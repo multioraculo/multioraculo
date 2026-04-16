@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/consultas/route.ts": {
-      "maxDuration": 3000
+      "maxDuration": 500
     }
   }
 }
