@@ -275,7 +275,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               {iconDesigns[index]}
               {isActive && <div className="absolute inset-0 rounded-xl border border-purple-400/50 animate-pulse"></div>}
             </button>
-            <span className="text-white/90 text-base font-medium tracking-wide">{name}</span>
+            <span className="text-white/90 text-base sm:text-base font-normal tracking-normal w-24 sm:w-28 text-center">{name}</span>
           </div>
         )
       },
