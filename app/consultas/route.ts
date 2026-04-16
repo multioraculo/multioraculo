@@ -113,17 +113,32 @@ function scoreChunk(chunk: string, keys: string[]) {
 
 async function download(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, (res) => {
-        if (res.statusCode !== 200) {
-          reject(new Error(`HTTP ${res.statusCode} from ${url}`))
-          return
-        }
-        const chunks: Buffer[] = []
-        res.on("data", (chunk) => chunks.push(chunk))
-        res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
-      })
-      .on("error", reject)
+    const fetchUrl = (targetUrl: string) => {
+      https
+        .get(targetUrl, (res) => {
+          // Segue redirects 301/302
+          if (res.statusCode === 301 || res.statusCode === 302) {
+            const redirectUrl = res.headers.location
+            if (!redirectUrl) {
+              reject(new Error(`Redirect sem location header de ${targetUrl}`))
+              return
+            }
+            fetchUrl(redirectUrl)
+            return
+          }
+
+          if (res.statusCode !== 200) {
+            reject(new Error(`HTTP ${res.statusCode} from ${targetUrl}`))
+            return
+          }
+
+          const chunks: Buffer[] = []
+          res.on("data", (chunk) => chunks.push(chunk))
+          res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
+        })
+        .on("error", reject)
+    }
+    fetchUrl(url)
   })
 }
 
