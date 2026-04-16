@@ -15,7 +15,7 @@ const LOCAL_INDEX = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.j
 const TMP_DIR = os.tmpdir()
 const TMP_INDEX = path.join(TMP_DIR, "pdfs.index.json")
 
-const ORACLE_SOURCES: Record
+const ORACLE_SOURCES: Record<
   OracleKey,
   { label: string; files: string[]; method: string }
 > = {
