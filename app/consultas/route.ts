@@ -2,12 +2,20 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import fs from "fs/promises"
 import path from "path"
+import https from "https"
+import os from "os"
 
 export const runtime = "nodejs"
 
-const INDEX_PATH = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.json")
+const INDEX_URL =
+  process.env.PDFS_INDEX_URL ||
+  "https://github.com/multioraculo/multioraculo/releases/download/v1-data/pdfs.index.json"
 
-const ORACLE_SOURCES: Record<
+const LOCAL_INDEX = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.json")
+const TMP_DIR = os.tmpdir()
+const TMP_INDEX = path.join(TMP_DIR, "pdfs.index.json")
+
+const ORACLE_SOURCES: Record
   OracleKey,
   { label: string; files: string[]; method: string }
 > = {
@@ -105,14 +113,56 @@ function scoreChunk(chunk: string, keys: string[]) {
   return score + Math.min(2, Math.floor(chunk.length / 600))
 }
 
+// Utility: download from URL
+async function download(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    https
+      .get(url, (res) => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode} from ${url}`))
+          return
+        }
+        const chunks: Buffer[] = []
+        res.on("data", (chunk) => chunks.push(chunk))
+        res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
+      })
+      .on("error", reject)
+  })
+}
+
+// Try local → tmp → download (same as hybridSearch.js)
+async function readFromAnywhere(
+  localPath: string,
+  tmpPath: string,
+  url: string,
+  label: string
+): Promise<string> {
+  try {
+    return await fs.readFile(localPath, "utf8")
+  } catch {}
+
+  try {
+    return await fs.readFile(tmpPath, "utf8")
+  } catch {}
+
+  console.log(`[consultas] downloading ${label} from ${url}`)
+  const content = await download(url)
+  await fs.writeFile(tmpPath, content, "utf8").catch(() => {})
+  return content
+}
+
 // Lazy-loaded index: parsed once per process lifetime, shared across all requests.
-// pdfs.index.json (~4.5 MB) has pre-extracted, pre-chunked text for every PDF —
-// eliminates the 10–30s PDF-parse overhead that happened on each warm start.
+// Now fetches from GitHub Release if not found locally
 let indexPromise: Promise<Map<string, string[]>> | null = null
 
 function getIndex(): Promise<Map<string, string[]>> {
   if (!indexPromise) {
-    indexPromise = fs.readFile(INDEX_PATH, "utf8").then((raw) => {
+    indexPromise = readFromAnywhere(
+      LOCAL_INDEX,
+      TMP_INDEX,
+      INDEX_URL,
+      "pdfs.index.json"
+    ).then((raw) => {
       const data = JSON.parse(raw) as {
         index: Array<{ file: string; chunks: string[] }>
       }
