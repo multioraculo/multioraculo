@@ -285,10 +285,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   return (
     <>
       {!showResults && (
-        <main className="relative z-20 min-h-[calc(100vh-8rem)] flex flex-col justify-end pt-6 pb-8 px-4 sm:pl-8 sm:pr-0">
+        <main className="relative z-20 min-h-[80vh] flex flex-col justify-end pt-6 pb-6 px-4 sm:pl-8 sm:pr-0">
           <div className="max-w-lg">
             <div
-              className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm mb-3 relative"
+              className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm mb-1 relative"
               style={{
                 filter: "url(#glass-effect)",
               }}
@@ -297,7 +297,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <span className="text-white/90 text-xs font-light relative z-10">Síntese Multioráculo</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-3">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-1">
               <span className="font-medium italic instrument">A singularidade</span> te trouxe
               <br />
               <span className="font-light tracking-tight text-white">até aqui.</span>
@@ -385,7 +385,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-8">
               <h3 className="text-white text-lg text-center font-light">Ler por oráculo</h3>
 
-              <div className="flex justify-center gap-2 sm:gap-4">
+              <div className="flex justify-center gap-2 sm:gap-4 overflow-x-auto px-2">
                 {["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"].map((name, index) => (
                   <OracleIcon key={index} index={index} name={name} tooltip={name} />
                 ))}
