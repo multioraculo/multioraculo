@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+﻿import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import fs from "fs/promises"
 import path from "path"
@@ -106,14 +106,11 @@ function scoreChunk(chunk: string, keys: string[]) {
   const c = normalize(chunk)
   let score = 0
   for (const k of keys) {
-    // pontua por ocorrência simples
     if (c.includes(k)) score += 2
   }
-  // bônus para densidade
   return score + Math.min(2, Math.floor(chunk.length / 600))
 }
 
-// Utility: download from URL
 async function download(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     https
@@ -130,7 +127,6 @@ async function download(url: string): Promise<string> {
   })
 }
 
-// Try local → tmp → download (same as hybridSearch.js)
 async function readFromAnywhere(
   localPath: string,
   tmpPath: string,
@@ -151,8 +147,6 @@ async function readFromAnywhere(
   return content
 }
 
-// Lazy-loaded index: parsed once per process lifetime, shared across all requests.
-// Now fetches from GitHub Release if not found locally
 let indexPromise: Promise<Map<string, string[]>> | null = null
 
 function getIndex(): Promise<Map<string, string[]>> {
@@ -195,7 +189,6 @@ async function getEvidenceForOracle(q: string, files: string[]) {
     excerpt: excerpt.slice(0, 800),
   }))
 
-  // fallback: se a pergunta for muito abstrata, pelo menos entrega 2 trechos iniciais
   if (top.length === 0) {
     const fallback: Array<{ source: string; excerpt: string }> = []
     for (const f of files) {
@@ -344,13 +337,6 @@ ${rawSymbols}
 `.trim()
 }
 
-// ─── Safety classification ────────────────────────────────────────────────────
-// Runs before any oracle processing. Returns true only for genuine high-risk
-// signals: explicit or clearly implicit suicidal intent, self-harm intent, or
-// acute mental health crisis with risk to life.
-// Dark, painful, existential, or grieving questions are NOT high-risk and must
-// receive a faithful oracle reading like any other question.
-
 const SAFETY_CLASSIFIER_PROMPT = `
 Você é um detector de risco de segurança. Avalie a mensagem do usuário e decida se ela contém sinais claros de risco real e imediato de suicídio, automutilação grave, ou crise aguda de saúde mental com perigo de vida.
 
@@ -399,12 +385,9 @@ async function classifyForSafety(openai: OpenAI, question: string): Promise<bool
     const verdict = (result.choices?.[0]?.message?.content || "SAFE").trim().toUpperCase()
     return verdict === "RISK"
   } catch {
-    // On classification failure, default to safe and allow normal reading
     return false
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
@@ -425,19 +408,12 @@ export async function POST(req: Request) {
   const openai = new OpenAI({ apiKey })
   const encoder = new TextEncoder()
 
-  // Newline-delimited JSON stream:
-  //   {"type":"oracles",  "question":…, "seed":…, "oracles":{…}}   ← sent when 5 parallel calls finish
-  //   {"type":"delta",    "text":"…"}                               ← synthesis text chunks
-  //   {"type":"done"}                                               ← stream complete
-  //   {"type":"complete", …}                                        ← safety-override shortcut
-  //   {"type":"error",    "message":"…"}                            ← unexpected failure
   const stream = new ReadableStream({
     async start(controller) {
       const send = (obj: object) =>
         controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
 
       try {
-        // Safety gate
         const isHighRisk = await classifyForSafety(openai, question)
         if (isHighRisk) {
           send({
@@ -455,7 +431,6 @@ export async function POST(req: Request) {
         const seed = fnv1a(question + "|" + Math.floor(Date.now() / 60000))
         const keys: OracleKey[] = ["tarot", "iching", "runas", "buzios", "lenormand"]
 
-        // 5 oracle calls in parallel — same logic as before, +max_tokens cap
         const oracleEntries = await Promise.all(
           keys.map(async (k) => {
             const meta = ORACLE_SOURCES[k]
@@ -515,10 +490,8 @@ export async function POST(req: Request) {
 
         const results = Object.fromEntries(oracleEntries) as Record<OracleKey, OracleResult>
 
-        // Send oracle results immediately — client can release the prayer loader
         send({ type: "oracles", question, seed, oracles: results })
 
-        // Stream synthesis — same model/temperature/prompts, now with max_tokens + stream
         const synthStream = await openai.chat.completions.create({
           model: "gpt-4o",
           temperature: 0.7,
