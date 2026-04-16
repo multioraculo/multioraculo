@@ -23,7 +23,6 @@ const PRAYER: PrayerItem[] = [
   { type: "line", text: "Que os búzios abram o caminho que estava fechado." },
   { type: "line", text: "Que as cartas descubram o que se esconde à vista." },
   { type: "break" },
-  { type: "line", text: "Peço verdade ao que se abre." },
   { type: "line", text: "Peço clareza ao que se mostra." },
   { type: "line", text: "Peço coragem para ouvir o que não quero" },
   { type: "line", text: "e humildade para acolher o que não espero." },
@@ -155,7 +154,7 @@ export default function PrayerLoader({ isLoading, onComplete }: Props) {
                 animate={{ opacity: isCurrent ? 0.85 : 0.28, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.9, ease: "easeOut" }}
-                className="text-sm font-light leading-relaxed text-white"
+                className="text-base font-light leading-relaxed text-white"
               >
                 {line.text}
               </motion.p>

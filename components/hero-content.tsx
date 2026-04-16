@@ -275,7 +275,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               {iconDesigns[index]}
               {isActive && <div className="absolute inset-0 rounded-xl border border-purple-400/50 animate-pulse"></div>}
             </button>
-            <span className="text-white/40 text-[10px] font-light tracking-wide">{name}</span>
+            <span className="text-white/90 text-base font-medium tracking-wide">{name}</span>
           </div>
         )
       },
@@ -329,7 +329,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <button
                 onClick={handleSubmit}
                 disabled={!question.trim()}
-                className="group px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg hover:shadow-white/10 transform disabled:hover:scale-100 disabled:hover:shadow-none flex items-center"
+                className="group px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg hover:shadow-white/10 transform disabled:hover:scale-100 disabled:hover:shadow-none flex items-center"
               >
                 <span className="group-hover:scale-105 transition-transform duration-200 inline-block group-disabled:scale-100">
                   Receber minha resposta
