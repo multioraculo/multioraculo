@@ -285,7 +285,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   return (
     <>
       {!showResults && (
-        <main className="relative z-20 min-h-[80vh] flex flex-col justify-end pt-6 pb-6 px-4 sm:pl-8 sm:pr-0">
+        <main className="relative z-20 min-h-[85dvh] flex flex-col justify-end pt-6 pb-8 px-4 sm:pl-8 sm:pr-0" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}>
           <div className="max-w-lg">
             <div
               className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm mb-1 relative"
@@ -316,6 +316,12 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 onChange={(e) => {
                   setQuestion(e.target.value)
                   setIsTyping(e.target.value.length > 0)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    if (question.trim()) handleSubmit()
+                  }
                 }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
@@ -454,41 +460,51 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     onClick={handleSave}
                     disabled={isSaved || saveLoading || !synthesis}
                     title={isSaved ? "Salvo" : "Salvar leitura"}
-                    className="group w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 hover:scale-105 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg
-                      className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
-                      fill={isSaved ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                      />
-                    </svg>
+                    <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform group-disabled:hover:scale-100 flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 group-hover:scale-110 transition-transform duration-200"
+                        fill={isSaved ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
+                      {isSaved ? "Salvo" : "Salvar Leitura"}
+                    </span>
                   </button>
                   <button
                     onClick={handleShare}
                     disabled={!synthesis}
-                    title="Compartilhar"
-                    className="group w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:text-white hover:bg-white/15 transition-all duration-200 hover:scale-105 transform flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    title="Encaminhar"
+                    className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <svg
-                      className="w-5 h-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-                      />
-                    </svg>
+                    <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform group-disabled:hover:scale-100 flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
+                      Encaminhar
+                    </span>
                   </button>
                 </div>
               </div>

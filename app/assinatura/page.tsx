@@ -13,15 +13,12 @@ export default async function AssinaturaPage() {
       <div className="relative z-10 pt-24 px-8">
         <div className="max-w-4xl mx-auto">
           <div className="max-w-lg mb-12">
-            <h1 className="text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-4">
-              <span className="font-medium italic instrument">Multioráculo</span> assine
-              <br />
-              <span className="font-light tracking-tight text-white">clareza, não ruído.</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-tight tracking-tight font-light text-white mb-4">
+              <span className="font-medium italic instrument">Multioráculo</span>: Assine clareza.
             </h1>
 
-            <p className="text-xs font-light text-white/70 leading-relaxed">
-              Cinco vozes, uma visão. A cada pergunta, o Multioráculo traduz a sincronicidade em síntese unificada
-              (Tarô, I Ching, Runas, Búzios e Lenormand) sem generalidades.
+            <p className="text-base sm:text-lg font-light text-white/70 leading-relaxed">
+              Decisões certas começam com respostas precisas. Cinco oráculos convergem para você.
             </p>
           </div>
 
@@ -31,11 +28,11 @@ export default async function AssinaturaPage() {
               <div className="mb-6">
                 <h2 className="text-xl font-light text-white mb-2">Essencial</h2>
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl font-light text-white">R$ 9,99</span>
+                  <span className="text-5xl font-light text-white">R$ 9,99</span>
                   <span className="text-white/60">/mês</span>
                 </div>
                 <p className="text-white/80 font-medium mb-4">Cadência e foco.</p>
-                <p className="text-white/70 text-sm">
+                <p className="text-white/70 text-base">
                   Duas tiragens por semana (8 por mês), para manter o rumo sem ansiedade.
                 </p>
               </div>
@@ -80,11 +77,11 @@ export default async function AssinaturaPage() {
               <div className="mb-6">
                 <h2 className="text-xl font-light text-white mb-2">Ilimitado</h2>
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-3xl font-light text-white">R$ 13,99</span>
+                  <span className="text-5xl font-light text-white">R$ 13,99</span>
                   <span className="text-white/60">/mês</span>
                 </div>
                 <p className="text-white/80 font-medium mb-4">Decisão em ritmo vivo.</p>
-                <p className="text-white/70 text-sm">
+                <p className="text-white/70 text-base">
                   Tiragens ilimitadas (uso pessoal) para transformar símbolo em gesto, todos os dias.
                 </p>
               </div>

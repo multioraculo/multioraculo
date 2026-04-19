@@ -457,7 +457,7 @@ export async function POST(req: Request) {
               temperature: 0.6,
               max_tokens: 1600,
               messages: [
-                { role: "system", content: "Responda apenas com JSON válido, sem Markdown." },
+                { role: "system", content: "Responda apenas com JSON válido, sem Markdown. O campo 'reading' deve ser escrito no mesmo idioma da pergunta do usuário." },
                 { role: "user", content: prompt },
               ],
             })
@@ -515,7 +515,7 @@ export async function POST(req: Request) {
           messages: [
             {
               role: "system",
-              content: "Escreva apenas a síntese em texto, sem títulos extras e sem bullets.",
+              content: "Escreva apenas a síntese em texto, sem títulos extras e sem bullets. Responda sempre no mesmo idioma em que a pergunta foi feita. Se a pergunta for em inglês, responda em inglês. Se for em português, responda em português.",
             },
             { role: "user", content: synthesisPrompt(question, results) },
           ],
