@@ -144,6 +144,33 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+/* Oracle icons horizontal scroll — thin custom scrollbar */
+.oracle-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s;
+}
+.oracle-scroll:hover {
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.oracle-scroll::-webkit-scrollbar {
+  height: 2px;
+}
+.oracle-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.oracle-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  transition: background 0.2s;
+}
+.oracle-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+}
+.oracle-scroll:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.4);
+}
 /* Apple-style typography scale */
 .text-caption {
   font-size: 0.75rem; /* 12px - labels pequenos */

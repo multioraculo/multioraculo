@@ -15,7 +15,18 @@ export type Consultation = {
   synthesis: string | null
   oracle_outputs: Record<string, unknown> | null     // jsonb
   is_saved: boolean
+  user_notes: string | null
   created_at: string
+}
+
+export type JournalEntry = {
+  id: string            // uuid
+  user_id: string       // FK → auth.users(id)
+  title: string | null
+  content: string
+  consultation_id: string | null  // nullable FK → consultations(id)
+  created_at: string
+  updated_at: string
 }
 
 export type DreamEntry = {

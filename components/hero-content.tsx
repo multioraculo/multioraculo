@@ -391,10 +391,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-8">
               <h3 className="text-white text-lg text-center font-light">Ler por oráculo</h3>
 
-              <div className="flex justify-center gap-2 sm:gap-4 overflow-x-auto px-2">
-                {["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"].map((name, index) => (
-                  <OracleIcon key={index} index={index} name={name} tooltip={name} />
-                ))}
+              <div className="relative">
+                {/* Right fade — hints scrollable content on mobile */}
+                <div className="absolute right-0 inset-y-0 w-12 bg-gradient-to-l from-black/25 to-transparent pointer-events-none z-10 sm:hidden" />
+                <div className="oracle-scroll flex gap-3 sm:gap-4 overflow-x-auto sm:justify-center px-1 pb-2">
+                  {["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"].map((name, index) => (
+                    <OracleIcon key={index} index={index} name={name} tooltip={name} />
+                  ))}
+                </div>
               </div>
 
               {/* Oracle Detail Card */}

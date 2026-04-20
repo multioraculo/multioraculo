@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import DeleteReadingButton from "@/components/delete-reading-button"
+import ReadingNotes from "@/components/reading-notes"
 import { createClient } from "@/lib/supabase/server"
 
 const ORACLE_ORDER = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
@@ -183,6 +184,12 @@ export default async function LeituraDetailPage({
                 </div>
               </div>
             )}
+
+            {/* Nota pessoal */}
+            <ReadingNotes
+              consultationId={consultation.id}
+              initialNotes={consultation.user_notes ?? null}
+            />
 
             {/* Deletar */}
             <div className="flex justify-end pt-2">
