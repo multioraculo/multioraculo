@@ -18,7 +18,7 @@ function Spinner() {
   )
 }
 
-function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabled: boolean; saving: boolean }) {
+function SaveButton({ onClick, disabled, saving, label = "Salvar no Grimório" }: { onClick: () => void; disabled: boolean; saving: boolean; label?: string }) {
   return (
     <button
       onClick={saving ? undefined : onClick}
@@ -32,7 +32,7 @@ function SaveButton({ onClick, disabled, saving }: { onClick: () => void; disabl
           : "bg-white/10 border-white/20 text-white/80 hover:text-white hover:bg-white/15",
       ].join(" ")}
     >
-      {saving ? <><Spinner /> Salvando…</> : "Salvar"}
+      {saving ? <><Spinner /> Salvando…</> : label}
     </button>
   )
 }
@@ -138,7 +138,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-light text-white">Diário</h1>
+        <h1 className="text-3xl font-light text-white">Grimório</h1>
         {!creating && (
           <button
             onClick={startCreate}
@@ -163,7 +163,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
           <textarea
             value={form.content}
             onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-            placeholder="O que você quer registrar?"
+            placeholder="Hoje meu dia foi..."
             rows={5}
             autoFocus
             className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm resize-none focus:outline-none focus:border-white/25 transition-colors duration-200"
@@ -183,12 +183,12 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
       {/* Empty state */}
       {entries.length === 0 && !creating && (
         <div className="text-center py-20">
-          <p className="text-white/40 text-sm mb-4">Nenhuma nota ainda.</p>
+          <p className="text-white/40 text-sm mb-4">Nenhuma anotação no Grimório ainda.</p>
           <button
             onClick={startCreate}
             className="px-6 py-2.5 rounded-full bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
-            Criar primeira nota
+            Criar primeira anotação
           </button>
         </div>
       )}

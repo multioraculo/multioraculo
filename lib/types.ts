@@ -37,3 +37,13 @@ export type DreamEntry = {
   is_saved: boolean
   created_at: string
 }
+
+export type Dream = {
+  id: string            // uuid
+  user_id: string       // FK → auth.users(id)
+  dream_description: string
+  interpretation: string | null
+  personal_notes: string | null
+  created_at: string
+  updated_at: string
+}
