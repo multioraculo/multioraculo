@@ -48,6 +48,23 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setCurrentUser(initialUser)
   }, [initialUser])
 
+  // Reset state when logo is clicked (dispatched by Header)
+  useEffect(() => {
+    const handler = () => {
+      setQuestion("")
+      setShowResults(false)
+      setActiveOracle(null)
+      setIsTyping(false)
+      setSynthesis(null)
+      setOracles(null)
+      setIsSaved(false)
+      setPrayerDone(true)
+      setIsLoading(false)
+    }
+    window.addEventListener("reset-hero", handler)
+    return () => window.removeEventListener("reset-hero", handler)
+  }, [])
+
   useEffect(() => {
     if (!isFocused && !isTyping && question === "") {
       intervalRef.current = setInterval(() => {

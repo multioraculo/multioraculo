@@ -65,11 +65,17 @@ export default function Header({ initialUser }: HeaderProps) {
     return "oráculo • síntese multi-oráculo • tarô • i ching • runas • búzios • lenormand • "
   }, [])
 
+  function handleLogoClick() {
+    window.dispatchEvent(new CustomEvent("reset-hero"))
+    router.push("/")
+  }
+
   return (
     <>
-      <header className="relative z-50 flex items-center justify-between p-6">
+      <header className="relative z-50 flex flex-col p-4 sm:p-6">
+        <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <button onClick={() => router.push("/")} className="relative" aria-label="Voltar ao início">
+          <button onClick={handleLogoClick} className="relative" aria-label="Voltar ao início">
             <div className="relative w-20 h-20 flex items-center justify-center">
               <div className="relative w-[60px] h-[60px]">
                 <PulsingBorder
@@ -126,9 +132,10 @@ export default function Header({ initialUser }: HeaderProps) {
           </button>
         </div>
 
+        {/* Desktop nav — centered absolutely */}
         <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
           <button
-            onClick={() => router.push("/")}
+            onClick={handleLogoClick}
             className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
             Multioráculo
@@ -163,6 +170,29 @@ export default function Header({ initialUser }: HeaderProps) {
             Login
           </button>
         )}
+        </div>
+
+        {/* Mobile nav — segunda linha visível só em telas pequenas */}
+        <nav className="flex sm:hidden items-center gap-5 mt-2 px-1">
+          <button
+            onClick={handleLogoClick}
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
+          >
+            Multioráculo
+          </button>
+          <button
+            onClick={() => router.push("/sonhos-salvos")}
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
+          >
+            Diário de Sonhos
+          </button>
+          <button
+            onClick={() => router.push("/diario")}
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
+          >
+            Grimório
+          </button>
+        </nav>
       </header>
 
       <LoginModal
