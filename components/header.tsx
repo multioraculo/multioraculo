@@ -72,8 +72,7 @@ export default function Header({ initialUser }: HeaderProps) {
 
   return (
     <>
-      <header className="relative z-50 flex flex-col p-4 sm:p-6">
-        <div className="flex items-center justify-between">
+      <header className="relative z-50 flex items-center p-4 sm:p-6">
         <div className="flex items-center">
           <button onClick={handleLogoClick} className="relative" aria-label="Voltar ao início">
             <div className="relative w-20 h-20 flex items-center justify-center">
@@ -132,6 +131,28 @@ export default function Header({ initialUser }: HeaderProps) {
           </button>
         </div>
 
+        {/* Mobile nav — inline entre logo e avatar */}
+        <nav className="flex sm:hidden flex-1 items-center justify-center gap-4">
+          <button
+            onClick={handleLogoClick}
+            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+          >
+            Multioráculo
+          </button>
+          <button
+            onClick={() => router.push("/sonhos-salvos")}
+            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+          >
+            Diário de Sonhos
+          </button>
+          <button
+            onClick={() => router.push("/diario")}
+            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+          >
+            Grimório
+          </button>
+        </nav>
+
         {/* Desktop nav — centered absolutely */}
         <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
           <button
@@ -170,29 +191,6 @@ export default function Header({ initialUser }: HeaderProps) {
             Login
           </button>
         )}
-        </div>
-
-        {/* Mobile nav — segunda linha visível só em telas pequenas */}
-        <nav className="flex sm:hidden items-center gap-5 mt-2 px-1">
-          <button
-            onClick={handleLogoClick}
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
-          >
-            Multioráculo
-          </button>
-          <button
-            onClick={() => router.push("/sonhos-salvos")}
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
-          >
-            Diário de Sonhos
-          </button>
-          <button
-            onClick={() => router.push("/diario")}
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200"
-          >
-            Grimório
-          </button>
-        </nav>
       </header>
 
       <LoginModal

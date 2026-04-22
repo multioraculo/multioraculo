@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 
 interface UserMenuProps {
@@ -26,6 +26,22 @@ function Divider() {
 export default function UserMenu({ user, onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleClose = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClose)
+    document.addEventListener("touchstart", handleClose)
+    return () => {
+      document.removeEventListener("mousedown", handleClose)
+      document.removeEventListener("touchstart", handleClose)
+    }
+  }, [isOpen])
 
   const go = (path: string) => {
     setIsOpen(false)
@@ -33,7 +49,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 transition-all duration-200 flex items-center justify-center"
@@ -42,9 +58,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-12 z-50 w-64 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-3 space-y-0.5">
+        <div className="absolute right-0 top-12 z-50 w-64 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-3 space-y-0.5">
 
             {/* User info */}
             <div className="border-b border-white/10 pb-3 mb-2">
@@ -85,8 +99,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             >
               Sair
             </button>
-          </div>
-        </>
+        </div>
       )}
     </div>
   )
