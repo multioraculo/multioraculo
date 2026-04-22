@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import type { User } from "@supabase/supabase-js"
@@ -73,7 +74,7 @@ export default function Header({ initialUser }: HeaderProps) {
   return (
     <>
       <header className="relative z-50 flex items-center p-4 sm:p-6">
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           <button onClick={handleLogoClick} className="relative" aria-label="Voltar ao início">
             <div className="relative w-20 h-20 flex items-center justify-center">
               <div className="relative w-[60px] h-[60px]">
@@ -132,47 +133,49 @@ export default function Header({ initialUser }: HeaderProps) {
         </div>
 
         {/* Mobile nav — inline entre logo e avatar */}
-        <nav className="flex sm:hidden flex-1 items-center justify-center gap-4">
-          <button
+        <nav className="flex sm:hidden flex-1 items-center justify-center gap-4 relative z-10">
+          <Link
+            href="/"
             onClick={handleLogoClick}
-            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
           >
-            Multioráculo
-          </button>
-          <button
-            onClick={() => router.push("/sonhos-salvos")}
-            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+            Início
+          </Link>
+          <Link
+            href="/sonhos-salvos"
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
           >
-            Diário de Sonhos
-          </button>
-          <button
-            onClick={() => router.push("/diario")}
-            className="text-white/80 hover:text-white text-[11px] font-light transition-colors duration-200"
+            Sonhos
+          </Link>
+          <Link
+            href="/diario"
+            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
           >
             Grimório
-          </button>
+          </Link>
         </nav>
 
         {/* Desktop nav — centered absolutely */}
         <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-          <button
+          <Link
+            href="/"
             onClick={handleLogoClick}
             className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
             Multioráculo
-          </button>
-          <button
-            onClick={() => router.push("/sonhos-salvos")}
+          </Link>
+          <Link
+            href="/sonhos-salvos"
             className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
             Diário de Sonhos
-          </button>
-          <button
-            onClick={() => router.push("/diario")}
+          </Link>
+          <Link
+            href="/diario"
             className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
             Grimório
-          </button>
+          </Link>
         </nav>
 
         {user ? (
@@ -186,7 +189,7 @@ export default function Header({ initialUser }: HeaderProps) {
         ) : (
           <button
             onClick={() => setShowLogin(true)}
-            className="px-6 py-2 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
+            className="shrink-0 px-6 py-2 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
           >
             Login
           </button>
