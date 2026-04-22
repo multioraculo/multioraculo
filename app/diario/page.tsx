@@ -25,20 +25,19 @@ export default async function DiarioPage() {
     <ShaderBackground>
       <Header initialUser={user} />
       <div className="relative z-10 min-h-screen pt-16 pb-16">
-        {/* Hero */}
-        <div className="text-center py-16 px-4 max-w-3xl mx-auto">
-          <h1 className="text-5xl sm:text-6xl font-light italic instrument text-white mb-6">
-            Grimório
-          </h1>
-          <p className="text-lg sm:text-xl text-white/70 leading-relaxed">
-            Seu espaço sagrado para registrar a vida como ela se desenrola.
-            Aqui, o cotidiano encontra o eterno, e cada dia se torna página
-            de um livro maior. Escreva livremente — sobre o que sentiu,
-            descobriu, sonhou acordado ou simplesmente viveu.
-          </p>
-        </div>
-
         <div className="max-w-3xl mx-auto px-4 sm:px-8 pb-16">
+          {/* Hero — alinhado à esquerda, consistente com /sonhos e home */}
+          <div className="py-16">
+            <h1 className="text-5xl sm:text-6xl font-light italic instrument text-white mb-4">
+              Grimório
+            </h1>
+            <p className="text-base sm:text-lg text-white/70 leading-relaxed max-w-xl">
+              Seu espaço sagrado para registrar o que a vida revela.
+              Cada registro guarda um fragmento da sua travessia interior.
+              Escreva sobre o que sentiu, compreendeu ou viveu.
+            </p>
+          </div>
+
           <DiaryList initialEntries={entries} />
         </div>
       </div>

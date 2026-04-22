@@ -143,7 +143,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
             onClick={startCreate}
             className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
-            Nova Nota
+            Novo Registro
           </button>
         </div>
       )}

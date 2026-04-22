@@ -52,7 +52,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     if (!isFocused && !isTyping && question === "") {
       intervalRef.current = setInterval(() => {
         setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length)
-      }, 5000)
+      }, 8000)
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -325,7 +325,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholders[currentPlaceholder]}
-                className="w-full h-24 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
+                className="w-full h-24 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
                 style={{ filter: "url(#glass-effect)" }}
               />
             </div>
