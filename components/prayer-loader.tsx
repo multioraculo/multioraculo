@@ -17,26 +17,23 @@ type PrayerItem = { type: "line"; text: string } | { type: "break" }
 
 const PRAYER: PrayerItem[] = [
   { type: "line", text: "Eu me abro ao que precisa ser visto." },
-  { type: "line", text: "Que os arcanos revelem as forças que agem em silêncio." },
-  { type: "line", text: "Que os hexagramas mostrem o que muda e o que permanece." },
-  { type: "line", text: "Que as runas nomeiem o que ainda não foi dito." },
-  { type: "line", text: "Que os búzios abram o caminho que estava fechado." },
-  { type: "line", text: "Que as cartas descubram o que se esconde à vista." },
   { type: "break" },
-  { type: "line", text: "Peço clareza ao que se mostra." },
-  { type: "line", text: "Peço coragem para ouvir o que não quero" },
-  { type: "line", text: "e humildade para acolher o que não espero." },
+  { type: "line", text: "Que se tornem visíveis as forças que já estão em movimento." },
   { type: "break" },
-  { type: "line", text: "Que as respostas tragam precisão no que dizem" },
-  { type: "line", text: "e comedimento no que revelam." },
-  { type: "line", text: "Que haja tolerância com a minha pergunta" },
-  { type: "line", text: "e sabedoria para que eu compreenda o que agora chega até mim." },
+  { type: "line", text: "Peço clareza para perceber o que se mostra." },
+  { type: "break" },
+  { type: "line", text: "Peço serenidade para receber o que me cabe." },
+  { type: "break" },
+  { type: "line", text: "Peço humildade para integrar o que se revela." },
+  { type: "break" },
+  { type: "line", text: "Que minha pergunta encontre presença" },
+  { type: "line", text: "e que haja entendimento no que agora se revela." },
   { type: "break" },
   { type: "line", text: "Assim seja." },
 ]
 
 // Time each line is shown before the next appears; breaks add extra pause
-// 15 lines × 2200ms + 3 breaks × 1600ms ≈ 39.5s total
+// 8 lines × 2200ms + 6 breaks × 1600ms ≈ 27s total
 const LINE_DELAY = 2200
 const BREAK_EXTRA = 1600
 // Maximum lines visible simultaneously in the teleprompter window

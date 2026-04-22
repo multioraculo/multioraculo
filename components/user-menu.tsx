@@ -55,9 +55,10 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             </div>
 
             {/* Grupo 1 — Consultas */}
-            <MenuItem label="Nova Leitura"     onClick={() => go("/")} />
+            <MenuItem label="Multioráculo"     onClick={() => go("/")} />
             <MenuItem label="Leituras Salvas"  onClick={() => go("/leituras-salvas")} />
             <MenuItem label="Oráculos"         onClick={() => go("/oraculos")} />
+            <MenuItem label="FAQ"              onClick={() => go("/faq")} />
 
             <Divider />
 
@@ -72,9 +73,8 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
 
             <Divider />
 
-            {/* Grupo 4 — Institucional */}
+            {/* Grupo 4 — Assinatura */}
             <MenuItem label="Assinatura"       onClick={() => go("/assinatura")} />
-            <MenuItem label="FAQ"              onClick={() => go("/faq")} />
 
             <Divider />
 
