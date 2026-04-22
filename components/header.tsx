@@ -142,7 +142,7 @@ export default function Header({ initialUser }: HeaderProps) {
             Multioráculo
           </Link>
           <Link
-            href="/sonhos-salvos"
+            href="/sonhos"
             className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
           >
             Sonhos
@@ -165,7 +165,7 @@ export default function Header({ initialUser }: HeaderProps) {
             Multioráculo
           </Link>
           <Link
-            href="/sonhos-salvos"
+            href="/sonhos"
             className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
             Diário de Sonhos
@@ -178,6 +178,7 @@ export default function Header({ initialUser }: HeaderProps) {
           </Link>
         </nav>
 
+        <div className="ml-auto shrink-0">
         {user ? (
           <UserMenu
             user={{
@@ -189,11 +190,12 @@ export default function Header({ initialUser }: HeaderProps) {
         ) : (
           <button
             onClick={() => setShowLogin(true)}
-            className="shrink-0 px-6 py-2 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
+            className="px-6 py-2 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
           >
             Login
           </button>
         )}
+        </div>
       </header>
 
       <LoginModal
