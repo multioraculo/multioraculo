@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import DiaryList from "@/components/diary-list"
@@ -8,25 +7,23 @@ import type { JournalEntry } from "@/lib/types"
 export default async function DiarioPage() {
   const supabase = await createClient()
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) redirect("/")
+  const { data: { user } } = await supabase.auth.getUser()
 
-  const { data, error } = await supabase
-    .from("journal_entries")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-
-  if (error) console.error("Erro ao carregar diário:", error)
-
-  const entries = (data ?? []) as JournalEntry[]
+  let entries: JournalEntry[] = []
+  if (user) {
+    const { data } = await supabase
+      .from("journal_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+    entries = (data ?? []) as JournalEntry[]
+  }
 
   return (
     <ShaderBackground>
-      <Header initialUser={user} />
+      <Header initialUser={user ?? null} />
       <div className="relative z-10 min-h-screen pt-16 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-8 pb-16">
-          {/* Hero — alinhado à esquerda, consistente com /sonhos e home */}
           <div className="py-16">
             <h1 className="text-5xl sm:text-6xl font-light italic instrument text-white mb-4">
               Grimório
@@ -38,7 +35,13 @@ export default async function DiarioPage() {
             </p>
           </div>
 
-          <DiaryList initialEntries={entries} />
+          {user ? (
+            <DiaryList initialEntries={entries} />
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-white/40 text-sm mb-4">Faça login para acessar seu Grimório.</p>
+            </div>
+          )}
         </div>
       </div>
     </ShaderBackground>

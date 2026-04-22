@@ -139,7 +139,7 @@ export default function Header({ initialUser }: HeaderProps) {
             onClick={handleLogoClick}
             className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
           >
-            Início
+            Multioráculo
           </Link>
           <Link
             href="/sonhos-salvos"
