@@ -47,3 +47,23 @@ export type Dream = {
   created_at: string
   updated_at: string
 }
+
+export type JourneyAnalysis = {
+  id: string            // uuid
+  user_id: string       // FK → auth.users(id)
+  analysis_text: string // JSON string of JourneyData
+  dreams_analyzed: number | null
+  created_at: string
+}
+
+export type JourneyData = {
+  timeline: Array<{
+    number: number
+    title: string
+    archetypes: string
+    summary: string
+  }>
+  patterns: string[]
+  turningPoint: string
+  essence: string
+}

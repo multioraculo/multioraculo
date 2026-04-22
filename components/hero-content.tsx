@@ -109,7 +109,6 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               setOracles(event.oracles ?? null)
               setIsLoading(false)
             } else if (event.type === "delta") {
-              // Synthesis text streaming in
               setSynthesis((prev) => (prev ?? "") + event.text)
             } else if (event.type === "complete") {
               // Safety-override shortcut (no oracle data)

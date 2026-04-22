@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
 export const runtime = "nodejs"
@@ -57,26 +56,53 @@ export async function POST(request: Request) {
   const dream = String(body?.dream || "").trim()
 
   if (!dream) {
-    return NextResponse.json({ error: "Descrição do sonho ausente." }, { status: 400 })
+    return new Response(JSON.stringify({ error: "Descrição do sonho ausente." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: "OPENAI_API_KEY não configurada." }, { status: 500 })
+    return new Response(JSON.stringify({ error: "OPENAI_API_KEY não configurada." }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    })
   }
 
   const openai = new OpenAI({ apiKey })
+  const encoder = new TextEncoder()
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.7,
     max_tokens: 2000,
+    stream: true,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: `Sonho:\n"${dream}"` },
     ],
   })
 
-  const interpretation = completion.choices?.[0]?.message?.content?.trim() ?? ""
-  return NextResponse.json({ ok: true, interpretation })
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of completion) {
+            const text = chunk.choices[0]?.delta?.content || ""
+            if (text) controller.enqueue(encoder.encode(text))
+          }
+        } finally {
+          controller.close()
+        }
+      },
+    }),
+    {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
+    }
+  )
 }

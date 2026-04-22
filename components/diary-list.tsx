@@ -137,17 +137,16 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-light text-white">Grimório</h1>
-        {!creating && (
+      {!creating && (
+        <div className="flex justify-end">
           <button
             onClick={startCreate}
             className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
             Nova Nota
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Create form */}
       {creating && (
@@ -157,13 +156,13 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
             type="text"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            placeholder="Título (opcional)"
+            placeholder="Hoje meu dia..."
             className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm focus:outline-none focus:border-white/25 transition-colors duration-200"
           />
           <textarea
             value={form.content}
             onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-            placeholder="Hoje meu dia foi..."
+            placeholder="Escreva sobre o seu dia..."
             rows={5}
             autoFocus
             className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm resize-none focus:outline-none focus:border-white/25 transition-colors duration-200"

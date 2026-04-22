@@ -26,7 +26,7 @@ export default async function SonhosSalvosPage() {
       <Header initialUser={user} />
       <div className="relative z-10 min-h-screen pt-24 pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-8">
-          <SavedDreamsList initialDreams={dreams} />
+          <SavedDreamsList initialDreams={dreams} userId={user.id} />
         </div>
       </div>
     </ShaderBackground>

@@ -126,24 +126,24 @@ export default function Header({ initialUser }: HeaderProps) {
           </button>
         </div>
 
-        <nav className="hidden sm:flex items-center space-x-2">
+        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
           <button
-            onClick={() => router.push("/oraculos")}
-            className="text-white/80 hover:text-white text-sm font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
+            onClick={() => router.push("/")}
+            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
-            Oráculos
+            Multioráculo
           </button>
           <button
-            onClick={() => router.push("/assinatura")}
-            className="text-white/80 hover:text-white text-sm font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
+            onClick={() => router.push("/sonhos-salvos")}
+            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
-            Assinatura
+            Diário de Sonhos
           </button>
           <button
-            onClick={() => router.push("/faq")}
-            className="text-white/80 hover:text-white text-sm font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
+            onClick={() => router.push("/diario")}
+            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
           >
-            FAQ
+            Grimório
           </button>
         </nav>
 
