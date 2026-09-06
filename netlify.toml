@@ -1,0 +1,29 @@
+# Configuração do Netlify para o Multioráculo (Next.js 15, App Router).
+#
+# O adaptador oficial detecta o Next.js e configura funções, edge (middleware
+# do Supabase), streaming e cache. Não fixe a versão do plugin: o Netlify
+# mantém a versão compatível com o Next instalado.
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Desliga a telemetria do Next no build
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Variáveis de ambiente necessárias (defina em Site configuration →
+# Environment variables, nunca aqui):
+#   OPENAI_API_KEY
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   PDFS_INDEX_URL   (opcional; padrão: release v1-data no GitHub)
+#
+# Limites relevantes do Netlify: toda função (inclusive com streaming) tem
+# teto de 60 s, não configurável. Por isso a consulta é feita em duas rotas:
+#   POST /consultas          → sorteio + interpretação dos 5 oráculos
+#   POST /consultas/sintese  → síntese final em streaming

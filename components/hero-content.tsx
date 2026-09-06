@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
-import PrayerLoader from "@/components/prayer-loader"
 
 
 const placeholders = [
@@ -36,7 +35,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [synthesis, setSynthesis] = useState<string | null>(null)
   const [oracles, setOracles] = useState<Record<string, any> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [prayerDone, setPrayerDone] = useState(true)
+  // Etapa atual da consulta, mostrada no lugar da síntese até o texto chegar
+  const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamError, setStreamError] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
@@ -58,8 +60,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       setSynthesis(null)
       setOracles(null)
       setIsSaved(false)
-      setPrayerDone(true)
       setIsLoading(false)
+      setIsStreaming(false)
+      setStage("idle")
+      setStreamError(null)
     }
     window.addEventListener("reset-hero", handler)
     return () => window.removeEventListener("reset-hero", handler)
@@ -84,67 +88,112 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     }
   }, [isFocused, isTyping, question])
 
+  // Lê um stream NDJSON e chama onEvent para cada linha válida
+  const readNdjson = async (res: Response, onEvent: (event: any) => void) => {
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      throw new Error(j?.error || `Erro ${res.status}`)
+    }
+    if (!res.body) throw new Error("No response body")
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buf = ""
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += decoder.decode(value, { stream: true })
+      const lines = buf.split("\n")
+      buf = lines.pop() ?? ""
+      for (const line of lines) {
+        if (!line.trim()) continue
+        let event: any
+        try {
+          event = JSON.parse(line)
+        } catch {
+          continue // malformed line — skip
+        }
+        onEvent(event)
+      }
+    }
+  }
+
   const handleSubmit = async () => {
     if (!question.trim()) return
     setIsLoading(true)
-    setPrayerDone(false)
+    setIsStreaming(true)
+    setStage("draw")
+    setStreamError(null)
     setSynthesis(null)
     setOracles(null)
+    setIsSaved(false)
     setShowResults(true)
     setTimeout(() => {
       document.getElementById("results-section")?.scrollIntoView({ behavior: "smooth" })
     }, 100)
+
+    let finalOracles: Record<string, any> | null = null
+    let safetyOverride = false
+
     try {
+      // Etapa 1: sorteio + interpretação dos cinco oráculos
       const res = await fetch("/consultas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       })
 
-      if (!res.body) throw new Error("No response body")
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buf = ""
-
-      // Parse newline-delimited JSON stream from the route
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        buf += decoder.decode(value, { stream: true })
-        const lines = buf.split("\n")
-        buf = lines.pop() ?? ""
-
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const event = JSON.parse(line)
-
-            if (event.type === "oracles") {
-              // 5 parallel oracle calls finished — release the prayer timer
-              setOracles(event.oracles ?? null)
-              setIsLoading(false)
-            } else if (event.type === "delta") {
-              setSynthesis((prev) => (prev ?? "") + event.text)
-            } else if (event.type === "complete") {
-              // Safety-override shortcut (no oracle data)
-              setSynthesis(event.synthesis ?? null)
-              setOracles(event.oracles ?? null)
-              setIsLoading(false)
-            } else if (event.type === "error") {
-              console.error("Oracle stream error:", event.message)
-              setIsLoading(false)
-            }
-          } catch {
-            // malformed line — skip
-          }
+      await readNdjson(res, (event) => {
+        if (event.type === "draw") {
+          // Símbolos sorteados chegam antes da interpretação: já dá para ler a tiragem
+          setStage("oracles")
+          setOracles(
+            Object.fromEntries(
+              Object.entries(event.draws ?? {}).map(([k, d]: [string, any]) => [
+                k,
+                { title: d.title, draw: { items: d.items, notes: d.notes }, reading: "" },
+              ])
+            )
+          )
+        } else if (event.type === "oracles") {
+          finalOracles = event.oracles ?? null
+          setOracles(finalOracles)
+          setIsLoading(false)
+          setStage("synthesis")
+        } else if (event.type === "complete") {
+          // Safety-override shortcut (no oracle data)
+          safetyOverride = true
+          setSynthesis(event.synthesis ?? null)
+          setOracles(event.oracles ?? null)
+          setIsLoading(false)
+        } else if (event.type === "error") {
+          throw new Error(event.message || "Erro na consulta.")
         }
-      }
-    } catch (err) {
+      })
+
+      if (safetyOverride) return
+      if (!finalOracles) throw new Error("A tiragem não foi concluída.")
+
+      // Etapa 2: síntese em streaming, a partir dos oráculos já interpretados
+      const res2 = await fetch("/consultas/sintese", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, oracles: finalOracles }),
+      })
+
+      await readNdjson(res2, (event) => {
+        if (event.type === "delta") {
+          setSynthesis((prev) => (prev ?? "") + event.text)
+        } else if (event.type === "error") {
+          throw new Error(event.message || "Erro na síntese.")
+        }
+      })
+    } catch (err: any) {
       console.error(err)
+      setStreamError(String(err?.message || "Não foi possível concluir a consulta."))
     } finally {
       setIsLoading(false)
+      setIsStreaming(false)
+      setStage("idle")
     }
   }
 
@@ -156,13 +205,15 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setSynthesis(null)
     setOracles(null)
     setIsSaved(false)
+    setStreamError(null)
+    setStage("idle")
     document.querySelector("textarea")?.focus()
   }
 
   const handleSave = async () => {
     if (isSaved || saveLoading) return
     if (!question || !synthesis) {
-      setSaveMessage("Não há leitura pronta para salvar.")
+      toast.error("Não há leitura pronta para salvar.")
       return
     }
 
@@ -375,10 +426,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             {/* Synthesis Card */}
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="flex items-center gap-2 mb-4">
-                {isLoading || !prayerDone ? (
+                {isStreaming && !synthesis ? (
                   <>
                     <h3 className="text-white text-lg">Multioráculo</h3>
-                    <span className="text-white/50 text-xs">• está realizando a sua tiragem</span>
+                    <span className="text-white/50 text-xs">
+                      {stage === "draw" && "• está realizando a sua tiragem"}
+                      {stage === "oracles" && "• está lendo cada oráculo"}
+                      {stage === "synthesis" && "• está escrevendo a sua resposta"}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -388,16 +443,24 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 )}
               </div>
               <div className="text-white/80 text-sm leading-relaxed">
-                {isLoading || !prayerDone ? (
-                  <PrayerLoader
-                    isLoading={isLoading}
-                    onComplete={() => setPrayerDone(true)}
-                  />
-                ) : synthesis ? (
+                {synthesis ? (
                   <div className="space-y-4">
-                    {synthesis.split(/\n{2,}/).map((para, i) => (
-                      <p key={i} className="text-white/80 text-sm leading-relaxed">{para.trim()}</p>
+                    {synthesis.split(/\n{2,}/).map((para, i, all) => (
+                      <p key={i} className="text-white/80 text-sm leading-relaxed">
+                        {para.trim()}
+                        {isStreaming && i === all.length - 1 && (
+                          <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-white/60 animate-pulse" />
+                        )}
+                      </p>
                     ))}
+                  </div>
+                ) : streamError ? (
+                  <p className="text-red-300/80 text-sm leading-relaxed">{streamError}</p>
+                ) : isStreaming ? (
+                  <div className="flex items-center gap-2 py-2" aria-live="polite">
+                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse [animation-delay:200ms]" />
+                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse [animation-delay:400ms]" />
                   </div>
                 ) : null}
               </div>
@@ -425,7 +488,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 const oracleName = ["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"][activeOracle]
                 const items = oracle?.draw?.items ?? []
                 const notes = oracle?.draw?.notes
-                const reading = oracle?.reading ?? (isLoading ? "Carregando..." : "")
+                const reading = oracle?.reading || (isLoading ? "Interpretando a tiragem..." : "")
 
                 return (
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20 animate-in slide-in-from-top-2 duration-300 space-y-5">
@@ -441,7 +504,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                       <div>
                         <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Tiragem</p>
                         <div className="space-y-3">
-                          {items.map((item, i) => (
+                          {items.map((item: { position?: string; name: string; meaning?: string }, i: number) => (
                             <div key={i} className="flex gap-3">
                               {item.position && (
                                 <span className="text-white/30 text-[11px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
@@ -478,7 +541,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 <div className="flex justify-center gap-4">
                   <button
                     onClick={handleSave}
-                    disabled={isSaved || saveLoading || !synthesis}
+                    disabled={isSaved || saveLoading || !synthesis || isStreaming}
                     title={isSaved ? "Salvo" : "Salvar leitura"}
                     className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -503,7 +566,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                   </button>
                   <button
                     onClick={handleShare}
-                    disabled={!synthesis}
+                    disabled={!synthesis || isStreaming}
                     title="Encaminhar"
                     className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
