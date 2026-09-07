@@ -145,6 +145,20 @@
   to   { transform: rotate(360deg); }
 }
 
+/* Búzios: entrada sutil de cada concha na primeira aparição da tiragem.
+   A posição final (translate/rotate/scale) fica no style inline; a animação
+   só acrescenta um leve deslocamento e fade, e depois tudo fica estático. */
+@keyframes buzios-shell-enter {
+  from { opacity: 0; margin-top: -10px; }
+  to   { opacity: 1; margin-top: 0; }
+}
+.buzios-shell-enter {
+  animation: buzios-shell-enter 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .buzios-shell-enter { animation: none; }
+}
+
 /* Subtle custom scrollbar — used throughout the app */
 .custom-scrollbar {
   scrollbar-width: thin;

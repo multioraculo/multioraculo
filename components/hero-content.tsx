@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import BuziosCasts from "@/components/buzios-board"
 import { fmt } from "@/lib/i18n"
 
 type HeroContentProps = {
@@ -25,6 +26,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [activeOracle, setActiveOracle] = useState<number | null>(null)
   const [synthesis, setSynthesis] = useState<string | null>(null)
   const [oracles, setOracles] = useState<Record<string, any> | null>(null)
+  // seed da tiragem atual: base do desenho determinístico dos búzios
+  const [readingSeed, setReadingSeed] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   // Etapa atual da consulta, mostrada no lugar da síntese até o texto chegar
   const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
@@ -169,12 +172,13 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
         if (event.type === "draw") {
           // Símbolos sorteados chegam antes da interpretação: já dá para ler a tiragem
           seed = event.seed || ""
+          setReadingSeed(seed)
           setStage("oracles")
           setOracles(
             Object.fromEntries(
               Object.entries(event.draws ?? {}).map(([k, d]: [string, any]) => [
                 k,
-                { title: d.title, draw: { items: d.items, notes: d.notes }, reading: "" },
+                { title: d.title, seed, draw: { items: d.items, notes: d.notes, shells: d.shells }, reading: "" },
               ])
             )
           )
@@ -566,6 +570,16 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     {items.length > 0 && (
                       <div>
                         <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
+                        {key === "buzios" && (
+                          <div className="mb-5 pb-5 border-b border-white/10">
+                            <BuziosCasts
+                              seed={oracle?.seed || readingSeed}
+                              items={items}
+                              shells={oracle?.draw?.shells ?? null}
+                              animate
+                            />
+                          </div>
+                        )}
                         <div className="space-y-3">
                           {items.map((item, i) => (
                             <div key={i} className="flex gap-3">

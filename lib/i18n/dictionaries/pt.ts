@@ -420,6 +420,14 @@ export const pt = {
     errorDelete: "Erro ao excluir nota.",
   },
 
+  buzios: {
+    firstCast: "1ª queda",
+    secondCast: "2ª queda · confirmação",
+    openCount: "{open} de {total} búzios abertos",
+    ariaPrimary: "Primeira queda: {open} dos {total} búzios abertos, correspondente ao Odu {odu}",
+    ariaConfirmation: "Segunda queda, confirmação: {open} dos {total} búzios abertos, correspondente ao Odu {odu}",
+  },
+
   billing: {
     planNames: { free: "Free", essential: "Essencial", unlimited: "Ilimitado" },
     currentPlan: "Seu plano atual",

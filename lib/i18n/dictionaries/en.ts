@@ -418,6 +418,14 @@ export const en: Dictionary = {
     errorDelete: "Error deleting note.",
   },
 
+  buzios: {
+    firstCast: "1st cast",
+    secondCast: "2nd cast · confirmation",
+    openCount: "{open} of {total} shells open",
+    ariaPrimary: "First cast: {open} of {total} shells open, corresponding to the Odu {odu}",
+    ariaConfirmation: "Second cast, confirmation: {open} of {total} shells open, corresponding to the Odu {odu}",
+  },
+
   billing: {
     planNames: { free: "Free", essential: "Essential", unlimited: "Unlimited" },
     currentPlan: "Your current plan",

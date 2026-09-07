@@ -418,6 +418,14 @@ export const es: Dictionary = {
     errorDelete: "Error al eliminar la nota.",
   },
 
+  buzios: {
+    firstCast: "1ª caída",
+    secondCast: "2ª caída · confirmación",
+    openCount: "{open} de {total} caracolas abiertas",
+    ariaPrimary: "Primera caída: {open} de las {total} caracolas abiertas, correspondiente al Odu {odu}",
+    ariaConfirmation: "Segunda caída, confirmación: {open} de las {total} caracolas abiertas, correspondiente al Odu {odu}",
+  },
+
   billing: {
     planNames: { free: "Free", essential: "Esencial", unlimited: "Ilimitado" },
     currentPlan: "Tu plan actual",

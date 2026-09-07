@@ -69,9 +69,17 @@ type OracleResult = {
   draw: {
     items: Array<{ position?: string; name: string; meaning?: string }>
     notes?: string
+    /** Búzios: quantidade de conchas abertas em cada queda (para a visualização) */
+    shells?: { primary: number; confirmation: number }
   }
   reading: string
   evidence: Evidence[]
+}
+
+/** Dados extras de desenho por oráculo, aditivos ao payload (hoje só Búzios). */
+function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
+  if (k !== "buzios") return {}
+  return { shells: { primary: draws.buzios.meta.first, confirmation: draws.buzios.meta.second } }
 }
 
 const stop = new Set([
@@ -481,7 +489,7 @@ export async function POST(req: Request) {
           draws: Object.fromEntries(
             ORACLE_KEYS.map((k) => [
               k,
-              { title: labels[k], notes: rendered[k].notes, items: rendered[k].items },
+              { title: labels[k], notes: rendered[k].notes, items: rendered[k].items, ...drawExtras(k, draws) },
             ])
           ),
         })
@@ -546,7 +554,7 @@ export async function POST(req: Request) {
               method: meta.method,
               seed,
               locale,
-              draw: { items, notes },
+              draw: { items, notes, ...drawExtras(k, draws) },
               reading,
               evidence: validateEvidence(parsed?.evidence, evidence),
             }

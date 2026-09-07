@@ -3,6 +3,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import DeleteReadingButton from "@/components/delete-reading-button"
 import ReadingNotes from "@/components/reading-notes"
+import BuziosCasts from "@/components/buzios-board"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import { formatDate } from "@/lib/i18n"
@@ -19,9 +20,11 @@ type OracleItem = {
 type OracleOutput = {
   reading?: string
   method?: string
+  seed?: string
   draw?: {
     notes?: string
     items?: OracleItem[]
+    shells?: { primary: number; confirmation: number }
   }
 }
 
@@ -136,6 +139,16 @@ export default async function LeituraDetailPage({
                         {items.length > 0 && (
                           <div>
                             <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{t.drawLabel}</p>
+                            {key === "buzios" && (
+                              <div className="mb-5 pb-5 border-b border-white/10">
+                                {/* leitura salva: mesmo seed da tiragem → mesmas posições; sem animação */}
+                                <BuziosCasts
+                                  seed={oracle.seed || consultation.id}
+                                  items={items}
+                                  shells={oracle.draw?.shells ?? null}
+                                />
+                              </div>
+                            )}
                             <div className="space-y-3">
                               {items.map((item, i) => (
                                 <div key={i} className="flex gap-3">
