@@ -11,7 +11,7 @@ export default async function SonhosPage() {
   return (
     <ShaderBackground>
       <Header initialUser={user ?? null} />
-      <DreamsPage />
+      <DreamsPage isLoggedIn={Boolean(user)} />
     </ShaderBackground>
   )
 }

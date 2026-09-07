@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { LOCALE_META, resolveLocale } from "@/lib/i18n/config"
+import { newSeed } from "@/lib/oracles/draw"
+import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
+import { VISITOR_COOKIE } from "@/lib/billing/visitor"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -43,7 +47,7 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
+    return NextResponse.json({ error: "Não autenticado.", code: "unauthenticated" }, { status: 401 })
   }
 
   const { data: dreams, error: dreamsError } = await supabase
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
 
   if (dreamsError || !dreams || dreams.length < 3) {
     return NextResponse.json(
-      { error: "São necessários pelo menos 3 sonhos para a análise." },
+      { error: "São necessários pelo menos 3 sonhos para a análise.", code: "not_enough_dreams" },
       { status: 400 }
     )
   }
@@ -63,6 +67,25 @@ export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: "OPENAI_API_KEY não configurada." }, { status: 500 })
+  }
+
+  // Cota (server-side): a Jornada é um consumo do tipo "journey", incluído só
+  // nos planos pagos (Essencial 1/mês, Ilimitado sem limite).
+  const visitorId = visitorIdFrom((await cookies()).get(VISITOR_COOKIE)?.value)
+  const seed = newSeed()
+  const consume = await consumeReading({ userId: user.id, visitorId, seed, locale, kind: "journey" })
+  if (!consume.allowed) {
+    return NextResponse.json(
+      {
+        error: "A Jornada onírica não está disponível no seu plano ou o limite do período foi atingido.",
+        code: consume.code,
+        plan: consume.entitlement.plan,
+        used: consume.used,
+        limit: consume.limit,
+        periodEnd: consume.entitlement.periodEnd,
+      },
+      { status: httpStatusFor(consume.code) }
+    )
   }
 
   const openai = new OpenAI({ apiKey })
@@ -98,8 +121,11 @@ export async function POST(request: Request) {
 
     const raw = completion.choices?.[0]?.message?.content ?? "{}"
     const journeyData = JSON.parse(raw)
+    await completeReading(seed)
     return NextResponse.json({ ok: true, journeyData })
   } catch (err: any) {
+    // falha técnica não consome a cota
+    await failReading(seed).catch(() => {})
     return NextResponse.json(
       { error: err.message ?? "Erro ao gerar análise." },
       { status: 500 }

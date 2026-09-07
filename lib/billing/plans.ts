@@ -32,31 +32,42 @@ export function isPaidPlan(v: unknown): v is Exclude<Plan, "free"> {
   return typeof v === "string" && (PAID_PLANS as string[]).includes(v)
 }
 
+// ---------------------------------------------------------------------------
+// Tipos de consumo e cotas
+// ---------------------------------------------------------------------------
+
 /**
- * Limite mensal de tiragens completas por plano. `null` = ilimitado.
- *
- * FREE: o projeto nunca teve limite (a consulta era aberta, inclusive sem
- * login). Esse comportamento é preservado por padrão. Para ativar um limite
- * gratuito, defina FREE_MONTHLY_READINGS (ex.: "1"); a partir daí visitantes
- * sem login precisam entrar para consultar, porque só assim há como contar.
+ * O que consome cota (cada um chama o modelo):
+ * - reading: tiragem completa (cinco oráculos + síntese), contada uma vez
+ * - dream:   interpretação de um sonho
+ * - journey: análise evolutiva dos sonhos salvos (Jornada onírica)
+ * Sonhos salvos, Grimório e leituras salvas são só armazenamento: exigem
+ * login, não consomem cota.
  */
-export function monthlyLimitFor(plan: Plan): number | null {
-  switch (plan) {
-    case "essential":
-      return 8
-    case "unlimited":
-      return null
-    case "free":
-    default:
-      return freeMonthlyLimit()
-  }
+export type UsageKind = "reading" | "dream" | "journey"
+export const USAGE_KINDS: UsageKind[] = ["reading", "dream", "journey"]
+
+export function isUsageKind(v: unknown): v is UsageKind {
+  return typeof v === "string" && (USAGE_KINDS as string[]).includes(v)
 }
 
-export function freeMonthlyLimit(): number | null {
-  const raw = process.env.FREE_MONTHLY_READINGS
-  if (!raw || !raw.trim()) return null
-  const n = parseInt(raw, 10)
-  return Number.isFinite(n) && n >= 0 ? n : null
+/** Limite mensal por plano e tipo. `null` = ilimitado; `0` = não incluído no plano. */
+export const PLAN_LIMITS: Record<Plan, Record<UsageKind, number | null>> = {
+  // Free: 1 tiragem e 1 sonho por mês civil (a primeira de cada, sem login,
+  // vale por cookie de visitante). Jornada só nos planos pagos.
+  free: { reading: 1, dream: 1, journey: 0 },
+  essential: { reading: 8, dream: 3, journey: 1 },
+  unlimited: { reading: null, dream: null, journey: null },
+}
+
+/** Tipos que o visitante sem login pode experimentar uma vez. */
+export const TRIAL_KINDS: UsageKind[] = ["reading", "dream"]
+
+export function monthlyLimitFor(plan: Plan, kind: UsageKind = "reading"): number | null {
+  const limits = PLAN_LIMITS[plan]
+  // atenção: null significa "sem limite" e precisa sobreviver (nada de `?? 0`)
+  if (!limits || !(kind in limits)) return 0
+  return limits[kind]
 }
 
 // ---------------------------------------------------------------------------

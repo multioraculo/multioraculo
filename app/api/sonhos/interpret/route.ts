@@ -1,5 +1,10 @@
 import OpenAI from "openai"
+import { cookies } from "next/headers"
 import { LOCALE_META, resolveLocale } from "@/lib/i18n/config"
+import { createClient } from "@/lib/supabase/server"
+import { newSeed } from "@/lib/oracles/draw"
+import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
+import { VISITOR_COOKIE } from "@/lib/billing/visitor"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -53,52 +58,76 @@ O inconsciente está comunicando:
 
 REGRAS: Profundo, específico, 4-6 símbolos, 800-1200 palavras. Não citar Jung/Freud.`
 
+const json = (body: object, status: number) =>
+  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const dream = String(body?.dream || "").trim()
   const locale = resolveLocale(body?.locale)
 
-  if (!dream) {
-    return new Response(JSON.stringify({ error: "Descrição do sonho ausente." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    })
-  }
+  if (!dream) return json({ error: "Descrição do sonho ausente." }, 400)
 
   const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) {
-    return new Response(JSON.stringify({ error: "OPENAI_API_KEY não configurada." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    })
+  if (!apiKey) return json({ error: "OPENAI_API_KEY não configurada." }, 500)
+
+  // Cota (server-side): uma interpretação = um consumo do tipo "dream".
+  // Visitante sem login tem uma gratuita, por cookie; depois pede login.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const visitorId = visitorIdFrom((await cookies()).get(VISITOR_COOKIE)?.value)
+  const seed = newSeed()
+  const consume = await consumeReading({ userId: user?.id ?? null, visitorId, seed, locale, kind: "dream" })
+  if (!consume.allowed) {
+    return json(
+      {
+        error: "Limite de interpretações do período atingido.",
+        code: consume.code,
+        plan: consume.entitlement.plan,
+        used: consume.used,
+        limit: consume.limit,
+        periodEnd: consume.entitlement.periodEnd,
+      },
+      httpStatusFor(consume.code)
+    )
   }
 
   const openai = new OpenAI({ apiKey })
   const encoder = new TextEncoder()
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    temperature: 0.7,
-    max_tokens: 2000,
-    stream: true,
-    messages: [
-      {
-        role: "system",
-        content: `${SYSTEM_PROMPT}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
-      },
-      { role: "user", content: `Sonho:\n"${dream}"` },
-    ],
-  })
+  let completion: Awaited<ReturnType<typeof openai.chat.completions.create>>
+  try {
+    completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.7,
+      max_tokens: 2000,
+      stream: true,
+      messages: [
+        {
+          role: "system",
+          content: `${SYSTEM_PROMPT}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
+        },
+        { role: "user", content: `Sonho:\n"${dream}"` },
+      ],
+    })
+  } catch (err: any) {
+    await failReading(seed).catch(() => {})
+    return json({ error: "Falha ao interpretar o sonho." }, 502)
+  }
 
   return new Response(
     new ReadableStream({
       async start(controller) {
+        let ok = false
         try {
-          for await (const chunk of completion) {
+          for await (const chunk of completion as any) {
             const text = chunk.choices[0]?.delta?.content || ""
             if (text) controller.enqueue(encoder.encode(text))
           }
+          ok = true
         } finally {
+          // só conta quando a interpretação chegou inteira; erro no meio não consome
+          await (ok ? completeReading(seed) : failReading(seed)).catch(() => {})
           controller.close()
         }
       },

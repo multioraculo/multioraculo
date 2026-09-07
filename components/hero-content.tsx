@@ -43,6 +43,32 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setCurrentUser(initialUser)
   }, [initialUser])
 
+  // Fluxo da gratuita: visitante bloqueado na 2ª tiragem → faz login → aqui
+  // conferimos no servidor se a conta ainda tem cota. Se a gratuita já foi
+  // usada, mostramos direto o CTA de planos, sem exigir novo clique.
+  useEffect(() => {
+    if (!initialUser || blockedBy !== "login") return
+    let cancelled = false
+    fetch("/api/billing/status", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((s) => {
+        if (cancelled) return
+        if (s?.plan === "free" && s?.remaining === 0) {
+          setStreamError(dict.billing.freeUsed)
+          setBlockedBy("limit")
+        } else {
+          setStreamError(null)
+          setBlockedBy(null)
+          setShowResults(false)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialUser])
+
   // Reset state when logo is clicked (dispatched by Header)
   useEffect(() => {
     const handler = () => {
@@ -192,10 +218,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       if (err?.code === "limit_reached") {
         const limit = err.meta?.limit ?? ""
         const date = err.meta?.periodEnd ? formatDate(err.meta.periodEnd, "long") : ""
-        setStreamError(fmt(dict.billing.limitReached, { limit, date }))
+        setStreamError(
+          err.meta?.plan === "free"
+            ? dict.billing.limitReachedFree
+            : fmt(dict.billing.limitReached, { limit, date })
+        )
         setBlockedBy("limit")
-      } else if (err?.code === "login_required") {
-        setStreamError(dict.billing.loginRequired)
+      } else if (err?.code === "trial_used" || err?.code === "login_required") {
+        setStreamError(dict.billing.trialUsed)
         setBlockedBy("login")
       } else if (err?.code === "billing_unavailable") {
         setStreamError(dict.billing.billingUnavailable)
@@ -390,7 +420,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             </p>
 
             <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">{dict.hero.prompt}</p>
+              <p className="text-xs font-light text-white/60 mb-2">
+                {dict.hero.prompt}
+                {!currentUser && <span className="text-white/45"> {dict.hero.freeHint}</span>}
+              </p>
               <textarea
                 value={question}
                 onChange={(e) => {

@@ -10,10 +10,13 @@
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
 import {
   ENTITLED_STATUSES,
+  PLAN_LIMITS,
+  USAGE_KINDS,
   monthlyLimitFor,
   type BillingProvider,
   type Plan,
   type SubscriptionStatus,
+  type UsageKind,
 } from "./plans"
 
 export type SubscriptionRow = {
@@ -33,8 +36,10 @@ export type SubscriptionRow = {
 export type Entitlement = {
   /** plano efetivo (o que o usuário pode usar agora) */
   plan: Plan
-  /** limite de tiragens completas no período; null = ilimitado */
+  /** limite de tiragens completas no período; null = ilimitado (compatibilidade) */
   monthlyLimit: number | null
+  /** limites por tipo de consumo; null = ilimitado, 0 = não incluído */
+  limits: Record<UsageKind, number | null>
   /** janela de contagem: ciclo de cobrança para assinantes, mês civil para Free */
   periodStart: string
   periodEnd: string
@@ -62,7 +67,14 @@ function calendarMonth(now = new Date()): { start: string; end: string } {
 
 export function freeEntitlement(): Entitlement {
   const { start, end } = calendarMonth()
-  return { plan: "free", monthlyLimit: monthlyLimitFor("free"), periodStart: start, periodEnd: end, subscription: null }
+  return {
+    plan: "free",
+    monthlyLimit: monthlyLimitFor("free"),
+    limits: { ...PLAN_LIMITS.free },
+    periodStart: start,
+    periodEnd: end,
+    subscription: null,
+  }
 }
 
 export async function getSubscriptionRow(userId: string): Promise<SubscriptionRow | null> {
@@ -122,20 +134,26 @@ export async function getUserEntitlement(userId: string | null | undefined): Pro
   return {
     plan: row.plan,
     monthlyLimit: monthlyLimitFor(row.plan),
+    limits: { ...PLAN_LIMITS[row.plan] },
     periodStart,
     periodEnd,
     subscription: info,
   }
 }
 
-/** Janela em que uma tiragem 'started' ainda pode estar em andamento (espelha consume_reading). */
+/** Janela em que um consumo 'started' ainda pode estar em andamento (espelha consume_reading). */
 export const STARTED_WINDOW_MS = 10 * 60 * 1000
 
 /**
- * Tiragens que contam no período: concluídas, mais as iniciadas há poucos
- * minutos (em andamento). 'started' antigas são falhas técnicas e não contam.
+ * Consumos de um tipo que contam no período: concluídos, mais os iniciados
+ * há poucos minutos (em andamento). 'started' antigas são falhas técnicas.
  */
-export async function getUsage(userId: string, periodStart: string, periodEnd: string): Promise<number> {
+export async function getUsage(
+  userId: string,
+  periodStart: string,
+  periodEnd: string,
+  kind: UsageKind = "reading"
+): Promise<number> {
   if (!hasAdminClient()) return 0
   const admin = createAdminClient()
   const windowStart = new Date(Date.now() - STARTED_WINDOW_MS).toISOString()
@@ -143,6 +161,7 @@ export async function getUsage(userId: string, periodStart: string, periodEnd: s
     .from("reading_usage")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
+    .eq("kind", kind)
     .gte("created_at", periodStart)
     .lt("created_at", periodEnd)
     .or(`status.eq.completed,and(status.eq.started,created_at.gte.${windowStart})`)
@@ -153,11 +172,21 @@ export async function getUsage(userId: string, periodStart: string, periodEnd: s
   return count ?? 0
 }
 
-export type EntitlementWithUsage = Entitlement & { used: number; remaining: number | null }
+export type KindUsage = { limit: number | null; used: number; remaining: number | null }
+export type EntitlementWithUsage = Entitlement & {
+  /** compatibilidade: tiragens */
+  used: number
+  remaining: number | null
+  usage: Record<UsageKind, KindUsage>
+}
 
 export async function getUserEntitlementWithUsage(userId: string | null | undefined): Promise<EntitlementWithUsage> {
   const ent = await getUserEntitlement(userId)
-  const used = userId ? await getUsage(userId, ent.periodStart, ent.periodEnd) : 0
-  const remaining = ent.monthlyLimit === null ? null : Math.max(ent.monthlyLimit - used, 0)
-  return { ...ent, used, remaining }
+  const usage = {} as Record<UsageKind, KindUsage>
+  for (const kind of USAGE_KINDS) {
+    const limit = ent.limits[kind]
+    const used = userId && limit !== 0 ? await getUsage(userId, ent.periodStart, ent.periodEnd, kind) : 0
+    usage[kind] = { limit, used, remaining: limit === null ? null : Math.max(limit - used, 0) }
+  }
+  return { ...ent, used: usage.reading.used, remaining: usage.reading.remaining, usage }
 }

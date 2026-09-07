@@ -27,7 +27,6 @@
 #   STRIPE_PRICE_ESSENCIAL
 #   STRIPE_PRICE_ILIMITADO
 #   NEXT_PUBLIC_SITE_URL        (https://multioraculo.com; URLs de retorno do Checkout)
-#   FREE_MONTHLY_READINGS       (opcional; vazio = Free ilimitado, comportamento original)
 #   PDFS_INDEX_URL              (opcional; padrão: release v1-data no GitHub)
 #
 # Webhook da Stripe: POST https://multioraculo.com/api/billing/webhook

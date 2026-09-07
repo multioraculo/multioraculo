@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
@@ -42,6 +43,8 @@ export default function SavedDreamsList({
   const [savedJourney, setSavedJourney] = useState<JourneyAnalysis | null>(null)
   const [journeyDirty, setJourneyDirty] = useState(false)
   const [saveJourneyLoading, setSaveJourneyLoading] = useState(false)
+  // Jornada bloqueada pelo plano ou pela cota do período
+  const [journeyBlocked, setJourneyBlocked] = useState<string | null>(null)
 
   // ── Dream card state ────────────────────────────────────────
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -104,7 +107,19 @@ export default function SavedDreamsList({
         body: JSON.stringify({ locale }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? t.errorGenerate)
+      if (!res.ok) {
+        // bloqueios de plano vêm com um código; o texto é do dicionário
+        if (json?.code === "plan_required") {
+          setJourneyBlocked(dict.billing.journeyPlanRequired)
+          return
+        }
+        if (json?.code === "limit_reached") {
+          setJourneyBlocked(fmt(dict.billing.journeyLimitReached, { date: json.periodEnd ? formatDate(json.periodEnd, "long") : "" }))
+          return
+        }
+        throw new Error(json.error ?? t.errorGenerate)
+      }
+      setJourneyBlocked(null)
       setJourneyData(json.journeyData as JourneyData)
       setJourneyDirty(true)
     } catch (err: any) {
@@ -208,6 +223,17 @@ export default function SavedDreamsList({
                 <p className="text-white/30 text-sm">
                   {fmt(t.lastAnalysis, { date: formatDate(savedJourney.created_at, "short") })}
                 </p>
+              )}
+              {journeyBlocked && (
+                <div className="basis-full bg-white/5 backdrop-blur-sm border border-white/15 rounded-xl p-4 flex flex-wrap items-center gap-3" role="status">
+                  <p className="text-white/80 text-sm leading-relaxed">{journeyBlocked}</p>
+                  <Link
+                    href="/assinatura"
+                    className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                  >
+                    {dict.dreams.seePlans}
+                  </Link>
+                </div>
               )}
             </div>
           )}

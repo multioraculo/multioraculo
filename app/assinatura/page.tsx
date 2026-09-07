@@ -4,7 +4,10 @@ import ShaderBackground from "@/components/shader-background"
 import SubscriptionActions, { type SubscriptionActionMode } from "@/components/subscription-actions"
 import { getI18n } from "@/lib/i18n/server"
 import { fmt, formatDate } from "@/lib/i18n"
+import { cookies } from "next/headers"
 import { getUserEntitlementWithUsage } from "@/lib/billing/entitlement"
+import { attributeVisitorReadings } from "@/lib/billing/usage"
+import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
 import type { Plan } from "@/lib/billing/plans"
 
 export const dynamic = "force-dynamic"
@@ -19,6 +22,11 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
   const b = dict.billing
   const { checkout } = await searchParams
 
+  // Tiragem gratuita feita sem login passa a contar na conta assim que a pessoa entra
+  if (user) {
+    const v = (await cookies()).get(VISITOR_COOKIE)?.value
+    await attributeVisitorReadings(user.id, isVisitorId(v) ? v : null)
+  }
   const ent = await getUserEntitlementWithUsage(user?.id ?? null)
   const sub = ent.subscription
   const isStripe = sub?.provider === "stripe"
@@ -48,14 +56,31 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
     return { mode: "subscribe", label: plan === "essential" ? t.essential.cta : t.unlimited.cta }
   }
 
-  const usageLine = (() => {
-    if (!user) return null
-    if (ent.monthlyLimit === null) return entitledPaid ? b.usageUnlimited : null
-    return fmt(b.usage, { used: ent.used, limit: ent.monthlyLimit })
+  // Uma linha por tipo de consumo (tiragens, sonhos, jornada)
+  const usageLines = (() => {
+    if (!user) return [] as string[]
+    const r = ent.usage.reading
+    const d = ent.usage.dream
+    const j = ent.usage.journey
+    const lines: string[] = []
+    if (!entitledPaid) {
+      lines.push(r.remaining && r.remaining > 0 ? b.freeAvailable : b.freeUsed)
+      lines.push(d.remaining && d.remaining > 0 ? b.freeDreamAvailable : b.freeDreamUsed)
+      return lines
+    }
+    lines.push(r.limit === null ? b.usageUnlimited : fmt(b.usage, { used: r.used, limit: r.limit }))
+    lines.push(d.limit === null ? b.usageDreamsUnlimited : fmt(b.usageDreams, { used: d.used, limit: d.limit }))
+    lines.push(j.limit === null ? b.usageJourneyUnlimited : fmt(b.usageJourney, { used: j.used, limit: j.limit }))
+    return lines
   })()
-  const renewsLine = entitledPaid && sub?.currentPeriodEnd && !sub.cancelAtPeriodEnd
-    ? fmt(b.renews, { date: formatDate(sub.currentPeriodEnd, locale, "long") })
-    : null
+  // Assinante: renova no fim do ciclo de cobrança. Free: a cota volta no mês civil seguinte.
+  const renewsLine = entitledPaid
+    ? sub?.currentPeriodEnd && !sub.cancelAtPeriodEnd
+      ? fmt(b.renews, { date: formatDate(sub.currentPeriodEnd, locale, "long") })
+      : null
+    : user
+      ? fmt(b.renews, { date: formatDate(ent.periodEnd, locale, "long") })
+      : null
 
   const planName = (p: Plan) => b.planNames[p]
 
@@ -86,10 +111,22 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
                 <p className="text-white/50 text-xs">{b.currentPlan}</p>
                 <p className="text-white text-lg font-light">{planName(ent.plan)}</p>
               </div>
-              {usageLine && <p className="text-white/70 text-sm">{usageLine}</p>}
+              {usageLines.length > 0 && (
+                <div className="space-y-0.5">
+                  {usageLines.map((line) => (
+                    <p key={line} className="text-white/70 text-sm">{line}</p>
+                  ))}
+                </div>
+              )}
               {renewsLine && <p className="text-white/50 text-sm">{renewsLine}</p>}
-              {!entitledPaid && <p className="text-white/50 text-sm max-w-md">{b.freeDescription}</p>}
             </div>
+          )}
+
+          {/* Regra do plano Free, visível para todos */}
+          {!entitledPaid && (
+            <p className="text-white/55 text-sm max-w-lg mb-8">
+              <span className="text-white/80">{b.planNames.free}:</span> {b.freeDescription}
+            </p>
           )}
 
           {banner && (

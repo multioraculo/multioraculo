@@ -3,8 +3,10 @@ import OpenAI from "openai"
 import { coerceSynthesisInput, synthesisPrompt } from "@/lib/oracles/synthesis"
 import { SYNTHESIS_SYSTEM_MESSAGE } from "@/lib/oracles/language"
 import { resolveLocale } from "@/lib/i18n/config"
+import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { claimSynthesis } from "@/lib/billing/usage"
+import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota só escreve a
@@ -34,7 +36,9 @@ export async function POST(req: Request) {
   // reading_usage) do mesmo usuário, e uma única vez. Não conta na cota.
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!seed || !(await claimSynthesis(seed, user?.id ?? null))) {
+  const visitorCookie = (await cookies()).get(VISITOR_COOKIE)?.value
+  const visitorId = isVisitorId(visitorCookie) ? visitorCookie : null
+  if (!seed || !(await claimSynthesis(seed, user?.id ?? null, visitorId))) {
     return NextResponse.json({ error: "Tiragem não encontrada ou já sintetizada.", code: "invalid_reading" }, { status: 403 })
   }
 

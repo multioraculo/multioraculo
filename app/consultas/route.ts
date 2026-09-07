@@ -13,8 +13,10 @@ import {
   SAFETY_RESPONSE,
 } from "@/lib/oracles/language"
 import { getDictionary, resolveLocale, type Locale } from "@/lib/i18n"
+import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
-import { completeReading, consumeReading, failReading } from "@/lib/billing/usage"
+import { completeReading, consumeReading, failReading, httpStatusFor } from "@/lib/billing/usage"
+import { VISITOR_COOKIE, isVisitorId, newVisitorId, serializeVisitorCookie } from "@/lib/billing/visitor"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota faz o sorteio e
@@ -405,20 +407,28 @@ export async function POST(req: Request) {
   // ------------------------------------------------------------------------
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Cookie de visitante: normalmente já vem do middleware; na primeiríssima
+  // requisição pode faltar, então geramos aqui e devolvemos no Set-Cookie.
+  const cookieStore = await cookies()
+  const existingVisitor = cookieStore.get(VISITOR_COOKIE)?.value
+  const visitorId = isVisitorId(existingVisitor) ? existingVisitor : newVisitorId()
+  const setVisitorCookie = visitorId !== existingVisitor
+
   const seed = newSeed()
-  const consume = await consumeReading({ userId: user?.id ?? null, seed, locale })
+  const consume = await consumeReading({ userId: user?.id ?? null, visitorId, seed, locale })
   if (!consume.allowed) {
-    const status = consume.code === "login_required" ? 401 : consume.code === "billing_unavailable" ? 503 : 402
+    const status = httpStatusFor(consume.code)
     return NextResponse.json(
       {
-        error: "Limite de tiragens do período atingido.",
+        error: consume.code === "trial_used" ? "Tiragem gratuita já utilizada. Entre para continuar." : "Limite de tiragens do período atingido.",
         code: consume.code,
         plan: consume.entitlement.plan,
         used: consume.used,
         limit: consume.limit,
         periodEnd: consume.entitlement.periodEnd,
       },
-      { status }
+      { status, headers: setVisitorCookie ? { "Set-Cookie": serializeVisitorCookie(visitorId) } : undefined }
     )
   }
 
@@ -566,11 +576,12 @@ export async function POST(req: Request) {
     },
   })
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-cache",
-      "X-Accel-Buffering": "no",
-    },
-  })
+  const headers: Record<string, string> = {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": "no-cache",
+    "X-Accel-Buffering": "no",
+  }
+  if (setVisitorCookie) headers["Set-Cookie"] = serializeVisitorCookie(visitorId)
+
+  return new Response(stream, { headers })
 }

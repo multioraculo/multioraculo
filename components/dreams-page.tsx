@@ -4,7 +4,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
+import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import { fmt } from "@/lib/i18n"
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -20,10 +22,12 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
-export default function DreamsPage() {
+export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const router = useRouter()
-  const { dict, locale } = useI18n()
+  const { dict, locale, formatDate } = useI18n()
   const t = dict.dreams
+  // bloqueio de cota vindo do servidor (gratuita usada, limite do plano)
+  const [blocked, setBlocked] = useState<{ message: string; action: "login" | "plans" | null } | null>(null)
 
   const [step, setStep] = useState<"input" | "loading" | "result">("input")
   const [dreamText, setDreamText] = useState("")
@@ -37,6 +41,7 @@ export default function DreamsPage() {
 
   const handleInterpret = async () => {
     if (!dreamText.trim()) return
+    setBlocked(null)
     setStep("loading")
     setInterpretation(null)
     setIsStreaming(false)
@@ -52,7 +57,26 @@ export default function DreamsPage() {
         body: JSON.stringify({ dream: dreamText, locale }),
       })
 
-      if (!res.ok) throw new Error(t.errorInterpret)
+      if (!res.ok) {
+        // bloqueios de plano vêm do servidor com um código; o texto é do dicionário
+        const j = await res.json().catch(() => ({}))
+        if (j?.code === "trial_used") {
+          setBlocked({ message: dict.billing.dreamTrialUsed, action: "login" })
+          window.dispatchEvent(new CustomEvent("open-login"))
+        } else if (j?.code === "limit_reached") {
+          const date = j.periodEnd ? formatDate(j.periodEnd, "long") : ""
+          setBlocked({
+            message: j.plan === "free" ? dict.billing.freeDreamUsed : fmt(dict.billing.dreamLimitReached, { limit: j.limit ?? "", date }),
+            action: "plans",
+          })
+        } else if (j?.code === "billing_unavailable") {
+          setBlocked({ message: dict.billing.billingUnavailable, action: null })
+        } else {
+          throw new Error(t.errorInterpret)
+        }
+        setStep("input")
+        return
+      }
       if (!res.body) throw new Error(t.noResponse)
 
       const reader = res.body.getReader()
@@ -176,7 +200,10 @@ export default function DreamsPage() {
             <p className="text-base font-light text-white/80 mb-4 leading-relaxed">{t.subtitle}</p>
 
             <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">{t.prompt}</p>
+              <p className="text-xs font-light text-white/60 mb-2">
+                {t.prompt}
+                {!isLoggedIn && <span className="text-white/45"> {t.freeHint}</span>}
+              </p>
               <textarea
                 value={dreamText}
                 onChange={(e) => setDreamText(e.target.value)}
@@ -191,6 +218,28 @@ export default function DreamsPage() {
                 className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
               />
             </div>
+
+            {blocked && (
+              <div className="mb-4 bg-white/5 backdrop-blur-sm border border-white/15 rounded-xl p-4 space-y-3" role="status">
+                <p className="text-white/80 text-sm leading-relaxed">{blocked.message}</p>
+                {blocked.action === "plans" && (
+                  <Link
+                    href="/assinatura"
+                    className="inline-block px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                  >
+                    {t.seePlans}
+                  </Link>
+                )}
+                {blocked.action === "login" && (
+                  <button
+                    onClick={() => window.dispatchEvent(new CustomEvent("open-login"))}
+                    className="inline-block px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                  >
+                    {dict.common.login}
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-4">
               <button
