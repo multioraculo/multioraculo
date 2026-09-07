@@ -3,6 +3,8 @@ import OpenAI from "openai"
 import { coerceSynthesisInput, synthesisPrompt } from "@/lib/oracles/synthesis"
 import { SYNTHESIS_SYSTEM_MESSAGE } from "@/lib/oracles/language"
 import { resolveLocale } from "@/lib/i18n/config"
+import { createClient } from "@/lib/supabase/server"
+import { claimSynthesis } from "@/lib/billing/usage"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota só escreve a
@@ -19,13 +21,21 @@ export async function POST(req: Request) {
   const question = String(body?.question || "").trim()
   const oracles = coerceSynthesisInput(body?.oracles)
   const locale = resolveLocale(body?.locale)
-  const seed = String(body?.seed || question)
+  const seed = String(body?.seed || "").trim()
 
   if (!question) {
     return NextResponse.json({ error: "Pergunta ausente." }, { status: 400 })
   }
   if (!oracles) {
     return NextResponse.json({ error: "Oráculos ausentes ou inválidos." }, { status: 400 })
+  }
+
+  // A síntese só existe para uma tiragem concluída (seed registrado em
+  // reading_usage) do mesmo usuário, e uma única vez. Não conta na cota.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!seed || !(await claimSynthesis(seed, user?.id ?? null))) {
+    return NextResponse.json({ error: "Tiragem não encontrada ou já sintetizada.", code: "invalid_reading" }, { status: 403 })
   }
 
   const apiKey = process.env.OPENAI_API_KEY

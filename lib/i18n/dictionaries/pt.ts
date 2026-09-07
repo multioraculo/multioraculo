@@ -416,6 +416,37 @@ export const pt = {
     errorUpdate: "Erro ao atualizar nota.",
     errorDelete: "Erro ao excluir nota.",
   },
+
+  billing: {
+    planNames: { free: "Free", essential: "Essencial", unlimited: "Ilimitado" },
+    currentPlan: "Seu plano atual",
+    freeDescription: "Consultas sem custo. Assine para garantir tiragens completas todo mês e apoiar o Multioráculo.",
+    manage: "Gerenciar assinatura",
+    switchPlan: "Trocar de plano",
+    loginToSubscribe: "Entre para assinar",
+    redirecting: "Redirecionando…",
+    usage: "{used} de {limit} tiragens usadas neste período",
+    usageUnlimited: "Tiragens ilimitadas para uso pessoal",
+    renews: "Renova em {date}",
+    statusPending: "Pagamento em processamento. Assim que a Stripe confirmar, seu plano será liberado automaticamente.",
+    statusPaymentProblem: "Há um problema com o pagamento da sua assinatura. Atualize o cartão em Gerenciar assinatura para manter o plano.",
+    statusCanceling: "Cancelamento agendado para {date}. Você mantém o acesso até lá.",
+    statusEnded: "Sua assinatura foi encerrada. Você está no plano Free.",
+    checkoutCanceled: "Pagamento cancelado. Nada foi cobrado.",
+    managedElsewhere: "Assinatura gerenciada por {provider}. Use o app da loja para alterá-la.",
+    providers: { stripe: "Stripe", google_play: "Google Play", apple: "App Store" },
+    errors: {
+      generic: "Não foi possível iniciar o pagamento. Tente novamente.",
+      alreadySubscribed: "Você já tem uma assinatura ativa. Use Gerenciar assinatura.",
+      notConfigured: "Pagamentos ainda não estão disponíveis.",
+      noCustomer: "Nenhuma assinatura encontrada para esta conta.",
+      unauthenticated: "Entre para continuar.",
+    },
+    limitReached: "Você já usou as {limit} tiragens deste período. A cota renova em {date}.",
+    limitReachedCta: "Ver planos",
+    loginRequired: "Entre para continuar consultando.",
+    billingUnavailable: "As consultas estão temporariamente indisponíveis. Tente novamente em instantes.",
+  },
 }
 
 export type Dictionary = typeof pt

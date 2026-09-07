@@ -57,6 +57,14 @@ export default function Header({ initialUser }: HeaderProps) {
     return () => subscription.unsubscribe()
   }, [supabase, router])
 
+  // Outras partes do site (página de assinatura, bloqueio por login) pedem o
+  // modal de login por evento, sem duplicar o formulário.
+  useEffect(() => {
+    const open = () => setShowLogin(true)
+    window.addEventListener("open-login", open)
+    return () => window.removeEventListener("open-login", open)
+  }, [])
+
   async function handleSignOut() {
     await supabase.auth.signOut()
     toast.success(dict.header.sessionEnded)

@@ -21,7 +21,17 @@
 #   OPENAI_API_KEY
 #   NEXT_PUBLIC_SUPABASE_URL
 #   NEXT_PUBLIC_SUPABASE_ANON_KEY
-#   PDFS_INDEX_URL   (opcional; padrão: release v1-data no GitHub)
+#   SUPABASE_SERVICE_ROLE_KEY   (webhook e contagem de tiragens; só servidor)
+#   STRIPE_SECRET_KEY
+#   STRIPE_WEBHOOK_SECRET
+#   STRIPE_PRICE_ESSENCIAL
+#   STRIPE_PRICE_ILIMITADO
+#   NEXT_PUBLIC_SITE_URL        (https://multioraculo.com; URLs de retorno do Checkout)
+#   FREE_MONTHLY_READINGS       (opcional; vazio = Free ilimitado, comportamento original)
+#   PDFS_INDEX_URL              (opcional; padrão: release v1-data no GitHub)
+#
+# Webhook da Stripe: POST https://multioraculo.com/api/billing/webhook
+# (fora do middleware do Supabase; responde só com escrita no banco).
 #
 # Limites relevantes do Netlify: toda função (inclusive com streaming) tem
 # teto de 60 s, não configurável. Por isso a consulta é feita em duas rotas:

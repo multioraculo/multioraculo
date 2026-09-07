@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
+import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import { fmt } from "@/lib/i18n"
 
 type HeroContentProps = {
   initialUser: User | null
@@ -13,7 +15,7 @@ type HeroContentProps = {
 const ORACLE_KEYS = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
 
 export default function HeroContent({ initialUser }: HeroContentProps) {
-  const { dict, locale } = useI18n()
+  const { dict, locale, formatDate } = useI18n()
   const placeholders = dict.hero.placeholders
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0)
   const [question, setQuestion] = useState("")
@@ -28,6 +30,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamError, setStreamError] = useState<string | null>(null)
+  // motivo de bloqueio vindo do servidor: mostra o CTA certo junto da mensagem
+  const [blockedBy, setBlockedBy] = useState<"limit" | "login" | null>(null)
   const [isSaved, setIsSaved] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
@@ -81,7 +85,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const readNdjson = async (res: Response, onEvent: (event: any) => void) => {
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
-      throw new Error(j?.error || `Erro ${res.status}`)
+      const e: any = new Error(j?.error || `Erro ${res.status}`)
+      e.code = j?.code
+      e.meta = j
+      throw e
     }
     if (!res.body) throw new Error("No response body")
     const reader = res.body.getReader()
@@ -181,7 +188,22 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       })
     } catch (err: any) {
       console.error(err)
-      setStreamError(String(err?.message || dict.results.consultFailed))
+      // Bloqueios de plano vêm do servidor com um código; o texto é do dicionário.
+      if (err?.code === "limit_reached") {
+        const limit = err.meta?.limit ?? ""
+        const date = err.meta?.periodEnd ? formatDate(err.meta.periodEnd, "long") : ""
+        setStreamError(fmt(dict.billing.limitReached, { limit, date }))
+        setBlockedBy("limit")
+      } else if (err?.code === "login_required") {
+        setStreamError(dict.billing.loginRequired)
+        setBlockedBy("login")
+      } else if (err?.code === "billing_unavailable") {
+        setStreamError(dict.billing.billingUnavailable)
+        setBlockedBy(null)
+      } else {
+        setStreamError(String(err?.message || dict.results.consultFailed))
+        setBlockedBy(null)
+      }
     } finally {
       setIsLoading(false)
       setIsStreaming(false)
@@ -198,6 +220,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setOracles(null)
     setIsSaved(false)
     setStreamError(null)
+    setBlockedBy(null)
     setStage("idle")
     document.querySelector("textarea")?.focus()
   }
@@ -445,7 +468,25 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     ))}
                   </div>
                 ) : streamError ? (
-                  <p className="text-red-300/80 text-sm leading-relaxed">{streamError}</p>
+                  <div className="space-y-3">
+                    <p className="text-red-300/80 text-sm leading-relaxed">{streamError}</p>
+                    {blockedBy === "limit" && (
+                      <Link
+                        href="/assinatura"
+                        className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                      >
+                        {dict.billing.limitReachedCta}
+                      </Link>
+                    )}
+                    {blockedBy === "login" && (
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-login"))}
+                        className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                      >
+                        {dict.common.login}
+                      </button>
+                    )}
+                  </div>
                 ) : isStreaming ? (
                   <div className="flex items-center gap-2 py-2" aria-live="polite">
                     <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse" />

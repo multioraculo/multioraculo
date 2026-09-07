@@ -26,6 +26,14 @@ Teste estatístico do sorteio (Node 22+ roda TypeScript direto):
 node --experimental-strip-types lib/oracles/draw.ts
 ```
 
+## Assinaturas e limites
+
+- **Entitlement central** em `lib/billing/entitlement.ts`: `getUserEntitlement(userId)` lê só a tabela `subscriptions` e responde plano, limite e período. Stripe, Google Play e App Store são apenas provedores que alimentam essa tabela (`billing_provider`).
+- **Planos** em `lib/billing/plans.ts`: Free (sem limite por padrão, configurável por `FREE_MONTHLY_READINGS`), Essencial (8 tiragens por ciclo), Ilimitado.
+- **Consumo** em `lib/billing/usage.ts`: `POST /consultas` chama a função SQL `consume_reading` (checagem + registro atômicos, por usuário) antes do sorteio; a linha vira `completed` quando os cinco oráculos terminam ou `failed` se der erro. `POST /consultas/sintese` só roda para um seed concluído do mesmo usuário, uma vez. Nada é contado duas vezes.
+- **Stripe**: Checkout (`POST /api/billing/checkout`) vincula a sessão ao `user.id` do Supabase por `client_reference_id` e metadata; Customer Portal (`POST /api/billing/portal`) para ver, trocar cartão e cancelar; webhook (`POST /api/billing/webhook`) é a única fonte de verdade do status, idempotente por `event.id`.
+- **Schema**: `supabase/migrations/20260906_billing.sql` (tabelas `billing_customers`, `subscriptions`, `reading_usage`, `webhook_events`; RLS só de leitura própria; escrita apenas via service role).
+
 ## Deploy no Netlify
 
 1. Crie um site novo no Netlify apontando para este repositório. O `netlify.toml` já define build, plugin do Next.js e Node 22.

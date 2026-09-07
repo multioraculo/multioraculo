@@ -13,6 +13,8 @@ import {
   SAFETY_RESPONSE,
 } from "@/lib/oracles/language"
 import { getDictionary, resolveLocale, type Locale } from "@/lib/i18n"
+import { createClient } from "@/lib/supabase/server"
+import { completeReading, consumeReading, failReading } from "@/lib/billing/usage"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota faz o sorteio e
@@ -395,6 +397,31 @@ export async function POST(req: Request) {
     )
   }
 
+  // ------------------------------------------------------------------------
+  // ENTITLEMENT (server-side). Quem é o usuário, qual plano tem e se ainda
+  // cabe uma tiragem no período. O seed é gerado aqui porque ele é a chave
+  // da unidade de consumo: uma consulta completa = uma linha em reading_usage.
+  // Chamadas diretas à API passam pela mesma verificação que a interface.
+  // ------------------------------------------------------------------------
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const seed = newSeed()
+  const consume = await consumeReading({ userId: user?.id ?? null, seed, locale })
+  if (!consume.allowed) {
+    const status = consume.code === "login_required" ? 401 : consume.code === "billing_unavailable" ? 503 : 402
+    return NextResponse.json(
+      {
+        error: "Limite de tiragens do período atingido.",
+        code: consume.code,
+        plan: consume.entitlement.plan,
+        used: consume.used,
+        limit: consume.limit,
+        periodEnd: consume.entitlement.periodEnd,
+      },
+      { status }
+    )
+  }
+
   const openai = new OpenAI({ apiKey })
   const encoder = new TextEncoder()
 
@@ -410,6 +437,8 @@ export async function POST(req: Request) {
 
         const isHighRisk = await classifyForSafety(openai, question)
         if (isHighRisk) {
+          // resposta de segurança não é uma tiragem: não conta na cota
+          await failReading(seed)
           send({
             type: "complete",
             question,
@@ -428,7 +457,6 @@ export async function POST(req: Request) {
         //    mesmo tempo, com um seed criptográfico. A pergunta e o idioma
         //    não participam; o idioma só muda como os símbolos são nomeados.
         // ------------------------------------------------------------------
-        const seed = newSeed()
         const draws = drawAll(seed)
         const rendered = Object.fromEntries(
           ORACLE_KEYS.map((k) => [k, renderDraw(draws[k], locale)])
@@ -519,12 +547,17 @@ export async function POST(req: Request) {
 
         const results = Object.fromEntries(oracleEntries) as Record<OracleKey, OracleResult>
 
+        // Tiragem completa: agora conta na cota e libera a síntese para este seed.
+        await completeReading(seed)
+
         send({ type: "oracles", question, seed, locale, oracles: results })
 
         // A síntese é pedida pelo cliente em seguida, via POST /consultas/sintese.
         send({ type: "done" })
         controller.close()
       } catch (err: any) {
+        // falha do servidor não consome a cota do usuário
+        await failReading(seed).catch(() => {})
         try {
           send({ type: "error", message: String(err?.message || err) })
         } catch {}
