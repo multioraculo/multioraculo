@@ -4,6 +4,8 @@ import { Figtree } from "next/font/google"
 import { GeistMono } from "geist/font/mono"
 import { Instrument_Serif } from "next/font/google"
 import { Toaster } from "sonner"
+import { I18nProvider } from "@/components/i18n-provider"
+import { getI18n } from "@/lib/i18n/server"
 import "./globals.css"
 
 const figtree = Figtree({
@@ -28,19 +30,24 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export const metadata: Metadata = {
-  title: "Multioráculo - Síntese Multioráculo",
-  description: "A mesma pergunta, vista por vários ângulos. Tarô, I Ching, Runas, Búzios e Cartas Lenormand.",
-  generator: "v0.app",
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n()
+  return {
+    title: dict.meta.title,
+    description: dict.meta.description,
+    generator: "v0.app",
+  }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const { locale } = await getI18n()
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <style>{`
 html {
@@ -52,8 +59,10 @@ html {
         `}</style>
       </head>
       <body className={`${figtree.variable} ${instrumentSerif.variable}`}>
-        {children}
-        <Toaster theme="dark" position="bottom-right" richColors duration={5000} />
+        <I18nProvider initialLocale={locale}>
+          {children}
+          <Toaster theme="dark" position="bottom-right" richColors duration={5000} />
+        </I18nProvider>
       </body>
     </html>
   )

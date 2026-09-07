@@ -4,13 +4,15 @@ import fs from "fs/promises"
 import path from "path"
 import https from "https"
 import os from "os"
+import { drawAll, newSeed, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
+import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import {
-  drawAll,
-  newSeed,
-  searchTermsOf,
-  type OracleDraw,
-  type OracleKey,
-} from "@/lib/oracles/draw"
+  languageRule,
+  ORACLE_FINAL_REMINDER,
+  ORACLE_SYSTEM_MESSAGE,
+  SAFETY_RESPONSE,
+} from "@/lib/oracles/language"
+import { getDictionary, resolveLocale, type Locale } from "@/lib/i18n"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota faz o sorteio e
@@ -25,36 +27,30 @@ const LOCAL_INDEX = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.j
 const TMP_DIR = os.tmpdir()
 const TMP_INDEX = path.join(TMP_DIR, "pdfs.index.json")
 
-const ORACLE_SOURCES: Record<
-  OracleKey,
-  { label: string; files: string[]; method: string }
-> = {
+const ORACLE_SOURCES: Record<OracleKey, { files: string[]; method: string }> = {
   tarot: {
-    label: "Tarô",
     files: ["jung_tarot.pdf"],
     method: "Cruz Celta (10 posições) com leitura arquetípica",
   },
   iching: {
-    label: "I Ching",
     files: ["i_ching_original.pdf"],
     method: "Hexagrama principal + linhas mutantes + hexagrama resultante",
   },
   runas: {
-    label: "Runas",
     files: ["futhark_handbook.pdf"],
     method: "Tiragem 9 runas (mapa de forças) com aplicação prática",
   },
   buzios: {
-    label: "Búzios",
     files: ["jogo_buzios.pdf", "odus_afro_brasileiros.pdf", "umbandadobrasil.pdf"],
     method: "Leitura por Odus (qualidade do tempo, risco, proteção, direção)",
   },
   lenormand: {
-    label: "Lenormand",
     files: ["lenormand_handbook.pdf"],
     method: "Mesa 9 cartas (quadro curto) + confirmadores objetivos",
   },
 }
+
+const ORACLE_KEYS: OracleKey[] = ["tarot", "iching", "runas", "buzios", "lenormand"]
 
 type Evidence = { source: string; excerpt: string }
 
@@ -64,6 +60,8 @@ type OracleResult = {
   method: string
   /** seed da tiragem: permite reproduzir exatamente os mesmos símbolos */
   seed: string
+  /** idioma em que a leitura foi escrita */
+  locale: Locale
   draw: {
     items: Array<{ position?: string; name: string; meaning?: string }>
     notes?: string
@@ -77,7 +75,11 @@ const stop = new Set([
   "por","para","pra","com","sem","um","uma","uns","umas","que","isso","isto","aqui",
   "agora","hoje","já","não","sim","se","eu","você","vc","me","minha","meu","teu",
   "tua","seu","sua","dela","dele","eles","elas","ao","à","às","é","ser","estar",
-  "como","qual","quais","quando","onde","porquê","pq"
+  "como","qual","quais","quando","onde","porquê","pq",
+  // en
+  "the","and","for","with","what","this","that","have","from","are","you","your","about",
+  // es
+  "que","por","para","con","una","uno","los","las","del","qué","cómo","mis","sus",
 ])
 
 function normalize(s: string) {
@@ -246,7 +248,7 @@ function validateEvidence(candidate: unknown, provided: Evidence[]): Evidence[] 
 const SYSTEM_GUIDES: Record<OracleKey, string> = {
   tarot: `TARÔ — Cruz Celta (10 posições).
 meanings[i]: significado tradicional da carta i na posição i (invertida quando indicado), aplicado à pergunta — 1-2 frases técnicas, sem floreio.
-notes: padrão geral em uma frase (ex: "Predominância de Espadas — conflito intelectual"), coerente com as cartas listadas.
+notes: padrão geral em uma frase (ex.: predominância de um naipe e o que isso indica), coerente com as cartas listadas.
 reading: leitura carta a carta — para cada uma, o que ela diz sobre a pergunta naquela posição, fiel ao simbolismo do Tarô de Marselha.`,
 
   iching: `I CHING — Hexagrama principal + linhas mutantes + hexagrama resultante.
@@ -262,7 +264,7 @@ notes: síntese do mapa em uma frase.
 reading: leia o mapa runa a runa — nome, símbolo, domínio clássico no Futhark Antigo, e como responde à pergunta naquela posição. Fiel à tradição rúnica nórdica.`,
 
   buzios: `BÚZIOS — Odu principal + segunda queda.
-meanings[0] (Odu principal): "Orixá(s) regente(s): [nome(s)]. [Qualidade energética fundamental do odu em 1-2 frases, baseado na tradição e nas referências]".
+meanings[0] (Odu principal): "Orixá(s) regente(s): [nome(s) dos Orixás que regem esse Odu na tradição — o Orixá NÃO é o nome do Odu]. [Qualidade energética fundamental do odu em 1-2 frases, baseado na tradição e nas referências]".
 meanings[1] (segunda queda): como esse odu confirma, tempera ou contradiz o principal.
 notes: nome do odu principal com número de búzios.
 reading: descrição técnica — nome completo do odu e variantes conhecidas, orixá regente, o que esse odu indica sobre o campo energético da pergunta, qualidade do tempo (expansão, cautela, ruptura, transformação), proteções e riscos tradicionais associados, orientação prática que o odu indica. Fiel à tradição Nagô-Iorubá e às referências fornecidas.`,
@@ -278,14 +280,15 @@ function oraclePrompt(
   label: string,
   method: string,
   question: string,
-  draw: OracleDraw,
-  evidence: Evidence[]
+  rendered: RenderedDraw,
+  evidence: Evidence[],
+  locale: Locale
 ) {
   const ev = evidence
     .map((e, i) => `Fonte ${i + 1} (${e.source}): ${e.excerpt}`)
     .join("\n\n")
 
-  const numbered = draw.items
+  const numbered = rendered.items
     .map((it, i) => `${i + 1}. ${it.position}: ${it.name}`)
     .join("\n")
 
@@ -296,18 +299,20 @@ Regras importantes:
 1) NÃO altere, substitua, acrescente ou omita nenhum símbolo. Não invente posições. Interprete o que saiu, na ordem em que saiu.
 2) Siga o método: ${method}.
 3) Seja específico e útil, evitando generalidades.
-4) Use os trechos de referência abaixo como base de linguagem e coerência com a tradição. Seja fiel ao sentido, mas reescreva com sua voz.
+4) Use os trechos de referência abaixo como base de linguagem e coerência com a tradição. Seja fiel ao sentido, mas reescreva com sua voz. Os trechos podem estar em outro idioma; a resposta não.
 5) Retorne JSON válido no formato indicado, sem texto fora do JSON.
-6) Inclua "evidence" com 3 a 6 itens, citando LITERALMENTE pequenos trechos (curtos, copiados palavra por palavra) dos trechos de referência, cada um com source e excerpt. Não invente citações nem páginas. Use apenas o nome do arquivo como source.
+6) Inclua "evidence" com 3 a 6 itens, citando LITERALMENTE pequenos trechos (curtos, copiados palavra por palavra, no idioma original do trecho) dos trechos de referência, cada um com source e excerpt. Não invente citações nem páginas. Use apenas o nome do arquivo como source.
 7) FIDELIDADE À TIRAGEM: Seja fiel ao resultado real dos símbolos. Não suavize indicações negativas, não force otimismo, não neutralize tensão, sombra, ruptura ou dificuldade revelada pelo campo simbólico. Se a tradição aponta conflito, perigo, contradição ou verdade dolorosa, expresse isso com clareza e responsabilidade. Conforto fácil é uma traição à tiragem.
+
+${languageRule(locale)}
 
 Pergunta do usuário:
 "${question}"
 
 TIRAGEM REALIZADA (${label}):
-${draw.description}
+${rendered.description}
 
-Itens a interpretar, nesta ordem exata (o array "meanings" deve ter exatamente ${draw.items.length} elementos, um por item):
+Itens a interpretar, nesta ordem exata (o array "meanings" deve ter exatamente ${rendered.items.length} elementos, um por item):
 ${numbered}
 
 Trechos de referência:
@@ -315,7 +320,7 @@ ${ev}
 
 FORMATO JSON (obrigatório):
 {
-  "meanings": [string, ...],   // exatamente ${draw.items.length} strings, na ordem dos itens acima
+  "meanings": [string, ...],   // exatamente ${rendered.items.length} strings, na ordem dos itens acima
   "notes": string,
   "reading": string,
   "evidence": [{"source": string, "excerpt": string}]
@@ -323,11 +328,13 @@ FORMATO JSON (obrigatório):
 
 Instruções específicas do sistema:
 ${SYSTEM_GUIDES[key]}
+
+${ORACLE_FINAL_REMINDER[locale]}
 `.trim()
 }
 
 const SAFETY_CLASSIFIER_PROMPT = `
-Você é um detector de risco de segurança. Avalie a mensagem do usuário e decida se ela contém sinais claros de risco real e imediato de suicídio, automutilação grave, ou crise aguda de saúde mental com perigo de vida.
+Você é um detector de risco de segurança. Avalie a mensagem do usuário (em qualquer idioma) e decida se ela contém sinais claros de risco real e imediato de suicídio, automutilação grave, ou crise aguda de saúde mental com perigo de vida.
 
 REGRA CRÍTICA: Responda SAFE para qualquer pergunta difícil, sombria, triste, existencial, de luto, de dor, de vazio, de dúvida ou de angústia que NÃO envolva risco real de vida. Essas perguntas merecem uma leitura honesta do oráculo, não uma interrupção.
 
@@ -352,14 +359,6 @@ Exemplos de RISK (interromper, resposta de segurança):
 Responda APENAS com uma palavra: SAFE ou RISK
 `.trim()
 
-const SAFETY_RESPONSE_TEXT = `Preciso pausar aqui.
-
-O que você escreveu me indica que você pode estar num momento de dor muito real — e agora a coisa mais importante não é uma tiragem. É você.
-
-Se você está pensando em se machucar ou em não querer mais estar aqui, por favor entre em contato agora com o CVV: ligue **188** (gratuito, 24 horas, todos os dias). Se estiver em risco imediato, ligue para o **SAMU (192)** ou vá ao pronto-socorro mais próximo.
-
-Você não precisa passar por isso sozinho.`
-
 async function classifyForSafety(openai: OpenAI, question: string): Promise<boolean> {
   try {
     const result = await openai.chat.completions.create({
@@ -381,6 +380,8 @@ async function classifyForSafety(openai: OpenAI, question: string): Promise<bool
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const question = String(body?.question || "").trim()
+  const locale = resolveLocale(body?.locale)
+  const labels = getDictionary(locale).oracles
 
   if (!question) {
     return NextResponse.json({ error: "Pergunta ausente." }, { status: 400 })
@@ -405,7 +406,7 @@ export async function POST(req: Request) {
       try {
         // Primeiro byte imediato: mantém a conexão de streaming aberta
         // enquanto o classificador e os oráculos trabalham.
-        send({ type: "start" })
+        send({ type: "start", locale })
 
         const isHighRisk = await classifyForSafety(openai, question)
         if (isHighRisk) {
@@ -413,7 +414,8 @@ export async function POST(req: Request) {
             type: "complete",
             question,
             seed: "",
-            synthesis: SAFETY_RESPONSE_TEXT,
+            locale,
+            synthesis: SAFETY_RESPONSE[locale],
             oracles: null,
             isSafetyOverride: true,
           })
@@ -423,25 +425,25 @@ export async function POST(req: Request) {
 
         // ------------------------------------------------------------------
         // 1) SORTEIO. Acontece aqui, em código, para os cinco oráculos ao
-        //    mesmo tempo, com um seed criptográfico. A pergunta não participa.
+        //    mesmo tempo, com um seed criptográfico. A pergunta e o idioma
+        //    não participam; o idioma só muda como os símbolos são nomeados.
         // ------------------------------------------------------------------
         const seed = newSeed()
         const draws = drawAll(seed)
-        const keys: OracleKey[] = ["tarot", "iching", "runas", "buzios", "lenormand"]
+        const rendered = Object.fromEntries(
+          ORACLE_KEYS.map((k) => [k, renderDraw(draws[k], locale)])
+        ) as Record<OracleKey, RenderedDraw>
 
         // Os símbolos sorteados vão ao cliente já, antes de qualquer
         // interpretação: o usuário vê a tiragem enquanto o modelo trabalha.
         send({
           type: "draw",
           seed,
+          locale,
           draws: Object.fromEntries(
-            keys.map((k) => [
+            ORACLE_KEYS.map((k) => [
               k,
-              {
-                title: ORACLE_SOURCES[k].label,
-                notes: draws[k].notes,
-                items: draws[k].items.map((it) => ({ position: it.position, name: it.name })),
-              },
+              { title: labels[k], notes: rendered[k].notes, items: rendered[k].items },
             ])
           ),
         })
@@ -451,11 +453,12 @@ export async function POST(req: Request) {
         //    símbolos já fixados e trechos de referência buscados por eles.
         // ------------------------------------------------------------------
         const oracleEntries = await Promise.all(
-          keys.map(async (k) => {
+          ORACLE_KEYS.map(async (k) => {
             const meta = ORACLE_SOURCES[k]
             const draw = draws[k]
+            const r = rendered[k]
             const evidence = await getEvidenceForOracle(draw, question, meta.files)
-            const prompt = oraclePrompt(k, meta.label, meta.method, question, draw, evidence)
+            const prompt = oraclePrompt(k, labels[k], meta.method, question, r, evidence, locale)
 
             let parsed: any = null
             let rawText = ""
@@ -468,8 +471,7 @@ export async function POST(req: Request) {
                 messages: [
                   {
                     role: "system",
-                    content:
-                      "Responda apenas com JSON válido, sem Markdown. Os campos 'meanings', 'notes' e 'reading' devem ser escritos no mesmo idioma da pergunta do usuário. Os símbolos da tiragem já estão definidos e não podem ser alterados.",
+                    content: ORACLE_SYSTEM_MESSAGE[locale],
                   },
                   { role: "user", content: prompt },
                 ],
@@ -483,7 +485,7 @@ export async function POST(req: Request) {
 
             // draw.items vem SEMPRE do sorteio; o modelo só contribui o "meaning"
             const meanings: unknown[] = Array.isArray(parsed?.meanings) ? parsed.meanings : []
-            const items = draw.items.map((it, i) => {
+            const items = r.items.map((it, i) => {
               const m = meanings[i]
               return {
                 position: it.position,
@@ -493,18 +495,19 @@ export async function POST(req: Request) {
             })
 
             const modelNotes = typeof parsed?.notes === "string" ? parsed.notes.trim() : ""
-            const notes = modelNotes ? `${draw.notes} — ${modelNotes}` : draw.notes
+            const notes = modelNotes ? `${r.notes} — ${modelNotes}` : r.notes
 
             const reading =
               typeof parsed?.reading === "string" && parsed.reading.trim()
                 ? parsed.reading.trim()
-                : rawText || "Não foi possível gerar a interpretação desta tiragem."
+                : rawText || ""
 
             const result: OracleResult = {
               key: k,
-              title: meta.label,
+              title: labels[k],
               method: meta.method,
               seed,
+              locale,
               draw: { items, notes },
               reading,
               evidence: validateEvidence(parsed?.evidence, evidence),
@@ -516,7 +519,7 @@ export async function POST(req: Request) {
 
         const results = Object.fromEntries(oracleEntries) as Record<OracleKey, OracleResult>
 
-        send({ type: "oracles", question, seed, oracles: results })
+        send({ type: "oracles", question, seed, locale, oracles: results })
 
         // A síntese é pedida pelo cliente em seguida, via POST /consultas/sintese.
         send({ type: "done" })

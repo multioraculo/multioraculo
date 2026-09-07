@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
 import { createClient } from "@/lib/supabase/client"
+import { useI18n } from "@/components/i18n-provider"
+import { fmt } from "@/lib/i18n"
 import type { Dream, JourneyAnalysis, JourneyData } from "@/lib/types"
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
@@ -21,22 +23,6 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   )
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
-}
-
-function formatDateShort(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
-}
-
 export default function SavedDreamsList({
   initialDreams,
   userId,
@@ -45,6 +31,8 @@ export default function SavedDreamsList({
   userId: string
 }) {
   const router = useRouter()
+  const { dict, locale, formatDate } = useI18n()
+  const t = dict.savedDreams
   const supabase = useMemo(() => createClient(), [])
   const [dreams, setDreams] = useState<Dream[]>(initialDreams)
 
@@ -110,13 +98,17 @@ export default function SavedDreamsList({
     setJourneyData(null)
     setJourneyDirty(false)
     try {
-      const res = await fetch("/sonhos/journey", { method: "POST" })
+      const res = await fetch("/sonhos/journey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale }),
+      })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error ?? "Erro ao gerar análise.")
+      if (!res.ok) throw new Error(json.error ?? t.errorGenerate)
       setJourneyData(json.journeyData as JourneyData)
       setJourneyDirty(true)
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao gerar análise.")
+      toast.error(err.message ?? t.errorGenerate)
     } finally {
       setJourneyLoading(false)
     }
@@ -139,9 +131,9 @@ export default function SavedDreamsList({
       if (error) throw new Error(error.message)
       setSavedJourney(data as JourneyAnalysis)
       setJourneyDirty(false)
-      toast.success("Análise da jornada salva!")
+      toast.success(t.analysisSaved)
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao salvar análise.")
+      toast.error(err.message ?? t.errorSaveAnalysis)
     } finally {
       setSaveJourneyLoading(false)
     }
@@ -155,9 +147,9 @@ export default function SavedDreamsList({
       if (!res.ok) throw new Error()
       setDreams((prev) => prev.filter((d) => d.id !== id))
       setDeleteConfirmId(null)
-      toast.success("Sonho excluído.")
+      toast.success(t.deleted)
     } catch {
-      toast.error("Erro ao excluir sonho.")
+      toast.error(t.errorDelete)
     }
   }
 
@@ -174,9 +166,9 @@ export default function SavedDreamsList({
         prev.map((d) => (d.id === id ? { ...d, personal_notes: editNotes || null } : d))
       )
       setEditingNotesId(null)
-      toast.success("Notas atualizadas.")
+      toast.success(t.notesUpdated)
     } catch {
-      toast.error("Erro ao atualizar notas.")
+      toast.error(t.errorNotes)
     } finally {
       setSavingNotesId(null)
     }
@@ -196,12 +188,10 @@ export default function SavedDreamsList({
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-4xl sm:text-5xl font-light italic instrument text-white mb-4">
-              Sua Jornada
+              {t.journeyTitle}
             </h1>
             <p className="text-base sm:text-lg text-white/60 leading-relaxed max-w-2xl">
-              Leitura da evolução dos seus sonhos, revelando padrões que retornam,
-              transformações que se aprofundam e o tema essencial que se desdobra
-              ao longo da sua travessia interior.
+              {t.journeyIntro}
             </p>
           </div>
 
@@ -212,11 +202,11 @@ export default function SavedDreamsList({
                 onClick={handleGenerateJourney}
                 className="px-8 py-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full text-sm text-white/80 hover:text-white transition-all duration-200"
               >
-                Gerar Análise
+                {t.generate}
               </button>
               {savedJourney && (
                 <p className="text-white/30 text-sm">
-                  Última análise: {formatDateShort(savedJourney.created_at)}
+                  {fmt(t.lastAnalysis, { date: formatDate(savedJourney.created_at, "short") })}
                 </p>
               )}
             </div>
@@ -226,7 +216,7 @@ export default function SavedDreamsList({
           {journeyLoading && (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Spinner className="w-8 h-8 text-white/40" />
-              <p className="text-white/40 text-sm">Analisando sua jornada onírica...</p>
+              <p className="text-white/40 text-sm">{t.analyzing}</p>
             </div>
           )}
 
@@ -238,7 +228,7 @@ export default function SavedDreamsList({
                 {/* Card 1: Linha de Evolução */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                   <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
-                    Linha de Evolução
+                    {t.timeline}
                   </p>
                   <div className="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
                     {journeyData.timeline.map((item) => (
@@ -256,7 +246,7 @@ export default function SavedDreamsList({
                 {/* Card 2: Padrões Recorrentes */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                   <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
-                    Padrões Recorrentes
+                    {t.patterns}
                   </p>
                   <ul className="space-y-3">
                     {journeyData.patterns.map((pattern, i) => (
@@ -271,7 +261,7 @@ export default function SavedDreamsList({
                 {/* Card 3: Ponto de Virada */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                   <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
-                    Ponto de Virada
+                    {t.turningPoint}
                   </p>
                   <p className="text-sm text-white/70 leading-relaxed">{journeyData.turningPoint}</p>
                 </div>
@@ -279,7 +269,7 @@ export default function SavedDreamsList({
                 {/* Card 4: Essência da Fase Atual */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
                   <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
-                    Essência da Fase Atual
+                    {t.essence}
                   </p>
                   <p className="text-sm text-white/70 leading-relaxed">{journeyData.essence}</p>
                 </div>
@@ -295,19 +285,19 @@ export default function SavedDreamsList({
                     className="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full text-sm text-white/80 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
                   >
                     {saveJourneyLoading
-                      ? <><Spinner className="w-3 h-3" /> Salvando...</>
-                      : "Salvar Análise"}
+                      ? <><Spinner className="w-3 h-3" /> {dict.common.saving}</>
+                      : t.saveAnalysis}
                   </button>
                 ) : savedJourney ? (
                   <p className="text-white/30 text-sm">
-                    ✓ Análise salva em {formatDateShort(savedJourney.created_at)}
+                    {fmt(t.analysisSavedOn, { date: formatDate(savedJourney.created_at, "short") })}
                   </p>
                 ) : null}
                 <button
                   onClick={handleGenerateJourney}
                   className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm text-white/45 hover:text-white/70 transition-all duration-200"
                 >
-                  Atualizar Análise
+                  {t.refreshAnalysis}
                 </button>
               </div>
             </>
@@ -329,13 +319,13 @@ export default function SavedDreamsList({
             "font-light italic instrument text-white",
             dreams.length >= 4 ? "text-2xl sm:text-3xl" : "text-4xl sm:text-5xl",
           ].join(" ")}>
-            Sonhos Salvos
+            {t.title}
           </h2>
           <button
             onClick={() => router.push("/sonhos")}
             className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
-            Novo Sonho
+            {t.newDream}
           </button>
         </div>
 
@@ -347,12 +337,12 @@ export default function SavedDreamsList({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             </div>
-            <p className="text-white/40 text-sm mb-4">Nenhum sonho salvo ainda.</p>
+            <p className="text-white/40 text-sm mb-4">{t.empty}</p>
             <button
               onClick={() => router.push("/sonhos")}
               className="px-6 py-2.5 rounded-full bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
             >
-              Interpretar primeiro sonho
+              {t.interpretFirst}
             </button>
           </div>
         )}
@@ -364,19 +354,19 @@ export default function SavedDreamsList({
               <div key={dream.id}>
                 {deleteConfirmId === dream.id ? (
                   <div className="bg-white/5 backdrop-blur-sm border border-red-400/30 rounded-2xl p-6 flex items-center justify-between gap-4">
-                    <p className="text-white/80 text-sm">Deseja excluir este sonho?</p>
+                    <p className="text-white/80 text-sm">{t.confirmDelete}</p>
                     <div className="flex gap-2 shrink-0">
                       <button
                         onClick={() => handleDelete(dream.id)}
                         className="px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-400/40 text-red-300 hover:bg-red-500/30 text-sm transition-colors"
                       >
-                        Excluir
+                        {dict.common.delete}
                       </button>
                       <button
                         onClick={() => setDeleteConfirmId(null)}
                         className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 text-sm transition-colors"
                       >
-                        Cancelar
+                        {dict.common.cancel}
                       </button>
                     </div>
                   </div>
@@ -384,11 +374,12 @@ export default function SavedDreamsList({
                   <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 space-y-3 hover:bg-white/[0.08] hover:border-white/20 transition-all duration-200">
                     {/* Card header */}
                     <div className="flex items-center justify-between gap-4">
-                      <span className="text-white/35 text-xs">{formatDate(dream.created_at)}</span>
+                      <span className="text-white/35 text-xs">{formatDate(dream.created_at, "long")}</span>
 
                       <div className="relative shrink-0">
                         <button
                           onClick={() => setOpenMenuId(openMenuId === dream.id ? null : dream.id)}
+                          aria-label={dict.common.options}
                           className="w-7 h-7 flex items-center justify-center rounded-lg text-white/20 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
                         >
                           <svg
@@ -411,7 +402,7 @@ export default function SavedDreamsList({
                               }}
                               className="w-full text-left px-3 py-2 text-white/90 hover:bg-white/5 rounded-lg transition-colors text-sm"
                             >
-                              Ver interpretação
+                              {t.viewInterpretation}
                             </button>
                             <button
                               onClick={() => {
@@ -422,13 +413,13 @@ export default function SavedDreamsList({
                               }}
                               className="w-full text-left px-3 py-2 text-white/90 hover:bg-white/5 rounded-lg transition-colors text-sm"
                             >
-                              Editar notas pessoais
+                              {t.editNotes}
                             </button>
                             <button
                               onClick={() => { setDeleteConfirmId(dream.id); setOpenMenuId(null) }}
                               className="w-full text-left px-3 py-2 text-red-400 hover:bg-white/5 rounded-lg transition-colors text-sm"
                             >
-                              Excluir
+                              {dict.common.delete}
                             </button>
                           </div>
                         )}
@@ -493,7 +484,7 @@ export default function SavedDreamsList({
                         {/* Notes editing */}
                         {editingNotesId === dream.id ? (
                           <div className="space-y-3">
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest">Notas pessoais</p>
+                            <p className="text-white/25 text-[10px] uppercase tracking-widest">{t.personalNotes}</p>
                             <textarea
                               value={editNotes}
                               onChange={(e) => setEditNotes(e.target.value)}
@@ -506,7 +497,7 @@ export default function SavedDreamsList({
                                 onClick={() => setEditingNotesId(null)}
                                 className="px-4 py-1.5 rounded-full text-white/50 hover:text-white/80 text-sm transition-colors"
                               >
-                                Cancelar
+                                {dict.common.cancel}
                               </button>
                               <button
                                 onClick={() => handleUpdateNotes(dream.id)}
@@ -518,13 +509,13 @@ export default function SavedDreamsList({
                                     : "bg-white/10 border-white/20 text-white/80 hover:text-white hover:bg-white/15",
                                 ].join(" ")}
                               >
-                                {savingNotesId === dream.id ? <><Spinner /> Salvando…</> : "Salvar"}
+                                {savingNotesId === dream.id ? <><Spinner /> {dict.common.saving}</> : dict.common.save}
                               </button>
                             </div>
                           </div>
                         ) : dream.personal_notes ? (
                           <div className="space-y-2">
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest">Notas pessoais</p>
+                            <p className="text-white/25 text-[10px] uppercase tracking-widest">{t.personalNotes}</p>
                             <p className="text-white/55 text-sm leading-relaxed">{dream.personal_notes}</p>
                           </div>
                         ) : null}
@@ -533,7 +524,7 @@ export default function SavedDreamsList({
                           onClick={() => { setExpandedId(null); setEditingNotesId(null) }}
                           className="text-white/30 hover:text-white/50 text-xs transition-colors"
                         >
-                          Recolher
+                          {dict.common.collapse}
                         </button>
                       </div>
                     )}

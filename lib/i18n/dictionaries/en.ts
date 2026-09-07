@@ -1,0 +1,417 @@
+import type { Dictionary } from "./pt"
+
+export const en: Dictionary = {
+  meta: {
+    title: "Multioráculo - Multi-Oracle Synthesis",
+    description:
+      "The same question, seen from several angles. Tarot, I Ching, Runes, Búzios and Lenormand cards.",
+  },
+
+  common: {
+    appName: "Multioráculo",
+    login: "Login",
+    logout: "Sign out",
+    save: "Save",
+    saved: "Saved",
+    saving: "Saving…",
+    cancel: "Cancel",
+    delete: "Delete",
+    close: "Close",
+    edit: "Edit",
+    collapse: "Collapse",
+    options: "Options",
+    share: "Share",
+    copied: "Copied to clipboard.",
+    loginRequired: "Sign in to continue.",
+  },
+
+  oracles: {
+    tarot: "Tarot",
+    iching: "I Ching",
+    runas: "Runes",
+    buzios: "Búzios",
+    lenormand: "Lenormand",
+  },
+
+  nav: {
+    home: "Multioráculo",
+    dreams: "Dream Journal",
+    dreamsShort: "Dreams",
+    grimoire: "Grimoire",
+    subscription: "Subscription",
+    savedReadings: "Saved Readings",
+    oracles: "Oracles",
+    faq: "FAQ",
+    savedDreams: "Saved Dreams",
+  },
+
+  header: {
+    backToStart: "Back to start",
+    circularText: "oracle • multi-oracle synthesis • tarot • i ching • runes • búzios • lenormand • ",
+    sessionEnded: "You have been signed out.",
+  },
+
+  locale: {
+    label: "Language",
+  },
+
+  login: {
+    title: "Sign in to save your readings",
+    subtitle: "Without an account you can still consult the oracles, but you won't have a history.",
+    namePlaceholder: "Your name",
+    emailPlaceholder: "you@email.com",
+    passwordPlaceholder: "Your password",
+    signIn: "Sign in",
+    signingIn: "Signing in...",
+    createAccount: "Create account",
+    creating: "Creating...",
+    haveAccount: "I already have an account",
+    continueWithout: "Continue without signing in",
+    success: "Signed in successfully.",
+    accountCreated: "Account created. Check your email to confirm your registration before signing in.",
+  },
+
+  hero: {
+    badge: "Multi-Oracle Synthesis",
+    titleEmphasis: "Singularity",
+    titleRest: "brought you",
+    titleLine2: "this far.",
+    subtitle:
+      "The same question, seen from several angles. Tarot, I Ching, Runes, Búzios and Lenormand cards. Each oracle reveals one part of the map. Together, they show the whole path.",
+    prompt: "Ready to begin? Write your question.",
+    placeholders: [
+      "Where am I confusing desire with destiny?",
+      "What has life already placed before me that I still haven't seen?",
+      "Which part of me needs to die so that something greater can be born?",
+      "If I weren't guided by fear, what would my move be right now?",
+      "What is true here, and what is only the noise of the mind?",
+      "What lesson is time already trying to teach me that I keep ignoring?",
+      "What invisible current is moving my destiny at this very moment?",
+      "Where am I trying to control, when I should simply allow?",
+      "What is the thinnest yet strongest thread that can guide me now?",
+      "What am I calling an obstacle that is actually an initiation?",
+      "Which opportunity is already ripe and only waiting for my courage?",
+      "What does prosperity really mean for me right now?",
+      "If life gave me only one gesture today, which would be the right one?",
+    ],
+    submit: "Receive my answer",
+  },
+
+  results: {
+    yourQuestion: "Your question",
+    stageDraw: "• is casting your reading",
+    stageOracles: "• is reading each oracle",
+    stageSynthesis: "• is writing your answer",
+    yourAnswer: "Your answer",
+    yourAnswerHint: "• This is your answer",
+    readByOracle: "Read by oracle",
+    drawLabel: "Draw",
+    traditionalReading: "Traditional reading",
+    interpreting: "Interpreting the draw...",
+    saveReading: "Save Reading",
+    saveReadingTitle: "Save reading",
+    saved: "Saved",
+    newQuestion: "Ask another question",
+    noReadingToSave: "There is no finished reading to save.",
+    loginToSave: "Sign in to save.",
+    saveFailed: "The reading could not be saved.",
+    savedOk: "Reading saved!",
+    consultFailed: "The consultation could not be completed.",
+    drawIncomplete: "The draw was not completed.",
+  },
+
+  oraclesPage: {
+    whatIsTitle: "What an oracle is",
+    whatIsText:
+      "An oracle is, in essence, a technology of perception. It is not mere superstition or chance; it is a mechanism built over generations to turn invisible patterns into visible symbols.",
+    howTitle: "How it works, technically",
+    how: [
+      {
+        title: "1. A closed system of symbols",
+        text: "Each oracle has a limited, well-defined set of signs (hexagrams, cards, runes, shells).",
+      },
+      {
+        title: "2. Ritualized randomness",
+        text: "The draw or the cast builds the bridge. It disarms the rational mind and lets the unconscious and the field of synchronicity come in.",
+      },
+      {
+        title: "3. An interpretive repertoire",
+        text: "Each symbol was cultivated within a tradition. It carries layers of meaning accumulated over centuries.",
+      },
+      {
+        title: "4. Synchronicity",
+        text: "The correspondence between your question and the result is not causal; it is symbolic. It is as if the universe held up a specific mirror at that very instant.",
+      },
+    ],
+    askTitle: "How to ask",
+    askIntro:
+      "The clarity of the answer depends on the clarity of the question. More than the right words, what matters is the inner posture. Questions asked with openness and attention tend to bring sharper answers.",
+    askExamples: [
+      { label: "Ask for direction:", example: "\"Where should I move my energy now?\"" },
+      { label: "Ask for a gesture:", example: "\"Which action transforms this cycle?\"" },
+      { label: "Ask for understanding:", example: "\"What am I still not seeing?\"" },
+    ],
+    askOutro:
+      "Avoid closed \"yes or no\" questions. Prefer statements that reveal the movement of the moment. The oracle does not hand down an order, but a mirror. It points to where to look and in what spirit to act.",
+    deliversTitle: "What the oracle delivers",
+    deliversText:
+      "The oracle does not predict the future like a machine. It shows the quality of the moment. Which forces are at work. Which risks and possibilities are already in motion. Just as a compass does not push you but shows north, the oracle does not decide, it reveals direction.",
+    traditionsTitle: "The five traditions of Multioráculo",
+    traditionsIntro:
+      "To translate your question precisely, we gathered an essential set of traditions: five symbolic languages that make up the simultaneous reading of Multioráculo. Each one illuminates one plane of the moment; together, they offer a coherent, actionable view.",
+    traditions: [
+      {
+        title: "Tarot",
+        text: "A language of 78 images that mirror the psychic journey. In a Jungian reading, the Major Arcana map individuation: for instance, the Fool as life impulse, Death as inevitable transformation, the Tower as the fall of rigid structures, Temperance as the integration of opposites and the World as wholeness. These are examples, not a complete list. Tarot does not predict; it reveals which archetype is on stage and what attitude it asks for now. It works very well for naming the inner force and the conflict shaping the question.",
+      },
+      {
+        title: "I Ching",
+        text: "The Chinese classic of change, with 64 hexagrams. Each consultation brings the Judgment, the Image and, when they appear, Moving Lines. It describes the quality of time, guiding when to advance, when to withdraw and how to align character and action. Ethics is central: clarity, modesty, firmness, gentleness. Instead of yes or no, the I Ching offers rhythm and posture. It is excellent for decisions that depend on timing and fine adjustment.",
+      },
+      {
+        title: "Runes",
+        text: "The Elder Futhark system, in which each rune is a letter, a force and a principle of nature. They speak of will in action: to begin, to cut, to protect, to reveal, to harvest. They are direct and operational, favoring short readings that turn into quick practice. The key is cadence: creating short cycles of gesture and review, without confusing speed with progress. Useful for unlocking movement and disciplining impulse.",
+      },
+      {
+        title: "Búzios",
+        text: "An Afro-Atlantic oracle that reads the fall of cowrie shells to indicate odus and the qualities of the Orishas, that is, living principles such as justice, courage, sweetness, movement and peace. It shows the flow and blockage of axé in the situation and calls for responsibility: the right word, the right time, respect for limits. In the app we treat it as guidance on principles and posture. For rites and religious prescriptions, always turn to a house of worship and qualified leadership.",
+      },
+      {
+        title: "Lenormand",
+        text: "A 36-card deck, the practical language of everyday life: letter, key, crossroads, house, garden, ship. It is read in pairs and chains like short sentences, producing verifiable short-term signs. It is the bridge between symbol and calendar: confirmations, invitations, logistical obstacles, developments within 24 to 72 hours. Great for validating a hunch with concrete evidence.",
+      },
+    ],
+    whyTogetherTitle: "Why read all five together",
+    whyTogetherText:
+      "Each system illuminates one plane of the same instant. Tarot names the psychic dynamic. The I Ching aligns with time. The Runes give gesture and cadence. Búzios offers an ethical axis and a relationship with the sacred. Lenormand anchors everything in the practical sign. Together, you do not receive five loose answers, but a coherent view that goes from archetype to calendar, from intention to action.",
+  },
+
+  faq: {
+    items: [
+      {
+        q: "Does Multioráculo predict the future?",
+        a: "No. It reveals the quality of the moment and the effective posture right now. You remain in charge of your choices.",
+      },
+      {
+        q: "What do I get in each reading?",
+        a: "A simultaneous reading of Tarot, I Ching, Runes, Búzios and Lenormand with a unified synthesis and the five oracles in tabs for full consultation. It includes a practical sign for the next 24 to 72 hours.",
+      },
+      {
+        q: "How many readings do I get on each plan?",
+        a: "Essential: two per week, 8 per month in total.\nUnlimited: unlimited readings for personal use.",
+      },
+      {
+        q: "What counts as a reading?",
+        a: "Asking a new question and generating the complete reading. Reopening the same reading does not use a new one.",
+      },
+      {
+        q: "Can I cancel whenever I want?",
+        a: "Yes. Cancel at any time. Access remains until the end of the cycle already paid.",
+      },
+      {
+        q: "Is there a free trial?",
+        a: "We may run promotional campaigns with one free reading. When it is active, we will let you know inside the app.",
+      },
+      {
+        q: "What if the answers seem to contradict each other?",
+        a: "Use the unified synthesis as your main reference. It aligns the five angles into a coherent orientation. Then go deeper in the tabs to see nuances of timing, attitude and practical verification.",
+      },
+      {
+        q: "How often should I ask?",
+        a: "Quality beats quantity. One good question per week usually produces more clarity than many questions per day. On Essential, follow the cadence of two per week. On Unlimited, keep a clear intention so as not to create noise.",
+      },
+      {
+        q: "Does the app store my questions and readings?",
+        a: "Your history stays on your device so you can review it. If we enable cloud sync, we will let you know transparently, with control options.",
+      },
+      {
+        q: "Do the readings replace medical, legal or financial advice?",
+        a: "No. Multioráculo is a tool for reflection and direction. For clinical, legal or financial decisions, seek qualified professionals.",
+      },
+      {
+        q: "How is Búzios handled in the app?",
+        a: "With respect for the Afro-Brazilian tradition. We use the language of principles and posture. For rites, specific prescriptions and religious guidance, seek a house of worship and a qualified priest.",
+      },
+      {
+        q: "What does a practical sign within 24 to 72 hours mean?",
+        a: "It is a verifiable indicator in everyday life, such as a message, an invitation, a confirmation or a concrete threshold. If the sign comes, move forward. If it does not, refine the question and adjust your posture.",
+      },
+      {
+        q: "How can I make my questions clearer?",
+        a: "Prefer open questions set in the present. Examples: Which gesture unlocks this cycle? What do I need to leave behind now? Where is the guiding thread of this decision?",
+      },
+      {
+        q: "Does Unlimited have any hidden limit?",
+        a: "It is unlimited for personal, human use. We do not allow automation, mass use or commercial redistribution of the readings.",
+      },
+      {
+        q: "Does it work on mobile?",
+        a: "Yes. The experience is designed mobile-first.",
+      },
+      {
+        q: "What support is available?",
+        a: "Email support on Essential. Priority support on Unlimited. The contact appears inside the app under Help.",
+      },
+    ],
+  },
+
+  subscription: {
+    titleSuffix: ": Subscribe to clarity.",
+    subtitle: "Right decisions begin with precise answers. Five oracles converge for you.",
+    perMonth: "/month",
+    forWhom: "For those who:",
+    mostPopular: "Most Popular",
+    essential: {
+      name: "Essential",
+      price: "R$ 9.99",
+      tagline: "Cadence and focus.",
+      description: "Two readings per week (8 per month), to stay on course without anxiety.",
+      features: [
+        "Simultaneous reading of the 5 oracles + unified summary",
+        "Oracles in tabs for deep checking",
+        "Save and revisit readings (timestamped)",
+        "Verifiable signs in everyday life",
+      ],
+      forWhom: "prefer one good question at a time, week after week.",
+      cta: "Start with Essential",
+    },
+    unlimited: {
+      name: "Unlimited",
+      price: "R$ 13.99",
+      tagline: "Decisions at a living pace.",
+      description: "Unlimited readings (personal use) to turn symbol into gesture, every day.",
+      features: [
+        "Everything in Essential",
+        "Full history and favorites",
+        "Reminders for the practical signs",
+        "Priority support",
+      ],
+      forWhom: "create, lead or adjust course often and want zero friction.",
+      cta: "Subscribe to Unlimited",
+    },
+    notesTitle: "Notes",
+    notes: [
+      "It counts as 1 reading when you ask a new question and receive the complete reading; reopening the same reading does not use one.",
+      "Cancel at any time; recurring monthly billing (BRL).",
+      "\"Unlimited\" is subject to reasonable personal use (no automation/mass use).",
+    ],
+  },
+
+  savedReadings: {
+    title: "Saved Readings",
+    emptyTitle: "No saved readings yet.",
+    emptyText: "Ask a question and save your first reading.",
+    askNow: "Ask a question now",
+    confirmDelete: "Delete this reading?",
+    view: "View reading",
+  },
+
+  readingDetail: {
+    back: "Saved Readings",
+    yourQuestion: "Your question",
+    yourAnswer: "Your answer",
+    readByOracle: "Read by oracle",
+    drawLabel: "Draw",
+    traditionalReading: "Traditional reading",
+  },
+
+  readingNotes: {
+    title: "Personal note",
+    placeholder: "Add a personal note about this reading...",
+    alsoJournal: "Also save to the Journal",
+    journalTitlePlaceholder: "Journal entry title (optional)",
+    save: "Save note",
+    savedCheck: "Saved ✓",
+    savedOk: "Note saved.",
+    savedWithJournal: "Note saved and added to the Journal.",
+    errorSaving: "Error saving note.",
+    errorSavingReading: "Error saving the note on the reading.",
+    errorSavingJournal: "Error saving to the Journal.",
+  },
+
+  deleteReading: {
+    delete: "Delete reading",
+    confirm: "Confirm deletion",
+    deleting: "Deleting...",
+    failed: "The reading could not be deleted.",
+    done: "Reading deleted.",
+  },
+
+  dreams: {
+    titleEmphasis: "The unconscious",
+    titleRest: "speaks",
+    titleLine2: "while you sleep.",
+    subtitle: "Describe your dream and reveal the symbols the psyche is communicating.",
+    prompt: "Describe your dream with as much detail as you remember.",
+    placeholder: "Describe your dream...",
+    interpret: "Interpret Symbols",
+    interpreting: "Interpreting symbols...",
+    interpretingShort: "Interpreting...",
+    yourDream: "Your dream",
+    personalNotes: "Personal notes",
+    notesPlaceholder: "Add your reflections...",
+    saveToJournal: "Save to Journal",
+    waitToFinish: "Wait for the interpretation to finish...",
+    anotherDream: "Interpret another dream",
+    shareTitle: "Dream Journal",
+    errorInterpret: "Error interpreting the dream.",
+    noResponse: "No response from the server.",
+    savedOk: "Dream saved successfully!",
+    errorSave: "Error saving the dream.",
+    loginToSee: "Sign in to see your saved dreams.",
+  },
+
+  savedDreams: {
+    journeyTitle: "Your Journey",
+    journeyIntro:
+      "A reading of how your dreams have evolved, revealing patterns that return, transformations that deepen and the essential theme unfolding along your inner crossing.",
+    generate: "Generate Analysis",
+    lastAnalysis: "Last analysis: {date}",
+    analyzing: "Analyzing your dream journey...",
+    timeline: "Line of Evolution",
+    patterns: "Recurring Patterns",
+    turningPoint: "Turning Point",
+    essence: "Essence of the Current Phase",
+    saveAnalysis: "Save Analysis",
+    analysisSavedOn: "✓ Analysis saved on {date}",
+    refreshAnalysis: "Refresh Analysis",
+    analysisSaved: "Journey analysis saved!",
+    errorGenerate: "Error generating the analysis.",
+    errorSaveAnalysis: "Error saving the analysis.",
+    title: "Saved Dreams",
+    newDream: "New Dream",
+    empty: "No saved dreams yet.",
+    interpretFirst: "Interpret your first dream",
+    confirmDelete: "Delete this dream?",
+    viewInterpretation: "View interpretation",
+    editNotes: "Edit personal notes",
+    personalNotes: "Personal notes",
+    deleted: "Dream deleted.",
+    errorDelete: "Error deleting the dream.",
+    notesUpdated: "Notes updated.",
+    errorNotes: "Error updating notes.",
+  },
+
+  grimoire: {
+    title: "Grimoire",
+    intro:
+      "Your sacred space to record what life reveals. Each entry holds a fragment of your inner crossing. Write about what you felt, understood or lived.",
+    loginToAccess: "Sign in to access your Grimoire.",
+    newEntry: "New Entry",
+    newNote: "New note",
+    titlePlaceholder: "Today my day...",
+    contentPlaceholder: "Write about your day...",
+    editTitlePlaceholder: "Title (optional)",
+    saveToGrimoire: "Save to Grimoire",
+    empty: "No notes in the Grimoire yet.",
+    createFirst: "Create your first note",
+    confirmDelete: "Delete this note?",
+    linkedToReading: "Linked to a reading",
+    created: "Note created.",
+    updated: "Note updated.",
+    deleted: "Note deleted.",
+    errorCreate: "Error creating note.",
+    errorUpdate: "Error updating note.",
+    errorDelete: "Error deleting note.",
+  },
+}

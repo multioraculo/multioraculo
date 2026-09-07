@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
+import { useI18n } from "@/components/i18n-provider"
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -21,6 +22,8 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
 
 export default function DreamsPage() {
   const router = useRouter()
+  const { dict, locale } = useI18n()
+  const t = dict.dreams
 
   const [step, setStep] = useState<"input" | "loading" | "result">("input")
   const [dreamText, setDreamText] = useState("")
@@ -46,17 +49,11 @@ export default function DreamsPage() {
       const res = await fetch("/api/sonhos/interpret", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dream: dreamText }),
+        body: JSON.stringify({ dream: dreamText, locale }),
       })
 
-      if (!res.ok) {
-        const errText = await res.text()
-        let errMsg = "Erro ao interpretar sonho."
-        try { errMsg = JSON.parse(errText).error ?? errMsg } catch {}
-        throw new Error(errMsg)
-      }
-
-      if (!res.body) throw new Error("Sem resposta do servidor.")
+      if (!res.ok) throw new Error(t.errorInterpret)
+      if (!res.body) throw new Error(t.noResponse)
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -83,7 +80,7 @@ export default function DreamsPage() {
       }
     } catch (err: any) {
       console.error("[sonhos/interpret] erro:", err)
-      toast.error(err.message ?? "Erro ao interpretar sonho.")
+      toast.error(err.message ?? t.errorInterpret)
       setStep("input")
     } finally {
       setIsStreaming(false)
@@ -117,13 +114,12 @@ export default function DreamsPage() {
           personal_notes: personalNotes.trim() || null,
         }),
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error)
+      if (!res.ok) throw new Error(t.errorSave)
       setIsSaved(true)
-      toast.success("Sonho salvo com sucesso!")
+      toast.success(t.savedOk)
       router.push("/sonhos-salvos")
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao salvar sonho.")
+      toast.error(err.message ?? t.errorSave)
     } finally {
       setSaveLoading(false)
     }
@@ -138,7 +134,7 @@ export default function DreamsPage() {
 
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Diário de Sonhos", text })
+        await navigator.share({ title: t.shareTitle, text })
         return
       } catch (err: any) {
         if (err?.name === "AbortError") return
@@ -157,7 +153,7 @@ export default function DreamsPage() {
       document.execCommand("copy")
       document.body.removeChild(el)
     }
-    toast.success("Copiado para a área de transferência.")
+    toast.success(dict.common.copied)
   }
 
   // ── Render ──────────────────────────────────────────────────
@@ -172,17 +168,15 @@ export default function DreamsPage() {
         >
           <div className="max-w-lg">
             <h1 className="text-4xl sm:text-5xl tracking-tight font-light text-white mb-2">
-              <span className="font-medium italic instrument">O inconsciente</span> fala
+              <span className="font-medium italic instrument">{t.titleEmphasis}</span> {t.titleRest}
               <br />
-              <span className="font-light tracking-tight text-white">enquanto você dorme.</span>
+              <span className="font-light tracking-tight text-white">{t.titleLine2}</span>
             </h1>
 
-            <p className="text-base font-light text-white/80 mb-4 leading-relaxed">
-              Descreva seu sonho e revele os símbolos que a psique está comunicando.
-            </p>
+            <p className="text-base font-light text-white/80 mb-4 leading-relaxed">{t.subtitle}</p>
 
             <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">Descreva seu sonho com os detalhes que lembrar.</p>
+              <p className="text-xs font-light text-white/60 mb-2">{t.prompt}</p>
               <textarea
                 value={dreamText}
                 onChange={(e) => setDreamText(e.target.value)}
@@ -192,7 +186,7 @@ export default function DreamsPage() {
                     handleInterpret()
                   }
                 }}
-                placeholder="Descreva seu sonho..."
+                placeholder={t.placeholder}
                 rows={5}
                 className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
               />
@@ -205,7 +199,7 @@ export default function DreamsPage() {
                 className="group px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg hover:shadow-white/10 transform disabled:hover:scale-100 disabled:hover:shadow-none flex items-center"
               >
                 <span className="group-hover:scale-105 transition-transform duration-200 inline-block group-disabled:scale-100">
-                  Interpretar Símbolos
+                  {t.interpret}
                 </span>
               </button>
             </div>
@@ -223,7 +217,7 @@ export default function DreamsPage() {
               <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
                 <div className="flex items-center gap-3 py-6 text-white/50 text-sm">
                   <Spinner className="w-4 h-4 text-white/40" />
-                  <span>Interpretando símbolos...</span>
+                  <span>{t.interpreting}</span>
                 </div>
               </div>
             )}
@@ -233,7 +227,7 @@ export default function DreamsPage() {
               <>
                 {/* Dream preview card */}
                 <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-                  <h3 className="text-white/60 text-sm mb-3">Seu sonho</h3>
+                  <h3 className="text-white/60 text-sm mb-3">{t.yourDream}</h3>
                   <p className="text-white text-base leading-relaxed">{dreamText}</p>
                 </div>
 
@@ -242,7 +236,7 @@ export default function DreamsPage() {
                   {isStreaming && (
                     <div className="flex items-center gap-2 mb-4 text-white/40 text-xs">
                       <Spinner className="w-3 h-3" />
-                      <span>Interpretando...</span>
+                      <span>{t.interpretingShort}</span>
                     </div>
                   )}
                   <div className="dream-interpretation space-y-0">
@@ -290,12 +284,12 @@ export default function DreamsPage() {
                   {/* Personal notes */}
                   <div className="mt-6">
                     <p className="text-white/25 text-[10px] uppercase tracking-widest mb-2">
-                      Notas pessoais
+                      {t.personalNotes}
                     </p>
                     <textarea
                       value={personalNotes}
                       onChange={(e) => setPersonalNotes(e.target.value)}
-                      placeholder="Adicionar suas reflexões..."
+                      placeholder={t.notesPlaceholder}
                       rows={3}
                       className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm resize-none focus:outline-none focus:border-white/25 transition-colors duration-200"
                     />
@@ -307,7 +301,7 @@ export default function DreamsPage() {
                       <button
                         onClick={handleSave}
                         disabled={isSaved || saveLoading || !interpretation || isStreaming}
-                        title={isStreaming ? "Aguarde a interpretação concluir..." : isSaved ? "Salvo" : "Salvar no Diário"}
+                        title={isStreaming ? t.waitToFinish : isSaved ? dict.common.saved : t.saveToJournal}
                         className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform group-disabled:hover:scale-100 flex items-center justify-center">
@@ -330,13 +324,13 @@ export default function DreamsPage() {
                           )}
                         </span>
                         <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
-                          {isSaved ? "Salvo" : "Salvar no Diário"}
+                          {isSaved ? dict.common.saved : t.saveToJournal}
                         </span>
                       </button>
 
                       <button
                         onClick={handleShare}
-                        title="Encaminhar"
+                        title={dict.common.share}
                         className="group flex flex-col items-center gap-1"
                       >
                         <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform flex items-center justify-center">
@@ -355,7 +349,7 @@ export default function DreamsPage() {
                           </svg>
                         </span>
                         <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
-                          Encaminhar
+                          {dict.common.share}
                         </span>
                       </button>
                     </div>
@@ -369,7 +363,7 @@ export default function DreamsPage() {
                     className="group px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer hover:scale-105 transform flex items-center"
                   >
                     <span className="group-hover:scale-105 transition-transform duration-200 inline-block">
-                      Interpretar outro sonho
+                      {t.anotherDream}
                     </span>
                   </button>
                 </div>

@@ -3,7 +3,11 @@
  *
  * Toda a aleatoriedade acontece aqui, em código, ANTES de qualquer chamada ao
  * modelo de linguagem. O modelo recebe os símbolos como entrada fixa e apenas
- * interpreta. Nenhum resultado depende do texto da pergunta.
+ * interpreta. Nenhum resultado depende do texto da pergunta nem do idioma.
+ *
+ * Este módulo produz apenas DADOS ESTRUTURADOS (índices, números, flags). Os
+ * nomes e textos em cada idioma são gerados por `localize.ts`, para que a
+ * lógica do sorteio exista uma única vez, independente de idioma.
  *
  * O seed é gerado com o gerador criptográfico do Node e alimenta um PRNG
  * (sfc32) de boa qualidade estatística, para que uma tiragem possa ser
@@ -91,99 +95,131 @@ export function makeRng(seed: string): Rng {
 // Tipos comuns
 // ---------------------------------------------------------------------------
 
+export type OracleKey = "tarot" | "iching" | "runas" | "buzios" | "lenormand"
+
+/** Identidade de um símbolo sorteado, independente de idioma */
+export type Sym =
+  | { kind: "tarot"; card: number; reversed: boolean } // índice em TAROT_DECK (0–77)
+  | { kind: "hexagram"; number: number; role: "primary" | "resulting" } // King Wen 1–64
+  | { kind: "line"; n: number; value: 6 | 9 } // linha mutante (1–6, de baixo para cima)
+  | { kind: "rune"; index: number; reversed: boolean } // índice em RUNES (0–23)
+  | { kind: "odu"; open: number; throwIndex: 1 | 2 } // búzios abertos (0–16)
+  | { kind: "lenormand"; card: number } // índice em LENORMAND_DECK (0–35)
+
 export type DrawItem = {
-  position: string
-  name: string
-  /** termos usados para buscar trechos nos PDFs sobre este símbolo */
+  /** chave da posição no método (ex.: "cc3" = 4ª posição da Cruz Celta) */
+  positionKey: string
+  sym: Sym
+  /** termos usados para buscar trechos nos PDFs sobre este símbolo (pt + en) */
   searchTerms: string[]
 }
 
-export type OracleDraw = {
-  items: DrawItem[]
-  /** resumo curto, exibido no cliente como draw.notes */
-  notes: string
-  /** descrição completa da tiragem para o prompt do modelo */
-  description: string
+export type TarotMeta = { majors: number; reversed: number; dominantSuit: number | null }
+export type IChingMeta = {
+  lines: number[]
+  bits: number[]
+  primary: number
+  moving: number[]
+  resulting: number | null
+  lowerTrigram: number
+  upperTrigram: number
 }
+export type RunesMeta = { reversed: number }
+export type BuziosMeta = { first: number; second: number }
+export type LenormandMeta = { center: number }
+
+export type OracleDraw =
+  | { key: "tarot"; items: DrawItem[]; meta: TarotMeta }
+  | { key: "iching"; items: DrawItem[]; meta: IChingMeta }
+  | { key: "runas"; items: DrawItem[]; meta: RunesMeta }
+  | { key: "buzios"; items: DrawItem[]; meta: BuziosMeta }
+  | { key: "lenormand"; items: DrawItem[]; meta: LenormandMeta }
 
 const norm = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
 
 // ---------------------------------------------------------------------------
-// TARÔ — Cruz Celta, 78 cartas (Marselha)
+// TARÔ — Cruz Celta, 78 cartas (Marselha). Nomes canônicos em português.
 // ---------------------------------------------------------------------------
 
-const MAJOR_ARCANA = [
+export const MAJOR_ARCANA = [
   "O Louco", "O Mago", "A Papisa", "A Imperatriz", "O Imperador", "O Papa",
   "Os Enamorados", "O Carro", "A Justiça", "O Eremita", "A Roda da Fortuna",
   "A Força", "O Enforcado", "A Morte", "A Temperança", "O Diabo", "A Torre",
   "A Estrela", "A Lua", "O Sol", "O Julgamento", "O Mundo",
 ]
-const SUITS = ["Copas", "Espadas", "Paus", "Ouros"]
-const RANKS = ["Ás", "Dois", "Três", "Quatro", "Cinco", "Seis", "Sete", "Oito",
+export const SUITS = ["Copas", "Espadas", "Paus", "Ouros"]
+export const RANKS = ["Ás", "Dois", "Três", "Quatro", "Cinco", "Seis", "Sete", "Oito",
   "Nove", "Dez", "Valete", "Cavaleiro", "Rainha", "Rei"]
 
-export const TAROT_DECK: Array<{ name: string; terms: string[] }> = [
+// nomes em inglês, usados só para localizar trechos nos manuais em inglês
+const MAJOR_ARCANA_EN = [
+  "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", "The Hierophant",
+  "The Lovers", "The Chariot", "Justice", "The Hermit", "Wheel of Fortune",
+  "Strength", "The Hanged Man", "Death", "Temperance", "The Devil", "The Tower",
+  "The Star", "The Moon", "The Sun", "Judgement", "The World",
+]
+const SUITS_EN = ["Cups", "Swords", "Wands", "Coins"]
+const RANKS_EN = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+  "Nine", "Ten", "Page", "Knight", "Queen", "King"]
+
+export type TarotCard =
+  | { major: number; name: string; terms: string[] }
+  | { suit: number; rank: number; name: string; terms: string[] }
+
+/** índice 0–21 = arcanos maiores; 22–77 = menores (naipe × 14 + valor) */
+export const TAROT_DECK: TarotCard[] = [
   ...MAJOR_ARCANA.map((n, i) => ({
+    major: i,
     name: n,
-    terms: [n.replace(/^(O|A|Os|As) /, ""), `arcano ${i}`],
+    terms: [n.replace(/^(O|A|Os|As) /, ""), MAJOR_ARCANA_EN[i].replace(/^The /, ""), `arcano ${i}`],
   })),
-  ...SUITS.flatMap((s) =>
-    RANKS.map((r) => ({ name: `${r} de ${s}`, terms: [`${r} de ${s}`, s, r] }))
+  ...SUITS.flatMap((s, si) =>
+    RANKS.map((r, ri) => ({
+      suit: si,
+      rank: ri,
+      name: `${r} de ${s}`,
+      terms: [`${r} de ${s}`, s, `${RANKS_EN[ri]} of ${SUITS_EN[si]}`, SUITS_EN[si]],
+    }))
   ),
 ]
 
-export const CELTIC_CROSS = [
-  "Situação central", "O que cruza", "Fundamento", "Passado recente",
-  "Coroamento possível", "Futuro próximo", "Como o consulente se vê",
-  "Influências externas", "Esperanças ou medos", "Resultado final",
-]
+export const CELTIC_CROSS_COUNT = 10
 
-export function drawTarot(rng: Rng): OracleDraw {
-  const deck = rng.shuffle(TAROT_DECK)
-  const items: DrawItem[] = CELTIC_CROSS.map((position, i) => {
-    const card = deck[i]
+export function drawTarot(rng: Rng): Extract<OracleDraw, { key: "tarot" }> {
+  const order = rng.shuffle(TAROT_DECK.map((_, i) => i))
+  const items: DrawItem[] = []
+  let majors = 0
+  let reversedCount = 0
+  const suitCount = [0, 0, 0, 0]
+  for (let i = 0; i < CELTIC_CROSS_COUNT; i++) {
+    const card = order[i]
     const reversed = rng.bool()
-    return {
-      position,
-      name: reversed ? `${card.name} invertida` : card.name,
-      searchTerms: card.terms,
-    }
-  })
-  const majors = items.filter((it) => MAJOR_ARCANA.some((m) => it.name.startsWith(m))).length
-  const reversed = items.filter((it) => it.name.endsWith("invertida")).length
-  const suitCount: Record<string, number> = {}
-  for (const it of items) for (const s of SUITS) if (it.name.includes(` de ${s}`)) suitCount[s] = (suitCount[s] || 0) + 1
-  const dominant = Object.entries(suitCount).sort((a, b) => b[1] - a[1])[0]
-  const notes = [
-    `${majors} arcanos maiores`,
-    `${reversed} invertidas`,
-    dominant && dominant[1] >= 3 ? `predominância de ${dominant[0]}` : null,
-  ].filter(Boolean).join(" · ")
-
-  const description =
-    `Cruz Celta, 10 cartas sorteadas de um baralho de 78 (Tarô de Marselha), sem reposição, ` +
-    `cada carta com 50% de chance de sair invertida.\n` +
-    items.map((it, i) => `${i + 1}. ${it.position}: ${it.name}`).join("\n") +
-    `\nPadrão: ${notes}.`
-  return { items, notes, description }
+    const c = TAROT_DECK[card]
+    if ("major" in c) majors++
+    else suitCount[c.suit]++
+    if (reversed) reversedCount++
+    items.push({ positionKey: `cc${i}`, sym: { kind: "tarot", card, reversed }, searchTerms: c.terms })
+  }
+  const maxSuit = Math.max(...suitCount)
+  const dominantSuit = maxSuit >= 3 ? suitCount.indexOf(maxSuit) : null
+  return { key: "tarot", items, meta: { majors, reversed: reversedCount, dominantSuit } }
 }
 
 // ---------------------------------------------------------------------------
 // I CHING — três moedas, hexagrama principal, linhas mutantes, resultante
 // ---------------------------------------------------------------------------
 
-type Trigram = { key: string; pinyin: string; name: string; attr: string }
 // key = três linhas de baixo para cima, 1 = yang, 0 = yin
-const TRIGRAMS: Trigram[] = [
-  { key: "111", pinyin: "Qian", name: "Céu", attr: "o criativo, força" },
-  { key: "110", pinyin: "Dui", name: "Lago", attr: "a alegria, serenidade" },
-  { key: "101", pinyin: "Li", name: "Fogo", attr: "o aderir, clareza" },
-  { key: "100", pinyin: "Zhen", name: "Trovão", attr: "o incitar, movimento" },
-  { key: "011", pinyin: "Xun", name: "Vento", attr: "o suave, penetração" },
-  { key: "010", pinyin: "Kan", name: "Água", attr: "o abismal, perigo" },
-  { key: "001", pinyin: "Gen", name: "Montanha", attr: "a quietude, repouso" },
-  { key: "000", pinyin: "Kun", name: "Terra", attr: "o receptivo, devoção" },
+export const TRIGRAMS = [
+  { key: "111", pinyin: "Qian" },
+  { key: "110", pinyin: "Dui" },
+  { key: "101", pinyin: "Li" },
+  { key: "100", pinyin: "Zhen" },
+  { key: "011", pinyin: "Xun" },
+  { key: "010", pinyin: "Kan" },
+  { key: "001", pinyin: "Gen" },
+  { key: "000", pinyin: "Kun" },
 ]
 
 // Tabela King Wen: KING_WEN[inferior][superior], ordem dos trigramas acima
@@ -199,9 +235,10 @@ const KING_WEN: number[][] = [
   /* Kun  */ [12, 45, 35, 16, 20, 8, 23, 2],
 ]
 
-// nomes em inglês (Wilhelm), usados só para localizar trechos no manual em inglês
-const HEXAGRAMS_EN = ["The Creative","The Receptive","Difficulty at the Beginning","Youthful Folly","Waiting","Conflict","The Army","Holding Together","Small Taming","Treading","Peace","Standstill","Fellowship","Great Possession","Modesty","Enthusiasm","Following","Work on the Decayed","Approach","Contemplation","Biting Through","Grace","Splitting Apart","Return","Innocence","Great Taming","Nourishment","Great Preponderance","The Abysmal","The Clinging","Influence","Duration","Retreat","Great Power","Progress","Darkening of the Light","The Family","Opposition","Obstruction","Deliverance","Decrease","Increase","Breakthrough","Coming to Meet","Gathering Together","Pushing Upward","Oppression","The Well","Revolution","The Cauldron","The Arousing","Keeping Still","Development","The Marrying Maiden","Abundance","The Wanderer","The Gentle","The Joyous","Dispersion","Limitation","Inner Truth","Small Preponderance","After Completion","Before Completion"]
+// nomes em inglês (Wilhelm), usados nos termos de busca e na localização
+export const HEXAGRAMS_EN = ["The Creative","The Receptive","Difficulty at the Beginning","Youthful Folly","Waiting","Conflict","The Army","Holding Together","Small Taming","Treading","Peace","Standstill","Fellowship","Great Possession","Modesty","Enthusiasm","Following","Work on the Decayed","Approach","Contemplation","Biting Through","Grace","Splitting Apart","Return","Innocence","Great Taming","Nourishment","Great Preponderance","The Abysmal","The Clinging","Influence","Duration","Retreat","Great Power","Progress","Darkening of the Light","The Family","Opposition","Obstruction","Deliverance","Decrease","Increase","Breakthrough","Coming to Meet","Gathering Together","Pushing Upward","Oppression","The Well","Revolution","The Cauldron","The Arousing","Keeping Still","Development","The Marrying Maiden","Abundance","The Wanderer","The Gentle","The Joyous","Dispersion","Limitation","Inner Truth","Small Preponderance","After Completion","Before Completion"]
 
+/** nomes canônicos em português + pinyin, índice = número King Wen − 1 */
 export const HEXAGRAMS: Array<{ pinyin: string; name: string }> = [
   { pinyin: "Qian", name: "O Criativo" },
   { pinyin: "Kun", name: "O Receptivo" },
@@ -269,25 +306,16 @@ export const HEXAGRAMS: Array<{ pinyin: string; name: string }> = [
   { pinyin: "Wei Ji", name: "Antes da Conclusão" },
 ]
 
-function trigramOf(bits: number[]): Trigram {
+function trigramIndex(bits: number[]): number {
   const key = bits.join("")
-  const t = TRIGRAMS.find((x) => x.key === key)
-  if (!t) throw new Error(`trigrama desconhecido ${key}`)
-  return t
+  const i = TRIGRAMS.findIndex((x) => x.key === key)
+  if (i < 0) throw new Error(`trigrama desconhecido ${key}`)
+  return i
 }
 
 /** bits de baixo para cima (6 valores 0/1) → número King Wen */
 export function hexagramNumber(bits: number[]): number {
-  const lower = trigramOf(bits.slice(0, 3))
-  const upper = trigramOf(bits.slice(3, 6))
-  const li = TRIGRAMS.indexOf(lower)
-  const ui = TRIGRAMS.indexOf(upper)
-  return KING_WEN[li][ui]
-}
-
-function hexLabel(n: number) {
-  const h = HEXAGRAMS[n - 1]
-  return `${n}. ${h.name}`
+  return KING_WEN[trigramIndex(bits.slice(0, 3))][trigramIndex(bits.slice(3, 6))]
 }
 
 function hexTerms(n: number) {
@@ -301,11 +329,7 @@ function hexTerms(n: number) {
   ]
 }
 
-function ordinal(n: number) {
-  return ["primeira", "segunda", "terceira", "quarta", "quinta", "sexta"][n - 1]
-}
-
-export function drawIChing(rng: Rng): OracleDraw {
+export function drawIChing(rng: Rng): Extract<OracleDraw, { key: "iching" }> {
   // três moedas: cara = 3, coroa = 2; soma 6 (yin mutante), 7 (yang), 8 (yin), 9 (yang mutante)
   const lines: number[] = []
   for (let i = 0; i < 6; i++) {
@@ -316,43 +340,42 @@ export function drawIChing(rng: Rng): OracleDraw {
   const bits = lines.map((v) => (v === 7 || v === 9 ? 1 : 0))
   const moving = lines.map((v, i) => (v === 6 || v === 9 ? i + 1 : 0)).filter(Boolean)
   const primary = hexagramNumber(bits)
-  const lower = trigramOf(bits.slice(0, 3))
-  const upper = trigramOf(bits.slice(3, 6))
 
   const items: DrawItem[] = [
-    { position: "Hexagrama principal", name: hexLabel(primary), searchTerms: hexTerms(primary) },
+    { positionKey: "primary", sym: { kind: "hexagram", number: primary, role: "primary" }, searchTerms: hexTerms(primary) },
   ]
   for (const n of moving) {
-    const v = lines[n - 1]
+    const value = lines[n - 1] as 6 | 9
     items.push({
-      position: `Linha ${n} mutante`,
-      name: v === 9
-        ? `Nove na ${ordinal(n)} posição (yang → yin)`
-        : `Seis na ${ordinal(n)} posição (yin → yang)`,
-      searchTerms: [v === 9 ? "nove" : "seis", `${ordinal(n)} posição`, ...hexTerms(primary)],
+      positionKey: `line${n}`,
+      sym: { kind: "line", n, value },
+      searchTerms: [value === 9 ? "nove" : "seis", value === 9 ? "nine" : "six", ...hexTerms(primary)],
     })
   }
   let resulting: number | null = null
   if (moving.length > 0) {
     const rbits = bits.map((b, i) => (moving.includes(i + 1) ? 1 - b : b))
     resulting = hexagramNumber(rbits)
-    items.push({ position: "Hexagrama resultante", name: hexLabel(resulting), searchTerms: hexTerms(resulting) })
+    items.push({
+      positionKey: "resulting",
+      sym: { kind: "hexagram", number: resulting, role: "resulting" },
+      searchTerms: hexTerms(resulting),
+    })
   }
 
-  const notes = resulting
-    ? `Hex. ${primary} → ${resulting} (linhas mutantes: ${moving.join(", ")})`
-    : `Hex. ${primary}, sem linhas mutantes`
-
-  const description =
-    `Método das três moedas, seis lançamentos (de baixo para cima).\n` +
-    `Valores das linhas: ${lines.join(" ")} (6 = yin mutante, 7 = yang, 8 = yin, 9 = yang mutante).\n` +
-    `Hexagrama principal: ${hexLabel(primary)} (${HEXAGRAMS[primary - 1].pinyin}). ` +
-    `Trigrama inferior: ${lower.pinyin} — ${lower.name} (${lower.attr}). ` +
-    `Trigrama superior: ${upper.pinyin} — ${upper.name} (${upper.attr}).\n` +
-    (moving.length
-      ? `Linhas mutantes: ${moving.join(", ")}.\nHexagrama resultante: ${hexLabel(resulting!)} (${HEXAGRAMS[resulting! - 1].pinyin}).`
-      : `Sem linhas mutantes: não há hexagrama resultante; leia apenas o Julgamento e a Imagem.`)
-  return { items, notes, description }
+  return {
+    key: "iching",
+    items,
+    meta: {
+      lines,
+      bits,
+      primary,
+      moving,
+      resulting,
+      lowerTrigram: trigramIndex(bits.slice(0, 3)),
+      upperTrigram: trigramIndex(bits.slice(3, 6)),
+    },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -386,29 +409,19 @@ export const RUNES: Array<{ name: string; glyph: string; reversible: boolean }> 
   { name: "Othala", glyph: "ᛟ", reversible: true },
 ]
 
-export const RUNE_POSITIONS = [
-  "Raiz", "Obstáculo", "Fundamento oculto", "Passado próximo", "Futuro próximo",
-  "Caminho", "Sombra", "Proteção", "Resultado",
-]
+export const RUNE_POSITIONS_COUNT = 9
 
-export function drawRunes(rng: Rng): OracleDraw {
-  const bag = rng.shuffle(RUNES)
-  const items: DrawItem[] = RUNE_POSITIONS.map((position, i) => {
-    const r = bag[i]
-    const reversed = r.reversible && rng.bool()
-    return {
-      position,
-      name: `${r.name} (${r.glyph})${reversed ? " invertida" : ""}`,
-      searchTerms: [r.name],
-    }
-  })
-  const reversed = items.filter((it) => it.name.endsWith("invertida")).length
-  const notes = `9 runas de 24, ${reversed} invertida${reversed === 1 ? "" : "s"}`
-  const description =
-    `Mapa de 9 forças: 9 runas sorteadas de um saco com as 24 runas do Futhark Antigo, sem reposição. ` +
-    `Runas reversíveis saem invertidas com 50% de chance; Gebo, Hagalaz, Isa, Jera, Eihwaz, Sowilo, Ingwaz e Dagaz não têm posição invertida.\n` +
-    items.map((it, i) => `${i + 1}. ${it.position}: ${it.name}`).join("\n")
-  return { items, notes, description }
+export function drawRunes(rng: Rng): Extract<OracleDraw, { key: "runas" }> {
+  const order = rng.shuffle(RUNES.map((_, i) => i))
+  const items: DrawItem[] = []
+  let reversedCount = 0
+  for (let i = 0; i < RUNE_POSITIONS_COUNT; i++) {
+    const index = order[i]
+    const reversed = RUNES[index].reversible && rng.bool()
+    if (reversed) reversedCount++
+    items.push({ positionKey: `r${i}`, sym: { kind: "rune", index, reversed }, searchTerms: [RUNES[index].name] })
+  }
+  return { key: "runas", items, meta: { reversed: reversedCount } }
 }
 
 // ---------------------------------------------------------------------------
@@ -441,31 +454,24 @@ function throwShells(rng: Rng): number {
   return open
 }
 
-export function drawBuzios(rng: Rng): OracleDraw {
+export function drawBuzios(rng: Rng): Extract<OracleDraw, { key: "buzios" }> {
   const first = throwShells(rng)
   const second = throwShells(rng)
-  const label = (n: number) => `${n} búzios abertos — ${ODUS[n]}`
   const items: DrawItem[] = [
-    { position: "Odu principal", name: label(first), searchTerms: [ODUS[first], `${first} búzios`] },
-    { position: "Segunda queda (confirmação)", name: label(second), searchTerms: [ODUS[second], `${second} búzios`] },
+    { positionKey: "main", sym: { kind: "odu", open: first, throwIndex: 1 }, searchTerms: [ODUS[first], `${first} búzios`] },
+    { positionKey: "second", sym: { kind: "odu", open: second, throwIndex: 2 }, searchTerms: [ODUS[second], `${second} búzios`] },
   ]
-  const notes = `${ODUS[first]} (${first}) · confirmação ${ODUS[second]} (${second})`
-  const description =
-    `Jogo de 16 búzios (merindilogun). Cada concha cai aberta ou fechada com igual probabilidade; ` +
-    `o Odu é dado pelo número de búzios abertos.\n` +
-    `Primeira queda (Odu principal): ${label(first)}.\n` +
-    `Segunda queda (confirmação / aspecto complementar): ${label(second)}.\n` +
-    `Observação: 0 abertos = Opirá (jogo fechado); 16 abertos = Alafia.`
-  return { items, notes, description }
+  return { key: "buzios", items, meta: { first, second } }
 }
 
 // ---------------------------------------------------------------------------
 // LENORMAND — 36 cartas, mesa 3×3
 // ---------------------------------------------------------------------------
 
-// nomes em inglês, usados só para localizar trechos nos manuais em inglês
-const LENORMAND_EN = ["Rider","Clover","Ship","House","Tree","Clouds","Snake","Coffin","Bouquet","Scythe","Whip","Birds","Child","Fox","Bear","Stars","Stork","Dog","Tower","Garden","Mountain","Crossroads","Mice","Heart","Ring","Book","Letter","Man","Woman","Lily","Sun","Moon","Key","Fish","Anchor","Cross"]
+// nomes em inglês, usados nos termos de busca e na localização
+export const LENORMAND_EN = ["Rider","Clover","Ship","House","Tree","Clouds","Snake","Coffin","Bouquet","Scythe","Whip","Birds","Child","Fox","Bear","Stars","Stork","Dog","Tower","Garden","Mountain","Crossroads","Mice","Heart","Ring","Book","Letter","Man","Woman","Lily","Sun","Moon","Key","Fish","Anchor","Cross"]
 
+/** nomes canônicos em português, índice = número da carta − 1 */
 export const LENORMAND_DECK = [
   "Cavaleiro", "Trevo", "Navio", "Casa", "Árvore", "Nuvens", "Serpente", "Caixão",
   "Buquê", "Foice", "Chicote", "Pássaros", "Criança", "Raposa", "Urso", "Estrelas",
@@ -474,43 +480,38 @@ export const LENORMAND_DECK = [
   "Peixes", "Âncora", "Cruz",
 ].map((name, i) => ({ number: i + 1, name, en: LENORMAND_EN[i] }))
 
-// ordem de leitura linha a linha; o centro é o 5º item
-export const LENORMAND_POSITIONS = [
-  "Canto sup. esq.", "Acima", "Canto sup. dir.",
-  "Esquerda", "Centro", "Direita",
-  "Canto inf. esq.", "Abaixo", "Canto inf. dir.",
-]
+/** ordem de leitura linha a linha; o centro é o índice 4 */
+export const LENORMAND_POSITIONS_COUNT = 9
 
-export function drawLenormand(rng: Rng): OracleDraw {
-  const deck = rng.shuffle(LENORMAND_DECK)
-  const items: DrawItem[] = LENORMAND_POSITIONS.map((position, i) => {
-    const c = deck[i]
-    return { position, name: `${c.number} — ${c.name}`, searchTerms: [c.name, c.en] }
-  })
-  const center = items[4]
-  const notes = `Centro: ${center.name}`
-  const description =
-    `Mesa de 9 cartas (quadrado 3×3), sorteadas de um baralho de 36 sem reposição. ` +
-    `Disposição linha a linha:\n` +
-    `[${items[0].name}] [${items[1].name}] [${items[2].name}]\n` +
-    `[${items[3].name}] [${items[4].name}] [${items[5].name}]\n` +
-    `[${items[6].name}] [${items[7].name}] [${items[8].name}]\n` +
-    `Carta central (tema dominante): ${center.name}.`
-  return { items, notes, description }
+export function drawLenormand(rng: Rng): Extract<OracleDraw, { key: "lenormand" }> {
+  const order = rng.shuffle(LENORMAND_DECK.map((_, i) => i))
+  const items: DrawItem[] = []
+  for (let i = 0; i < LENORMAND_POSITIONS_COUNT; i++) {
+    const card = order[i]
+    const c = LENORMAND_DECK[card]
+    items.push({ positionKey: `l${i}`, sym: { kind: "lenormand", card }, searchTerms: [c.name, c.en] })
+  }
+  return { key: "lenormand", items, meta: { center: order[4] } }
 }
 
 // ---------------------------------------------------------------------------
 // Tiragem simultânea
 // ---------------------------------------------------------------------------
 
-export type OracleKey = "tarot" | "iching" | "runas" | "buzios" | "lenormand"
+export type AllDraws = {
+  tarot: Extract<OracleDraw, { key: "tarot" }>
+  iching: Extract<OracleDraw, { key: "iching" }>
+  runas: Extract<OracleDraw, { key: "runas" }>
+  buzios: Extract<OracleDraw, { key: "buzios" }>
+  lenormand: Extract<OracleDraw, { key: "lenormand" }>
+}
 
 /**
  * Realiza as cinco tiragens de uma vez. Cada oráculo recebe seu próprio RNG
  * derivado do seed, de modo que o resultado de um nunca influencia o outro e
  * cada tiragem é reproduzível isoladamente.
  */
-export function drawAll(seed: string): Record<OracleKey, OracleDraw> {
+export function drawAll(seed: string): AllDraws {
   return {
     tarot: drawTarot(makeRng(`${seed}:tarot`)),
     iching: drawIChing(makeRng(`${seed}:iching`)),

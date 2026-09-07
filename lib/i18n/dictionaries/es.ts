@@ -1,0 +1,417 @@
+import type { Dictionary } from "./pt"
+
+export const es: Dictionary = {
+  meta: {
+    title: "Multioráculo - Síntesis Multioráculo",
+    description:
+      "La misma pregunta, vista desde varios ángulos. Tarot, I Ching, Runas, Búzios y cartas Lenormand.",
+  },
+
+  common: {
+    appName: "Multioráculo",
+    login: "Iniciar sesión",
+    logout: "Salir",
+    save: "Guardar",
+    saved: "Guardado",
+    saving: "Guardando…",
+    cancel: "Cancelar",
+    delete: "Eliminar",
+    close: "Cerrar",
+    edit: "Editar",
+    collapse: "Contraer",
+    options: "Opciones",
+    share: "Compartir",
+    copied: "Copiado al portapapeles.",
+    loginRequired: "Inicia sesión para continuar.",
+  },
+
+  oracles: {
+    tarot: "Tarot",
+    iching: "I Ching",
+    runas: "Runas",
+    buzios: "Búzios",
+    lenormand: "Lenormand",
+  },
+
+  nav: {
+    home: "Multioráculo",
+    dreams: "Diario de Sueños",
+    dreamsShort: "Sueños",
+    grimoire: "Grimorio",
+    subscription: "Suscripción",
+    savedReadings: "Lecturas Guardadas",
+    oracles: "Oráculos",
+    faq: "FAQ",
+    savedDreams: "Sueños Guardados",
+  },
+
+  header: {
+    backToStart: "Volver al inicio",
+    circularText: "oráculo • síntesis multioráculo • tarot • i ching • runas • búzios • lenormand • ",
+    sessionEnded: "Sesión cerrada.",
+  },
+
+  locale: {
+    label: "Idioma",
+  },
+
+  login: {
+    title: "Entra para guardar tus lecturas",
+    subtitle: "Sin cuenta puedes consultar normalmente, pero no tendrás historial.",
+    namePlaceholder: "Tu nombre",
+    emailPlaceholder: "tu@email.com",
+    passwordPlaceholder: "Tu contraseña",
+    signIn: "Entrar",
+    signingIn: "Entrando...",
+    createAccount: "Crear cuenta",
+    creating: "Creando...",
+    haveAccount: "Ya tengo cuenta",
+    continueWithout: "Continuar sin iniciar sesión",
+    success: "Sesión iniciada con éxito.",
+    accountCreated: "Cuenta creada. Revisa tu correo para confirmar el registro antes de entrar.",
+  },
+
+  hero: {
+    badge: "Síntesis Multioráculo",
+    titleEmphasis: "La singularidad",
+    titleRest: "te trajo",
+    titleLine2: "hasta aquí.",
+    subtitle:
+      "La misma pregunta, vista desde varios ángulos. Tarot, I Ching, Runas, Búzios y cartas Lenormand. Cada oráculo revela una parte del mapa. Juntos, muestran el camino entero.",
+    prompt: "¿Lista para empezar? Escribe tu pregunta.",
+    placeholders: [
+      "¿Dónde estoy confundiendo deseo con destino?",
+      "¿Qué ha puesto ya la vida frente a mí que todavía no he visto?",
+      "¿Qué parte de mí necesita morir para que algo mayor pueda nacer?",
+      "Si no me guiara el miedo, ¿cuál sería mi gesto ahora?",
+      "¿Qué es verdadero aquí y qué es solo ruido de la mente?",
+      "¿Qué lección intenta enseñarme el tiempo y yo insisto en ignorar?",
+      "¿Qué corriente invisible mueve mi destino en este instante?",
+      "¿Dónde intento controlar cuando debería simplemente permitir?",
+      "¿Cuál es el hilo más fino, pero más fuerte, que puede guiarme ahora?",
+      "¿Qué estoy llamando obstáculo cuando en realidad es una iniciación?",
+      "¿Qué oportunidad ya está madura y solo espera mi coraje?",
+      "¿Qué significa realmente la prosperidad para mí ahora?",
+      "Si la vida me diera un solo gesto hoy, ¿cuál sería el correcto?",
+    ],
+    submit: "Recibir mi respuesta",
+  },
+
+  results: {
+    yourQuestion: "Tu pregunta",
+    stageDraw: "• está realizando tu tirada",
+    stageOracles: "• está leyendo cada oráculo",
+    stageSynthesis: "• está escribiendo tu respuesta",
+    yourAnswer: "Tu respuesta",
+    yourAnswerHint: "• Esta es tu respuesta",
+    readByOracle: "Leer por oráculo",
+    drawLabel: "Tirada",
+    traditionalReading: "Lectura tradicional",
+    interpreting: "Interpretando la tirada...",
+    saveReading: "Guardar Lectura",
+    saveReadingTitle: "Guardar lectura",
+    saved: "Guardado",
+    newQuestion: "Hacer otra pregunta",
+    noReadingToSave: "No hay una lectura lista para guardar.",
+    loginToSave: "Inicia sesión para guardar.",
+    saveFailed: "No se pudo guardar la lectura.",
+    savedOk: "¡Lectura guardada!",
+    consultFailed: "No se pudo completar la consulta.",
+    drawIncomplete: "La tirada no se completó.",
+  },
+
+  oraclesPage: {
+    whatIsTitle: "Qué es un oráculo",
+    whatIsText:
+      "Un oráculo es, en esencia, una tecnología de percepción. No es solo superstición o azar: es un mecanismo construido por generaciones para transformar patrones invisibles en símbolos visibles.",
+    howTitle: "Cómo funciona técnicamente",
+    how: [
+      {
+        title: "1. Sistema cerrado de símbolos",
+        text: "Cada oráculo tiene un conjunto limitado y bien definido de signos (hexagramas, cartas, runas, caracolas).",
+      },
+      {
+        title: "2. Azar ritualizado",
+        text: "El sorteo o el lanzamiento crea el puente. Desarma la mente racional y permite que entren el inconsciente y el campo de sincronicidad.",
+      },
+      {
+        title: "3. Repertorio interpretativo",
+        text: "Cada símbolo fue cultivado en una tradición. Carga capas de sentido acumuladas a lo largo de siglos.",
+      },
+      {
+        title: "4. Sincronicidad",
+        text: "La correspondencia entre tu pregunta y el resultado no es causal, es simbólica. Es como si el universo mostrara un espejo específico en ese instante.",
+      },
+    ],
+    askTitle: "Cómo preguntar",
+    askIntro:
+      "La claridad de la respuesta depende de la claridad de la pregunta. Más que las palabras exactas, importa la postura interior. Las preguntas hechas con apertura y atención suelen traer respuestas más nítidas.",
+    askExamples: [
+      { label: "Pregunta por dirección:", example: "\"¿Hacia dónde mover la energía ahora?\"" },
+      { label: "Pregunta por un gesto:", example: "\"¿Qué acción transforma este ciclo?\"" },
+      { label: "Pregunta por comprensión:", example: "\"¿Qué es lo que todavía no veo?\"" },
+    ],
+    askOutro:
+      "Evita preguntas cerradas de \"sí o no\". Prefiere enunciados que revelen el movimiento del momento. El oráculo no entrega una orden, sino un espejo. Señala hacia dónde mirar y con qué espíritu actuar.",
+    deliversTitle: "Qué entrega el oráculo",
+    deliversText:
+      "El oráculo no predice el futuro como una máquina. Muestra la cualidad del momento. Qué fuerzas están actuando. Qué riesgos y posibilidades ya están en movimiento. Así como una brújula no te empuja, sino que muestra el norte, el oráculo no decide, revela dirección.",
+    traditionsTitle: "Las cinco tradiciones del Multioráculo",
+    traditionsIntro:
+      "Para traducir tu pregunta con precisión, reunimos un conjunto esencial de tradiciones: cinco lenguajes simbólicos que componen la lectura simultánea del Multioráculo. Cada uno ilumina un plano del momento; juntos, ofrecen una visión coherente y accionable.",
+    traditions: [
+      {
+        title: "Tarot",
+        text: "Lenguaje de 78 imágenes que reflejan el viaje psíquico. En la lectura junguiana, los Arcanos Mayores trazan la individuación: por ejemplo, el Loco como impulso de vida, la Muerte como transformación inevitable, la Torre como caída de las estructuras rígidas, la Templanza como integración de opuestos y el Mundo como totalidad. Son ejemplos, no una lista completa. El Tarot no predice; revela qué arquetipo está en escena y qué actitud pide ahora. Funciona muy bien para nombrar la fuerza interna y el conflicto que moldean la pregunta.",
+      },
+      {
+        title: "I Ching",
+        text: "Clásico chino del cambio con 64 hexagramas. Cada consulta trae el Dictamen, la Imagen y, cuando aparecen, las Líneas Mutantes. Describe la cualidad del tiempo, orientando cuándo avanzar, cuándo recogerse y cómo alinear carácter y acción. La ética es central: claridad, modestia, firmeza, suavidad. En lugar de sí o no, el I Ching ofrece ritmo y postura. Es excelente para decisiones que dependen del timing y del ajuste fino.",
+      },
+      {
+        title: "Runas",
+        text: "Sistema del Futhark Antiguo en el que cada runa es letra, fuerza y principio de naturaleza. Hablan de la voluntad en acto: iniciar, cortar, proteger, revelar, cosechar. Son directas y operativas, y favorecen lecturas cortas que se convierten en práctica rápida. La clave es la cadencia: crear ciclos breves de gesto y revisión, sin confundir velocidad con progreso. Útiles para destrabar el movimiento y dar disciplina al impulso.",
+      },
+      {
+        title: "Búzios",
+        text: "Oráculo afroatlántico que lee la caída de las caracolas para indicar odus y cualidades de los Orixás, es decir, principios vivos como justicia, coraje, dulzura, movimiento y paz. Muestra el flujo y el bloqueo del axé en la situación y llama a la responsabilidad: la palabra justa, el tiempo justo, el respeto al límite. En la app lo tratamos como orientación de principios y postura. Para ritos y prescripciones religiosas, siempre acudir a una casa de culto y a un liderazgo cualificado.",
+      },
+      {
+        title: "Lenormand",
+        text: "Baraja de 36 cartas, lenguaje práctico de lo cotidiano: carta, llave, caminos, casa, jardín, barco. Se lee en pares y cadenas como frases cortas, generando señales verificables a corto plazo. Es el puente entre símbolo y agenda: confirmaciones, invitaciones, obstáculos logísticos, desenlaces de 24 a 72 horas. Ideal para validar un presentimiento con evidencia concreta.",
+      },
+    ],
+    whyTogetherTitle: "Por qué leer los cinco juntos",
+    whyTogetherText:
+      "Cada sistema ilumina un plano del mismo instante. El Tarot nombra la dinámica psíquica. El I Ching alinea con el tiempo. Las Runas dan gesto y cadencia. Los Búzios ofrecen un eje ético y relación con lo sagrado. El Lenormand ancla todo en la señal práctica. En conjunto, no recibes cinco respuestas sueltas, sino una visión coherente que va del arquetipo al calendario, de la intención a la acción.",
+  },
+
+  faq: {
+    items: [
+      {
+        q: "¿El Multioráculo predice el futuro?",
+        a: "No. Revela la cualidad del momento y la postura eficaz ahora. Tú sigues al mando de tus decisiones.",
+      },
+      {
+        q: "¿Qué recibo en cada tirada?",
+        a: "Una lectura simultánea de Tarot, I Ching, Runas, Búzios y Lenormand con síntesis unificada y los cinco oráculos en pestañas para consulta completa. Incluye una señal práctica para las próximas 24 a 72 horas.",
+      },
+      {
+        q: "¿Cuántas tiradas tengo en cada plan?",
+        a: "Esencial: dos por semana, 8 por mes en total.\nIlimitado: tiradas ilimitadas para uso personal.",
+      },
+      {
+        q: "¿Qué cuenta como una tirada?",
+        a: "Hacer una pregunta nueva y generar la lectura completa. Reabrir la misma lectura no consume una nueva tirada.",
+      },
+      {
+        q: "¿Puedo cancelar cuando quiera?",
+        a: "Sí. Cancelación en cualquier momento. El acceso se mantiene hasta el final del ciclo ya pagado.",
+      },
+      {
+        q: "¿Hay periodo de prueba gratuito?",
+        a: "Podemos hacer campañas promocionales con una tirada gratuita. Cuando esté activa, avisaremos dentro de la app.",
+      },
+      {
+        q: "¿Qué hago si las respuestas parecen contradecirse?",
+        a: "Usa la síntesis unificada como referencia principal. Alinea los cinco ángulos en una orientación coherente. Después, profundiza en las pestañas para ver matices de timing, actitud y verificación práctica.",
+      },
+      {
+        q: "¿Con qué frecuencia debo preguntar?",
+        a: "La calidad vence a la cantidad. Una buena pregunta por semana suele producir más claridad que muchas preguntas por día. En Esencial, sigue la cadencia de dos por semana. En Ilimitado, mantén una intención clara para no generar ruido.",
+      },
+      {
+        q: "¿La app guarda mis preguntas y lecturas?",
+        a: "El historial queda en tu dispositivo para que puedas revisarlo. Si activamos la sincronización en la nube, avisaremos con transparencia y opciones de control.",
+      },
+      {
+        q: "¿Las lecturas sustituyen el asesoramiento médico, jurídico o financiero?",
+        a: "No. El Multioráculo es una herramienta de reflexión y dirección. Para decisiones clínicas, legales o financieras, consulta a profesionales cualificados.",
+      },
+      {
+        q: "¿Cómo se trata el Búzios en la app?",
+        a: "Con respeto a la tradición afrobrasileña. Usamos un lenguaje de principios y postura. Para ritos, prescripciones específicas y orientación religiosa, acude a una casa de culto y a un sacerdote cualificado.",
+      },
+      {
+        q: "¿Qué significa señal práctica de 24 a 72 horas?",
+        a: "Es un indicador verificable en lo cotidiano, como un mensaje, una invitación, una confirmación o un umbral concreto. Si la señal llega, avanza. Si no llega, refina la pregunta y ajusta la postura.",
+      },
+      {
+        q: "¿Cómo hacer mis preguntas más claras?",
+        a: "Prefiere preguntas abiertas y situadas en el presente. Ejemplos: ¿Qué gesto destraba este ciclo? ¿Qué necesito dejar atrás ahora? ¿Dónde está el hilo guía de esta decisión?",
+      },
+      {
+        q: "¿El Ilimitado tiene algún límite oculto?",
+        a: "Es ilimitado para uso personal humano. No permitimos automatizaciones, uso masivo ni redistribución comercial de las tiradas.",
+      },
+      {
+        q: "¿Funciona en el móvil?",
+        a: "Sí. La experiencia está diseñada primero para móvil.",
+      },
+      {
+        q: "¿Qué soporte hay disponible?",
+        a: "Soporte por correo en Esencial. Soporte prioritario en Ilimitado. El contacto aparece dentro de la app en Ayuda.",
+      },
+    ],
+  },
+
+  subscription: {
+    titleSuffix: ": Suscríbete a la claridad.",
+    subtitle: "Las decisiones correctas empiezan con respuestas precisas. Cinco oráculos convergen para ti.",
+    perMonth: "/mes",
+    forWhom: "Para quien:",
+    mostPopular: "Más Popular",
+    essential: {
+      name: "Esencial",
+      price: "R$ 9,99",
+      tagline: "Cadencia y foco.",
+      description: "Dos tiradas por semana (8 al mes), para mantener el rumbo sin ansiedad.",
+      features: [
+        "Lectura simultánea de los 5 oráculos + resumen unificado",
+        "Oráculos en pestañas para una revisión profunda",
+        "Guardar y revisitar lecturas (sello de momento)",
+        "Señales verificables en lo cotidiano",
+      ],
+      forWhom: "prefiere una buena pregunta a la vez, semana tras semana.",
+      cta: "Empezar con Esencial",
+    },
+    unlimited: {
+      name: "Ilimitado",
+      price: "R$ 13,99",
+      tagline: "Decisión a ritmo vivo.",
+      description: "Tiradas ilimitadas (uso personal) para transformar símbolo en gesto, todos los días.",
+      features: [
+        "Todo lo de Esencial",
+        "Historial completo y favoritos",
+        "Recordatorios para las señales prácticas",
+        "Soporte prioritario",
+      ],
+      forWhom: "crea, lidera o ajusta el rumbo con frecuencia y quiere cero fricción.",
+      cta: "Suscribirme a Ilimitado",
+    },
+    notesTitle: "Observaciones",
+    notes: [
+      "Cuenta como 1 tirada cuando haces una pregunta nueva y recibes la lectura completa; reabrir la misma lectura no consume.",
+      "Cancelación en cualquier momento; cobro mensual recurrente (BRL).",
+      "\"Ilimitado\" sujeto a un uso personal razonable (no permite automatización/uso masivo)",
+    ],
+  },
+
+  savedReadings: {
+    title: "Lecturas Guardadas",
+    emptyTitle: "Todavía no hay lecturas guardadas.",
+    emptyText: "Haz una pregunta y guarda tu primera lectura.",
+    askNow: "Hacer una pregunta ahora",
+    confirmDelete: "¿Deseas eliminar esta lectura?",
+    view: "Ver lectura",
+  },
+
+  readingDetail: {
+    back: "Lecturas Guardadas",
+    yourQuestion: "Tu pregunta",
+    yourAnswer: "Tu respuesta",
+    readByOracle: "Leer por oráculo",
+    drawLabel: "Tirada",
+    traditionalReading: "Lectura tradicional",
+  },
+
+  readingNotes: {
+    title: "Nota personal",
+    placeholder: "Añadir una nota personal sobre esta lectura...",
+    alsoJournal: "Guardar también en el Diario",
+    journalTitlePlaceholder: "Título de la entrada del Diario (opcional)",
+    save: "Guardar nota",
+    savedCheck: "Guardado ✓",
+    savedOk: "Nota guardada.",
+    savedWithJournal: "Nota guardada y añadida al Diario.",
+    errorSaving: "Error al guardar la nota.",
+    errorSavingReading: "Error al guardar la nota en la lectura.",
+    errorSavingJournal: "Error al guardar en el Diario.",
+  },
+
+  deleteReading: {
+    delete: "Eliminar lectura",
+    confirm: "Confirmar eliminación",
+    deleting: "Eliminando...",
+    failed: "No se pudo eliminar la lectura.",
+    done: "Lectura eliminada.",
+  },
+
+  dreams: {
+    titleEmphasis: "El inconsciente",
+    titleRest: "habla",
+    titleLine2: "mientras duermes.",
+    subtitle: "Describe tu sueño y revela los símbolos que la psique está comunicando.",
+    prompt: "Describe tu sueño con los detalles que recuerdes.",
+    placeholder: "Describe tu sueño...",
+    interpret: "Interpretar Símbolos",
+    interpreting: "Interpretando símbolos...",
+    interpretingShort: "Interpretando...",
+    yourDream: "Tu sueño",
+    personalNotes: "Notas personales",
+    notesPlaceholder: "Añadir tus reflexiones...",
+    saveToJournal: "Guardar en el Diario",
+    waitToFinish: "Espera a que termine la interpretación...",
+    anotherDream: "Interpretar otro sueño",
+    shareTitle: "Diario de Sueños",
+    errorInterpret: "Error al interpretar el sueño.",
+    noResponse: "Sin respuesta del servidor.",
+    savedOk: "¡Sueño guardado con éxito!",
+    errorSave: "Error al guardar el sueño.",
+    loginToSee: "Inicia sesión para ver tus sueños guardados.",
+  },
+
+  savedDreams: {
+    journeyTitle: "Tu Viaje",
+    journeyIntro:
+      "Lectura de la evolución de tus sueños, que revela patrones que regresan, transformaciones que se profundizan y el tema esencial que se despliega a lo largo de tu travesía interior.",
+    generate: "Generar Análisis",
+    lastAnalysis: "Último análisis: {date}",
+    analyzing: "Analizando tu viaje onírico...",
+    timeline: "Línea de Evolución",
+    patterns: "Patrones Recurrentes",
+    turningPoint: "Punto de Inflexión",
+    essence: "Esencia de la Fase Actual",
+    saveAnalysis: "Guardar Análisis",
+    analysisSavedOn: "✓ Análisis guardado el {date}",
+    refreshAnalysis: "Actualizar Análisis",
+    analysisSaved: "¡Análisis del viaje guardado!",
+    errorGenerate: "Error al generar el análisis.",
+    errorSaveAnalysis: "Error al guardar el análisis.",
+    title: "Sueños Guardados",
+    newDream: "Nuevo Sueño",
+    empty: "Todavía no hay sueños guardados.",
+    interpretFirst: "Interpretar el primer sueño",
+    confirmDelete: "¿Deseas eliminar este sueño?",
+    viewInterpretation: "Ver interpretación",
+    editNotes: "Editar notas personales",
+    personalNotes: "Notas personales",
+    deleted: "Sueño eliminado.",
+    errorDelete: "Error al eliminar el sueño.",
+    notesUpdated: "Notas actualizadas.",
+    errorNotes: "Error al actualizar las notas.",
+  },
+
+  grimoire: {
+    title: "Grimorio",
+    intro:
+      "Tu espacio sagrado para registrar lo que la vida revela. Cada registro guarda un fragmento de tu travesía interior. Escribe sobre lo que sentiste, comprendiste o viviste.",
+    loginToAccess: "Inicia sesión para acceder a tu Grimorio.",
+    newEntry: "Nuevo Registro",
+    newNote: "Nueva nota",
+    titlePlaceholder: "Hoy mi día...",
+    contentPlaceholder: "Escribe sobre tu día...",
+    editTitlePlaceholder: "Título (opcional)",
+    saveToGrimoire: "Guardar en el Grimorio",
+    empty: "Todavía no hay anotaciones en el Grimorio.",
+    createFirst: "Crear la primera anotación",
+    confirmDelete: "¿Deseas eliminar esta nota?",
+    linkedToReading: "Vinculada a una lectura",
+    created: "Nota creada.",
+    updated: "Nota actualizada.",
+    deleted: "Nota eliminada.",
+    errorCreate: "Error al crear la nota.",
+    errorUpdate: "Error al actualizar la nota.",
+    errorDelete: "Error al eliminar la nota.",
+  },
+}

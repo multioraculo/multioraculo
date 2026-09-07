@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { useI18n } from "@/components/i18n-provider"
 
 interface ReadingNotesProps {
   consultationId: string
@@ -23,6 +24,8 @@ function Spinner() {
 }
 
 export default function ReadingNotes({ consultationId, initialNotes }: ReadingNotesProps) {
+  const { dict } = useI18n()
+  const t = dict.readingNotes
   const [notes, setNotes] = useState(initialNotes ?? "")
   const [saveToJournal, setSaveToJournal] = useState(false)
   const [journalTitle, setJournalTitle] = useState("")
@@ -40,7 +43,7 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_notes: notes }),
       })
-      if (!notesRes.ok) throw new Error("Erro ao salvar nota na leitura.")
+      if (!notesRes.ok) throw new Error(t.errorSavingReading)
 
       if (saveToJournal) {
         const journalRes = await fetch("/api/journal", {
@@ -52,13 +55,13 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
             consultation_id: consultationId,
           }),
         })
-        if (!journalRes.ok) throw new Error("Erro ao salvar no Diário.")
+        if (!journalRes.ok) throw new Error(t.errorSavingJournal)
       }
 
       setSaved(true)
-      toast.success(saveToJournal ? "Nota salva e adicionada ao Diário." : "Nota salva.")
+      toast.success(saveToJournal ? t.savedWithJournal : t.savedOk)
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao salvar nota.")
+      toast.error(err.message ?? t.errorSaving)
     } finally {
       setSaving(false)
     }
@@ -68,12 +71,12 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
 
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 space-y-4">
-      <h3 className="text-white/60 text-sm font-light">Nota pessoal</h3>
+      <h3 className="text-white/60 text-sm font-light">{t.title}</h3>
 
       <textarea
         value={notes}
         onChange={(e) => { setNotes(e.target.value); setSaved(false) }}
-        placeholder="Adicionar nota pessoal sobre esta leitura..."
+        placeholder={t.placeholder}
         rows={4}
         className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm resize-none focus:outline-none focus:border-white/25 transition-colors duration-200"
       />
@@ -87,7 +90,7 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
           className="w-4 h-4 rounded border-white/20 bg-white/5 accent-white/80 cursor-pointer"
         />
         <label htmlFor="save-to-journal" className="text-white/60 text-sm cursor-pointer select-none">
-          Salvar também no Diário
+          {t.alsoJournal}
         </label>
       </div>
 
@@ -96,7 +99,7 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
           type="text"
           value={journalTitle}
           onChange={(e) => setJournalTitle(e.target.value)}
-          placeholder="Título da entrada no Diário (opcional)"
+          placeholder={t.journalTitlePlaceholder}
           className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm focus:outline-none focus:border-white/25 transition-colors duration-200"
         />
       )}
@@ -117,11 +120,11 @@ export default function ReadingNotes({ consultationId, initialNotes }: ReadingNo
           ].join(" ")}
         >
           {saving ? (
-            <><Spinner /> Salvando…</>
+            <><Spinner /> {dict.common.saving}</>
           ) : saved ? (
-            "Salvo ✓"
+            t.savedCheck
           ) : (
-            "Salvar nota"
+            t.save
           )}
         </button>
       </div>

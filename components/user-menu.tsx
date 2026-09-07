@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useI18n } from "@/components/i18n-provider"
 
 interface UserMenuProps {
   user: { email: string; full_name: string | null }
@@ -26,6 +27,7 @@ function Divider() {
 export default function UserMenu({ user, onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  const { dict } = useI18n()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -53,6 +55,8 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/15 transition-all duration-200 flex items-center justify-center"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
       >
         <span className="text-sm font-medium">{user.email.charAt(0).toUpperCase()}</span>
       </button>
@@ -69,35 +73,30 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             </div>
 
             {/* Grupo 1 — Consultas */}
-            <MenuItem label="Multioráculo"     onClick={() => go("/")} />
-            <MenuItem label="Leituras Salvas"  onClick={() => go("/leituras-salvas")} />
-            <MenuItem label="Oráculos"         onClick={() => go("/oraculos")} />
-            <MenuItem label="FAQ"              onClick={() => go("/faq")} />
+            <MenuItem label={dict.nav.home}          onClick={() => go("/")} />
+            <MenuItem label={dict.nav.savedReadings} onClick={() => go("/leituras-salvas")} />
+            <MenuItem label={dict.nav.oracles}       onClick={() => go("/oraculos")} />
+            <MenuItem label={dict.nav.faq}           onClick={() => go("/faq")} />
 
             <Divider />
 
             {/* Grupo 2 — Sonhos */}
-            <MenuItem label="Diário de Sonhos" onClick={() => go("/sonhos")} />
-            <MenuItem label="Sonhos Salvos"    onClick={() => go("/sonhos-salvos")} />
+            <MenuItem label={dict.nav.dreams}      onClick={() => go("/sonhos")} />
+            <MenuItem label={dict.nav.savedDreams} onClick={() => go("/sonhos-salvos")} />
 
             <Divider />
 
             {/* Grupo 3 — Grimório */}
-            <MenuItem label="Grimório"         onClick={() => go("/diario")} />
+            <MenuItem label={dict.nav.grimoire} onClick={() => go("/diario")} />
 
             <Divider />
 
-            {/* Grupo 4 — Assinatura */}
-            <MenuItem label="Assinatura"       onClick={() => go("/assinatura")} />
-
-            <Divider />
-
-            {/* Grupo 5 — Sair */}
+            {/* Sair — "Assinatura" agora vive no menu global do cabeçalho */}
             <button
               onClick={() => { setIsOpen(false); onLogout() }}
               className="w-full text-left py-2 px-3 text-white/60 hover:text-white/80 hover:bg-white/5 rounded-lg transition-all duration-200 text-sm"
             >
-              Sair
+              {dict.common.logout}
             </button>
         </div>
       )}

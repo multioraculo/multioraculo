@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
+import { useI18n } from "@/components/i18n-provider"
 
 type LoginModalProps = {
   isOpen: boolean
@@ -12,6 +13,8 @@ type LoginModalProps = {
 
 export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalProps) {
   const supabase = useMemo(() => createClient(), [])
+  const { dict } = useI18n()
+  const t = dict.login
   const [mode, setMode] = useState<"signin" | "signup">("signin")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -49,7 +52,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         return
       }
 
-      toast.success("Login feito com sucesso.")
+      toast.success(t.success)
       onSuccess()
     } finally {
       setLoading(false)
@@ -73,9 +76,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         return
       }
 
-      setMessage(
-        "Conta criada. Verifique seu email para confirmar o cadastro antes de entrar."
-      )
+      setMessage(t.accountCreated)
     } finally {
       setLoading(false)
     }
@@ -88,6 +89,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
       <div className="relative w-full max-w-md backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8">
         <button
           onClick={handleClose}
+          aria-label={dict.common.close}
           className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,10 +98,8 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
         </button>
 
         <div className="text-center mb-6">
-          <h2 className="text-xl font-light text-white mb-2">Entre para salvar suas leituras</h2>
-          <p className="text-white/70 text-sm">
-            Sem login você pode consultar normalmente, mas não terá histórico.
-          </p>
+          <h2 className="text-xl font-light text-white mb-2">{t.title}</h2>
+          <p className="text-white/70 text-sm">{t.subtitle}</p>
         </div>
 
         <div className="space-y-4">
@@ -108,7 +108,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome"
+              placeholder={t.namePlaceholder}
               className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base focus:outline-none focus:border-white/40 transition-all duration-200"
             />
           )}
@@ -117,7 +117,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="seu@email.com"
+            placeholder={t.emailPlaceholder}
             className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base focus:outline-none focus:border-white/40 transition-all duration-200"
           />
 
@@ -125,7 +125,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Sua senha"
+            placeholder={t.passwordPlaceholder}
             className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base focus:outline-none focus:border-white/40 transition-all duration-200"
           />
 
@@ -140,14 +140,14 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                   disabled={loading}
                   className="w-full py-3 px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-medium text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Entrando..." : "Entrar"}
+                  {loading ? t.signingIn : t.signIn}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMode("signup"); setError(null); setMessage(null) }}
                   className="w-full py-3 px-6 backdrop-blur-md bg-white/5 border border-white/10 text-white/80 rounded-full font-medium text-sm hover:bg-white/10 hover:text-white transition-all duration-200"
                 >
-                  Criar conta
+                  {t.createAccount}
                 </button>
               </>
             ) : (
@@ -157,14 +157,14 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
                   disabled={loading}
                   className="w-full py-3 px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-medium text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Criando..." : "Criar conta"}
+                  {loading ? t.creating : t.createAccount}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMode("signin"); setError(null); setMessage(null) }}
                   className="w-full py-3 px-6 backdrop-blur-md bg-white/5 border border-white/10 text-white/80 rounded-full font-medium text-sm hover:bg-white/10 hover:text-white transition-all duration-200"
                 >
-                  Já tenho conta
+                  {t.haveAccount}
                 </button>
               </>
             )}
@@ -174,7 +174,7 @@ export default function LoginModal({ isOpen, onClose, onSuccess }: LoginModalPro
               onClick={handleClose}
               className="w-full py-3 px-6 text-white/60 hover:text-white/80 font-medium text-sm transition-colors duration-200"
             >
-              Continuar sem login
+              {t.continueWithout}
             </button>
           </div>
         </div>

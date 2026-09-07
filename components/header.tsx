@@ -11,6 +11,8 @@ import { createClient } from "@/lib/supabase/client"
 import { upsertProfile } from "@/lib/supabase/queries"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
+import LocaleSwitcher from "@/components/locale-switcher"
+import { useI18n } from "@/components/i18n-provider"
 
 const PulsingBorder = dynamic(
   async () => {
@@ -26,6 +28,7 @@ type HeaderProps = {
 
 export default function Header({ initialUser }: HeaderProps) {
   const router = useRouter()
+  const { dict } = useI18n()
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
@@ -56,26 +59,31 @@ export default function Header({ initialUser }: HeaderProps) {
 
   async function handleSignOut() {
     await supabase.auth.signOut()
-    toast.success("Sessão encerrada.")
+    toast.success(dict.header.sessionEnded)
     setUser(null)
     router.push("/")
     router.refresh()
   }
-
-  const circularText = useMemo(() => {
-    return "oráculo • síntese multi-oráculo • tarô • i ching • runas • búzios • lenormand • "
-  }, [])
 
   function handleLogoClick() {
     window.dispatchEvent(new CustomEvent("reset-hero"))
     router.push("/")
   }
 
+  // Menu global: as mesmas áreas em desktop e mobile. "Assinatura" é uma área
+  // da plataforma, por isso vive aqui e não no menu do usuário.
+  const navItems = [
+    { href: "/", label: dict.nav.home, short: dict.nav.home, onClick: handleLogoClick },
+    { href: "/sonhos", label: dict.nav.dreams, short: dict.nav.dreamsShort },
+    { href: "/diario", label: dict.nav.grimoire, short: dict.nav.grimoire },
+    { href: "/assinatura", label: dict.nav.subscription, short: dict.nav.subscription },
+  ]
+
   return (
     <>
-      <header className="relative z-50 flex items-center p-4 sm:p-6">
+      <header className="relative z-50 flex flex-wrap items-center gap-2 p-4 sm:p-6">
         <div className="flex items-center shrink-0">
-          <button onClick={handleLogoClick} className="relative" aria-label="Voltar ao início">
+          <button onClick={handleLogoClick} className="relative" aria-label={dict.header.backToStart}>
             <div className="relative w-20 h-20 flex items-center justify-center">
               <div className="relative w-[60px] h-[60px]">
                 <PulsingBorder
@@ -124,7 +132,7 @@ export default function Header({ initialUser }: HeaderProps) {
                 </defs>
                 <text className="text-[8px] fill-white/75 instrument">
                   <textPath href={`#circle-${pathId}`} startOffset="0%">
-                    {circularText}
+                    {dict.header.circularText}
                   </textPath>
                 </text>
               </motion.svg>
@@ -132,69 +140,55 @@ export default function Header({ initialUser }: HeaderProps) {
           </button>
         </div>
 
-        {/* Mobile nav — inline entre logo e avatar */}
-        <nav className="flex sm:hidden flex-1 items-center justify-center gap-4 relative z-10">
-          <Link
-            href="/"
-            onClick={handleLogoClick}
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
-          >
-            Multioráculo
-          </Link>
-          <Link
-            href="/sonhos"
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
-          >
-            Sonhos
-          </Link>
-          <Link
-            href="/diario"
-            className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-3"
-          >
-            Grimório
-          </Link>
+        {/* Mobile nav — segunda linha do cabeçalho, com os quatro destinos sempre visíveis */}
+        <nav
+          className="flex sm:hidden basis-full order-last items-center justify-between gap-2 px-1 -mt-1 relative z-10"
+          aria-label="Menu"
+        >
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={item.onClick}
+              className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-2 whitespace-nowrap"
+            >
+              {item.short}
+            </Link>
+          ))}
         </nav>
 
         {/* Desktop nav — centered absolutely */}
-        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-          <Link
-            href="/"
-            onClick={handleLogoClick}
-            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
-          >
-            Multioráculo
-          </Link>
-          <Link
-            href="/sonhos"
-            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
-          >
-            Diário de Sonhos
-          </Link>
-          <Link
-            href="/diario"
-            className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
-          >
-            Grimório
-          </Link>
+        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label="Menu">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={item.onClick}
+              className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
 
-        <div className="ml-auto shrink-0">
-        {user ? (
-          <UserMenu
-            user={{
-              email: user.email ?? "",
-              full_name: user.user_metadata?.full_name ?? null,
-            }}
-            onLogout={handleSignOut}
-          />
-        ) : (
-          <button
-            onClick={() => setShowLogin(true)}
-            className="px-6 py-2 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
-          >
-            Login
-          </button>
-        )}
+        <div className="ml-auto shrink-0 flex items-center gap-2">
+          <LocaleSwitcher />
+          {user ? (
+            <UserMenu
+              user={{
+                email: user.email ?? "",
+                full_name: user.user_metadata?.full_name ?? null,
+              }}
+              onLogout={handleSignOut}
+            />
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              className="h-10 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
+            >
+              {dict.common.login}
+            </button>
+          )}
         </div>
       </header>
 

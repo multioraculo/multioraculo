@@ -3,9 +3,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useI18n } from "@/components/i18n-provider"
 
 export default function DeleteReadingButton({ id }: { id: string }) {
   const router = useRouter()
+  const { dict } = useI18n()
+  const t = dict.deleteReading
   const [confirming, setConfirming] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -22,17 +25,16 @@ export default function DeleteReadingButton({ id }: { id: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       })
-      const json = await res.json()
       if (!res.ok) {
-        toast.error(json.error ?? "Não foi possível excluir a leitura.")
+        toast.error(t.failed)
         setConfirming(false)
       } else {
-        toast.success("Leitura excluída.")
+        toast.success(t.done)
         router.push("/leituras-salvas")
         router.refresh()
       }
     } catch {
-      toast.error("Não foi possível excluir a leitura.")
+      toast.error(t.failed)
       setConfirming(false)
     } finally {
       setLoading(false)
@@ -46,7 +48,7 @@ export default function DeleteReadingButton({ id }: { id: string }) {
           onClick={() => setConfirming(false)}
           className="text-white/40 hover:text-white/70 text-xs transition-colors duration-200"
         >
-          Cancelar
+          {dict.common.cancel}
         </button>
       )}
       <button
@@ -58,7 +60,7 @@ export default function DeleteReadingButton({ id }: { id: string }) {
             : "border-white/15 text-white/40 hover:text-white/70 hover:border-white/30"
         }`}
       >
-        {loading ? "Excluindo..." : confirming ? "Confirmar exclusão" : "Excluir leitura"}
+        {loading ? t.deleting : confirming ? t.confirm : t.delete}
       </button>
     </div>
   )

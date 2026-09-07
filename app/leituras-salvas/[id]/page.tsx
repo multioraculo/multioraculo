@@ -4,15 +4,10 @@ import ShaderBackground from "@/components/shader-background"
 import DeleteReadingButton from "@/components/delete-reading-button"
 import ReadingNotes from "@/components/reading-notes"
 import { createClient } from "@/lib/supabase/server"
+import { getI18n } from "@/lib/i18n/server"
+import { formatDate } from "@/lib/i18n"
 
 const ORACLE_ORDER = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
-const ORACLE_NAMES: Record<string, string> = {
-  iching: "I Ching",
-  tarot: "Tarô",
-  buzios: "Búzios",
-  lenormand: "Lenormand",
-  runas: "Runas",
-}
 
 // Mirrors OracleResult from the consultation route exactly
 type OracleItem = {
@@ -37,6 +32,8 @@ export default async function LeituraDetailPage({
 }) {
   const { id } = await params
   const supabase = await createClient()
+  const { dict, locale } = await getI18n()
+  const t = dict.readingDetail
 
   const {
     data: { user },
@@ -58,11 +55,7 @@ export default async function LeituraDetailPage({
     redirect("/leituras-salvas")
   }
 
-  const date = new Date(consultation.created_at).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
+  const date = formatDate(consultation.created_at, locale, "long")
 
   const oracleOutputs = consultation.oracle_outputs as Record<string, OracleOutput> | null
   const activeOracles = ORACLE_ORDER.filter((key) => oracleOutputs?.[key]?.reading)
@@ -85,14 +78,14 @@ export default async function LeituraDetailPage({
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Leituras Salvas
+            {t.back}
           </a>
 
           <div className="space-y-8">
             {/* Pergunta */}
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white/60 text-sm">Sua pergunta</h3>
+                <h3 className="text-white/60 text-sm">{t.yourQuestion}</h3>
                 <span className="text-white/30 text-xs">{date}</span>
               </div>
               <p className="text-white text-base leading-relaxed">{consultation.question}</p>
@@ -102,7 +95,7 @@ export default async function LeituraDetailPage({
             {consultation.synthesis && (
               <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-white text-lg">Sua resposta</h3>
+                  <h3 className="text-white text-lg">{t.yourAnswer}</h3>
                 </div>
                 <div className="space-y-4">
                   {consultation.synthesis
@@ -119,7 +112,7 @@ export default async function LeituraDetailPage({
             {/* Oráculos — mesma estrutura do card de detalhe no live */}
             {activeOracles.length > 0 && (
               <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 border border-white/10 space-y-6">
-                <h3 className="text-white text-lg text-center font-light">Ler por oráculo</h3>
+                <h3 className="text-white text-lg text-center font-light">{t.readByOracle}</h3>
 
                 <div className="space-y-4">
                   {activeOracles.map((key) => {
@@ -135,14 +128,14 @@ export default async function LeituraDetailPage({
                       >
                         {/* Header */}
                         <div>
-                          <h4 className="text-white text-base font-light">{ORACLE_NAMES[key]}</h4>
+                          <h4 className="text-white text-base font-light">{dict.oracles[key]}</h4>
                           {notes && <p className="text-white/45 text-xs mt-1">{notes}</p>}
                         </div>
 
                         {/* Tiragem — o que saiu */}
                         {items.length > 0 && (
                           <div>
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Tiragem</p>
+                            <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{t.drawLabel}</p>
                             <div className="space-y-3">
                               {items.map((item, i) => (
                                 <div key={i} className="flex gap-3">
@@ -170,7 +163,7 @@ export default async function LeituraDetailPage({
                           <div className={items.length > 0 ? "border-t border-white/10 pt-5" : ""}>
                             {items.length > 0 && (
                               <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">
-                                Leitura tradicional
+                                {t.traditionalReading}
                               </p>
                             )}
                             <div className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap">

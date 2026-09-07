@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { toast } from "sonner"
+import { useI18n } from "@/components/i18n-provider"
 import type { JournalEntry } from "@/lib/types"
 
 function Spinner() {
@@ -18,7 +19,19 @@ function Spinner() {
   )
 }
 
-function SaveButton({ onClick, disabled, saving, label = "Salvar no Grimório" }: { onClick: () => void; disabled: boolean; saving: boolean; label?: string }) {
+function SaveButton({
+  onClick,
+  disabled,
+  saving,
+  label,
+  savingLabel,
+}: {
+  onClick: () => void
+  disabled: boolean
+  saving: boolean
+  label: string
+  savingLabel: string
+}) {
   return (
     <button
       onClick={saving ? undefined : onClick}
@@ -32,7 +45,7 @@ function SaveButton({ onClick, disabled, saving, label = "Salvar no Grimório" }
           : "bg-white/10 border-white/20 text-white/80 hover:text-white hover:bg-white/15",
       ].join(" ")}
     >
-      {saving ? <><Spinner /> Salvando…</> : label}
+      {saving ? <><Spinner /> {savingLabel}</> : label}
     </button>
   )
 }
@@ -41,18 +54,12 @@ interface DiaryListProps {
   initialEntries: JournalEntry[]
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  })
-}
-
 type FormState = { title: string; content: string }
 const emptyForm: FormState = { title: "", content: "" }
 
 export default function DiaryList({ initialEntries }: DiaryListProps) {
+  const { dict, formatDate } = useI18n()
+  const t = dict.grimoire
   const [entries, setEntries] = useState<JournalEntry[]>(initialEntries)
   const [creating, setCreating] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -88,13 +95,13 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
         body: JSON.stringify({ title: form.title || null, content: form.content }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error)
+      if (!res.ok) throw new Error(t.errorCreate)
       setEntries((prev) => [json.entry, ...prev])
       setCreating(false)
       setForm(emptyForm)
-      toast.success("Nota criada.")
+      toast.success(t.created)
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao criar nota.")
+      toast.error(err.message ?? t.errorCreate)
     } finally {
       setSaving(false)
     }
@@ -110,13 +117,13 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
         body: JSON.stringify({ title: form.title || null, content: form.content }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error)
+      if (!res.ok) throw new Error(t.errorUpdate)
       setEntries((prev) => prev.map((e) => (e.id === id ? json.entry : e)))
       setEditingId(null)
       setForm(emptyForm)
-      toast.success("Nota atualizada.")
+      toast.success(t.updated)
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao atualizar nota.")
+      toast.error(err.message ?? t.errorUpdate)
     } finally {
       setSaving(false)
     }
@@ -128,9 +135,9 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
       if (!res.ok) throw new Error()
       setEntries((prev) => prev.filter((e) => e.id !== id))
       setDeleteConfirm(null)
-      toast.success("Nota excluída.")
+      toast.success(t.deleted)
     } catch {
-      toast.error("Erro ao excluir nota.")
+      toast.error(t.errorDelete)
     }
   }
 
@@ -143,7 +150,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
             onClick={startCreate}
             className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
-            Novo Registro
+            {t.newEntry}
           </button>
         </div>
       )}
@@ -151,18 +158,18 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
       {/* Create form */}
       {creating && (
         <div className="bg-white/5 backdrop-blur-sm border border-white/15 rounded-2xl p-6 space-y-4">
-          <h3 className="text-white/70 text-sm font-light">Nova nota</h3>
+          <h3 className="text-white/70 text-sm font-light">{t.newNote}</h3>
           <input
             type="text"
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            placeholder="Hoje meu dia..."
+            placeholder={t.titlePlaceholder}
             className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm focus:outline-none focus:border-white/25 transition-colors duration-200"
           />
           <textarea
             value={form.content}
             onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-            placeholder="Escreva sobre o seu dia..."
+            placeholder={t.contentPlaceholder}
             rows={5}
             autoFocus
             className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm resize-none focus:outline-none focus:border-white/25 transition-colors duration-200"
@@ -172,9 +179,15 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
               onClick={cancelForm}
               className="px-4 py-2 rounded-full text-white/50 hover:text-white/80 text-sm transition-colors"
             >
-              Cancelar
+              {dict.common.cancel}
             </button>
-            <SaveButton onClick={handleCreate} disabled={!form.content.trim()} saving={saving} />
+            <SaveButton
+              onClick={handleCreate}
+              disabled={!form.content.trim()}
+              saving={saving}
+              label={t.saveToGrimoire}
+              savingLabel={dict.common.saving}
+            />
           </div>
         </div>
       )}
@@ -182,12 +195,12 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
       {/* Empty state */}
       {entries.length === 0 && !creating && (
         <div className="text-center py-20">
-          <p className="text-white/40 text-sm mb-4">Nenhuma anotação no Grimório ainda.</p>
+          <p className="text-white/40 text-sm mb-4">{t.empty}</p>
           <button
             onClick={startCreate}
             className="px-6 py-2.5 rounded-full bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
-            Criar primeira anotação
+            {t.createFirst}
           </button>
         </div>
       )}
@@ -198,19 +211,19 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
           <div key={entry.id} className="group relative">
             {deleteConfirm === entry.id ? (
               <div className="bg-white/5 backdrop-blur-sm border border-red-400/30 rounded-2xl p-6 flex items-center justify-between gap-4">
-                <p className="text-white/80 text-sm">Deseja excluir esta nota?</p>
+                <p className="text-white/80 text-sm">{t.confirmDelete}</p>
                 <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => handleDelete(entry.id)}
                     className="px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-400/40 text-red-300 hover:bg-red-500/30 text-sm transition-colors"
                   >
-                    Excluir
+                    {dict.common.delete}
                   </button>
                   <button
                     onClick={() => setDeleteConfirm(null)}
                     className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 text-sm transition-colors"
                   >
-                    Cancelar
+                    {dict.common.cancel}
                   </button>
                 </div>
               </div>
@@ -220,7 +233,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
                   type="text"
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Título (opcional)"
+                  placeholder={t.editTitlePlaceholder}
                   className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white/80 placeholder-white/30 text-sm focus:outline-none focus:border-white/25 transition-colors duration-200"
                 />
                 <textarea
@@ -235,9 +248,15 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
                     onClick={cancelForm}
                     className="px-4 py-2 rounded-full text-white/50 hover:text-white/80 text-sm transition-colors"
                   >
-                    Cancelar
+                    {dict.common.cancel}
                   </button>
-                  <SaveButton onClick={() => handleUpdate(entry.id)} disabled={!form.content.trim()} saving={saving} />
+                  <SaveButton
+                    onClick={() => handleUpdate(entry.id)}
+                    disabled={!form.content.trim()}
+                    saving={saving}
+                    label={t.saveToGrimoire}
+                    savingLabel={dict.common.saving}
+                  />
                 </div>
               </div>
             ) : (
@@ -256,10 +275,11 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-white/30 text-xs whitespace-nowrap">
-                      {formatDate(entry.updated_at !== entry.created_at ? entry.updated_at : entry.created_at)}
+                      {formatDate(entry.updated_at !== entry.created_at ? entry.updated_at : entry.created_at, "long")}
                     </span>
                     <button
                       onClick={(e) => { e.stopPropagation(); setDeleteConfirm(entry.id) }}
+                      aria-label={dict.common.delete}
                       className="opacity-0 group-hover:opacity-100 p-1 text-white/30 hover:text-red-400 transition-all duration-200 rounded"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -269,7 +289,7 @@ export default function DiaryList({ initialEntries }: DiaryListProps) {
                   </div>
                 </div>
                 {entry.consultation_id && (
-                  <p className="text-white/25 text-xs">Vinculada a uma leitura</p>
+                  <p className="text-white/25 text-xs">{t.linkedToReading}</p>
                 )}
               </div>
             )}

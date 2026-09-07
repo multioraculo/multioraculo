@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import { coerceSynthesisInput, synthesisPrompt } from "@/lib/oracles/synthesis"
+import { SYNTHESIS_SYSTEM_MESSAGE } from "@/lib/oracles/language"
+import { resolveLocale } from "@/lib/i18n/config"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota só escreve a
@@ -10,11 +12,14 @@ export const maxDuration = 60
 /**
  * Segunda etapa da consulta: recebe os oráculos já interpretados e devolve a
  * síntese em streaming (NDJSON: {type:"delta"} ... {type:"done"}).
+ * Body: { question, oracles, seed?, locale? }
  */
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const question = String(body?.question || "").trim()
   const oracles = coerceSynthesisInput(body?.oracles)
+  const locale = resolveLocale(body?.locale)
+  const seed = String(body?.seed || question)
 
   if (!question) {
     return NextResponse.json({ error: "Pergunta ausente." }, { status: 400 })
@@ -37,20 +42,20 @@ export async function POST(req: Request) {
         controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
 
       try {
-        send({ type: "start" })
+        send({ type: "start", locale })
 
         const synthStream = await openai.chat.completions.create({
           model: "gpt-4o",
-          temperature: 0.7,
-          max_tokens: 750,
+          temperature: 0.85,
+          max_tokens: 900,
+          presence_penalty: 0.3,
           stream: true,
           messages: [
             {
               role: "system",
-              content:
-                "Escreva apenas a síntese em texto, sem títulos extras e sem bullets. Responda sempre no mesmo idioma em que a pergunta foi feita. Se a pergunta for em inglês, responda em inglês. Se for em português, responda em português.",
+              content: SYNTHESIS_SYSTEM_MESSAGE[locale],
             },
-            { role: "user", content: synthesisPrompt(question, oracles) },
+            { role: "user", content: synthesisPrompt(question, oracles, locale, seed) },
           ],
         })
 

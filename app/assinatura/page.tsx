@@ -1,10 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
+import { getI18n } from "@/lib/i18n/server"
 
 export default async function AssinaturaPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const { dict } = await getI18n()
+  const t = dict.subscription
 
   return (
     <ShaderBackground>
@@ -14,55 +17,41 @@ export default async function AssinaturaPage() {
         <div className="max-w-4xl mx-auto">
           <div className="max-w-lg mb-12">
             <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-tight tracking-tight font-light text-white mb-4">
-              <span className="font-medium italic instrument">Multioráculo</span>: Assine clareza.
+              <span className="font-medium italic instrument">{dict.common.appName}</span>{t.titleSuffix}
             </h1>
 
-            <p className="text-base sm:text-lg font-light text-white/70 leading-relaxed">
-              Decisões certas começam com respostas precisas. Cinco oráculos convergem para você.
-            </p>
+            <p className="text-base sm:text-lg font-light text-white/70 leading-relaxed">{t.subtitle}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Essencial Plan */}
             <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-8 hover:bg-white/15 transition-all duration-300">
               <div className="mb-6">
-                <h2 className="text-xl font-light text-white mb-2">Essencial</h2>
+                <h2 className="text-xl font-light text-white mb-2">{t.essential.name}</h2>
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-5xl font-light text-white">R$ 9,99</span>
-                  <span className="text-white/60">/mês</span>
+                  <span className="text-5xl font-light text-white">{t.essential.price}</span>
+                  <span className="text-white/60">{t.perMonth}</span>
                 </div>
-                <p className="text-white/80 font-medium mb-4">Cadência e foco.</p>
-                <p className="text-white/70 text-base">
-                  Duas tiragens por semana (8 por mês), para manter o rumo sem ansiedade.
-                </p>
+                <p className="text-white/80 font-medium mb-4">{t.essential.tagline}</p>
+                <p className="text-white/70 text-base">{t.essential.description}</p>
               </div>
 
               <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Leitura simultânea dos 5 oráculos + resumo unificado
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Oráculos em abas para checagem profunda
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Salvar e revisitar leituras (carimbo de momento)
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Sinais verificáveis no cotidiano
-                </li>
+                {t.essential.features.map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-white/80 text-sm">
+                    <span className="text-green-400 mt-1">✓</span>
+                    {f}
+                  </li>
+                ))}
               </ul>
 
               <div className="mb-6">
-                <p className="text-white/60 text-xs mb-2">Para quem:</p>
-                <p className="text-white/80 text-sm">prefere uma pergunta boa por vez, semana após semana.</p>
+                <p className="text-white/60 text-xs mb-2">{t.forWhom}</p>
+                <p className="text-white/80 text-sm">{t.essential.forWhom}</p>
               </div>
 
               <button className="w-full py-3 px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-medium text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200">
-                Começar com Essencial
+                {t.essential.cta}
               </button>
             </div>
 
@@ -70,62 +59,47 @@ export default async function AssinaturaPage() {
             <div className="backdrop-blur-md bg-white/15 border border-white/30 rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <span className="backdrop-blur-md bg-gradient-to-r from-purple-400/80 to-pink-400/80 border border-white/20 text-white text-xs px-3 py-1 rounded-full font-medium">
-                  Mais Popular
+                  {t.mostPopular}
                 </span>
               </div>
 
               <div className="mb-6">
-                <h2 className="text-xl font-light text-white mb-2">Ilimitado</h2>
+                <h2 className="text-xl font-light text-white mb-2">{t.unlimited.name}</h2>
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-5xl font-light text-white">R$ 13,99</span>
-                  <span className="text-white/60">/mês</span>
+                  <span className="text-5xl font-light text-white">{t.unlimited.price}</span>
+                  <span className="text-white/60">{t.perMonth}</span>
                 </div>
-                <p className="text-white/80 font-medium mb-4">Decisão em ritmo vivo.</p>
-                <p className="text-white/70 text-base">
-                  Tiragens ilimitadas (uso pessoal) para transformar símbolo em gesto, todos os dias.
-                </p>
+                <p className="text-white/80 font-medium mb-4">{t.unlimited.tagline}</p>
+                <p className="text-white/70 text-base">{t.unlimited.description}</p>
               </div>
 
               <ul className="space-y-3 mb-8">
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Tudo do Essencial
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Histórico completo e favoritos
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Lembretes para os sinais práticos
-                </li>
-                <li className="flex items-start gap-3 text-white/80 text-sm">
-                  <span className="text-green-400 mt-1">✓</span>
-                  Suporte prioritário
-                </li>
+                {t.unlimited.features.map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-white/80 text-sm">
+                    <span className="text-green-400 mt-1">✓</span>
+                    {f}
+                  </li>
+                ))}
               </ul>
 
               <div className="mb-6">
-                <p className="text-white/60 text-xs mb-2">Para quem:</p>
-                <p className="text-white/80 text-sm">cria, lidera ou ajusta rota com frequência e quer fricção zero.</p>
+                <p className="text-white/60 text-xs mb-2">{t.forWhom}</p>
+                <p className="text-white/80 text-sm">{t.unlimited.forWhom}</p>
               </div>
 
               <button className="w-full py-3 px-6 backdrop-blur-md bg-white/15 border border-white/30 text-white rounded-full font-medium text-sm hover:bg-white/20 hover:scale-105 transition-all duration-200">
-                Assinar Ilimitado
+                {t.unlimited.cta}
               </button>
             </div>
           </div>
 
           {/* Terms */}
           <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-6 mb-16">
-            <h3 className="text-white font-medium mb-4">Observações</h3>
+            <h3 className="text-white font-medium mb-4">{t.notesTitle}</h3>
             <ul className="space-y-2 text-white/70 text-sm">
-              <li>
-                • Conta como 1 tiragem quando você faz uma pergunta nova e recebe a leitura completa; reabrir a mesma
-                leitura não consome.
-              </li>
-              <li>• Cancelamento a qualquer momento; cobrança mensal recorrente (BRL).</li>
-              <li>• "Ilimitado" sujeito a uso pessoal razoável (não permite automação/massa)</li>
+              {t.notes.map((n) => (
+                <li key={n}>• {n}</li>
+              ))}
             </ul>
           </div>
         </div>

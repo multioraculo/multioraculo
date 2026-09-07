@@ -3,10 +3,12 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import ConsultationsList from "@/components/consultations-list"
 import { createClient } from "@/lib/supabase/server"
+import { getI18n } from "@/lib/i18n/server"
 import type { Consultation } from "@/lib/types"
 
 export default async function LeiturasSalvasPage() {
   const supabase = await createClient()
+  const { dict } = await getI18n()
 
   const {
     data: { user },
@@ -37,7 +39,7 @@ export default async function LeiturasSalvasPage() {
       <div className="relative z-10 min-h-screen pt-24 pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-light text-white mb-6">Leituras Salvas</h1>
+            <h1 className="text-3xl font-light text-white mb-6">{dict.savedReadings.title}</h1>
           </div>
 
           <ConsultationsList consultations={consultations} />

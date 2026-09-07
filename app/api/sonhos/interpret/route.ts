@@ -1,10 +1,12 @@
 import OpenAI from "openai"
+import { LOCALE_META, resolveLocale } from "@/lib/i18n/config"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 const SYSTEM_PROMPT = `Você é um intérprete ESPECIALIZADO em simbolismo onírico profundo.
 
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA — use exatamente este formato Markdown:
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA — use exatamente este formato Markdown (os títulos das seções devem ser escritos no idioma da resposta, com o mesmo sentido):
 
 ## INTRODUÇÃO
 
@@ -54,6 +56,7 @@ REGRAS: Profundo, específico, 4-6 símbolos, 800-1200 palavras. Não citar Jung
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const dream = String(body?.dream || "").trim()
+  const locale = resolveLocale(body?.locale)
 
   if (!dream) {
     return new Response(JSON.stringify({ error: "Descrição do sonho ausente." }), {
@@ -79,7 +82,10 @@ export async function POST(request: Request) {
     max_tokens: 2000,
     stream: true,
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "system",
+        content: `${SYSTEM_PROMPT}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
+      },
       { role: "user", content: `Sonho:\n"${dream}"` },
     ],
   })

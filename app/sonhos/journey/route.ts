@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import { createClient } from "@/lib/supabase/server"
+import { LOCALE_META, resolveLocale } from "@/lib/i18n/config"
 
 export const runtime = "nodejs"
+export const maxDuration = 60
 
 const SYSTEM_PROMPT = `Você é um especialista em simbolismo onírico e análise psíquica profunda.
 Analise os sonhos fornecidos cronologicamente e retorne APENAS um objeto JSON válido com esta estrutura exata:
@@ -32,10 +34,12 @@ REGRAS ABSOLUTAS:
 - "essence": síntese do momento psíquico atual, SEM travessões
 - Use linguagem natural e expressiva. Escreva como prosa, não como lista com separadores artificiais
 - PROIBIDO usar o caractere — (em-dash) em qualquer campo
-- Idioma de toda a resposta: Português
 - NÃO citar Jung, Freud ou qualquer autor pelo nome`
 
-export async function POST() {
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}))
+  const locale = resolveLocale(body?.locale)
+
   const supabase = await createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
@@ -65,7 +69,7 @@ export async function POST() {
 
   const dreamsList = dreams
     .map((d: any, i: number) => {
-      const date = new Date(d.created_at).toLocaleDateString("pt-BR", {
+      const date = new Date(d.created_at).toLocaleDateString(LOCALE_META[locale].tag, {
         day: "2-digit",
         month: "long",
         year: "numeric",
@@ -81,7 +85,10 @@ export async function POST() {
       max_tokens: 1500,
       response_format: { type: "json_object" },
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "system",
+          content: `${SYSTEM_PROMPT}\n- Idioma de todos os textos do JSON: ${LOCALE_META[locale].promptName}`,
+        },
         {
           role: "user",
           content: `Analise estes ${dreams.length} sonhos e retorne o JSON da jornada:\n\n${dreamsList}`,

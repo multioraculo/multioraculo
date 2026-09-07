@@ -2,10 +2,12 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import SavedDreamsList from "@/components/saved-dreams-list"
 import { createClient } from "@/lib/supabase/server"
+import { getI18n } from "@/lib/i18n/server"
 import type { Dream } from "@/lib/types"
 
 export default async function SonhosSalvosPage() {
   const supabase = await createClient()
+  const { dict } = await getI18n()
 
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -28,7 +30,7 @@ export default async function SonhosSalvosPage() {
             <SavedDreamsList initialDreams={dreams} userId={user.id} />
           ) : (
             <div className="text-center py-20">
-              <p className="text-white/40 text-sm mb-4">Faça login para ver seus sonhos salvos.</p>
+              <p className="text-white/40 text-sm mb-4">{dict.dreams.loginToSee}</p>
             </div>
           )}
         </div>

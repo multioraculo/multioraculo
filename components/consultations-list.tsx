@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useI18n } from "@/components/i18n-provider"
 import type { Consultation } from "@/lib/types"
 
 interface ConsultationsListProps {
@@ -9,6 +10,8 @@ interface ConsultationsListProps {
 }
 
 export default function ConsultationsList({ consultations: initial }: ConsultationsListProps) {
+  const { dict, formatDate } = useI18n()
+  const t = dict.savedReadings
   const [items, setItems] = useState<Consultation[]>(initial)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -41,13 +44,13 @@ export default function ConsultationsList({ consultations: initial }: Consultati
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </div>
-        <h3 className="text-white text-lg mb-2">Ainda não há leituras salvas.</h3>
-        <p className="text-white/60 text-sm mb-6">Faça uma pergunta e salve sua primeira leitura.</p>
+        <h3 className="text-white text-lg mb-2">{t.emptyTitle}</h3>
+        <p className="text-white/60 text-sm mb-6">{t.emptyText}</p>
         <a
           href="/"
           className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:scale-105 inline-block"
         >
-          Fazer uma pergunta agora
+          {t.askNow}
         </a>
       </div>
     )
@@ -59,19 +62,19 @@ export default function ConsultationsList({ consultations: initial }: Consultati
         <div key={c.id} className="relative">
           {deleteConfirm === c.id ? (
             <div className="bg-white/5 backdrop-blur-sm border border-red-400/30 rounded-2xl p-6 flex items-center justify-between gap-4">
-              <p className="text-white/80 text-sm">Deseja excluir esta leitura?</p>
+              <p className="text-white/80 text-sm">{t.confirmDelete}</p>
               <div className="flex gap-2 shrink-0">
                 <button
                   onClick={() => handleDelete(c.id)}
                   className="px-4 py-1.5 rounded-lg bg-red-500/20 border border-red-400/40 text-red-300 hover:bg-red-500/30 text-sm transition-colors"
                 >
-                  Excluir
+                  {dict.common.delete}
                 </button>
                 <button
                   onClick={() => setDeleteConfirm(null)}
                   className="px-4 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 text-sm transition-colors"
                 >
-                  Cancelar
+                  {dict.common.cancel}
                 </button>
               </div>
             </div>
@@ -89,11 +92,7 @@ export default function ConsultationsList({ consultations: initial }: Consultati
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-white/40 text-xs whitespace-nowrap">
-                    {new Date(c.created_at).toLocaleDateString("pt-BR", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatDate(c.created_at, "short")}
                   </span>
 
                   {/* Arrow → opens dropdown */}
@@ -101,7 +100,7 @@ export default function ConsultationsList({ consultations: initial }: Consultati
                     <button
                       onClick={() => setOpenMenu(openMenu === c.id ? null : c.id)}
                       className="w-7 h-7 flex items-center justify-center rounded-lg text-white/20 hover:text-white/60 hover:bg-white/5 transition-all duration-200"
-                      aria-label="Opções"
+                      aria-label={dict.common.options}
                     >
                       <svg
                         className="w-4 h-4 transition-transform duration-200"
@@ -121,13 +120,13 @@ export default function ConsultationsList({ consultations: initial }: Consultati
                           className="block px-3 py-2 text-white/90 hover:bg-white/5 rounded-lg transition-colors text-sm"
                           onClick={() => setOpenMenu(null)}
                         >
-                          Ver leitura
+                          {t.view}
                         </a>
                         <button
                           onClick={() => { setOpenMenu(null); setDeleteConfirm(c.id) }}
                           className="w-full text-left px-3 py-2 text-red-400 hover:bg-white/5 rounded-lg transition-colors text-sm"
                         >
-                          Excluir
+                          {dict.common.delete}
                         </button>
                       </div>
                     )}

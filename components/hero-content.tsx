@@ -3,29 +3,18 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
-
-
-const placeholders = [
-  "Onde estou confundindo desejo com destino?",
-  "O que a vida já colocou diante de mim que ainda não vi?",
-  "Qual parte de mim precisa morrer para que algo maior possa nascer?",
-  "Se eu não fosse guiado pelo medo, qual seria o meu gesto agora?",
-  "O que é verdadeiro aqui e o que é apenas ruído da mente?",
-  "Qual é a lição que o tempo já está tentando me ensinar, mas eu insisto em ignorar?",
-  "Que corrente invisível está movendo meu destino neste instante?",
-  "Onde estou tentando controlar, quando deveria apenas permitir?",
-  "Qual é o fio mais fino, porém mais forte, que pode me guiar neste momento?",
-  "O que estou chamando de obstáculo, mas que na verdade é uma iniciação?",
-  "Que oportunidade já está madura, mas espera apenas a minha coragem?",
-  "O que realmente significa prosperidade para mim agora?",
-  "Se a vida me desse apenas um gesto hoje, qual seria o gesto correto?",
-]
+import { useI18n } from "@/components/i18n-provider"
 
 type HeroContentProps = {
   initialUser: User | null
 }
 
+// Ordem fixa dos ícones de oráculo na tela de resultados
+const ORACLE_KEYS = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
+
 export default function HeroContent({ initialUser }: HeroContentProps) {
+  const { dict, locale } = useI18n()
+  const placeholders = dict.hero.placeholders
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0)
   const [question, setQuestion] = useState("")
   const [isTyping, setIsTyping] = useState(false)
@@ -86,7 +75,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
         clearInterval(intervalRef.current)
       }
     }
-  }, [isFocused, isTyping, question])
+  }, [isFocused, isTyping, question, placeholders.length])
 
   // Lê um stream NDJSON e chama onEvent para cada linha válida
   const readNdjson = async (res: Response, onEvent: (event: any) => void) => {
@@ -132,19 +121,21 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     }, 100)
 
     let finalOracles: Record<string, any> | null = null
+    let seed = ""
     let safetyOverride = false
 
     try {
-      // Etapa 1: sorteio + interpretação dos cinco oráculos
+      // Etapa 1: sorteio + interpretação dos cinco oráculos, no idioma atual
       const res = await fetch("/consultas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, locale }),
       })
 
       await readNdjson(res, (event) => {
         if (event.type === "draw") {
           // Símbolos sorteados chegam antes da interpretação: já dá para ler a tiragem
+          seed = event.seed || ""
           setStage("oracles")
           setOracles(
             Object.fromEntries(
@@ -156,6 +147,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
           )
         } else if (event.type === "oracles") {
           finalOracles = event.oracles ?? null
+          seed = event.seed || seed
           setOracles(finalOracles)
           setIsLoading(false)
           setStage("synthesis")
@@ -166,30 +158,30 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
           setOracles(event.oracles ?? null)
           setIsLoading(false)
         } else if (event.type === "error") {
-          throw new Error(event.message || "Erro na consulta.")
+          throw new Error(event.message || dict.results.consultFailed)
         }
       })
 
       if (safetyOverride) return
-      if (!finalOracles) throw new Error("A tiragem não foi concluída.")
+      if (!finalOracles) throw new Error(dict.results.drawIncomplete)
 
       // Etapa 2: síntese em streaming, a partir dos oráculos já interpretados
       const res2 = await fetch("/consultas/sintese", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, oracles: finalOracles }),
+        body: JSON.stringify({ question, oracles: finalOracles, seed, locale }),
       })
 
       await readNdjson(res2, (event) => {
         if (event.type === "delta") {
           setSynthesis((prev) => (prev ?? "") + event.text)
         } else if (event.type === "error") {
-          throw new Error(event.message || "Erro na síntese.")
+          throw new Error(event.message || dict.results.consultFailed)
         }
       })
     } catch (err: any) {
       console.error(err)
-      setStreamError(String(err?.message || "Não foi possível concluir a consulta."))
+      setStreamError(String(err?.message || dict.results.consultFailed))
     } finally {
       setIsLoading(false)
       setIsStreaming(false)
@@ -213,7 +205,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const handleSave = async () => {
     if (isSaved || saveLoading) return
     if (!question || !synthesis) {
-      toast.error("Não há leitura pronta para salvar.")
+      toast.error(dict.results.noReadingToSave)
       return
     }
 
@@ -226,18 +218,16 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
         body: JSON.stringify({ question, synthesis, oracle_outputs: oracles }),
       })
 
-      const json = await res.json()
-
       if (res.status === 401) {
-        toast.error("Faça login para salvar.")
+        toast.error(dict.results.loginToSave)
       } else if (!res.ok) {
-        toast.error(json.error ?? "Não foi possível salvar a leitura.")
+        toast.error(dict.results.saveFailed)
       } else {
         setIsSaved(true)
-        toast.success("Leitura salva!")
+        toast.success(dict.results.savedOk)
       }
     } catch {
-      toast.error("Não foi possível salvar a leitura.")
+      toast.error(dict.results.saveFailed)
     } finally {
       setSaveLoading(false)
     }
@@ -249,7 +239,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     // 1. Try Web Share API (mobile + modern desktop)
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Multioráculo", text })
+        await navigator.share({ title: dict.common.appName, text })
         return // share sheet opened — done
       } catch (err: any) {
         if (err?.name === "AbortError") return // user dismissed — do nothing
@@ -271,7 +261,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       document.execCommand("copy")
       document.body.removeChild(el)
     }
-    toast.success("Copiado para a área de transferência.")
+    toast.success(dict.common.copied)
   }
 
   const OracleIcon = useMemo(
@@ -349,6 +339,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     [activeOracle],
   )
 
+  const oracleNames = ORACLE_KEYS.map((k) => dict.oracles[k])
+
   return (
     <>
       {!showResults && (
@@ -361,23 +353,21 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               }}
             >
               <div className="absolute top-0 left-1 right-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full" />
-              <span className="text-white/90 text-xs font-light relative z-10">Síntese Multioráculo</span>
+              <span className="text-white/90 text-xs font-light relative z-10">{dict.hero.badge}</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-1">
-              <span className="font-medium italic instrument">A singularidade</span> te trouxe
+              <span className="font-medium italic instrument">{dict.hero.titleEmphasis}</span> {dict.hero.titleRest}
               <br />
-              <span className="font-light tracking-tight text-white">até aqui.</span>
+              <span className="font-light tracking-tight text-white">{dict.hero.titleLine2}</span>
             </h1>
 
             <p className="text-base font-light text-white/80 mb-3 leading-relaxed">
-              A mesma pergunta, vista por vários ângulos. Tarô, I Ching, Runas, Búzios e Cartas Lenormand. Cada oráculo
-              revela uma parte do mapa. Juntos, eles mostram o caminho inteiro.
+              {dict.hero.subtitle}
             </p>
 
             <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">Está pronta para começar? Escreva sua pergunta.</p>
-
+              <p className="text-xs font-light text-white/60 mb-2">{dict.hero.prompt}</p>
               <textarea
                 value={question}
                 onChange={(e) => {
@@ -392,7 +382,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={placeholders[currentPlaceholder]}
+                placeholder={placeholders[currentPlaceholder % placeholders.length]}
                 className="w-full h-24 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
                 style={{ filter: "url(#glass-effect)" }}
               />
@@ -405,7 +395,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 className="group px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 hover:shadow-lg hover:shadow-white/10 transform disabled:hover:scale-100 disabled:hover:shadow-none flex items-center"
               >
                 <span className="group-hover:scale-105 transition-transform duration-200 inline-block group-disabled:scale-100">
-                  Receber minha resposta
+                  {dict.hero.submit}
                 </span>
               </button>
             </div>
@@ -419,7 +409,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
           <div className="max-w-4xl mx-auto px-4 sm:px-8 py-10 sm:py-16 space-y-8">
             {/* Question Card */}
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-              <h3 className="text-white/60 text-sm mb-3">Sua pergunta</h3>
+              <h3 className="text-white/60 text-sm mb-3">{dict.results.yourQuestion}</h3>
               <p className="text-white text-base leading-relaxed">{question}</p>
             </div>
 
@@ -428,17 +418,17 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <div className="flex items-center gap-2 mb-4">
                 {isStreaming && !synthesis ? (
                   <>
-                    <h3 className="text-white text-lg">Multioráculo</h3>
+                    <h3 className="text-white text-lg">{dict.common.appName}</h3>
                     <span className="text-white/50 text-xs">
-                      {stage === "draw" && "• está realizando a sua tiragem"}
-                      {stage === "oracles" && "• está lendo cada oráculo"}
-                      {stage === "synthesis" && "• está escrevendo a sua resposta"}
+                      {stage === "draw" && dict.results.stageDraw}
+                      {stage === "oracles" && dict.results.stageOracles}
+                      {stage === "synthesis" && dict.results.stageSynthesis}
                     </span>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-white text-lg">Sua resposta</h3>
-                    <span className="text-white/50 text-xs">• Esta é a sua resposta</span>
+                    <h3 className="text-white text-lg">{dict.results.yourAnswer}</h3>
+                    <span className="text-white/50 text-xs">{dict.results.yourAnswerHint}</span>
                   </>
                 )}
               </div>
@@ -468,13 +458,13 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
 
             {/* Oracle Section */}
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-8">
-              <h3 className="text-white text-lg text-center font-light">Ler por oráculo</h3>
+              <h3 className="text-white text-lg text-center font-light">{dict.results.readByOracle}</h3>
 
               <div className="relative">
                 {/* Right fade — hints scrollable content on mobile */}
                 <div className="absolute right-0 inset-y-0 w-12 bg-gradient-to-l from-black/25 to-transparent pointer-events-none z-10 sm:hidden" />
                 <div className="oracle-scroll flex gap-3 sm:gap-4 overflow-x-auto sm:justify-center px-1 pb-2">
-                  {["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"].map((name, index) => (
+                  {oracleNames.map((name, index) => (
                     <OracleIcon key={index} index={index} name={name} tooltip={name} />
                   ))}
                 </div>
@@ -482,13 +472,12 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
 
               {/* Oracle Detail Card */}
               {activeOracle !== null && (() => {
-                const ORACLE_KEYS = ["iching", "tarot", "buzios", "lenormand", "runas"]
                 const key = ORACLE_KEYS[activeOracle]
                 const oracle = oracles?.[key]
-                const oracleName = ["I Ching", "Tarô", "Búzios", "Lenormand", "Runas"][activeOracle]
-                const items = oracle?.draw?.items ?? []
+                const oracleName = oracleNames[activeOracle]
+                const items: Array<{ position?: string; name: string; meaning?: string }> = oracle?.draw?.items ?? []
                 const notes = oracle?.draw?.notes
-                const reading = oracle?.reading || (isLoading ? "Interpretando a tiragem..." : "")
+                const reading = oracle?.reading || (isLoading ? dict.results.interpreting : "")
 
                 return (
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20 animate-in slide-in-from-top-2 duration-300 space-y-5">
@@ -502,9 +491,9 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     {/* Tiragem — o que saiu */}
                     {items.length > 0 && (
                       <div>
-                        <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Tiragem</p>
+                        <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
                         <div className="space-y-3">
-                          {items.map((item: { position?: string; name: string; meaning?: string }, i: number) => (
+                          {items.map((item, i) => (
                             <div key={i} className="flex gap-3">
                               {item.position && (
                                 <span className="text-white/30 text-[11px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
@@ -527,7 +516,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     {reading && (
                       <div className={items.length > 0 ? "border-t border-white/10 pt-5" : ""}>
                         {items.length > 0 && (
-                          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">Leitura tradicional</p>
+                          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.traditionalReading}</p>
                         )}
                         <div className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap">{reading}</div>
                       </div>
@@ -542,7 +531,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                   <button
                     onClick={handleSave}
                     disabled={isSaved || saveLoading || !synthesis || isStreaming}
-                    title={isSaved ? "Salvo" : "Salvar leitura"}
+                    title={isSaved ? dict.results.saved : dict.results.saveReadingTitle}
                     className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform group-disabled:hover:scale-100 flex items-center justify-center">
@@ -561,13 +550,13 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                       </svg>
                     </span>
                     <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
-                      {isSaved ? "Salvo" : "Salvar Leitura"}
+                      {isSaved ? dict.results.saved : dict.results.saveReading}
                     </span>
                   </button>
                   <button
                     onClick={handleShare}
                     disabled={!synthesis || isStreaming}
-                    title="Encaminhar"
+                    title={dict.common.share}
                     className="group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 group-hover:text-white group-hover:bg-white/15 transition-all duration-200 group-hover:scale-105 transform group-disabled:hover:scale-100 flex items-center justify-center">
@@ -586,7 +575,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                       </svg>
                     </span>
                     <span className="text-xs text-white/60 group-hover:text-white/80 transition-colors duration-200">
-                      Encaminhar
+                      {dict.common.share}
                     </span>
                   </button>
                 </div>
@@ -600,7 +589,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 className="group px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 cursor-pointer hover:scale-105 transform flex items-center"
               >
                 <span className="group-hover:scale-105 transition-transform duration-200 inline-block">
-                  Fazer outra pergunta
+                  {dict.results.newQuestion}
                 </span>
               </button>
             </div>
