@@ -4,18 +4,24 @@ import fs from "fs/promises"
 import path from "path"
 import https from "https"
 import os from "os"
-import { drawAll, newSeed, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
+import { drawAll, newSeed, RUNES, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import {
   languageRule,
   ORACLE_FINAL_REMINDER,
   ORACLE_SYSTEM_MESSAGE,
   SAFETY_RESPONSE,
+  SYNTHESIS_SYSTEM_MESSAGE,
 } from "@/lib/oracles/language"
 import { getDictionary, resolveLocale, type Locale } from "@/lib/i18n"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { completeReading, consumeReading, failReading, httpStatusFor } from "@/lib/billing/usage"
+import { failPreview, findPendingPreview, reservePreview, storePreviewResult, teaserCut, teaserOf } from "@/lib/billing/preview"
+import { logEvent } from "@/lib/billing/events"
+import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
+import { synthesisPrompt } from "@/lib/oracles/synthesis"
+import { PENDING_READING_COOKIE, serializePendingReadingCookie } from "@/lib/billing/visitor"
 import { VISITOR_COOKIE, isVisitorId, newVisitorId, serializeVisitorCookie } from "@/lib/billing/visitor"
 
 export const runtime = "nodejs"
@@ -71,15 +77,29 @@ type OracleResult = {
     notes?: string
     /** Búzios: quantidade de conchas abertas em cada queda (para a visualização) */
     shells?: { primary: number; confirmation: number }
+    /** Runas: nome, glifo e orientação de cada runa, na ordem das posições (para a visualização) */
+    runes?: Array<{ name: string; glyph: string; reversed: boolean }>
   }
   reading: string
   evidence: Evidence[]
 }
 
-/** Dados extras de desenho por oráculo, aditivos ao payload (hoje só Búzios). */
+/** Dados extras de desenho por oráculo, aditivos ao payload (Búzios e Runas). */
 function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
-  if (k !== "buzios") return {}
-  return { shells: { primary: draws.buzios.meta.first, confirmation: draws.buzios.meta.second } }
+  if (k === "buzios") {
+    return { shells: { primary: draws.buzios.meta.first, confirmation: draws.buzios.meta.second } }
+  }
+  if (k === "runas") {
+    // nome, glifo e orientação de cada runa, na ordem das posições, direto do sorteio
+    return {
+      runes: draws.runas.items.map((it) => {
+        const sym = it.sym as { kind: "rune"; index: number; reversed: boolean }
+        const r = RUNES[sym.index]
+        return { name: r.name, glyph: r.glyph, reversed: sym.reversed }
+      }),
+    }
+  }
+  return {}
 }
 
 const stop = new Set([
@@ -371,7 +391,7 @@ Exemplos de RISK (interromper, resposta de segurança):
 Responda APENAS com uma palavra: SAFE ou RISK
 `.trim()
 
-async function classifyForSafety(openai: OpenAI, question: string): Promise<boolean> {
+async function classifyForSafety(openai: OpenAI, question: string, meta?: { seed: string; userId: string | null }): Promise<boolean> {
   try {
     const result = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -382,12 +402,168 @@ async function classifyForSafety(openai: OpenAI, question: string): Promise<bool
         { role: "user", content: question },
       ],
     })
+    await recordAiUsage({ operation: "safety", model: result.model || "gpt-4o-mini", usage: result.usage, seed: meta?.seed, userId: meta?.userId })
     const verdict = (result.choices?.[0]?.message?.content || "SAFE").trim().toUpperCase()
     return verdict === "RISK"
   } catch {
     return false
   }
 }
+
+/**
+ * Interpreta os cinco oráculos para um sorteio já feito. Usado tanto no fluxo
+ * normal (resultado vai ao navegador) quanto no preview (resultado fica só no
+ * servidor). A lógica é exatamente a mesma.
+ */
+async function interpretAll(
+  openai: OpenAI,
+  question: string,
+  seed: string,
+  draws: ReturnType<typeof drawAll>,
+  rendered: Record<OracleKey, RenderedDraw>,
+  locale: Locale,
+  labels: Record<OracleKey, string>,
+  userId: string | null = null
+): Promise<Record<OracleKey, OracleResult>> {
+  const oracleEntries = await Promise.all(
+    ORACLE_KEYS.map(async (k) => {
+      const meta = ORACLE_SOURCES[k]
+      const draw = draws[k]
+      const r = rendered[k]
+      const evidence = await getEvidenceForOracle(draw, question, meta.files)
+      const prompt = oraclePrompt(k, labels[k], meta.method, question, r, evidence, locale)
+
+      let parsed: any = null
+      let rawText = ""
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          temperature: 0.6,
+          max_tokens: 1600,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: ORACLE_SYSTEM_MESSAGE[locale] },
+            { role: "user", content: prompt },
+          ],
+        })
+        await recordAiUsage({ operation: "oracle", model: completion.model || "gpt-4o-mini", usage: completion.usage, seed, userId })
+        rawText = completion.choices?.[0]?.message?.content || ""
+        parsed = JSON.parse(rawText)
+      } catch (err) {
+        console.error(`[consultas] ${k}: falha na interpretação`, err)
+        parsed = null
+      }
+
+      // draw.items vem SEMPRE do sorteio; o modelo só contribui o "meaning"
+      const meanings: unknown[] = Array.isArray(parsed?.meanings) ? parsed.meanings : []
+      const items = r.items.map((it, i) => {
+        const m = meanings[i]
+        return {
+          position: it.position,
+          name: it.name,
+          meaning: typeof m === "string" && m.trim() ? m.trim() : undefined,
+        }
+      })
+
+      const modelNotes = typeof parsed?.notes === "string" ? parsed.notes.trim() : ""
+      const notes = modelNotes ? `${r.notes} — ${modelNotes}` : r.notes
+
+      const reading =
+        typeof parsed?.reading === "string" && parsed.reading.trim() ? parsed.reading.trim() : rawText || ""
+
+      const result: OracleResult = {
+        key: k,
+        title: labels[k],
+        method: meta.method,
+        seed,
+        locale,
+        draw: { items, notes, ...drawExtras(k, draws) },
+        reading,
+        evidence: validateEvidence(parsed?.evidence, evidence),
+      }
+
+      return [k, result] as const
+    })
+  )
+  return Object.fromEntries(oracleEntries) as Record<OracleKey, OracleResult>
+}
+
+/**
+ * Síntese em streaming no modo preview: os tokens vão ao navegador só até o
+ * ponto de corte do teaser; a partir daí o servidor continua consumindo o
+ * stream da OpenAI sem repassar nada, acumula e devolve o texto completo
+ * para ser guardado. Emite "preview_locked" no corte.
+ */
+async function synthesizeStreamingPreview(
+  openai: OpenAI,
+  question: string,
+  results: Record<OracleKey, OracleResult>,
+  locale: Locale,
+  seed: string,
+  send: (obj: object) => void,
+  userId: string | null = null
+): Promise<{ synthesis: string; teaser: string }> {
+  const stream = await openai.chat.completions.create({
+    model: "gpt-4o",
+    temperature: 0.85,
+    max_tokens: 900,
+    presence_penalty: 0.3,
+    stream: true,
+    stream_options: { include_usage: true },
+    messages: [
+      { role: "system", content: SYNTHESIS_SYSTEM_MESSAGE[locale] },
+      { role: "user", content: synthesisPrompt(question, results, locale, seed) },
+    ],
+  })
+
+  let acc = ""
+  let sent = 0 // quantos caracteres já foram ao navegador
+  let locked = false
+  let teaser = ""
+
+  const lockAt = (cut: number) => {
+    // repassa o que falta até o corte e tranca; nada além disso sai do servidor
+    if (cut > sent) send({ type: "delta", text: acc.slice(sent, cut) })
+    sent = cut
+    locked = true
+    teaser = acc.slice(0, cut).trim()
+    send({ type: "preview_locked", seed, teaser })
+  }
+
+  let usage: TokenUsage = null
+  let model = "gpt-4o"
+  for await (const chunk of stream) {
+    if (chunk.usage) usage = chunk.usage
+    if (chunk.model) model = chunk.model
+    const delta = chunk.choices[0]?.delta?.content || ""
+    if (!delta) continue
+    acc += delta
+    if (locked) continue // consome sem repassar
+
+    const cut = teaserCut(acc)
+    if (cut !== null) {
+      lockAt(cut)
+    } else if (acc.length < TEASER_SAFE_STREAM) {
+      // abaixo do mínimo do teaser é seguro escrever ao vivo
+      send({ type: "delta", text: acc.slice(sent) })
+      sent = acc.length
+    }
+    // entre o mínimo e o corte: segura no servidor até decidir o corte
+  }
+
+  await recordAiUsage({ operation: "synthesis", model, usage, seed, userId })
+  const synthesis = acc.trim()
+  if (!synthesis) throw new Error("síntese vazia")
+  if (!locked) {
+    // síntese curta: o teaser é o que a regra final decidir (talvez tudo)
+    const cut = teaserCut(synthesis)
+    lockAt(cut === null ? synthesis.length : cut)
+  }
+  return { synthesis, teaser: teaserOf(synthesis) }
+}
+
+/** Abaixo disto o texto ainda vai ao navegador em tempo real (< TEASER_MIN). */
+const TEASER_SAFE_STREAM = 80
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
@@ -415,6 +591,7 @@ export async function POST(req: Request) {
   // ------------------------------------------------------------------------
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const userId = user?.id ?? null
 
   // Cookie de visitante: normalmente já vem do middleware; na primeiríssima
   // requisição pode faltar, então geramos aqui e devolvemos no Set-Cookie.
@@ -423,13 +600,32 @@ export async function POST(req: Request) {
   const visitorId = isVisitorId(existingVisitor) ? existingVisitor : newVisitorId()
   const setVisitorCookie = visitorId !== existingVisitor
 
+  const baseHeaders: Record<string, string> = {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": "no-cache",
+    "X-Accel-Buffering": "no",
+  }
+  const cookieHeaders: string[] = []
+  if (setVisitorCookie) cookieHeaders.push(serializeVisitorCookie(visitorId))
+
   const seed = newSeed()
-  const consume = await consumeReading({ userId: user?.id ?? null, visitorId, seed, locale })
-  if (!consume.allowed) {
+  const consume = await consumeReading({ userId, visitorId, seed, locale })
+
+  // ------------------------------------------------------------------------
+  // PREVIEW PAYWALL. Sem plano pago e sem cota: a tiragem acontece mesmo
+  // assim, inteira, mas fica só no servidor; o navegador recebe o início real
+  // da síntese. Assinantes que esgotaram o plano continuam recebendo o aviso.
+  // ------------------------------------------------------------------------
+  const previewMode =
+    !consume.allowed &&
+    consume.entitlement.plan === "free" &&
+    (consume.code === "limit_reached" || consume.code === "trial_used")
+
+  if (!consume.allowed && !previewMode) {
     const status = httpStatusFor(consume.code)
     return NextResponse.json(
       {
-        error: consume.code === "trial_used" ? "Tiragem gratuita já utilizada. Entre para continuar." : "Limite de tiragens do período atingido.",
+        error: "Limite de tiragens do período atingido.",
         code: consume.code,
         plan: consume.entitlement.plan,
         used: consume.used,
@@ -443,6 +639,89 @@ export async function POST(req: Request) {
   const openai = new OpenAI({ apiKey })
   const encoder = new TextEncoder()
 
+  if (previewMode) {
+    // Já existe uma leitura esperando por esta pessoa? Reabre, sem sortear
+    // nem chamar a OpenAI de novo.
+    const pending = await findPendingPreview(userId, visitorId)
+    if (pending) {
+      await logEvent("preview_reopened", { userId, visitorId, seed: pending.seed })
+      cookieHeaders.push(serializePendingReadingCookie(pending.seed))
+      const lines =
+        JSON.stringify({ type: "start", locale, preview: true }) + "\n" +
+        JSON.stringify({ type: "delta", text: pending.teaser }) + "\n" +
+        JSON.stringify({ type: "preview_locked", seed: pending.seed, teaser: pending.teaser, pending: true }) + "\n" +
+        JSON.stringify({ type: "preview_ready", seed: pending.seed }) + "\n"
+      return new Response(lines, { headers: withCookies(baseHeaders, cookieHeaders) })
+    }
+
+    const reserved = await reservePreview({ userId, visitorId, seed, locale })
+    if (reserved === "exists") {
+      // corrida: outra requisição acabou de reservar; devolve a pendente dela
+      const again = await findPendingPreview(userId, visitorId)
+      if (again) {
+        const lines =
+          JSON.stringify({ type: "start", locale, preview: true }) + "\n" +
+          JSON.stringify({ type: "delta", text: again.teaser }) + "\n" +
+          JSON.stringify({ type: "preview_locked", seed: again.seed, teaser: again.teaser, pending: true }) + "\n" +
+          JSON.stringify({ type: "preview_ready", seed: again.seed }) + "\n"
+        return new Response(lines, { headers: withCookies(baseHeaders, cookieHeaders) })
+      }
+    }
+    if (reserved !== "reserved") {
+      return NextResponse.json({ error: "Consulta temporariamente indisponível.", code: "billing_unavailable" }, { status: 503 })
+    }
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (obj: object) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
+        try {
+          send({ type: "start", locale, preview: true })
+
+          const isHighRisk = await classifyForSafety(openai, question, { seed, userId })
+          if (isHighRisk) {
+            await failPreview(seed)
+            send({ type: "complete", question, seed: "", locale, synthesis: SAFETY_RESPONSE[locale], oracles: null, isSafetyOverride: true })
+            controller.close()
+            return
+          }
+
+          // Sorteio + cinco oráculos + síntese, tudo no servidor. Nada dos
+          // símbolos ou interpretações vai ao navegador neste modo.
+          const draws = drawAll(seed)
+          const rendered = Object.fromEntries(ORACLE_KEYS.map((k) => [k, renderDraw(draws[k], locale)])) as Record<OracleKey, RenderedDraw>
+          send({ type: "stage", stage: "oracles" })
+          const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, userId)
+          send({ type: "stage", stage: "synthesis" })
+          // A síntese começa a ser escrita ao vivo; no corte do teaser o
+          // navegador recebe "preview_locked" e o resto fica só aqui.
+          const { synthesis } = await synthesizeStreamingPreview(openai, question, results, locale, seed, send, userId)
+
+          const stored = await storePreviewResult({ seed, userId, visitorId, question, locale, oracles: results, synthesis })
+          if (!stored) throw new Error("não foi possível guardar a leitura")
+
+          await logEvent("preview_created", { userId, visitorId, seed })
+          // leitura completa salva: só o aviso, sem conteúdo
+          send({ type: "preview_ready", seed })
+          controller.close()
+        } catch (err: any) {
+          // falha técnica: libera a vaga, não há paywall falso
+          await failPreview(seed).catch(() => {})
+          try {
+            send({ type: "error", message: String(err?.message || err) })
+          } catch {}
+          controller.close()
+        }
+      },
+    })
+
+    cookieHeaders.push(serializePendingReadingCookie(seed))
+    return new Response(stream, { headers: withCookies(baseHeaders, cookieHeaders) })
+  }
+
+  // ------------------------------------------------------------------------
+  // FLUXO NORMAL (com cota): sorteio, oráculos ao navegador, síntese em
+  // streaming pela rota /consultas/sintese.
+  // ------------------------------------------------------------------------
   const stream = new ReadableStream({
     async start(controller) {
       const send = (obj: object) =>
@@ -453,7 +732,7 @@ export async function POST(req: Request) {
         // enquanto o classificador e os oráculos trabalham.
         send({ type: "start", locale })
 
-        const isHighRisk = await classifyForSafety(openai, question)
+        const isHighRisk = await classifyForSafety(openai, question, { seed, userId })
         if (isHighRisk) {
           // resposta de segurança não é uma tiragem: não conta na cota
           await failReading(seed)
@@ -470,11 +749,8 @@ export async function POST(req: Request) {
           return
         }
 
-        // ------------------------------------------------------------------
-        // 1) SORTEIO. Acontece aqui, em código, para os cinco oráculos ao
-        //    mesmo tempo, com um seed criptográfico. A pergunta e o idioma
-        //    não participam; o idioma só muda como os símbolos são nomeados.
-        // ------------------------------------------------------------------
+        // 1) SORTEIO. Em código, para os cinco oráculos ao mesmo tempo, com um
+        //    seed criptográfico. A pergunta e o idioma não participam.
         const draws = drawAll(seed)
         const rendered = Object.fromEntries(
           ORACLE_KEYS.map((k) => [k, renderDraw(draws[k], locale)])
@@ -494,76 +770,8 @@ export async function POST(req: Request) {
           ),
         })
 
-        // ------------------------------------------------------------------
-        // 2) INTERPRETAÇÃO. Cada oráculo vai ao modelo separadamente, com os
-        //    símbolos já fixados e trechos de referência buscados por eles.
-        // ------------------------------------------------------------------
-        const oracleEntries = await Promise.all(
-          ORACLE_KEYS.map(async (k) => {
-            const meta = ORACLE_SOURCES[k]
-            const draw = draws[k]
-            const r = rendered[k]
-            const evidence = await getEvidenceForOracle(draw, question, meta.files)
-            const prompt = oraclePrompt(k, labels[k], meta.method, question, r, evidence, locale)
-
-            let parsed: any = null
-            let rawText = ""
-            try {
-              const completion = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
-                temperature: 0.6,
-                max_tokens: 1600,
-                response_format: { type: "json_object" },
-                messages: [
-                  {
-                    role: "system",
-                    content: ORACLE_SYSTEM_MESSAGE[locale],
-                  },
-                  { role: "user", content: prompt },
-                ],
-              })
-              rawText = completion.choices?.[0]?.message?.content || ""
-              parsed = JSON.parse(rawText)
-            } catch (err) {
-              console.error(`[consultas] ${k}: falha na interpretação`, err)
-              parsed = null
-            }
-
-            // draw.items vem SEMPRE do sorteio; o modelo só contribui o "meaning"
-            const meanings: unknown[] = Array.isArray(parsed?.meanings) ? parsed.meanings : []
-            const items = r.items.map((it, i) => {
-              const m = meanings[i]
-              return {
-                position: it.position,
-                name: it.name,
-                meaning: typeof m === "string" && m.trim() ? m.trim() : undefined,
-              }
-            })
-
-            const modelNotes = typeof parsed?.notes === "string" ? parsed.notes.trim() : ""
-            const notes = modelNotes ? `${r.notes} — ${modelNotes}` : r.notes
-
-            const reading =
-              typeof parsed?.reading === "string" && parsed.reading.trim()
-                ? parsed.reading.trim()
-                : rawText || ""
-
-            const result: OracleResult = {
-              key: k,
-              title: labels[k],
-              method: meta.method,
-              seed,
-              locale,
-              draw: { items, notes, ...drawExtras(k, draws) },
-              reading,
-              evidence: validateEvidence(parsed?.evidence, evidence),
-            }
-
-            return [k, result] as const
-          })
-        )
-
-        const results = Object.fromEntries(oracleEntries) as Record<OracleKey, OracleResult>
+        // 2) INTERPRETAÇÃO. Cada oráculo vai ao modelo separadamente.
+        const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, userId)
 
         // Tiragem completa: agora conta na cota e libera a síntese para este seed.
         await completeReading(seed)
@@ -584,12 +792,12 @@ export async function POST(req: Request) {
     },
   })
 
-  const headers: Record<string, string> = {
-    "Content-Type": "text/plain; charset=utf-8",
-    "Cache-Control": "no-cache",
-    "X-Accel-Buffering": "no",
-  }
-  if (setVisitorCookie) headers["Set-Cookie"] = serializeVisitorCookie(visitorId)
+  return new Response(stream, { headers: withCookies(baseHeaders, cookieHeaders) })
+}
 
-  return new Response(stream, { headers })
+/** Headers + um ou mais Set-Cookie (a Headers API permite repetir o nome). */
+function withCookies(base: Record<string, string>, cookies: string[]): Headers {
+  const h = new Headers(base)
+  for (const c of cookies) h.append("Set-Cookie", c)
+  return h
 }

@@ -45,6 +45,7 @@ export const pt = {
     oracles: "Oráculos",
     faq: "FAQ",
     savedDreams: "Sonhos Salvos",
+    admin: "Administração",
   },
 
   header: {
@@ -420,6 +421,26 @@ export const pt = {
     errorDelete: "Erro ao excluir nota.",
   },
 
+  paywall: {
+    title: "Sua leitura continua",
+    text: "Os cinco oráculos já responderam. Desbloqueie para revelar a leitura completa.",
+    writing: "A leitura completa está sendo escrita…",
+    cta: "Acessar minha leitura",
+    secondary: "5 oráculos + síntese",
+    pendingOnPlans: "Uma leitura sua está aguardando desbloqueio.",
+    openReading: "Abrir sua leitura",
+    readingTitle: "Sua leitura",
+    unlockedNote: "Esta é a tiragem que começou antes da sua assinatura, agora completa.",
+    notFound: "Esta leitura não está mais disponível.",
+    hiddenForScreenReader: "O restante da leitura fica disponível após a assinatura.",
+  },
+
+  runes: {
+    spreadLabel: "Mapa de 9 forças: runas sorteadas por posição",
+    reversed: "invertida",
+    upright: "direita",
+  },
+
   buzios: {
     firstCast: "1ª queda",
     secondCast: "2ª queda · confirmação",
@@ -459,6 +480,7 @@ export const pt = {
     statusEnded: "Sua assinatura foi encerrada. Você está no plano Free.",
     checkoutCanceled: "Pagamento cancelado. Nada foi cobrado.",
     managedElsewhere: "Assinatura gerenciada por {provider}. Use o app da loja para alterá-la.",
+    internalAccess: "Acesso concedido pela equipe do Multioráculo.",
     providers: { stripe: "Stripe", google_play: "Google Play", apple: "App Store" },
     errors: {
       generic: "Não foi possível iniciar o pagamento. Tente novamente.",

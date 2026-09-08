@@ -7,7 +7,10 @@ import { fmt, formatDate } from "@/lib/i18n"
 import { cookies } from "next/headers"
 import { getUserEntitlementWithUsage } from "@/lib/billing/entitlement"
 import { attributeVisitorReadings } from "@/lib/billing/usage"
-import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
+import { PENDING_READING_COOKIE, VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
+import { isPreviewOwner, loadPreview } from "@/lib/billing/preview"
+import { logEvent } from "@/lib/billing/events"
+import Link from "next/link"
 import type { Plan } from "@/lib/billing/plans"
 
 export const dynamic = "force-dynamic"
@@ -31,6 +34,18 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
   const sub = ent.subscription
   const isStripe = sub?.provider === "stripe"
   const entitledPaid = ent.plan !== "free"
+  // admin ou acesso especial: plano concedido internamente, sem Stripe
+  const internalAccess = ent.access.source === "admin" || ent.access.source === "override"
+
+  // Leitura em preview aguardando desbloqueio (cookie httpOnly com o seed).
+  // Só aparece se a leitura existir e pertencer a esta pessoa.
+  const pendingSeed = (await cookies()).get(PENDING_READING_COOKIE)?.value
+  const pendingReading = pendingSeed ? await loadPreview(pendingSeed) : null
+  const visitorCookie = (await cookies()).get(VISITOR_COOKIE)?.value
+  // funil: visita à página de planos (só tipo, conta ou visitante e data)
+  await logEvent("plans_viewed", { userId: user?.id ?? null, visitorId: isVisitorId(visitorCookie) ? visitorCookie : null })
+  const pendingOwned = pendingReading && isPreviewOwner(pendingReading, user?.id ?? null, isVisitorId(visitorCookie) ? visitorCookie : null)
+  const pendingUnlockable = Boolean(pendingOwned && (entitledPaid || pendingReading?.unlocked_at))
 
   // Estado exibido no topo da página
   let banner: { tone: "info" | "warn" | "ok"; text: string } | null = null
@@ -49,6 +64,7 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
   // Ação de cada card, decidida no servidor a partir do entitlement
   function actionFor(plan: "essential" | "unlimited"): { mode: SubscriptionActionMode; label: string } {
     if (!user) return { mode: "login", label: b.loginToSubscribe }
+    if (internalAccess) return { mode: "store", label: b.internalAccess }
     if (entitledPaid && sub && !isStripe) return { mode: "store", label: fmt(b.managedElsewhere, { provider: b.providers[sub.provider] }) }
     if (entitledPaid && isStripe) return { mode: "manage", label: ent.plan === plan ? b.manage : b.switchPlan }
     // pagamento pendente com a Stripe: evita segundo checkout, manda ao portal
@@ -132,6 +148,21 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
           {banner && (
             <div className={`backdrop-blur-md border rounded-2xl p-5 mb-8 text-sm leading-relaxed ${toneClass[banner.tone]}`} role="status">
               {banner.text}
+            </div>
+          )}
+
+          {/* Leitura pendente: volta à mesma tiragem quando o plano liberar */}
+          {pendingOwned && pendingSeed && (
+            <div className="backdrop-blur-md border border-white/20 bg-white/10 rounded-2xl p-5 mb-8 flex flex-wrap items-center justify-between gap-3" role="status">
+              <p className="text-white/85 text-sm">{pendingUnlockable ? dict.paywall.unlockedNote : dict.paywall.pendingOnPlans}</p>
+              {pendingUnlockable && (
+                <Link
+                  href={`/leitura/${encodeURIComponent(pendingSeed)}`}
+                  className="px-5 py-2 rounded-full bg-white/15 border border-white/30 text-white font-medium text-sm hover:bg-white/20 transition-all duration-200"
+                >
+                  {dict.paywall.openReading}
+                </Link>
+              )}
             </div>
           )}
 

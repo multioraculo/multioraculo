@@ -43,6 +43,7 @@ export const es: Dictionary = {
     oracles: "Oráculos",
     faq: "FAQ",
     savedDreams: "Sueños Guardados",
+    admin: "Administración",
   },
 
   header: {
@@ -418,6 +419,26 @@ export const es: Dictionary = {
     errorDelete: "Error al eliminar la nota.",
   },
 
+  paywall: {
+    title: "Tu lectura continúa",
+    text: "Los cinco oráculos ya respondieron. Desbloquea para revelar la lectura completa.",
+    writing: "La lectura completa se está escribiendo…",
+    cta: "Acceder a mi lectura",
+    secondary: "5 oráculos + síntesis",
+    pendingOnPlans: "Una lectura tuya está esperando ser desbloqueada.",
+    openReading: "Abrir tu lectura",
+    readingTitle: "Tu lectura",
+    unlockedNote: "Esta es la tirada que empezó antes de tu suscripción, ahora completa.",
+    notFound: "Esta lectura ya no está disponible.",
+    hiddenForScreenReader: "El resto de la lectura queda disponible después de suscribirte.",
+  },
+
+  runes: {
+    spreadLabel: "Mapa de 9 fuerzas: runas sorteadas por posición",
+    reversed: "invertida",
+    upright: "derecha",
+  },
+
   buzios: {
     firstCast: "1ª caída",
     secondCast: "2ª caída · confirmación",
@@ -457,6 +478,7 @@ export const es: Dictionary = {
     statusEnded: "Tu suscripción ha terminado. Estás en el plan Free.",
     checkoutCanceled: "Pago cancelado. No se cobró nada.",
     managedElsewhere: "Suscripción gestionada por {provider}. Usa la app de la tienda para cambiarla.",
+    internalAccess: "Acceso concedido por el equipo de Multioráculo.",
     providers: { stripe: "Stripe", google_play: "Google Play", apple: "App Store" },
     errors: {
       generic: "No se pudo iniciar el pago. Inténtalo de nuevo.",

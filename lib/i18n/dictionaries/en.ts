@@ -43,6 +43,7 @@ export const en: Dictionary = {
     oracles: "Oracles",
     faq: "FAQ",
     savedDreams: "Saved Dreams",
+    admin: "Admin",
   },
 
   header: {
@@ -418,6 +419,26 @@ export const en: Dictionary = {
     errorDelete: "Error deleting note.",
   },
 
+  paywall: {
+    title: "Your reading continues",
+    text: "The five oracles have answered. Unlock to reveal the complete reading.",
+    writing: "The complete reading is being written…",
+    cta: "Access my reading",
+    secondary: "5 oracles + synthesis",
+    pendingOnPlans: "One of your readings is waiting to be unlocked.",
+    openReading: "Open your reading",
+    readingTitle: "Your reading",
+    unlockedNote: "This is the reading that began before your subscription, now complete.",
+    notFound: "This reading is no longer available.",
+    hiddenForScreenReader: "The rest of the reading becomes available after subscribing.",
+  },
+
+  runes: {
+    spreadLabel: "Map of 9 forces: runes drawn by position",
+    reversed: "reversed",
+    upright: "upright",
+  },
+
   buzios: {
     firstCast: "1st cast",
     secondCast: "2nd cast · confirmation",
@@ -457,6 +478,7 @@ export const en: Dictionary = {
     statusEnded: "Your subscription has ended. You are on the Free plan.",
     checkoutCanceled: "Payment canceled. Nothing was charged.",
     managedElsewhere: "Subscription managed by {provider}. Use the store app to change it.",
+    internalAccess: "Access granted by the Multioráculo team.",
     providers: { stripe: "Stripe", google_play: "Google Play", apple: "App Store" },
     errors: {
       generic: "The payment could not be started. Please try again.",

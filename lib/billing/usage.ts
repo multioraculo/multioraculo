@@ -59,7 +59,11 @@ export async function attributeVisitorReadings(userId: string, visitorId: string
     .update({ user_id: userId })
     .eq("visitor_id", visitorId)
     .is("user_id", null)
-  if (error) console.error("[billing] attributeVisitorReadings:", error.message)
+  // 23505: a conta já tinha uma preview pendente própria; a do cookie fica como visitante
+  if (error && error.code !== "23505") console.error("[billing] attributeVisitorReadings:", error.message)
+  // conteúdo das previews acompanha a atribuição
+  const { attributePreviewResults } = await import("./preview")
+  await attributePreviewResults(userId, visitorId)
 }
 
 export async function consumeReading(input: {

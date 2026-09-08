@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
-import { getSubscriptionRow, isEntitled } from "@/lib/billing/entitlement"
+import { getSubscriptionRow, getUserAccess, isEntitled } from "@/lib/billing/entitlement"
+import { logEvent } from "@/lib/billing/events"
 import { isPaidPlan, stripeConfigured, stripePriceFor } from "@/lib/billing/plans"
 import { getOrCreateStripeCustomer, getStripe, siteUrl, stripeLocale } from "@/lib/billing/stripe"
 import { resolveLocale } from "@/lib/i18n/config"
@@ -37,6 +38,10 @@ export async function POST(req: Request) {
   if (existing && isEntitled(existing)) {
     return NextResponse.json({ error: "Assinatura já ativa.", code: "already_subscribed" }, { status: 409 })
   }
+  // admin e acessos especiais já têm o plano: não devem pagar por engano
+  if (await getUserAccess(user.id)) {
+    return NextResponse.json({ error: "Acesso já concedido.", code: "already_subscribed" }, { status: 409 })
+  }
 
   try {
     const admin = createAdminClient()
@@ -59,6 +64,7 @@ export async function POST(req: Request) {
     })
 
     if (!session.url) throw new Error("Checkout sem URL")
+    await logEvent("checkout_started", { userId: user.id, meta: { plan } })
     return NextResponse.json({ url: session.url })
   } catch (err: any) {
     console.error("[billing/checkout]", err?.message || err)

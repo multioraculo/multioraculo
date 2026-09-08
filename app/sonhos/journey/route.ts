@@ -6,6 +6,7 @@ import { LOCALE_META, resolveLocale } from "@/lib/i18n/config"
 import { newSeed } from "@/lib/oracles/draw"
 import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
 import { VISITOR_COOKIE } from "@/lib/billing/visitor"
+import { recordAiUsage } from "@/lib/ai/usage"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -119,6 +120,7 @@ export async function POST(request: Request) {
       ],
     })
 
+    await recordAiUsage({ operation: "journey", model: completion.model || "gpt-4o", usage: completion.usage, seed, userId: user.id })
     const raw = completion.choices?.[0]?.message?.content ?? "{}"
     const journeyData = JSON.parse(raw)
     await completeReading(seed)

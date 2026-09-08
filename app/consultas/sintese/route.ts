@@ -7,6 +7,7 @@ import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { claimSynthesis } from "@/lib/billing/usage"
 import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
+import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
 
 export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota só escreve a
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
           max_tokens: 900,
           presence_penalty: 0.3,
           stream: true,
+          stream_options: { include_usage: true },
           messages: [
             {
               role: "system",
@@ -73,10 +75,15 @@ export async function POST(req: Request) {
           ],
         })
 
+        let usage: TokenUsage = null
+        let model = "gpt-4o"
         for await (const chunk of synthStream) {
+          if (chunk.usage) usage = chunk.usage
+          if (chunk.model) model = chunk.model
           const delta = chunk.choices[0]?.delta?.content || ""
           if (delta) send({ type: "delta", text: delta })
         }
+        await recordAiUsage({ operation: "synthesis", model, usage, seed, userId: user?.id ?? null })
 
         send({ type: "done" })
       } catch (err: any) {

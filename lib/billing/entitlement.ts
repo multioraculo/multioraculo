@@ -1,10 +1,12 @@
 /**
  * Camada central de entitlement.
  *
- * Responde "qual plano este usuário tem e o que pode usar", olhando apenas a
- * tabela `subscriptions` do Supabase. De onde a assinatura veio (Stripe hoje,
- * Google Play / App Store amanhã) é irrelevante aqui: o webhook de cada
- * provedor só precisa manter essa tabela atualizada.
+ * Responde "qual plano este usuário tem e o que pode usar". Prioridade:
+ *   1. admin ou acesso especial vigente (user_roles / access_overrides),
+ *      concedido internamente, sem Stripe e sem receita;
+ *   2. assinatura paga ativa (tabela `subscriptions`, mantida pelos webhooks
+ *      de cada provedor: Stripe hoje, Google Play / App Store amanhã);
+ *   3. Free.
  */
 
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
@@ -33,9 +35,14 @@ export type SubscriptionRow = {
   canceled_at: string | null
 }
 
+/** De onde vem o plano efetivo. admin/override nunca contam como pagantes. */
+export type AccessSource = "admin" | "override" | "subscription" | "free"
+
 export type Entitlement = {
   /** plano efetivo (o que o usuário pode usar agora) */
   plan: Plan
+  /** origem do plano efetivo, com motivo e validade quando é acesso interno */
+  access: { source: AccessSource; reason: string | null; expiresAt: string | null }
   /** limite de tiragens completas no período; null = ilimitado (compatibilidade) */
   monthlyLimit: number | null
   /** limites por tipo de consumo; null = ilimitado, 0 = não incluído */
@@ -69,12 +76,34 @@ export function freeEntitlement(): Entitlement {
   const { start, end } = calendarMonth()
   return {
     plan: "free",
+    access: { source: "free", reason: null, expiresAt: null },
     monthlyLimit: monthlyLimitFor("free"),
     limits: { ...PLAN_LIMITS.free },
     periodStart: start,
     periodEnd: end,
     subscription: null,
   }
+}
+
+/**
+ * Acesso interno (admin ou override) do usuário, decidido no banco pela
+ * função get_user_access: liga overrides por e-mail à conta no primeiro uso.
+ * Sem service role (dev) não há acesso interno.
+ */
+export async function getUserAccess(
+  userId: string
+): Promise<{ source: "admin" | "override"; plan: Plan; reason: string | null; expiresAt: string | null } | null> {
+  if (!hasAdminClient()) return null
+  const { data, error } = await createAdminClient().rpc("get_user_access", { p_user_id: userId })
+  if (error) {
+    // função ainda não existe (migration pendente) ou erro: segue pela assinatura
+    console.warn("[entitlement] get_user_access:", error.message)
+    return null
+  }
+  const row = Array.isArray(data) ? data[0] : data
+  if (!row || (row.source !== "admin" && row.source !== "override")) return null
+  const plan: Plan = row.plan === "essential" ? "essential" : "unlimited"
+  return { source: row.source, plan, reason: row.reason ?? null, expiresAt: row.expires_at ?? null }
 }
 
 export async function getSubscriptionRow(userId: string): Promise<SubscriptionRow | null> {
@@ -109,22 +138,38 @@ export function isEntitled(row: SubscriptionRow, now = new Date()): boolean {
 export async function getUserEntitlement(userId: string | null | undefined): Promise<Entitlement> {
   if (!userId) return freeEntitlement()
 
-  const row = await getSubscriptionRow(userId)
-  if (!row) return freeEntitlement()
-
-  const entitled = isEntitled(row)
+  const [access, row] = await Promise.all([getUserAccess(userId), getSubscriptionRow(userId)])
   const month = calendarMonth()
-  const info: NonNullable<Entitlement["subscription"]> = {
-    plan: row.plan,
-    status: row.status,
-    provider: row.billing_provider,
-    cancelAtPeriodEnd: row.cancel_at_period_end,
-    currentPeriodEnd: row.current_period_end,
-    paymentProblem: row.status === "past_due" || row.status === "unpaid",
-    pending: row.status === "incomplete",
-    ended: !entitled,
+
+  const info: NonNullable<Entitlement["subscription"]> | null = row
+    ? {
+        plan: row.plan,
+        status: row.status,
+        provider: row.billing_provider,
+        cancelAtPeriodEnd: row.cancel_at_period_end,
+        currentPeriodEnd: row.current_period_end,
+        paymentProblem: row.status === "past_due" || row.status === "unpaid",
+        pending: row.status === "incomplete",
+        ended: !isEntitled(row),
+      }
+    : null
+
+  // 1) admin ou acesso especial: vale por mês civil, independe da Stripe
+  if (access) {
+    return {
+      plan: access.plan,
+      access: { source: access.source, reason: access.reason, expiresAt: access.expiresAt },
+      monthlyLimit: monthlyLimitFor(access.plan),
+      limits: { ...PLAN_LIMITS[access.plan] },
+      periodStart: month.start,
+      periodEnd: month.end,
+      subscription: info,
+    }
   }
 
+  // 2) assinatura paga; 3) Free
+  if (!row || !info) return freeEntitlement()
+  const entitled = isEntitled(row)
   if (!entitled) {
     return { ...freeEntitlement(), subscription: info }
   }
@@ -133,6 +178,7 @@ export async function getUserEntitlement(userId: string | null | undefined): Pro
   const periodEnd = row.current_period_end ?? month.end
   return {
     plan: row.plan,
+    access: { source: "subscription", reason: null, expiresAt: null },
     monthlyLimit: monthlyLimitFor(row.plan),
     limits: { ...PLAN_LIMITS[row.plan] },
     periodStart,

@@ -36,6 +36,27 @@ export function serializeVisitorCookie(id: string): string {
     .join("; ")
 }
 
+/**
+ * Referência à leitura em preview aguardando desbloqueio. Cookie httpOnly,
+ * só um seed: sem ele não se acessa nada, e o servidor ainda confere o dono
+ * e o entitlement antes de mostrar qualquer conteúdo.
+ */
+export const PENDING_READING_COOKIE = "mo_pending_reading"
+
+export function serializePendingReadingCookie(seed: string): string {
+  const o = visitorCookieOptions()
+  return [
+    `${PENDING_READING_COOKIE}=${encodeURIComponent(seed)}`,
+    `Path=${o.path}`,
+    `Max-Age=${60 * 60 * 24 * 31}`,
+    "HttpOnly",
+    "SameSite=Lax",
+    o.secure ? "Secure" : "",
+  ]
+    .filter(Boolean)
+    .join("; ")
+}
+
 export function isVisitorId(v: unknown): v is string {
   return typeof v === "string" && /^[0-9a-f-]{20,64}$/i.test(v)
 }

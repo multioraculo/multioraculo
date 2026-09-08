@@ -6,6 +6,8 @@ import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
 import BuziosCasts from "@/components/buzios-board"
+import RunesSpread from "@/components/runes-spread"
+import PreviewPaywall from "@/components/preview-paywall"
 import { fmt } from "@/lib/i18n"
 
 type HeroContentProps = {
@@ -28,6 +30,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [oracles, setOracles] = useState<Record<string, any> | null>(null)
   // seed da tiragem atual: base do desenho determinístico dos búzios
   const [readingSeed, setReadingSeed] = useState("")
+  // preview paywall: só o início real da síntese chega ao navegador
+  const [preview, setPreview] = useState<{ seed: string; teaser: string; ready: boolean } | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   // Etapa atual da consulta, mostrada no lugar da síntese até o texto chegar
   const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
@@ -39,6 +43,24 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [saveLoading, setSaveLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  // Métrica de produto: qual cartão de oráculo a pessoa abre (uma vez por
+  // oráculo por tiragem). Só tipo, oráculo e seed; nenhum conteúdo.
+  const loggedOpensRef = useRef<Set<string>>(new Set())
+  const readingSeedRef = useRef("")
+  useEffect(() => {
+    readingSeedRef.current = readingSeed
+    loggedOpensRef.current.clear()
+  }, [readingSeed])
+  const logOracleOpen = (key: string) => {
+    if (loggedOpensRef.current.has(key)) return
+    loggedOpensRef.current.add(key)
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "oracle_opened", oracle: key, seed: readingSeedRef.current || undefined }),
+      keepalive: true,
+    }).catch(() => {})
+  }
   // Sync when the server re-renders the page after an auth change (triggered
   // by Header's router.refresh()). No onAuthStateChange here — only Header
   // subscribes, to avoid concurrent lock acquisitions on the same client.
@@ -151,6 +173,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setSynthesis(null)
     setOracles(null)
     setIsSaved(false)
+    setPreview(null)
     setShowResults(true)
     setTimeout(() => {
       document.getElementById("results-section")?.scrollIntoView({ behavior: "smooth" })
@@ -159,6 +182,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     let finalOracles: Record<string, any> | null = null
     let seed = ""
     let safetyOverride = false
+    let previewLocked = false
 
     try {
       // Etapa 1: sorteio + interpretação dos cinco oráculos, no idioma atual
@@ -178,10 +202,25 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             Object.fromEntries(
               Object.entries(event.draws ?? {}).map(([k, d]: [string, any]) => [
                 k,
-                { title: d.title, seed, draw: { items: d.items, notes: d.notes, shells: d.shells }, reading: "" },
+                { title: d.title, seed, draw: { items: d.items, notes: d.notes, shells: d.shells, runes: d.runes }, reading: "" },
               ])
             )
           )
+        } else if (event.type === "stage") {
+          // modo preview: o servidor avisa em que etapa está, sem enviar símbolos
+          if (event.stage === "oracles" || event.stage === "synthesis") setStage(event.stage)
+        } else if (event.type === "delta") {
+          // modo preview: a síntese começa a ser escrita ao vivo, até o corte
+          setSynthesis((prev) => (prev ?? "") + event.text)
+          setIsLoading(false)
+        } else if (event.type === "preview_locked") {
+          // corte do teaser: o vidro sobe; o restante fica só no servidor
+          previewLocked = true
+          setPreview({ seed: String(event.seed || ""), teaser: String(event.teaser || ""), ready: false })
+          setIsLoading(false)
+        } else if (event.type === "preview_ready") {
+          // leitura completa salva no servidor (nenhum conteúdo chega aqui)
+          setPreview((prev) => (prev ? { ...prev, ready: true } : { seed: String(event.seed || ""), teaser: "", ready: true }))
         } else if (event.type === "oracles") {
           finalOracles = event.oracles ?? null
           seed = event.seed || seed
@@ -200,6 +239,12 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       })
 
       if (safetyOverride) return
+      if (previewLocked) {
+        // leitura guardada no servidor; aqui ficou só o teaser
+        setOracles(null)
+        setIsLoading(false)
+        return
+      }
       if (!finalOracles) throw new Error(dict.results.drawIncomplete)
 
       // Etapa 2: síntese em streaming, a partir dos oráculos já interpretados
@@ -255,6 +300,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setIsSaved(false)
     setStreamError(null)
     setBlockedBy(null)
+    setPreview(null)
     setStage("idle")
     document.querySelector("textarea")?.focus()
   }
@@ -382,7 +428,11 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 backdropFilter: "blur(10px)",
                 border: isActive ? "1px solid rgba(139,69,193,0.4)" : "1px solid rgba(255,255,255,0.1)",
               }}
-              onClick={() => setActiveOracle(activeOracle === index ? null : index)}
+              onClick={() => {
+                const opening = activeOracle !== index
+                setActiveOracle(opening ? index : null)
+                if (opening) logOracleOpen(ORACLE_KEYS[index])
+              }}
               title={tooltip}
               aria-label={tooltip}
             >
@@ -493,7 +543,9 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 )}
               </div>
               <div className="text-white/80 text-sm leading-relaxed">
-                {synthesis ? (
+                {preview ? (
+                  <PreviewPaywall teaser={preview.teaser || synthesis || ""} ready={preview.ready} />
+                ) : synthesis ? (
                   <div className="space-y-4">
                     {synthesis.split(/\n{2,}/).map((para, i, all) => (
                       <p key={i} className="text-white/80 text-sm leading-relaxed">
@@ -534,7 +586,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               </div>
             </div>
 
-            {/* Oracle Section */}
+            {/* Oracle Section — não existe em modo preview: nenhum símbolo é enviado */}
+            {!preview && (
             <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-8">
               <h3 className="text-white text-lg text-center font-light">{dict.results.readByOracle}</h3>
 
@@ -578,6 +631,11 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                               shells={oracle?.draw?.shells ?? null}
                               animate
                             />
+                          </div>
+                        )}
+                        {key === "runas" && (
+                          <div className="mb-5 pb-5 border-b border-white/10">
+                            <RunesSpread items={items} runes={oracle?.draw?.runes ?? null} animate />
                           </div>
                         )}
                         <div className="space-y-3">
@@ -669,6 +727,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 </div>
               </div>
             </div>
+
+            )}
 
             {/* Ask another question button */}
             <div className="flex justify-center pt-8">

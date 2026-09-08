@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { newSeed } from "@/lib/oracles/draw"
 import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
 import { VISITOR_COOKIE } from "@/lib/billing/visitor"
+import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -102,6 +103,7 @@ export async function POST(request: Request) {
       temperature: 0.7,
       max_tokens: 2000,
       stream: true,
+      stream_options: { include_usage: true },
       messages: [
         {
           role: "system",
@@ -119,12 +121,17 @@ export async function POST(request: Request) {
     new ReadableStream({
       async start(controller) {
         let ok = false
+        let usage: TokenUsage = null
+        let model = "gpt-4o-mini"
         try {
           for await (const chunk of completion as any) {
+            if (chunk.usage) usage = chunk.usage
+            if (chunk.model) model = chunk.model
             const text = chunk.choices[0]?.delta?.content || ""
             if (text) controller.enqueue(encoder.encode(text))
           }
           ok = true
+          await recordAiUsage({ operation: "dream", model, usage, seed, userId: user?.id ?? null })
         } finally {
           // só conta quando a interpretação chegou inteira; erro no meio não consome
           await (ok ? completeReading(seed) : failReading(seed)).catch(() => {})

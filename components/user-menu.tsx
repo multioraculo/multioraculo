@@ -26,6 +26,8 @@ function Divider() {
 
 export default function UserMenu({ user, onLogout }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  // null = ainda não perguntou ao servidor; consulta uma vez, ao abrir o menu
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const router = useRouter()
   const { dict } = useI18n()
   const menuRef = useRef<HTMLDivElement>(null)
@@ -44,6 +46,14 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
       document.removeEventListener("touchstart", handleClose)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen || isAdmin !== null) return
+    fetch("/api/admin/me")
+      .then((r) => r.json())
+      .then((j) => setIsAdmin(Boolean(j?.admin)))
+      .catch(() => setIsAdmin(false))
+  }, [isOpen, isAdmin])
 
   const go = (path: string) => {
     setIsOpen(false)
@@ -90,6 +100,13 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
             <MenuItem label={dict.nav.grimoire} onClick={() => go("/diario")} />
 
             <Divider />
+
+            {isAdmin && (
+              <>
+                <MenuItem label={dict.nav.admin} onClick={() => go("/admin")} />
+                <Divider />
+              </>
+            )}
 
             {/* Sair — "Assinatura" agora vive no menu global do cabeçalho */}
             <button

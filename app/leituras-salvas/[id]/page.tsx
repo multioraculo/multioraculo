@@ -4,6 +4,7 @@ import ShaderBackground from "@/components/shader-background"
 import DeleteReadingButton from "@/components/delete-reading-button"
 import ReadingNotes from "@/components/reading-notes"
 import BuziosCasts from "@/components/buzios-board"
+import RunesSpread from "@/components/runes-spread"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import { formatDate } from "@/lib/i18n"
@@ -25,6 +26,7 @@ type OracleOutput = {
     notes?: string
     items?: OracleItem[]
     shells?: { primary: number; confirmation: number }
+    runes?: Array<{ name: string; glyph: string; reversed: boolean }>
   }
 }
 
@@ -147,6 +149,11 @@ export default async function LeituraDetailPage({
                                   items={items}
                                   shells={oracle.draw?.shells ?? null}
                                 />
+                              </div>
+                            )}
+                            {key === "runas" && (
+                              <div className="mb-5 pb-5 border-b border-white/10">
+                                <RunesSpread items={items} runes={oracle.draw?.runes ?? null} />
                               </div>
                             )}
                             <div className="space-y-3">
