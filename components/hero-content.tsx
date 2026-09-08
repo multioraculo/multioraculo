@@ -7,6 +7,8 @@ import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
 import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
+import IChingHexagram from "@/components/iching-hexagram"
+import TarotSpread from "@/components/tarot-spread"
 import PreviewPaywall from "@/components/preview-paywall"
 import { fmt } from "@/lib/i18n"
 
@@ -636,6 +638,16 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                         {key === "runas" && (
                           <div className="mb-5 pb-5 border-b border-white/10">
                             <RunesSpread items={items} runes={oracle?.draw?.runes ?? null} animate />
+                          </div>
+                        )}
+                        {key === "iching" && (
+                          <div className="mb-5 pb-5 border-b border-white/10">
+                            <IChingHexagram items={items} hexagram={oracle?.draw?.hexagram ?? null} animate />
+                          </div>
+                        )}
+                        {key === "tarot" && oracle?.draw?.cards && (
+                          <div className="mb-5 pb-5 border-b border-white/10">
+                            <TarotSpread items={items} cards={oracle.draw.cards} animate />
                           </div>
                         )}
                         <div className="space-y-3">

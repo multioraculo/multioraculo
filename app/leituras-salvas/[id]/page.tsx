@@ -5,6 +5,9 @@ import DeleteReadingButton from "@/components/delete-reading-button"
 import ReadingNotes from "@/components/reading-notes"
 import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
+import IChingHexagram from "@/components/iching-hexagram"
+import TarotSpread from "@/components/tarot-spread"
+import { tarotCardsFromSeed } from "@/lib/oracles/tarot-server"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import { formatDate } from "@/lib/i18n"
@@ -156,6 +159,19 @@ export default async function LeituraDetailPage({
                                 <RunesSpread items={items} runes={oracle.draw?.runes ?? null} />
                               </div>
                             )}
+                            {key === "iching" && (
+                              <div className="mb-5 pb-5 border-b border-white/10">
+                                <IChingHexagram items={items} hexagram={(oracle.draw as any)?.hexagram ?? null} />
+                              </div>
+                            )}
+                            {key === "tarot" && (() => {
+                              const cards = (oracle.draw as any)?.cards ?? tarotCardsFromSeed(oracle.seed)
+                              return cards ? (
+                                <div className="mb-5 pb-5 border-b border-white/10">
+                                  <TarotSpread items={items} cards={cards} />
+                                </div>
+                              ) : null
+                            })()}
                             <div className="space-y-3">
                               {items.map((item, i) => (
                                 <div key={i} className="flex gap-3">

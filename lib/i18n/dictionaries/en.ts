@@ -439,6 +439,29 @@ export const en: Dictionary = {
     upright: "upright",
   },
 
+  tarot: {
+    spreadLabel: "Celtic Cross: ten cards in the spread positions",
+    reversed: "reversed",
+    upright: "upright",
+    credit: "Cards:",
+  },
+
+  iching: {
+    hexagram: "Hexagram",
+    primary: "Primary hexagram",
+    resulting: "Resulting hexagram",
+    transformation: "transformation",
+    upper: "Upper",
+    lower: "Lower",
+    movingLines: "Moving lines:",
+    noMoving: "No moving lines",
+    yang: "yang",
+    yin: "yin",
+    lineOrdinals: ["1st", "2nd", "3rd", "4th", "5th", "6th"],
+    trigrams: ["Heaven", "Lake", "Fire", "Thunder", "Wind", "Water", "Mountain", "Earth"],
+    ariaHexagram: "Hexagram {number}, {name}. Lines from bottom to top: {lines}.",
+  },
+
   buzios: {
     firstCast: "1st cast",
     secondCast: "2nd cast · confirmation",

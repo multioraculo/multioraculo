@@ -174,6 +174,152 @@
   .rune-enter { animation: none; }
 }
 
+/* I Ching: as seis linhas se constroem de baixo para cima na primeira
+   aparição (atraso por linha no style inline); a linha mutante recebe um
+   único pulso de brilho durante a revelação; depois tudo fica estático. */
+@keyframes hx-line-enter {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.96); }
+  70%  { opacity: 1; transform: translateY(-1px) scale(1.005); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes hx-line-pulse {
+  0%   { opacity: 0.1; }
+  45%  { opacity: 0.5; }
+  100% { opacity: 0.22; }
+}
+@keyframes hx-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+/* Peça de vidro fosco: preenchimento baixo, desfoque do que está atrás,
+   bevel e borda luminosa por sombras internas. O contêiner .hx-line não
+   pode ter filter, senão o backdrop-filter das peças deixa de enxergar o
+   gradiente do card. Peças centradas na linha de 19px. */
+.hx-pc {
+  position: absolute; top: 5.2px; height: 8.6px; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(246,240,255,0.14) 45%, rgba(226,211,255,0.20) 100%);
+  -webkit-backdrop-filter: blur(5px) saturate(135%) brightness(1.12);
+  backdrop-filter: blur(5px) saturate(135%) brightness(1.12);
+  box-shadow:
+    inset 0 1.2px 1px rgba(255,255,255,0.62),   /* aresta superior iluminada */
+    inset 0 -1.2px 1.4px rgba(88,58,160,0.26),  /* aresta inferior (bevel) */
+    inset 2px 0 2px rgba(255,255,255,0.22),     /* lado esquerdo pega luz */
+    inset -2px 0 2px rgba(88,58,160,0.14),
+    inset 0 0 0 0.8px rgba(255,255,255,0.34),   /* borda luminosa fina */
+    0 2px 3px rgba(12,4,34,0.22),               /* contato */
+    0 6px 12px rgba(12,4,34,0.10);              /* profundidade suave */
+}
+/* luz atravessando o volume: foco largo e leitoso perto da borda superior esquerda */
+.hx-pc::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(70% 140% at 28% 30%, rgba(255,255,255,0.34), rgba(255,255,255,0.06) 55%, rgba(255,255,255,0) 75%);
+}
+/* lateral (espessura): a mesma forma um pouco abaixo, lilás semi-transparente */
+.hx-sd {
+  position: absolute; top: 7.3px; height: 8.6px; border-radius: 999px;
+  background: rgba(150,120,215,0.26);
+  box-shadow: inset 0 -1px 1px rgba(60,35,120,0.18);
+}
+/* brilho externo mínimo; a linha mutante tem um pouco mais e um pulso único na revelação */
+.hx-gl {
+  position: absolute; top: 4px; height: 11px; border-radius: 999px;
+  background: #e9d5ff; filter: blur(5px); opacity: 0.10;
+}
+.hx-line.hx-moving .hx-gl { opacity: 0.22; }
+.hx-dot {
+  position: absolute; right: -6px; top: 8px; width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(233,213,255,0.85);
+}
+.hx-enter { animation: hx-line-enter 520ms cubic-bezier(0.3, 0.9, 0.35, 1) both; }
+.hx-enter.hx-moving .hx-gl { animation: hx-line-pulse 1100ms ease-out both; animation-delay: inherit; }
+.hx-fade { animation: hx-fade 550ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .hx-enter, .hx-enter.hx-moving .hx-gl, .hx-fade { animation: none; }
+}
+
+/* Tarô: carta histórica encapsulada em lâmina translúcida, distribuída
+   carta a carta na primeira aparição. A arte (.tc-art) nunca recebe filtro;
+   todo o material está na moldura (.tc-capsule) em volta dela. */
+.tc-slot {
+  position: relative;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: 50% 50%;
+  perspective: 700px;
+}
+.tc-capsule {
+  position: relative;
+  isolation: isolate;
+  padding: 6px;
+  border-radius: 12px;
+  /* lâmina: quase transparente, com o gradiente do card atravessando */
+  background: linear-gradient(160deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 45%, rgba(190,160,255,0.10) 100%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
+  backdrop-filter: blur(6px) saturate(130%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.28),      /* borda fina com highlight */
+    inset 1px 1px 0 rgba(255,255,255,0.35),      /* bevel: aresta iluminada */
+    inset -1px -1px 0 rgba(70,40,140,0.25),      /* bevel: aresta em sombra */
+    0 2px 3px rgba(12,4,34,0.28),                /* contato */
+    0 12px 24px rgba(30,10,80,0.35);             /* projetada, colorida pelo ambiente */
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  transform-style: preserve-3d;
+}
+/* espessura: a mesma lâmina deslocada para baixo e à direita, atrás */
+.tc-capsule::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: 12px;
+  transform: translate(2px, 3px);
+  background: rgba(120,90,200,0.35);
+}
+/* reflexo do ambiente só na moldura (máscara exclui a área da arte) */
+.tc-capsule::after {
+  content: ""; position: absolute; inset: 0; border-radius: 12px; padding: 6px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 38%, rgba(255,255,255,0) 62%, rgba(200,170,255,0.32) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+.tc-art {
+  display: block; width: 100%; height: auto; border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  user-select: none;
+}
+.tc-num {
+  position: absolute; left: 4px; top: 4px; z-index: 3;
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; line-height: 1; color: rgba(255,255,255,0.9);
+  background: rgba(20,8,50,0.55); border: 1px solid rgba(255,255,255,0.25);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+/* hover só com ponteiro fino: elevação mínima e sombra um pouco mais profunda */
+@media (hover: hover) and (pointer: fine) {
+  .tc-slot:hover .tc-capsule {
+    transform: translateY(-3px) rotateX(2deg) rotateY(-2deg);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,0.32),
+      inset 1px 1px 0 rgba(255,255,255,0.4),
+      inset -1px -1px 0 rgba(70,40,140,0.25),
+      0 3px 4px rgba(12,4,34,0.3),
+      0 18px 32px rgba(30,10,80,0.42);
+  }
+}
+/* distribuição: a carta sai de uma origem comum, entra no campo, desliza com
+   leve rotação e assenta na posição real; depois fica estática */
+@keyframes tc-deal {
+  0%   { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(calc(var(--rot, 0deg) - 12deg + var(--wob, 0deg))) scale(0.92); }
+  55%  { opacity: 1; }
+  82%  { transform: translate(0, 0) rotate(calc(var(--rot, 0deg) + var(--wob, 0deg) * 0.4)) scale(1.012); }
+  100% { opacity: 1; transform: rotate(var(--rot, 0deg)); }
+}
+.tc-deal-enter { animation: tc-deal 480ms cubic-bezier(0.22, 0.9, 0.3, 1) both; }
+/* número da posição aparece depois que a carta assenta */
+@keyframes tc-fade { from { opacity: 0; } to { opacity: 1; } }
+.tc-num-enter { animation: tc-fade 400ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .tc-deal-enter, .tc-num-enter { animation: none; }
+}
+
 /* Subtle custom scrollbar — used throughout the app */
 .custom-scrollbar {
   scrollbar-width: thin;

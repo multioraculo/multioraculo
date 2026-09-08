@@ -441,6 +441,29 @@ export const pt = {
     upright: "direita",
   },
 
+  tarot: {
+    spreadLabel: "Cruz Celta: dez cartas nas posições da tiragem",
+    reversed: "invertida",
+    upright: "direita",
+    credit: "Cartas:",
+  },
+
+  iching: {
+    hexagram: "Hexagrama",
+    primary: "Hexagrama principal",
+    resulting: "Hexagrama resultante",
+    transformation: "transformação",
+    upper: "Superior",
+    lower: "Inferior",
+    movingLines: "Linhas mutantes:",
+    noMoving: "Sem linhas mutantes",
+    yang: "yang",
+    yin: "yin",
+    lineOrdinals: ["1ª", "2ª", "3ª", "4ª", "5ª", "6ª"],
+    trigrams: ["Céu", "Lago", "Fogo", "Trovão", "Vento", "Água", "Montanha", "Terra"],
+    ariaHexagram: "Hexagrama {number}, {name}. Linhas de baixo para cima: {lines}.",
+  },
+
   buzios: {
     firstCast: "1ª queda",
     secondCast: "2ª queda · confirmação",

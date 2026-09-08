@@ -6,6 +6,7 @@ import https from "https"
 import os from "os"
 import { drawAll, newSeed, RUNES, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
+import { tarotCardRef, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import {
   languageRule,
   ORACLE_FINAL_REMINDER,
@@ -79,6 +80,10 @@ type OracleResult = {
     shells?: { primary: number; confirmation: number }
     /** Runas: nome, glifo e orientação de cada runa, na ordem das posições (para a visualização) */
     runes?: Array<{ name: string; glyph: string; reversed: boolean }>
+    /** Tarô: id estável, arcano, naipe/valor e orientação de cada carta, na ordem das posições (para a visualização) */
+    cards?: TarotCardRef[]
+    /** I Ching: linhas de baixo para cima (1 = yang), mutantes, principal e resultante (para a visualização) */
+    hexagram?: { bits: number[]; moving: number[]; primary: number; resulting: number | null; lowerTrigram: number; upperTrigram: number }
   }
   reading: string
   evidence: Evidence[]
@@ -88,6 +93,18 @@ type OracleResult = {
 function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
   if (k === "buzios") {
     return { shells: { primary: draws.buzios.meta.first, confirmation: draws.buzios.meta.second } }
+  }
+  if (k === "tarot") {
+    return {
+      cards: draws.tarot.items.map((it) => {
+        const s = it.sym as { kind: "tarot"; card: number; reversed: boolean }
+        return tarotCardRef(s.card, s.reversed)
+      }),
+    }
+  }
+  if (k === "iching") {
+    const m = draws.iching.meta
+    return { hexagram: { bits: m.bits, moving: m.moving, primary: m.primary, resulting: m.resulting, lowerTrigram: m.lowerTrigram, upperTrigram: m.upperTrigram } }
   }
   if (k === "runas") {
     // nome, glifo e orientação de cada runa, na ordem das posições, direto do sorteio

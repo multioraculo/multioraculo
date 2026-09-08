@@ -318,6 +318,18 @@ export function hexagramNumber(bits: number[]): number {
   return KING_WEN[trigramIndex(bits.slice(0, 3))][trigramIndex(bits.slice(3, 6))]
 }
 
+/**
+ * Inverso de hexagramNumber: número King Wen → 6 bits de baixo para cima.
+ * Só para a visualização de leituras antigas (não participa do sorteio).
+ */
+export function bitsOfHexagram(n: number): number[] {
+  for (let lower = 0; lower < 8; lower++) {
+    const upper = KING_WEN[lower].indexOf(n)
+    if (upper >= 0) return [...TRIGRAMS[lower].key, ...TRIGRAMS[upper].key].map(Number)
+  }
+  throw new Error(`hexagrama desconhecido ${n}`)
+}
+
 function hexTerms(n: number) {
   const h = HEXAGRAMS[n - 1]
   return [

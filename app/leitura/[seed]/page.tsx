@@ -5,6 +5,9 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
+import IChingHexagram from "@/components/iching-hexagram"
+import TarotSpread from "@/components/tarot-spread"
+import { tarotCardsFromSeed } from "@/lib/oracles/tarot-server"
 import PreviewPaywall from "@/components/preview-paywall"
 import SaveReadingButton from "@/components/save-reading-button"
 import { createClient } from "@/lib/supabase/server"
@@ -100,6 +103,19 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                               <RunesSpread items={items} runes={(oracle.draw as any)?.runes ?? null} />
                             </div>
                           )}
+                          {key === "iching" && (
+                            <div className="mb-5 pb-5 border-b border-white/10">
+                              <IChingHexagram items={items} hexagram={(oracle.draw as any)?.hexagram ?? null} />
+                            </div>
+                          )}
+                          {key === "tarot" && (() => {
+                            const cards = (oracle.draw as any)?.cards ?? tarotCardsFromSeed(oracle.seed || seed)
+                            return cards ? (
+                              <div className="mb-5 pb-5 border-b border-white/10">
+                                <TarotSpread items={items} cards={cards} />
+                              </div>
+                            ) : null
+                          })()}
                           <div className="space-y-3">
                             {items.map((item, i) => (
                               <div key={i} className="flex gap-3">

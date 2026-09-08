@@ -439,6 +439,29 @@ export const es: Dictionary = {
     upright: "derecha",
   },
 
+  tarot: {
+    spreadLabel: "Cruz Celta: diez cartas en las posiciones de la tirada",
+    reversed: "invertida",
+    upright: "derecha",
+    credit: "Cartas:",
+  },
+
+  iching: {
+    hexagram: "Hexagrama",
+    primary: "Hexagrama principal",
+    resulting: "Hexagrama resultante",
+    transformation: "transformación",
+    upper: "Superior",
+    lower: "Inferior",
+    movingLines: "Líneas mutantes:",
+    noMoving: "Sin líneas mutantes",
+    yang: "yang",
+    yin: "yin",
+    lineOrdinals: ["1ª", "2ª", "3ª", "4ª", "5ª", "6ª"],
+    trigrams: ["Cielo", "Lago", "Fuego", "Trueno", "Viento", "Agua", "Montaña", "Tierra"],
+    ariaHexagram: "Hexagrama {number}, {name}. Líneas de abajo hacia arriba: {lines}.",
+  },
+
   buzios: {
     firstCast: "1ª caída",
     secondCast: "2ª caída · confirmación",
