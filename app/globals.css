@@ -427,6 +427,30 @@
 @media (min-width: 640px) { .explore-sheet-enter { animation-name: none; transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .explore-sheet-enter { animation: none; } }
 
+/* Entrada por voz: botão integrado ao canto inferior direito do campo,
+   estados por ícone e texto (não só cor), sem gravador gigante. */
+.voice-wrap { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.voice-btn {
+  width: 40px; height: 40px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease; -webkit-tap-highlight-color: transparent;
+}
+.voice-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.voice-btn:hover, .voice-btn:focus-visible { color: #fff; background: rgba(255,255,255,0.12); outline: none; }
+.voice-btn:focus-visible { box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+.voice-btn.is-listening { color: #fff; background: rgba(190,160,255,0.22); border-color: rgba(255,255,255,0.3); animation: voice-pulse 1.6s ease-in-out infinite; }
+.voice-btn.is-busy { color: rgba(255,255,255,0.8); cursor: progress; }
+@keyframes voice-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(190,160,255,0.35); } 50% { box-shadow: 0 0 0 7px rgba(190,160,255,0); } }
+.voice-status { font-size: 11px; color: rgba(255,255,255,0.6); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.voice-status.is-listening { color: rgba(255,255,255,0.85); }
+.voice-dot { width: 6px; height: 6px; border-radius: 50%; background: #d9c4ff; animation: voice-dot 1.2s ease-in-out infinite; }
+@keyframes voice-dot { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.voice-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.25); border-top-color: rgba(255,255,255,0.9); animation: voice-spin 0.8s linear infinite; }
+@keyframes voice-spin { to { transform: rotate(360deg); } }
+.voice-error { position: absolute; right: 0; top: calc(100% + 6px); margin: 0; font-size: 11px; color: rgba(255,214,170,0.9); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .voice-btn.is-listening, .voice-dot, .voice-spinner { animation: none; } }
+
 /* Subtle custom scrollbar — used throughout the app */
 .custom-scrollbar {
   scrollbar-width: thin;

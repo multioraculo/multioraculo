@@ -11,6 +11,7 @@ import IChingHexagram from "@/components/iching-hexagram"
 import TarotSpread from "@/components/tarot-spread"
 import LenormandTable from "@/components/lenormand-table"
 import PreviewPaywall from "@/components/preview-paywall"
+import VoiceMicButton, { appendTranscript } from "@/components/voice-input"
 import { fmt } from "@/lib/i18n"
 
 type HeroContentProps = {
@@ -481,6 +482,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 {dict.hero.prompt}
                 {!currentUser && <span className="text-white/45"> {dict.hero.freeHint}</span>}
               </p>
+              <div className="relative">
               <textarea
                 value={question}
                 onChange={(e) => {
@@ -496,9 +498,17 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholders[currentPlaceholder % placeholders.length]}
-                className="w-full h-24 px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
+                className="w-full h-24 pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
                 style={{ filter: "url(#glass-effect)" }}
               />
+              {/* voz: acrescenta a transcrição ao que já está escrito, sem enviar nada */}
+              <VoiceMicButton
+                onText={(text) => {
+                  setQuestion((q) => appendTranscript(q, text))
+                  setIsTyping(true)
+                }}
+              />
+              </div>
             </div>
 
             <div className="flex items-center gap-4 flex-wrap">

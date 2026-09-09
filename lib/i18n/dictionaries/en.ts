@@ -481,6 +481,20 @@ export const en: Dictionary = {
     upright: "upright",
   },
 
+  voice: {
+    start: "Speak instead of typing",
+    stop: "Tap to stop",
+    listening: "Listening…",
+    transcribing: "Transcribing…",
+    errors: {
+      unsupported: "This browser can't record voice. You can type as usual.",
+      denied: "Allow microphone access to speak.",
+      nomic: "No microphone was found.",
+      failed: "Couldn't transcribe right now. Try again or type.",
+      rate_limited: "Too many recordings in a short time. Wait a few minutes.",
+    },
+  },
+
   lenormand: {
     tableLabel: "Nine-card table: three rows of three, with the center card in the middle",
   },

@@ -483,6 +483,20 @@ export const pt = {
     upright: "direita",
   },
 
+  voice: {
+    start: "Falar em vez de digitar",
+    stop: "Toque para parar",
+    listening: "Ouvindo…",
+    transcribing: "Transcrevendo…",
+    errors: {
+      unsupported: "Este navegador não permite gravar voz. Você pode digitar normalmente.",
+      denied: "Permita o uso do microfone para falar.",
+      nomic: "Nenhum microfone foi encontrado.",
+      failed: "Não foi possível transcrever agora. Tente de novo ou digite.",
+      rate_limited: "Muitas gravações em pouco tempo. Aguarde alguns minutos.",
+    },
+  },
+
   lenormand: {
     tableLabel: "Mesa de 9 cartas: três linhas de três, com a carta central no meio",
   },

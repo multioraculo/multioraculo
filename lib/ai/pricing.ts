@@ -22,6 +22,8 @@ export const PRICING_VERSION = "2026-09"
 export const MODEL_PRICES: ModelPrice[] = [
   { model: "gpt-4o-mini", since: "2024-07-18", inputPerMillion: 0.15, outputPerMillion: 0.6 },
   { model: "gpt-4o", since: "2024-08-06", inputPerMillion: 2.5, outputPerMillion: 10 },
+  // transcrição de voz: tokens de áudio na entrada, texto na saída (≈ US$ 0,003 por minuto falado)
+  { model: "gpt-4o-mini-transcribe", since: "2025-03-20", inputPerMillion: 1.25, outputPerMillion: 5 },
 ]
 
 export function priceFor(model: string, at: Date = new Date()): ModelPrice | null {

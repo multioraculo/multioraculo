@@ -481,6 +481,20 @@ export const es: Dictionary = {
     upright: "derecha",
   },
 
+  voice: {
+    start: "Hablar en vez de escribir",
+    stop: "Toca para detener",
+    listening: "Escuchando…",
+    transcribing: "Transcribiendo…",
+    errors: {
+      unsupported: "Este navegador no permite grabar voz. Puedes escribir normalmente.",
+      denied: "Permite el uso del micrófono para hablar.",
+      nomic: "No se encontró ningún micrófono.",
+      failed: "No se pudo transcribir ahora. Intenta de nuevo o escribe.",
+      rate_limited: "Demasiadas grabaciones en poco tiempo. Espera unos minutos.",
+    },
+  },
+
   lenormand: {
     tableLabel: "Mesa de 9 cartas: tres filas de tres, con la carta central en el medio",
   },

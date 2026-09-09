@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import VoiceMicButton, { appendTranscript } from "@/components/voice-input"
 import { fmt } from "@/lib/i18n"
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
@@ -204,6 +205,7 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
                 {t.prompt}
                 {!isLoggedIn && <span className="text-white/45"> {t.freeHint}</span>}
               </p>
+              <div className="relative">
               <textarea
                 value={dreamText}
                 onChange={(e) => setDreamText(e.target.value)}
@@ -215,8 +217,10 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
                 }}
                 placeholder={t.placeholder}
                 rows={5}
-                className="w-full px-4 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
+                className="w-full pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
               />
+              <VoiceMicButton onText={(text) => setDreamText((d) => appendTranscript(d, text))} />
+              </div>
             </div>
 
             {blocked && (
