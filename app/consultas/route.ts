@@ -7,6 +7,7 @@ import os from "os"
 import { drawAll, newSeed, RUNES, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import { tarotCardRef, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { lenormandId } from "@/lib/oracles/lenormand-assets"
 import {
   languageRule,
   ORACLE_FINAL_REMINDER,
@@ -82,6 +83,8 @@ type OracleResult = {
     runes?: Array<{ name: string; glyph: string; reversed: boolean }>
     /** Tarô: id estável, arcano, naipe/valor e orientação de cada carta, na ordem das posições (para a visualização) */
     cards?: TarotCardRef[]
+    /** Lenormand: id estável e número de cada carta, na ordem das 9 posições (para a visualização) */
+    lenormandCards?: Array<{ id: string; number: number }>
     /** I Ching: linhas de baixo para cima (1 = yang), mutantes, principal e resultante (para a visualização) */
     hexagram?: { bits: number[]; moving: number[]; primary: number; resulting: number | null; lowerTrigram: number; upperTrigram: number }
   }
@@ -99,6 +102,14 @@ function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
       cards: draws.tarot.items.map((it) => {
         const s = it.sym as { kind: "tarot"; card: number; reversed: boolean }
         return tarotCardRef(s.card, s.reversed)
+      }),
+    }
+  }
+  if (k === "lenormand") {
+    return {
+      lenormandCards: draws.lenormand.items.map((it) => {
+        const s = it.sym as { kind: "lenormand"; card: number }
+        return { id: lenormandId(s.card), number: s.card + 1 }
       }),
     }
   }

@@ -19,7 +19,8 @@ export function ShaderBackground({ className, children }: ShaderBackgroundProps)
         speed={0.5}
       />
 
-      <div className="relative z-10">{children}</div>
+      {/* no celular, reserva o espaço da barra de navegação fixa no rodapé */}
+      <div className="relative z-10 pb-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:pb-0">{children}</div>
     </div>
   );
 }

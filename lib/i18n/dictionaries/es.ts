@@ -43,6 +43,10 @@ export const es: Dictionary = {
     oracles: "Oráculos",
     faq: "FAQ",
     savedDreams: "Sueños Guardados",
+    explore: "Explorar",
+    exploreOracles: "Cómo trabaja cada oráculo",
+    exploreFaq: "Preguntas frecuentes",
+    mainNav: "Navegación principal",
     admin: "Administración",
   },
 
@@ -437,6 +441,10 @@ export const es: Dictionary = {
     spreadLabel: "Mapa de 9 fuerzas: runas sorteadas por posición",
     reversed: "invertida",
     upright: "derecha",
+  },
+
+  lenormand: {
+    tableLabel: "Mesa de 9 cartas: tres filas de tres, con la carta central en el medio",
   },
 
   tarot: {

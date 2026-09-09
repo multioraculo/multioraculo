@@ -7,6 +7,7 @@ import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
 import IChingHexagram from "@/components/iching-hexagram"
 import TarotSpread from "@/components/tarot-spread"
+import LenormandTable from "@/components/lenormand-table"
 import { tarotCardsFromSeed } from "@/lib/oracles/tarot-server"
 import PreviewPaywall from "@/components/preview-paywall"
 import SaveReadingButton from "@/components/save-reading-button"
@@ -106,6 +107,11 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                           {key === "iching" && (
                             <div className="mb-5 pb-5 border-b border-white/10">
                               <IChingHexagram items={items} hexagram={(oracle.draw as any)?.hexagram ?? null} />
+                            </div>
+                          )}
+                          {key === "lenormand" && (
+                            <div className="mb-5 pb-5 border-b border-white/10">
+                              <LenormandTable items={items} cards={(oracle.draw as any)?.lenormandCards ?? null} />
                             </div>
                           )}
                           {key === "tarot" && (() => {

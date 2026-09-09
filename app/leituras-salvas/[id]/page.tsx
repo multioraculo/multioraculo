@@ -7,6 +7,7 @@ import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
 import IChingHexagram from "@/components/iching-hexagram"
 import TarotSpread from "@/components/tarot-spread"
+import LenormandTable from "@/components/lenormand-table"
 import { tarotCardsFromSeed } from "@/lib/oracles/tarot-server"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
@@ -162,6 +163,11 @@ export default async function LeituraDetailPage({
                             {key === "iching" && (
                               <div className="mb-5 pb-5 border-b border-white/10">
                                 <IChingHexagram items={items} hexagram={(oracle.draw as any)?.hexagram ?? null} />
+                              </div>
+                            )}
+                            {key === "lenormand" && (
+                              <div className="mb-5 pb-5 border-b border-white/10">
+                                <LenormandTable items={items} cards={(oracle.draw as any)?.lenormandCards ?? null} />
                               </div>
                             )}
                             {key === "tarot" && (() => {

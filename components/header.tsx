@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useId, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import dynamic from "next/dynamic"
@@ -12,6 +12,7 @@ import { upsertProfile } from "@/lib/supabase/queries"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
+import { SearchIcon } from "@/components/nav-icons"
 import { useI18n } from "@/components/i18n-provider"
 
 const PulsingBorder = dynamic(
@@ -32,6 +33,21 @@ export default function Header({ initialUser }: HeaderProps) {
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
+  // "Explorar" no desktop: menu leve com Oráculos e FAQ (no celular vive na barra inferior)
+  const [exploreOpen, setExploreOpen] = useState(false)
+  const exploreRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!exploreOpen) return
+    const close = (e: MouseEvent | TouchEvent) => {
+      if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) setExploreOpen(false)
+    }
+    document.addEventListener("mousedown", close)
+    document.addEventListener("touchstart", close)
+    return () => {
+      document.removeEventListener("mousedown", close)
+      document.removeEventListener("touchstart", close)
+    }
+  }, [exploreOpen])
   const pathId = useId()
 
   useEffect(() => {
@@ -78,18 +94,18 @@ export default function Header({ initialUser }: HeaderProps) {
     router.push("/")
   }
 
-  // Menu global: as mesmas áreas em desktop e mobile. "Assinatura" é uma área
-  // da plataforma, por isso vive aqui e não no menu do usuário.
+  // Destinos principais (os mesmos da barra inferior no celular). O
+  // Multioráculo é a entrada real do produto; não existe "Início" à parte.
   const navItems = [
-    { href: "/", label: dict.nav.home, short: dict.nav.home, onClick: handleLogoClick },
-    { href: "/sonhos", label: dict.nav.dreams, short: dict.nav.dreamsShort },
-    { href: "/diario", label: dict.nav.grimoire, short: dict.nav.grimoire },
-    { href: "/assinatura", label: dict.nav.subscription, short: dict.nav.subscription },
+    { href: "/", label: dict.nav.home, onClick: handleLogoClick },
+    { href: "/sonhos", label: dict.nav.dreamsShort },
+    { href: "/diario", label: dict.nav.grimoire },
+    { href: "/assinatura", label: dict.nav.subscription },
   ]
 
   return (
     <>
-      <header className="relative z-50 flex flex-wrap items-center gap-2 p-4 sm:p-6">
+      <header className="relative z-50 flex items-center gap-2 p-4 sm:p-6">
         <div className="flex items-center shrink-0">
           <button onClick={handleLogoClick} className="relative" aria-label={dict.header.backToStart}>
             <div className="relative w-20 h-20 flex items-center justify-center">
@@ -148,25 +164,10 @@ export default function Header({ initialUser }: HeaderProps) {
           </button>
         </div>
 
-        {/* Mobile nav — segunda linha do cabeçalho, com os quatro destinos sempre visíveis */}
-        <nav
-          className="flex sm:hidden basis-full order-last items-center justify-between gap-2 px-1 -mt-1 relative z-10"
-          aria-label="Menu"
-        >
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={item.onClick}
-              className="text-white/80 hover:text-white text-xs font-light transition-colors duration-200 py-2 whitespace-nowrap"
-            >
-              {item.short}
-            </Link>
-          ))}
-        </nav>
+        {/* Celular: sem links de texto no topo; a navegação principal fica no rodapé (BottomNav). */}
 
-        {/* Desktop nav — centered absolutely */}
-        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label="Menu">
+        {/* Desktop: os mesmos destinos da barra inferior, centralizados */}
+        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label={dict.nav.mainNav}>
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -177,6 +178,28 @@ export default function Header({ initialUser }: HeaderProps) {
               {item.label}
             </Link>
           ))}
+          <div className="relative" ref={exploreRef}>
+            <button
+              type="button"
+              onClick={() => setExploreOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={exploreOpen}
+              className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5"
+            >
+              <SearchIcon className="w-4 h-4" />
+              {dict.nav.explore}
+            </button>
+            {exploreOpen && (
+              <div role="menu" className="absolute left-1/2 -translate-x-1/2 top-9 z-50 w-56 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5">
+                {[{ href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles }, { href: "/faq", label: dict.nav.faq, hint: dict.nav.exploreFaq }].map((it) => (
+                  <Link key={it.href} href={it.href} role="menuitem" onClick={() => setExploreOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors">
+                    <span className="block text-white/90 text-sm">{it.label}</span>
+                    <span className="block text-white/45 text-xs">{it.hint}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         <div className="ml-auto shrink-0 flex items-center gap-2">

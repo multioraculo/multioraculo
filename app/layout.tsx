@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Instrument_Serif } from "next/font/google"
 import { Toaster } from "sonner"
 import { I18nProvider } from "@/components/i18n-provider"
+import BottomNav from "@/components/bottom-nav"
 import { getI18n } from "@/lib/i18n/server"
 import "./globals.css"
 
@@ -61,6 +62,7 @@ html {
       <body className={`${figtree.variable} ${instrumentSerif.variable}`}>
         <I18nProvider initialLocale={locale}>
           {children}
+          <BottomNav />
           <Toaster theme="dark" position="bottom-right" richColors duration={5000} />
         </I18nProvider>
       </body>

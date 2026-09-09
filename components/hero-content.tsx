@@ -9,6 +9,7 @@ import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
 import IChingHexagram from "@/components/iching-hexagram"
 import TarotSpread from "@/components/tarot-spread"
+import LenormandTable from "@/components/lenormand-table"
 import PreviewPaywall from "@/components/preview-paywall"
 import { fmt } from "@/lib/i18n"
 
@@ -648,6 +649,11 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                         {key === "tarot" && oracle?.draw?.cards && (
                           <div className="mb-5 pb-5 border-b border-white/10">
                             <TarotSpread items={items} cards={oracle.draw.cards} animate />
+                          </div>
+                        )}
+                        {key === "lenormand" && (
+                          <div className="mb-5 pb-5 border-b border-white/10">
+                            <LenormandTable items={items} cards={oracle?.draw?.lenormandCards ?? null} animate />
                           </div>
                         )}
                         <div className="space-y-3">

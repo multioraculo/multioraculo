@@ -43,6 +43,10 @@ export const en: Dictionary = {
     oracles: "Oracles",
     faq: "FAQ",
     savedDreams: "Saved Dreams",
+    explore: "Explore",
+    exploreOracles: "How each oracle works",
+    exploreFaq: "Frequently asked questions",
+    mainNav: "Main navigation",
     admin: "Admin",
   },
 
@@ -437,6 +441,10 @@ export const en: Dictionary = {
     spreadLabel: "Map of 9 forces: runes drawn by position",
     reversed: "reversed",
     upright: "upright",
+  },
+
+  lenormand: {
+    tableLabel: "Nine-card table: three rows of three, with the center card in the middle",
   },
 
   tarot: {

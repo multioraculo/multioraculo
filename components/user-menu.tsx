@@ -82,22 +82,11 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
               <p className="text-white/60 text-xs">{user.email}</p>
             </div>
 
-            {/* Grupo 1 — Consultas */}
-            <MenuItem label={dict.nav.home}          onClick={() => go("/")} />
+            {/* Conteúdo pessoal. As áreas públicas (Multioráculo, Sonhos,
+                Grimório, Assinatura, Oráculos, FAQ) vivem na navegação principal. */}
             <MenuItem label={dict.nav.savedReadings} onClick={() => go("/leituras-salvas")} />
-            <MenuItem label={dict.nav.oracles}       onClick={() => go("/oraculos")} />
-            <MenuItem label={dict.nav.faq}           onClick={() => go("/faq")} />
-
-            <Divider />
-
-            {/* Grupo 2 — Sonhos */}
-            <MenuItem label={dict.nav.dreams}      onClick={() => go("/sonhos")} />
-            <MenuItem label={dict.nav.savedDreams} onClick={() => go("/sonhos-salvos")} />
-
-            <Divider />
-
-            {/* Grupo 3 — Grimório */}
-            <MenuItem label={dict.nav.grimoire} onClick={() => go("/diario")} />
+            <MenuItem label={dict.nav.dreams}        onClick={() => go("/sonhos")} />
+            <MenuItem label={dict.nav.savedDreams}   onClick={() => go("/sonhos-salvos")} />
 
             <Divider />
 

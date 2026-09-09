@@ -45,6 +45,10 @@ export const pt = {
     oracles: "Oráculos",
     faq: "FAQ",
     savedDreams: "Sonhos Salvos",
+    explore: "Explorar",
+    exploreOracles: "Como cada oráculo trabalha",
+    exploreFaq: "Perguntas frequentes",
+    mainNav: "Navegação principal",
     admin: "Administração",
   },
 
@@ -439,6 +443,10 @@ export const pt = {
     spreadLabel: "Mapa de 9 forças: runas sorteadas por posição",
     reversed: "invertida",
     upright: "direita",
+  },
+
+  lenormand: {
+    tableLabel: "Mesa de 9 cartas: três linhas de três, com a carta central no meio",
   },
 
   tarot: {
