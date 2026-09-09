@@ -48,6 +48,44 @@ export const en: Dictionary = {
     exploreFaq: "Frequently asked questions",
     mainNav: "Main navigation",
     admin: "Admin",
+    records: "Records",
+  },
+
+  records: {
+    title: "Records",
+    savedReadingsHint: "Readings you kept",
+    savedDreamsHint: "Interpreted dreams you saved",
+    grimoireHint: "Your notes",
+    loginTitle: "Records are personal.",
+    loginText: "Sign in to see your saved readings, dreams and notes.",
+    login: "Sign in",
+  },
+
+  account: {
+    plan: "Plan",
+    today: "Today",
+    accountSection: "Account",
+    readingsAvailable: "{remaining} of {limit} readings available",
+    readingsAvailableOne: "{remaining} of 1 reading available",
+    unlimitedReadings: "Unlimited readings",
+    managePlan: "Manage plan",
+    knowPlans: "See plans",
+    internalAccess: "Internal access",
+    loading: "Loading…",
+    illuminated: "{pct}% illuminated",
+  },
+
+  // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
+  // fase (inspiração em temas da psicologia analítica, sem atribuir a Jung).
+  moon: {
+    newMoon: { name: "New Moon", keywords: "Interiority · potential · origin", text: "Opens space for retreat and for listening to what is still emerging from the unconscious." },
+    waxingCrescent: { name: "Waxing Crescent", keywords: "Emergence · desire · impulse", text: "Brings to awareness something that is beginning to take shape and asks for movement." },
+    firstQuarter: { name: "First Quarter", keywords: "Tension · choice · affirmation", text: "Asks you to take a stand amid the tensions between what wants to be born and reality." },
+    waxingGibbous: { name: "Waxing Gibbous", keywords: "Elaboration · maturing · adjustment", text: "Favors working through what is maturing: observing, adjusting and preparing what is about to be revealed." },
+    fullMoon: { name: "Full Moon", keywords: "Awareness · revelation · culmination", text: "Brings to light what was hidden, making clearer what asks for recognition and integration." },
+    waningGibbous: { name: "Waning Gibbous", keywords: "Assimilation · meaning · integration", text: "Invites you to absorb what was lived and turn experience into understanding." },
+    lastQuarter: { name: "Last Quarter", keywords: "Review · letting go · transformation", text: "Asks for a review of what has served its purpose and can be transformed or left behind." },
+    waningCrescent: { name: "Waning Crescent", keywords: "Retreat · shadow · dissolution", text: "Invites retreat, the integration of the shadow and the opening of space for a new cycle." },
   },
 
   header: {

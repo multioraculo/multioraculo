@@ -48,6 +48,44 @@ export const es: Dictionary = {
     exploreFaq: "Preguntas frecuentes",
     mainNav: "Navegación principal",
     admin: "Administración",
+    records: "Registros",
+  },
+
+  records: {
+    title: "Registros",
+    savedReadingsHint: "Lecturas que guardaste",
+    savedDreamsHint: "Sueños interpretados y guardados",
+    grimoireHint: "Tus anotaciones",
+    loginTitle: "Los registros son personales.",
+    loginText: "Entra para ver tus lecturas guardadas, sueños y anotaciones.",
+    login: "Entrar",
+  },
+
+  account: {
+    plan: "Plan",
+    today: "Hoy",
+    accountSection: "Cuenta",
+    readingsAvailable: "{remaining} de {limit} lecturas disponibles",
+    readingsAvailableOne: "{remaining} de 1 lectura disponible",
+    unlimitedReadings: "Lecturas ilimitadas",
+    managePlan: "Gestionar plan",
+    knowPlans: "Conocer planes",
+    internalAccess: "Acceso interno",
+    loading: "Cargando…",
+    illuminated: "{pct}% iluminada",
+  },
+
+  // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
+  // fase (inspiração em temas da psicologia analítica, sem atribuir a Jung).
+  moon: {
+    newMoon: { name: "Luna Nueva", keywords: "Interioridad · potencial · origen", text: "Abre espacio para el recogimiento y la escucha de lo que aún está surgiendo en el inconsciente." },
+    waxingCrescent: { name: "Luna Creciente", keywords: "Emergencia · deseo · impulso", text: "Trae a la conciencia algo que empieza a tomar forma y pide movimiento." },
+    firstQuarter: { name: "Cuarto Creciente", keywords: "Tensión · elección · afirmación", text: "Pide tomar posición ante las tensiones entre lo que desea nacer y la realidad." },
+    waxingGibbous: { name: "Gibosa Creciente", keywords: "Elaboración · maduración · ajuste", text: "Favorece la elaboración de lo que está madurando: observar, ajustar y preparar lo que está a punto de revelarse." },
+    fullMoon: { name: "Luna Llena", keywords: "Conciencia · revelación · culminación", text: "Saca a la luz lo que estaba oculto, aclarando aquello que pide reconocimiento e integración." },
+    waningGibbous: { name: "Gibosa Menguante", keywords: "Asimilación · significado · integración", text: "Invita a asimilar lo vivido y a transformar la experiencia en comprensión." },
+    lastQuarter: { name: "Cuarto Menguante", keywords: "Revisión · desapego · transformación", text: "Pide revisar lo que ya cumplió su función y puede transformarse o dejarse atrás." },
+    waningCrescent: { name: "Luna Menguante", keywords: "Recogimiento · sombra · disolución", text: "Invita al recogimiento, a la integración de la sombra y a abrir espacio para un nuevo ciclo." },
   },
 
   header: {

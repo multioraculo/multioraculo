@@ -12,7 +12,8 @@ import { upsertProfile } from "@/lib/supabase/queries"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
-import { SearchIcon } from "@/components/nav-icons"
+import { RecordsIcon, SearchIcon } from "@/components/nav-icons"
+import { RecordsLoginPrompt, recordLinks } from "@/components/records-sheet"
 import { useI18n } from "@/components/i18n-provider"
 
 const PulsingBorder = dynamic(
@@ -33,13 +34,14 @@ export default function Header({ initialUser }: HeaderProps) {
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
-  // "Explorar" no desktop: menu leve com Oráculos e FAQ (no celular vive na barra inferior)
-  const [exploreOpen, setExploreOpen] = useState(false)
-  const exploreRef = useRef<HTMLDivElement>(null)
+  // Menus leves do desktop: "Registros" (pessoal) e "Explorar" (Oráculos e
+  // FAQ). No celular os mesmos destinos vivem na barra inferior.
+  const [openMenu, setOpenMenu] = useState<"records" | "explore" | null>(null)
+  const menusRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (!exploreOpen) return
+    if (!openMenu) return
     const close = (e: MouseEvent | TouchEvent) => {
-      if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) setExploreOpen(false)
+      if (menusRef.current && !menusRef.current.contains(e.target as Node)) setOpenMenu(null)
     }
     document.addEventListener("mousedown", close)
     document.addEventListener("touchstart", close)
@@ -47,7 +49,7 @@ export default function Header({ initialUser }: HeaderProps) {
       document.removeEventListener("mousedown", close)
       document.removeEventListener("touchstart", close)
     }
-  }, [exploreOpen])
+  }, [openMenu])
   const pathId = useId()
 
   useEffect(() => {
@@ -100,8 +102,20 @@ export default function Header({ initialUser }: HeaderProps) {
     { href: "/", label: dict.nav.home, onClick: handleLogoClick },
     { href: "/sonhos", label: dict.nav.dreamsShort },
     { href: "/diario", label: dict.nav.grimoire },
-    { href: "/assinatura", label: dict.nav.subscription },
   ]
+  const exploreLinks = [
+    { href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles },
+    { href: "/faq", label: dict.nav.faq, hint: dict.nav.exploreFaq },
+  ]
+  const menuButtonClass = "text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5"
+  const menuPanelClass = "absolute left-1/2 -translate-x-1/2 top-9 z-50 w-60 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5"
+  const menuLinks = (links: { href: string; label: string; hint: string }[]) =>
+    links.map((it) => (
+      <Link key={it.href} href={it.href} role="menuitem" onClick={() => setOpenMenu(null)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors">
+        <span className="block text-white/90 text-sm">{it.label}</span>
+        <span className="block text-white/45 text-xs">{it.hint}</span>
+      </Link>
+    ))
 
   return (
     <>
@@ -178,27 +192,30 @@ export default function Header({ initialUser }: HeaderProps) {
               {item.label}
             </Link>
           ))}
-          <div className="relative" ref={exploreRef}>
-            <button
-              type="button"
-              onClick={() => setExploreOpen((v) => !v)}
-              aria-haspopup="menu"
-              aria-expanded={exploreOpen}
-              className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5"
-            >
-              <SearchIcon className="w-4 h-4" />
-              {dict.nav.explore}
-            </button>
-            {exploreOpen && (
-              <div role="menu" className="absolute left-1/2 -translate-x-1/2 top-9 z-50 w-56 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5">
-                {[{ href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles }, { href: "/faq", label: dict.nav.faq, hint: dict.nav.exploreFaq }].map((it) => (
-                  <Link key={it.href} href={it.href} role="menuitem" onClick={() => setExploreOpen(false)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors">
-                    <span className="block text-white/90 text-sm">{it.label}</span>
-                    <span className="block text-white/45 text-xs">{it.hint}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
+          <div className="contents" ref={menusRef}>
+            {/* Registros: área pessoal; sem login, convida a entrar */}
+            <div className="relative">
+              <button type="button" onClick={() => setOpenMenu((m) => (m === "records" ? null : "records"))} aria-haspopup="menu" aria-expanded={openMenu === "records"} className={menuButtonClass}>
+                <RecordsIcon className="w-4 h-4" />
+                {dict.nav.records}
+              </button>
+              {openMenu === "records" && (
+                <div role="menu" className={menuPanelClass}>
+                  {user ? menuLinks(recordLinks(dict)) : <RecordsLoginPrompt compact onLogin={() => { setOpenMenu(null); setShowLogin(true) }} />}
+                </div>
+              )}
+            </div>
+            <div className="relative">
+              <button type="button" onClick={() => setOpenMenu((m) => (m === "explore" ? null : "explore"))} aria-haspopup="menu" aria-expanded={openMenu === "explore"} className={menuButtonClass}>
+                <SearchIcon className="w-4 h-4" />
+                {dict.nav.explore}
+              </button>
+              {openMenu === "explore" && (
+                <div role="menu" className={menuPanelClass}>
+                  {menuLinks(exploreLinks)}
+                </div>
+              )}
+            </div>
           </div>
         </nav>
 

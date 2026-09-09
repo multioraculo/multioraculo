@@ -64,6 +64,17 @@ export function SealIcon(p: P) {
   )
 }
 
+/** Registros: caixa de arquivo (tampa, corpo e puxador) */
+export function RecordsIcon(p: P) {
+  return (
+    <svg {...base(p)}>
+      <rect x="3.5" y="4.5" width="17" height="4" rx="1" />
+      <path d="M5 8.5v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9" />
+      <path d="M10 12.5h4" />
+    </svg>
+  )
+}
+
 /** Explorar: lupa */
 export function SearchIcon(p: P) {
   return (

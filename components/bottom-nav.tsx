@@ -5,25 +5,29 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
-import { BookIcon, MoonIcon, MultioraculoIcon, SealIcon, SearchIcon } from "@/components/nav-icons"
+import RecordsSheet, { RECORD_PATHS } from "@/components/records-sheet"
+import { BookIcon, MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon } from "@/components/nav-icons"
 
 /**
  * Navegação principal no celular, fixa no rodapé, iconográfica:
- * Sonhos | Grimório | Multioráculo | Assinatura | Explorar.
+ * Sonhos | Grimório | Multioráculo | Registros | Explorar.
  * O Multioráculo é a entrada real do produto e fica no centro, com um pouco
- * mais de presença. "Explorar" abre um painel com Oráculos e FAQ. Existe
- * para quem não fez login também; cada rota mantém as próprias regras.
- * No desktop (sm+) some: o cabeçalho leva os mesmos destinos.
+ * mais de presença. "Registros" abre o painel pessoal (leituras salvas,
+ * sonhos salvos, Grimório); "Explorar" abre o painel público com Oráculos e
+ * FAQ. A assinatura vive no painel do avatar. Cada rota mantém as próprias
+ * regras. No desktop (sm+) some: o cabeçalho leva os mesmos destinos.
  */
 export default function BottomNav() {
   const { dict } = useI18n()
   const pathname = usePathname()
   const router = useRouter()
   const [explore, setExplore] = useState(false)
+  const [records, setRecords] = useState(false)
   const t = dict.nav
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/leitura") : pathname.startsWith(href))
   const exploreActive = pathname.startsWith("/oraculos") || pathname.startsWith("/faq")
+  const recordsActive = RECORD_PATHS.some((p) => pathname.startsWith(p))
 
   const goHome = (e: React.MouseEvent) => {
     if (pathname === "/") {
@@ -52,26 +56,25 @@ export default function BottomNav() {
     )
   }
 
+  const sheetButton = (label: string, Icon: typeof MoonIcon, active: boolean, open: boolean, onOpen: () => void) => (
+    <button type="button" onClick={onOpen} aria-haspopup="dialog" aria-expanded={open} className={`bnav-item ${active ? "is-active" : ""}`}>
+      <span className="bnav-icon">
+        <Icon className="w-[22px] h-[22px]" />
+      </span>
+      <span className="bnav-label">{label}</span>
+    </button>
+  )
+
   return (
     <>
       <nav className="bnav sm:hidden" aria-label={t.mainNav}>
         {item("/sonhos", t.dreamsShort, MoonIcon)}
         {item("/diario", t.grimoire, BookIcon)}
         {item("/", t.home, MultioraculoIcon, { center: true, onClick: goHome })}
-        {item("/assinatura", t.subscription, SealIcon)}
-        <button
-          type="button"
-          onClick={() => setExplore(true)}
-          aria-haspopup="dialog"
-          aria-expanded={explore}
-          className={`bnav-item ${exploreActive ? "is-active" : ""}`}
-        >
-          <span className="bnav-icon">
-            <SearchIcon className="w-[22px] h-[22px]" />
-          </span>
-          <span className="bnav-label">{t.explore}</span>
-        </button>
+        {sheetButton(t.records, RecordsIcon, recordsActive, records, () => setRecords(true))}
+        {sheetButton(t.explore, SearchIcon, exploreActive, explore, () => setExplore(true))}
       </nav>
+      <RecordsSheet open={records} onClose={() => setRecords(false)} />
       <ExploreSheet open={explore} onClose={() => setExplore(false)} />
     </>
   )
