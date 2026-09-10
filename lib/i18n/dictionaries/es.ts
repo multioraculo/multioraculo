@@ -138,7 +138,6 @@ export const es: Dictionary = {
       "Si la vida me diera un solo gesto hoy, ¿cuál sería el correcto?",
     ],
     submit: "Recibir mi respuesta",
-    freeHint: "Tu primera tirada es gratuita y no necesita registro.",
   },
 
   errors: {
@@ -395,14 +394,13 @@ export const es: Dictionary = {
   },
 
   dreams: {
-    titleEmphasis: "El inconsciente",
-    titleRest: "habla",
-    titleLine2: "mientras duermes.",
-    subtitle: "Describe tu sueño y revela los símbolos que la psique está comunicando.",
+    title: "Sueños",
+    subtitle: "El inconsciente habla mientras duermes.",
+    approach: "El análisis observa los símbolos, las imágenes y las relaciones del sueño desde una perspectiva simbólica y arquetípica.",
     prompt: "Describe tu sueño con los detalles que recuerdes.",
     placeholder: "Describe tu sueño...",
-    interpret: "Interpretar Símbolos",
-    interpreting: "Interpretando símbolos...",
+    interpret: "Interpretar sueño",
+    interpreting: "Interpretando el sueño...",
     interpretingShort: "Interpretando...",
     yourDream: "Tu sueño",
     personalNotes: "Notas personales",
@@ -416,7 +414,6 @@ export const es: Dictionary = {
     savedOk: "¡Sueño guardado con éxito!",
     errorSave: "Error al guardar el sueño.",
     loginToSee: "Inicia sesión para ver tus sueños guardados.",
-    freeHint: "Tu primera interpretación es gratuita y no necesita registro.",
     seePlans: "Ver planes",
   },
 

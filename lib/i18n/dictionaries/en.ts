@@ -138,7 +138,6 @@ export const en: Dictionary = {
       "If life gave me only one gesture today, which would be the right one?",
     ],
     submit: "Receive my answer",
-    freeHint: "Your first reading is free and needs no account.",
   },
 
   errors: {
@@ -395,14 +394,13 @@ export const en: Dictionary = {
   },
 
   dreams: {
-    titleEmphasis: "The unconscious",
-    titleRest: "speaks",
-    titleLine2: "while you sleep.",
-    subtitle: "Describe your dream and reveal the symbols the psyche is communicating.",
+    title: "Dreams",
+    subtitle: "The unconscious speaks while you sleep.",
+    approach: "The reading looks at the dream's symbols, images and relations from a symbolic and archetypal perspective.",
     prompt: "Describe your dream with as much detail as you remember.",
     placeholder: "Describe your dream...",
-    interpret: "Interpret Symbols",
-    interpreting: "Interpreting symbols...",
+    interpret: "Interpret dream",
+    interpreting: "Interpreting the dream...",
     interpretingShort: "Interpreting...",
     yourDream: "Your dream",
     personalNotes: "Personal notes",
@@ -416,7 +414,6 @@ export const en: Dictionary = {
     savedOk: "Dream saved successfully!",
     errorSave: "Error saving the dream.",
     loginToSee: "Sign in to see your saved dreams.",
-    freeHint: "Your first interpretation is free and needs no account.",
     seePlans: "See plans",
   },
 

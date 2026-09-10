@@ -9,7 +9,7 @@ export default async function SonhosPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <ShaderBackground>
+    <ShaderBackground tone="sonhos">
       <Header initialUser={user ?? null} />
       <DreamsPage isLoggedIn={Boolean(user)} />
     </ShaderBackground>

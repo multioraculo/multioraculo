@@ -510,7 +510,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   return (
     <>
       {!showResults && (
-        <main className="relative z-20 min-h-[85dvh] flex flex-col justify-end pt-6 pb-8 px-4 sm:pl-8 sm:pr-0" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}>
+        <main className="relative z-20 min-h-[calc(100dvh-11.75rem)] sm:min-h-[85dvh] flex flex-col justify-end pt-3 sm:pt-6 pb-8 px-4 sm:pl-8 sm:pr-0" style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}>
           <div className="max-w-lg">
             <div
               className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 backdrop-blur-sm mb-1 relative"
@@ -522,21 +522,18 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <span className="text-white/90 text-xs font-light relative z-10">{dict.hero.badge}</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-1">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.08] sm:leading-tight md:leading-16 tracking-tight font-light text-white mb-1">
               <span className="font-medium italic instrument">{dict.hero.titleEmphasis}</span> {dict.hero.titleRest}
               <br />
               <span className="font-light tracking-tight text-white">{dict.hero.titleLine2}</span>
             </h1>
 
-            <p className="text-base font-light text-white/80 mb-3 leading-relaxed">
+            <p className="text-base font-light text-white/80 mb-2 sm:mb-3 leading-relaxed">
               {dict.hero.subtitle}
             </p>
 
-            <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">
-                {dict.hero.prompt}
-                {!currentUser && <span className="text-white/45"> {dict.hero.freeHint}</span>}
-              </p>
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs font-light text-white/60 mb-2">{dict.hero.prompt}</p>
               <div className="relative">
               <textarea
                 value={question}
@@ -553,7 +550,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder={placeholders[currentPlaceholder % placeholders.length]}
-                className="w-full h-24 pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
+                className="w-full h-20 sm:h-24 pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
                 style={{ filter: "url(#glass-effect)" }}
               />
               {/* voz: acrescenta a transcrição ao que já está escrito, sem enviar nada */}

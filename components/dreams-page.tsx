@@ -188,23 +188,20 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
       {/* ── Input screen ──────────────────────────────────────── */}
       {step === "input" && (
         <main
-          className="relative z-20 min-h-[85dvh] flex flex-col justify-end pt-6 pb-8 px-4 sm:pl-8 sm:pr-0"
+          className="relative z-20 min-h-[calc(100dvh-11.75rem)] sm:min-h-[85dvh] flex flex-col justify-end pt-3 sm:pt-6 pb-8 px-4 sm:pl-8 sm:pr-0"
           style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom, 2rem))" }}
         >
           <div className="max-w-lg">
-            <h1 className="text-4xl sm:text-5xl tracking-tight font-light text-white mb-2">
-              <span className="font-medium italic instrument">{t.titleEmphasis}</span> {t.titleRest}
-              <br />
-              <span className="font-light tracking-tight text-white">{t.titleLine2}</span>
+            <h1 className="text-5xl sm:text-6xl font-light italic instrument text-white leading-none mb-2 sm:mb-3">
+              {t.title}
             </h1>
 
-            <p className="text-base font-light text-white/80 mb-4 leading-relaxed">{t.subtitle}</p>
+            <p className="text-base sm:text-lg font-light text-white/75 mb-2 sm:mb-3 leading-relaxed">{t.subtitle}</p>
 
-            <div className="mb-4">
-              <p className="text-xs font-light text-white/60 mb-2">
-                {t.prompt}
-                {!isLoggedIn && <span className="text-white/45"> {t.freeHint}</span>}
-              </p>
+            <p className="text-[11px] sm:text-xs font-light text-white/45 mb-3 sm:mb-4 leading-snug max-w-md">{t.approach}</p>
+
+            <div className="mb-3 sm:mb-4">
+              <p className="text-xs font-light text-white/60 mb-1.5 sm:mb-2">{t.prompt}</p>
               <div className="relative">
               <textarea
                 value={dreamText}
@@ -216,8 +213,8 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
                   }
                 }}
                 placeholder={t.placeholder}
-                rows={5}
-                className="w-full pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
+                rows={4}
+                className="w-full h-20 sm:h-32 pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200"
               />
               <VoiceMicButton onText={(text) => setDreamText((d) => appendTranscript(d, text))} />
               </div>

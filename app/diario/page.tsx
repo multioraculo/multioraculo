@@ -22,7 +22,7 @@ export default async function DiarioPage() {
   }
 
   return (
-    <ShaderBackground>
+    <ShaderBackground tone="grimorio">
       <Header initialUser={user ?? null} />
       <div className="relative z-10 min-h-screen pt-16 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-8 pb-16">

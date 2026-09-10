@@ -140,7 +140,6 @@ export const pt = {
       "Se a vida me desse apenas um gesto hoje, qual seria o gesto correto?",
     ],
     submit: "Receber minha resposta",
-    freeHint: "Sua primeira tiragem é gratuita e não precisa de cadastro.",
   },
 
   errors: {
@@ -397,14 +396,13 @@ export const pt = {
   },
 
   dreams: {
-    titleEmphasis: "O inconsciente",
-    titleRest: "fala",
-    titleLine2: "enquanto você dorme.",
-    subtitle: "Descreva seu sonho e revele os símbolos que a psique está comunicando.",
+    title: "Sonhos",
+    subtitle: "O inconsciente fala enquanto você dorme.",
+    approach: "A análise observa símbolos, imagens e relações do sonho a partir de uma perspectiva simbólica e arquetípica.",
     prompt: "Descreva seu sonho com os detalhes que lembrar.",
     placeholder: "Descreva seu sonho...",
-    interpret: "Interpretar Símbolos",
-    interpreting: "Interpretando símbolos...",
+    interpret: "Interpretar sonho",
+    interpreting: "Interpretando o sonho...",
     interpretingShort: "Interpretando...",
     yourDream: "Seu sonho",
     personalNotes: "Notas pessoais",
@@ -418,7 +416,6 @@ export const pt = {
     savedOk: "Sonho salvo com sucesso!",
     errorSave: "Erro ao salvar sonho.",
     loginToSee: "Faça login para ver seus sonhos salvos.",
-    freeHint: "Sua primeira interpretação é gratuita e não precisa de cadastro.",
     seePlans: "Ver planos",
   },
 
