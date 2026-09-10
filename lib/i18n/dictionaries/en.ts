@@ -141,6 +141,19 @@ export const en: Dictionary = {
     freeHint: "Your first reading is free and needs no account.",
   },
 
+  errors: {
+    oracle_failed: "One of the oracles did not finish its reading. Your draw was not used. Try asking again.",
+    references_unavailable: "The oracle references are unavailable right now. Your draw was not used. Try again in a moment.",
+    timeout: "The consultation took longer than expected and was interrupted. Your draw was not used. Try again.",
+    storage_failed: "We could not store your reading safely. Your draw was not used. Try again.",
+    internal: "Something went wrong on our side. Your draw was not used. Try again in a moment.",
+    no_question: "Write your question to consult the oracles.",
+    reading_not_found: "We could not find this reading. Ask a new question.",
+    synthesis_failed: "The five oracles were read, but the synthesis could not be written right now. The draw is saved: you can try the synthesis again.",
+    synthesis_in_progress: "The synthesis for this reading is already being written. Wait a moment and try again.",
+    retrySynthesis: "Try the synthesis again",
+  },
+
   results: {
     yourQuestion: "Your question",
     stageDraw: "• is casting your reading",
@@ -497,6 +510,15 @@ export const en: Dictionary = {
 
   lenormand: {
     tableLabel: "Nine-card table: three rows of three, with the center card in the middle",
+  },
+
+  focus: {
+    open: "Look closer",
+    flip: "Tap to see the meaning",
+    back: "Tap to return to the table",
+    close: "Close",
+    pending: "The meaning of this card appears here as soon as the oracle finishes writing.",
+    none: "This reading did not keep a meaning for this symbol.",
   },
 
   tarot: {

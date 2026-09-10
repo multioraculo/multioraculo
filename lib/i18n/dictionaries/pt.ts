@@ -143,6 +143,19 @@ export const pt = {
     freeHint: "Sua primeira tiragem é gratuita e não precisa de cadastro.",
   },
 
+  errors: {
+    oracle_failed: "Um dos oráculos não concluiu a leitura. Sua tiragem não foi consumida. Tente perguntar de novo.",
+    references_unavailable: "As referências dos oráculos estão indisponíveis agora. Sua tiragem não foi consumida. Tente de novo em instantes.",
+    timeout: "A consulta demorou mais do que o esperado e foi interrompida. Sua tiragem não foi consumida. Tente de novo.",
+    storage_failed: "Não foi possível guardar sua leitura com segurança. Sua tiragem não foi consumida. Tente de novo.",
+    internal: "Algo saiu errado por aqui. Sua tiragem não foi consumida. Tente de novo em instantes.",
+    no_question: "Escreva sua pergunta para consultar os oráculos.",
+    reading_not_found: "Não encontramos esta leitura. Faça uma nova pergunta.",
+    synthesis_failed: "Os cinco oráculos foram lidos, mas a síntese não pôde ser escrita agora. A tiragem está guardada: você pode tentar a síntese de novo.",
+    synthesis_in_progress: "A síntese desta leitura já está sendo escrita. Aguarde alguns instantes e tente de novo.",
+    retrySynthesis: "Tentar a síntese de novo",
+  },
+
   results: {
     yourQuestion: "Sua pergunta",
     stageDraw: "• está realizando a sua tiragem",
@@ -499,6 +512,15 @@ export const pt = {
 
   lenormand: {
     tableLabel: "Mesa de 9 cartas: três linhas de três, com a carta central no meio",
+  },
+
+  focus: {
+    open: "Ver de perto",
+    flip: "Toque para ver o significado",
+    back: "Toque para voltar à mesa",
+    close: "Fechar",
+    pending: "O significado desta carta aparece aqui assim que o oráculo terminar de escrever.",
+    none: "Esta leitura não guardou um significado para este símbolo.",
   },
 
   tarot: {

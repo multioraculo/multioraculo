@@ -2,6 +2,7 @@
 
 import { useI18n } from "@/components/i18n-provider"
 import { TAROT_CREDIT, tarotAssetPath, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
  * Visualização da Cruz Celta do Tarô. Só representa o que o motor sorteou:
@@ -18,9 +19,12 @@ import { TAROT_CREDIT, tarotAssetPath, type TarotCardRef } from "@/lib/oracles/t
  * orientação. Celular: grade de duas colunas na ordem das posições, com
  * rótulo, nome e orientação em cada carta. Carta invertida termina
  * fisicamente de cabeça para baixo; a que cruza deita sobre a central.
+ *
+ * Toque numa carta: ela sai da mesa e aparece maior; segundo toque vira e
+ * mostra o significado; terceiro toque devolve à mesa (FocusCard).
  */
 
-type Item = { position?: string; name: string }
+type Item = { position?: string; name: string; meaning?: string }
 
 type Props = {
   items: Item[]
@@ -86,6 +90,7 @@ function Capsule({ card, label, width }: { card: TarotCardRef; label: string; wi
 export default function TarotSpread({ items, cards, animate = false }: Props) {
   const { dict } = useI18n()
   const t = dict.tarot
+  const focus = useFocusCard()
   if (!cards || cards.length === 0) return null
 
   const entries = cards.slice(0, 10).map((card, i) => {
@@ -93,8 +98,9 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
     const name = stripReversed(it.name, t.reversed)
     const orientation = card.reversed ? t.reversed : t.upright
     const label = `${it.position ? it.position + ": " : ""}${name}, ${orientation}`
-    return { card, position: it.position ?? "", name, orientation, label }
+    return { card, position: it.position ?? "", name, orientation, label, meaning: it.meaning }
   })
+  const openLabel = (e: (typeof entries)[number]) => `${e.label}. ${dict.focus.open}`
 
   const wobble = (i: number) => (((i * 7) % 5) - 2) * 1.5
 
@@ -110,7 +116,8 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
             const sideways = s.rot % 180 !== 0
             const badge = sideways ? { left: -(CARD_H - CARD_W) / 2 + 4, top: (CARD_H - CARD_W) / 2 + 4 } : { left: 4, top: 4 }
             return (
-              <div key={i} role="listitem" aria-label={e.label} className="absolute" style={{ left: s.x, top: s.y, width: CARD_W, zIndex: s.z }}>
+              <div key={i} role="listitem" aria-label={e.label} className={`absolute ${focus.focusedIndex === i ? "fc-away" : ""}`} style={{ left: s.x, top: s.y, width: CARD_W, zIndex: s.z }}>
+                <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
                 <div
                   className={`tc-slot ${animate ? "tc-deal-enter" : ""}`}
                   style={
@@ -125,6 +132,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                 >
                   <Capsule card={e.card} label={e.label} width={CARD_W} />
                 </div>
+                </button>
                 <span className={`tc-num ${animate ? "tc-num-enter" : ""}`} style={{ ...badge, animationDelay: animate ? `${i * STEP_MS + 420}ms` : undefined }} aria-hidden="true">
                   {i + 1}
                 </span>
@@ -139,10 +147,11 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
         {entries.map((e, i) => {
           const rot = e.card.reversed ? 180 : 0
           return (
-            <div key={i} role="listitem" aria-label={e.label} className="flex flex-col items-center text-center">
+            <div key={i} role="listitem" aria-label={e.label} className={`flex flex-col items-center text-center ${focus.focusedIndex === i ? "fc-away" : ""}`}>
               <span className="text-white/40 text-[10px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-end mb-2">
                 {e.position}
               </span>
+              <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
               <div
                 className={`tc-slot ${animate ? "tc-deal-enter" : ""}`}
                 style={
@@ -158,12 +167,28 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
               >
                 <Capsule card={e.card} label={e.label} />
               </div>
+              </button>
               <span className="text-white/90 text-xs font-medium leading-tight mt-2">{e.name}</span>
               <span className={`text-[10px] mt-0.5 leading-tight ${e.card.reversed ? "text-amber-200/80" : "text-white/35"}`}>{e.orientation}</span>
             </div>
           )
         })}
       </div>
+
+      <FocusCard
+        state={focus.state}
+        items={entries.map((e) => ({ position: e.position, name: e.name, orientation: e.orientation, meaning: e.meaning }))}
+        renderFront={(i) => (
+          <div style={{ transform: entries[i].card.reversed ? "rotate(180deg)" : undefined }}>
+            <Capsule card={entries[i].card} label={entries[i].label} />
+          </div>
+        )}
+        onAdvance={focus.advance}
+        onClose={focus.close}
+        width="min(78vw, 300px, 31vh)"
+        aspect="217 / 409"
+        live={animate}
+      />
 
       <p className="text-white/35 text-[10px] text-center mt-4 leading-relaxed">
         {t.credit}{" "}

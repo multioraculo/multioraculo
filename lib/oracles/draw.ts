@@ -110,8 +110,25 @@ export type DrawItem = {
   /** chave da posição no método (ex.: "cc3" = 4ª posição da Cruz Celta) */
   positionKey: string
   sym: Sym
-  /** termos usados para buscar trechos nos PDFs sobre este símbolo (pt + en) */
+  /**
+   * Termos que identificam ESTE símbolo nas referências (nome próprio da
+   * carta, do hexagrama, da runa, do odu). Um trecho só conta como referência
+   * do item se casar com um destes.
+   */
   searchTerms: string[]
+  /**
+   * Termos amplos (naipe, numeração, hexagrama de origem): desempatam entre
+   * trechos já selecionados, nunca selecionam sozinhos.
+   */
+  broadTerms?: string[]
+  /**
+   * Identidade obrigatória do contexto: quando existe, o trecho precisa casar
+   * com um termo específico E com um destes. É o caso das linhas mutantes:
+   * "nine at second" aparece nos 64 hexagramas, então sem exigir também o
+   * hexagrama sorteado a referência viria do hexagrama errado. Só entram aqui
+   * identificadores NÃO ambíguos.
+   */
+  contextTerms?: string[]
 }
 
 export type TarotMeta = { majors: number; reversed: number; dominantSuit: number | null }
@@ -135,8 +152,45 @@ export type OracleDraw =
   | { key: "buzios"; items: DrawItem[]; meta: BuziosMeta }
   | { key: "lenormand"; items: DrawItem[]; meta: LenormandMeta }
 
-const norm = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+/** minúsculas e sem acentos: forma canônica usada na busca de referências */
+export function normalizeText(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+}
+
+const termCache = new Map<string, RegExp>()
+
+/** caracteres com significado em expressão regular, escapados um a um */
+const RE_SPECIAL = new Set([".", "*", "+", "?", "^", "$", "{", "}", "(", ")", "|", "[", "]", "\\", "/", "-"])
+function escapeForRegExp(s: string): string {
+  let out = ""
+  for (const ch of s) out += RE_SPECIAL.has(ch) ? "\\" + ch : ch
+  return out
+}
+
+/**
+ * Um termo casa com o texto apenas como PALAVRA INTEIRA. Sem isso, nomes
+ * curtos contaminavam a busca: o pinyin "Lin" casava dentro de "linha",
+ * "Gen" dentro de "gente", "Sol" dentro de "solo". Termos com menos de três
+ * letras nunca casam.
+ */
+export function textHasTerm(normalizedText: string, term: string): boolean {
+  return findTerm(normalizedText, term) >= 0
+}
+
+/** Posição da primeira ocorrência do termo como palavra inteira, ou -1. */
+export function findTerm(normalizedText: string, term: string): number {
+  const t = normalizeText(term).trim()
+  if (t.length < 3) return -1
+  let re = termCache.get(t)
+  if (!re) {
+    // espaços do termo aceitam qualquer espaçamento do texto (quebras de linha do PDF)
+    const escaped = escapeForRegExp(t).replace(/\s+/g, String.raw`\s+`)
+    re = new RegExp(String.raw`(?<![\p{L}\p{N}])` + escaped + String.raw`(?![\p{L}\p{N}])`, "u")
+    termCache.set(t, re)
+  }
+  const m = re.exec(normalizedText)
+  return m ? m.index : -1
+}
 
 // ---------------------------------------------------------------------------
 // TARÔ — Cruz Celta, 78 cartas (Marselha). Nomes canônicos em português.
@@ -164,22 +218,25 @@ const RANKS_EN = ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"
   "Nine", "Ten", "Page", "Knight", "Queen", "King"]
 
 export type TarotCard =
-  | { major: number; name: string; terms: string[] }
-  | { suit: number; rank: number; name: string; terms: string[] }
+  | { major: number; name: string; terms: string[]; broad: string[] }
+  | { suit: number; rank: number; name: string; terms: string[]; broad: string[] }
 
 /** índice 0–21 = arcanos maiores; 22–77 = menores (naipe × 14 + valor) */
 export const TAROT_DECK: TarotCard[] = [
   ...MAJOR_ARCANA.map((n, i) => ({
     major: i,
     name: n,
-    terms: [n.replace(/^(O|A|Os|As) /, ""), MAJOR_ARCANA_EN[i].replace(/^The /, ""), `arcano ${i}`],
+    terms: [n.replace(/^(O|A|Os|As) /, ""), MAJOR_ARCANA_EN[i].replace(/^The /, "")],
+    broad: [`arcano ${i}`, `arcanum ${i}`],
   })),
   ...SUITS.flatMap((s, si) =>
     RANKS.map((r, ri) => ({
       suit: si,
       rank: ri,
       name: `${r} de ${s}`,
-      terms: [`${r} de ${s}`, s, `${RANKS_EN[ri]} of ${SUITS_EN[si]}`, SUITS_EN[si]],
+      // o nome completo identifica a carta; o naipe sozinho não
+      terms: [`${r} de ${s}`, `${RANKS_EN[ri]} of ${SUITS_EN[si]}`],
+      broad: [s, SUITS_EN[si]],
     }))
   ),
 ]
@@ -199,7 +256,7 @@ export function drawTarot(rng: Rng): Extract<OracleDraw, { key: "tarot" }> {
     if ("major" in c) majors++
     else suitCount[c.suit]++
     if (reversed) reversedCount++
-    items.push({ positionKey: `cc${i}`, sym: { kind: "tarot", card, reversed }, searchTerms: c.terms })
+    items.push({ positionKey: `cc${i}`, sym: { kind: "tarot", card, reversed }, searchTerms: c.terms, broadTerms: c.broad })
   }
   const maxSuit = Math.max(...suitCount)
   const dominantSuit = maxSuit >= 3 ? suitCount.indexOf(maxSuit) : null
@@ -330,14 +387,66 @@ export function bitsOfHexagram(n: number): number[] {
   throw new Error(`hexagrama desconhecido ${n}`)
 }
 
-function hexTerms(n: number) {
+/**
+ * Pinyins repetidos entre hexagramas (Qian é 1 e 15; Kun é 2 e 47; Bi é 8 e
+ * 22; Yi é 27 e 42; Lü é 10 e 56; Jian é 39 e 53; Jie é 40 e 60). Eles NÃO
+ * identificam um hexagrama, então não podem selecionar nem autorizar um
+ * trecho: um texto sobre "Qian" pode ser sobre o outro Qian.
+ */
+const AMBIGUOUS_PINYIN = new Set(
+  HEXAGRAMS.map((h) => h.pinyin).filter((p, _i, all) => all.filter((q) => q === p).length > 1)
+)
+
+/**
+ * Termos de um hexagrama.
+ * `searchTerms`: identificadores inequívocos (nome em pt e en, mais o pinyin
+ * quando ele é único). `broadTerms`: a numeração, que desempata.
+ */
+function hexTerms(n: number): { searchTerms: string[]; broadTerms: string[] } {
   const h = HEXAGRAMS[n - 1]
+  const unique = [h.name.replace(/^(O|A|Os|As) /, ""), HEXAGRAMS_EN[n - 1].replace(/^The /, "")]
+  if (!AMBIGUOUS_PINYIN.has(h.pinyin)) unique.push(h.pinyin)
+  return {
+    searchTerms: unique,
+    broadTerms: [`hexagrama ${n}`, `hexagram ${n}`],
+  }
+}
+
+/**
+ * Fórmula clássica que nomeia a linha no texto (Wilhelm): "Nine at the
+ * beginning", "Six in the second place", "Nine at the top".
+ *
+ * Antes a busca usava "seis"/"nove"/"six"/"nine" soltos, que casam com
+ * qualquer página de qualquer hexagrama e traziam a linha errada. A fórmula
+ * inteira identifica a linha certa; o hexagrama entra como termo amplo.
+ */
+// `{n}` = nine/six (ou nove/seis). Cada linha traz as formas de mais de uma
+// edição: a referência atual (Ritsema/Karcher) escreve "Initial Nine",
+// "Nine at second", "Six above"; Wilhelm escreve "Nine at the beginning",
+// "Six in the second place", "Nine at the top".
+const LINE_FORMS_EN = [
+  ["initial {n}", "{n} at the beginning", "{n} in the first place"],
+  ["{n} at second", "{n} in the second place"],
+  ["{n} at third", "{n} in the third place"],
+  ["{n} at fourth", "{n} in the fourth place"],
+  ["{n} at fifth", "{n} in the fifth place"],
+  ["{n} above", "{n} at the top", "{n} in the sixth place"],
+]
+const LINE_FORMS_PT = [
+  ["{n} inicial", "{n} no início", "{n} no começo"],
+  ["{n} no segundo lugar", "{n} na segunda linha"],
+  ["{n} no terceiro lugar", "{n} na terceira linha"],
+  ["{n} no quarto lugar", "{n} na quarta linha"],
+  ["{n} no quinto lugar", "{n} na quinta linha"],
+  ["{n} em cima", "{n} no sexto lugar", "{n} no topo"],
+]
+
+function lineTerms(n: number, value: 6 | 9): string[] {
+  const en = value === 9 ? "nine" : "six"
+  const pt = value === 9 ? "nove" : "seis"
   return [
-    h.pinyin,
-    h.name.replace(/^(O|A|Os|As) /, ""),
-    HEXAGRAMS_EN[n - 1].replace(/^The /, ""),
-    `hexagrama ${n}`,
-    `hexagram ${n}`,
+    ...LINE_FORMS_EN[n - 1].map((p) => p.replace("{n}", en)),
+    ...LINE_FORMS_PT[n - 1].map((p) => p.replace("{n}", pt)),
   ]
 }
 
@@ -353,15 +462,19 @@ export function drawIChing(rng: Rng): Extract<OracleDraw, { key: "iching" }> {
   const moving = lines.map((v, i) => (v === 6 || v === 9 ? i + 1 : 0)).filter(Boolean)
   const primary = hexagramNumber(bits)
 
+  const primaryTerms = hexTerms(primary)
   const items: DrawItem[] = [
-    { positionKey: "primary", sym: { kind: "hexagram", number: primary, role: "primary" }, searchTerms: hexTerms(primary) },
+    { positionKey: "primary", sym: { kind: "hexagram", number: primary, role: "primary" }, ...primaryTerms },
   ]
   for (const n of moving) {
     const value = lines[n - 1] as 6 | 9
     items.push({
       positionKey: `line${n}`,
       sym: { kind: "line", n, value },
-      searchTerms: [value === 9 ? "nove" : "seis", value === 9 ? "nine" : "six", ...hexTerms(primary)],
+      searchTerms: lineTerms(n, value),
+      // a fórmula da linha existe nos 64 hexagramas: o trecho só serve se for
+      // do hexagrama que saiu. Sem isso, evidência vazia.
+      contextTerms: [...primaryTerms.searchTerms, ...primaryTerms.broadTerms],
     })
   }
   let resulting: number | null = null
@@ -371,7 +484,7 @@ export function drawIChing(rng: Rng): Extract<OracleDraw, { key: "iching" }> {
     items.push({
       positionKey: "resulting",
       sym: { kind: "hexagram", number: resulting, role: "resulting" },
-      searchTerms: hexTerms(resulting),
+      ...hexTerms(resulting),
     })
   }
 
@@ -470,8 +583,8 @@ export function drawBuzios(rng: Rng): Extract<OracleDraw, { key: "buzios" }> {
   const first = throwShells(rng)
   const second = throwShells(rng)
   const items: DrawItem[] = [
-    { positionKey: "main", sym: { kind: "odu", open: first, throwIndex: 1 }, searchTerms: [ODUS[first], `${first} búzios`] },
-    { positionKey: "second", sym: { kind: "odu", open: second, throwIndex: 2 }, searchTerms: [ODUS[second], `${second} búzios`] },
+    { positionKey: "main", sym: { kind: "odu", open: first, throwIndex: 1 }, searchTerms: [ODUS[first]], broadTerms: [`${first} búzios`, `${first} buzios`] },
+    { positionKey: "second", sym: { kind: "odu", open: second, throwIndex: 2 }, searchTerms: [ODUS[second]], broadTerms: [`${second} búzios`, `${second} buzios`] },
   ]
   return { key: "buzios", items, meta: { first, second } }
 }
@@ -533,12 +646,9 @@ export function drawAll(seed: string): AllDraws {
   }
 }
 
-/** termos de busca normalizados de todos os itens de uma tiragem */
-export function searchTermsOf(draw: OracleDraw): string[] {
-  const set = new Set<string>()
-  for (const it of draw.items) for (const t of it.searchTerms) {
-    const n = norm(t).trim()
-    if (n.length >= 3) set.add(n)
-  }
-  return Array.from(set)
-}
+/**
+ * A busca de referências acontece POR ITEM (ver getEvidenceForOracle em
+ * app/consultas/route.ts), usando searchTerms/broadTerms de cada DrawItem.
+ * Não existe mais um saco único de termos por oráculo: ele fazia uma carta
+ * bem documentada tomar as vagas das outras.
+ */

@@ -20,7 +20,7 @@ node scripts/lenormand-ingest.mjs CartasLenormand_g.png house,snake,bouquet --co
 node scripts/lenormand-ingest.mjs CartasLenormand_g.png scythe,whip,child --cols 3 --sheet 100,485,1000,915
 node scripts/lenormand-ingest.mjs CartasLenormand_g.png crossroads,mice,heart --cols 3 --sheet 100,915,1000,1330
 node scripts/lenormand-ingest.mjs CartasLenormand_h.png birds
+node scripts/lenormand-ingest.mjs CartasLenormand_i.png fish,rider,dog,moon,tree,ring --cols 3 --rows 2 --sheet 40,100,1060,1290
 ```
 
-Ainda sem arte (a lâmina mostra só número e nome): rider (1), tree (5),
-dog (18), ring (25), moon (32), fish (34).
+As 36 cartas têm arte.

@@ -1,6 +1,7 @@
 "use client"
 
 import { useI18n } from "@/components/i18n-provider"
+import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
  * Visualização da tiragem de Runas. Só desenha o que o motor já sorteou:
@@ -16,7 +17,7 @@ import { useI18n } from "@/components/i18n-provider"
  * escalonada por keyframes CSS só na primeira aparição.
  */
 
-export type RuneCardData = { position: string; name: string; glyph: string; reversed: boolean }
+export type RuneCardData = { position: string; name: string; glyph: string; reversed: boolean; meaning?: string }
 
 /** Traços de cada runa do Futhark Antigo em um quadro 100×100 (só linhas retas). */
 const RUNE_PATHS: Record<string, string> = {
@@ -146,7 +147,7 @@ export function runeFromLabel(label: string): { name: string; glyph: string; rev
 }
 
 type Props = {
-  items: Array<{ position?: string; name: string }>
+  items: Array<{ position?: string; name: string; meaning?: string }>
   /** campo estruturado vindo do motor; leituras antigas usam o texto do item */
   runes?: Array<{ name: string; glyph: string; reversed: boolean }> | null
   /** entrada escalonada só na primeira aparição (leitura ao vivo) */
@@ -156,12 +157,13 @@ type Props = {
 export default function RunesSpread({ items, runes, animate = false }: Props) {
   const { dict } = useI18n()
   const t = dict.runes
+  const focus = useFocusCard()
 
   const cards: RuneCardData[] = items
-    .map((it, i) => {
+    .map((it, i): RuneCardData | null => {
       const r = runes?.[i] ?? runeFromLabel(it.name)
       if (!r) return null
-      return { position: it.position ?? "", name: r.name, glyph: r.glyph, reversed: r.reversed }
+      return { position: it.position ?? "", name: r.name, glyph: r.glyph, reversed: r.reversed, meaning: it.meaning }
     })
     .filter((c): c is RuneCardData => c !== null)
 
@@ -176,13 +178,12 @@ export default function RunesSpread({ items, runes, animate = false }: Props) {
             key={i}
             role="listitem"
             aria-label={`${c.position ? c.position + ": " : ""}${c.name}${c.reversed ? `, ${t.reversed}` : ""}`}
-            className={`relative flex flex-col items-center rounded-xl border border-white/[0.12] px-2 pt-3 pb-3 text-center ${animate ? "rune-enter" : ""}`}
-            style={{
-              background:
-                "radial-gradient(circle at 50% 25%, rgba(181,126,255,0.14), rgba(255,255,255,0.035) 60%, rgba(255,255,255,0.02))",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), inset 0 0 40px rgba(255,255,255,0.02)",
-              animationDelay: animate ? `${i * 90}ms` : undefined,
-            }}
+            className={`fc-btn rn-plate relative flex flex-col items-center rounded-xl border border-white/[0.12] px-2 pt-3 pb-3 text-center ${animate ? "rune-enter" : ""} ${focus.focusedIndex === i ? "fc-away" : ""}`}
+            style={{ animationDelay: animate ? `${i * 90}ms` : undefined }}
+            onClick={() => focus.open(i)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); focus.open(i) } }}
+            tabIndex={0}
+            title={dict.focus.open}
           >
             <span className="text-white/40 text-[9px] sm:text-[10px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-center">
               {c.position}
@@ -197,6 +198,20 @@ export default function RunesSpread({ items, runes, animate = false }: Props) {
           </div>
         ))}
       </div>
+      <FocusCard
+        state={focus.state}
+        items={cards.map((c) => ({ position: c.position, name: c.name, orientation: c.reversed ? t.reversed : t.upright, meaning: c.meaning }))}
+        renderFront={(i) => (
+          <div className="rn-plate rounded-xl border border-white/[0.12] flex items-center justify-center" style={{ width: "100%", height: "100%" }}>
+            <RuneObject name={cards[i].name} glyph={cards[i].glyph} reversed={cards[i].reversed} index={i} width={150} height={195} />
+          </div>
+        )}
+        onAdvance={focus.advance}
+        onClose={focus.close}
+        width="min(78vw, 260px, 45vh)"
+        aspect="3 / 4"
+        live={animate}
+      />
     </>
   )
 }

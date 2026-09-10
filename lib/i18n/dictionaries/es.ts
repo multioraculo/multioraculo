@@ -141,6 +141,19 @@ export const es: Dictionary = {
     freeHint: "Tu primera tirada es gratuita y no necesita registro.",
   },
 
+  errors: {
+    oracle_failed: "Uno de los oráculos no terminó su lectura. Tu tirada no fue consumida. Intenta preguntar de nuevo.",
+    references_unavailable: "Las referencias de los oráculos no están disponibles ahora. Tu tirada no fue consumida. Intenta de nuevo en un momento.",
+    timeout: "La consulta tardó más de lo esperado y se interrumpió. Tu tirada no fue consumida. Intenta de nuevo.",
+    storage_failed: "No pudimos guardar tu lectura con seguridad. Tu tirada no fue consumida. Intenta de nuevo.",
+    internal: "Algo salió mal de nuestro lado. Tu tirada no fue consumida. Intenta de nuevo en un momento.",
+    no_question: "Escribe tu pregunta para consultar los oráculos.",
+    reading_not_found: "No encontramos esta lectura. Haz una nueva pregunta.",
+    synthesis_failed: "Los cinco oráculos fueron leídos, pero la síntesis no pudo escribirse ahora. La tirada está guardada: puedes intentar la síntesis de nuevo.",
+    synthesis_in_progress: "La síntesis de esta lectura ya se está escribiendo. Espera un momento e intenta de nuevo.",
+    retrySynthesis: "Intentar la síntesis de nuevo",
+  },
+
   results: {
     yourQuestion: "Tu pregunta",
     stageDraw: "• está realizando tu tirada",
@@ -497,6 +510,15 @@ export const es: Dictionary = {
 
   lenormand: {
     tableLabel: "Mesa de 9 cartas: tres filas de tres, con la carta central en el medio",
+  },
+
+  focus: {
+    open: "Ver de cerca",
+    flip: "Toca para ver el significado",
+    back: "Toca para volver a la mesa",
+    close: "Cerrar",
+    pending: "El significado de esta carta aparece aquí en cuanto el oráculo termine de escribir.",
+    none: "Esta lectura no guardó un significado para este símbolo.",
   },
 
   tarot: {

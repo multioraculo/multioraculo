@@ -41,6 +41,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamError, setStreamError] = useState<string | null>(null)
+  // seed de uma leitura já guardada cuja síntese falhou: permite tentar de novo
+  const [synthRetrySeed, setSynthRetrySeed] = useState<string | null>(null)
   // motivo de bloqueio vindo do servidor: mostra o CTA certo junto da mensagem
   const [blockedBy, setBlockedBy] = useState<"limit" | "login" | null>(null)
   const [isSaved, setIsSaved] = useState(false)
@@ -168,6 +170,54 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     }
   }
 
+  // Texto do erro vem SEMPRE do dicionário, por código. Nada que o servidor
+  // (ou a OpenAI) escreveu chega à tela.
+  const errorText = (code?: string): string => {
+    const table = dict.errors as unknown as Record<string, string>
+    return (code && table[code]) || dict.results.consultFailed
+  }
+
+  /**
+   * Pede a síntese ao servidor apenas pelo seed: os cinco resultados já estão
+   * guardados lá. Chamada tanto no fluxo normal quanto na nova tentativa —
+   * em nenhum dos casos há novo sorteio, nova interpretação ou nova cota.
+   */
+  const requestSynthesis = async (readingSeedValue: string) => {
+    const res = await fetch("/consultas/sintese", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seed: readingSeedValue, locale }),
+    })
+    await readNdjson(res, (event) => {
+      if (event.type === "delta") {
+        setSynthesis((prev) => (prev ?? "") + event.text)
+      } else if (event.type === "error") {
+        const e: any = new Error(event.code || "internal")
+        e.code = event.code
+        throw e
+      }
+    })
+  }
+
+  const retrySynthesis = async () => {
+    if (!synthRetrySeed) return
+    setStreamError(null)
+    setSynthRetrySeed(null)
+    setSynthesis(null)
+    setIsStreaming(true)
+    setStage("synthesis")
+    try {
+      await requestSynthesis(synthRetrySeed)
+      setSynthRetrySeed(null)
+    } catch (err: any) {
+      console.error(err)
+      setStreamError(errorText(err?.code))
+    } finally {
+      setIsStreaming(false)
+      setStage("idle")
+    }
+  }
+
   const handleSubmit = async () => {
     if (!question.trim()) return
     setIsLoading(true)
@@ -206,7 +256,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             Object.fromEntries(
               Object.entries(event.draws ?? {}).map(([k, d]: [string, any]) => [
                 k,
-                { title: d.title, seed, draw: { items: d.items, notes: d.notes, shells: d.shells, runes: d.runes }, reading: "" },
+                {
+                  title: d.title,
+                  seed,
+                  // tudo o que o servidor mandou do sorteio: cartas do Tarô e do
+                  // Lenormand e o hexagrama aparecem já nesta etapa
+                  draw: { items: d.items, notes: d.notes, shells: d.shells, runes: d.runes, cards: d.cards, lenormandCards: d.lenormandCards, hexagram: d.hexagram },
+                  reading: "",
+                },
               ])
             )
           )
@@ -238,7 +295,9 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
           setOracles(event.oracles ?? null)
           setIsLoading(false)
         } else if (event.type === "error") {
-          throw new Error(event.message || dict.results.consultFailed)
+          const e: any = new Error(event.code || "internal")
+          e.code = event.code
+          throw e
         }
       })
 
@@ -251,20 +310,16 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       }
       if (!finalOracles) throw new Error(dict.results.drawIncomplete)
 
-      // Etapa 2: síntese em streaming, a partir dos oráculos já interpretados
-      const res2 = await fetch("/consultas/sintese", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, oracles: finalOracles, seed, locale }),
-      })
-
-      await readNdjson(res2, (event) => {
-        if (event.type === "delta") {
-          setSynthesis((prev) => (prev ?? "") + event.text)
-        } else if (event.type === "error") {
-          throw new Error(event.message || dict.results.consultFailed)
-        }
-      })
+      // Etapa 2: síntese. A leitura inteira já está guardada no servidor;
+      // aqui só pedimos o texto pelo seed. Se a síntese falhar, os cinco
+      // oráculos continuam na tela e a pessoa pode tentar de novo.
+      try {
+        await requestSynthesis(seed)
+      } catch (err: any) {
+        console.error(err)
+        setStreamError(errorText(err?.code))
+        setSynthRetrySeed(seed)
+      }
     } catch (err: any) {
       console.error(err)
       // Bloqueios de plano vêm do servidor com um código; o texto é do dicionário.
@@ -284,7 +339,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
         setStreamError(dict.billing.billingUnavailable)
         setBlockedBy(null)
       } else {
-        setStreamError(String(err?.message || dict.results.consultFailed))
+        setStreamError(errorText(err?.code))
         setBlockedBy(null)
       }
     } finally {
@@ -579,6 +634,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                       >
                         {dict.billing.limitReachedCta}
                       </Link>
+                    )}
+                    {synthRetrySeed && !isStreaming && (
+                      <button
+                        onClick={retrySynthesis}
+                        className="inline-block px-5 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
+                      >
+                        {dict.errors.retrySynthesis}
+                      </button>
                     )}
                     {blockedBy === "login" && (
                       <button

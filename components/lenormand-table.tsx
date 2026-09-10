@@ -2,6 +2,7 @@
 
 import { useI18n } from "@/components/i18n-provider"
 import { lenormandArtSrc, lenormandId, lenormandIndexOfId } from "@/lib/oracles/lenormand-assets"
+import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
  * Mesa de 9 cartas do Lenormand (3×3), exatamente como o motor sorteia:
@@ -16,11 +17,14 @@ import { lenormandArtSrc, lenormandId, lenormandIndexOfId } from "@/lib/oracles/
  * (public/lenormand/<id>.png), posicionada na mesma janela da carta
  * original. Número e nome vêm do motor (idioma da pessoa), não da imagem.
  *
+ * Toque numa carta: ela sai da mesa e aparece maior; segundo toque vira e
+ * mostra o significado; terceiro toque devolve à mesa (FocusCard).
+ *
  * Identificação: id estável do payload (`cards`) ou, em leituras antigas, o
  * número no início do nome ("24 — Coração"), que é independente do idioma.
  */
 
-type Item = { position?: string; name: string }
+type Item = { position?: string; name: string; meaning?: string }
 export type LenormandCardRef = { id: string; number: number }
 
 type Props = {
@@ -48,39 +52,67 @@ function displayName(name: string): string {
   return name.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 }
 
+/** A lâmina de uma carta: número, gravura e nome. Tamanho vem de --ln-cw. */
+export function LenormandCard({ index, name, center = false, className = "", style }: { index: number; name: string; center?: boolean; className?: string; style?: React.CSSProperties }) {
+  return (
+    <div className={`ln-card ${center ? "ln-center" : ""} ${className}`} style={style}>
+      <span className="ln-num" aria-hidden="true">{index + 1}</span>
+      <div className="ln-art" aria-hidden="true">
+        {/* gravura com fundo transparente; se a arte da carta ainda não existir, a lâmina fica só com número e nome */}
+        <img
+          src={lenormandArtSrc(lenormandId(index))}
+          alt=""
+          draggable={false}
+          onError={(ev) => { ev.currentTarget.style.display = "none" }}
+        />
+      </div>
+      <span className="ln-name" aria-hidden="true">{name}</span>
+    </div>
+  )
+}
+
 export default function LenormandTable({ items, cards, animate = false }: Props) {
   const { dict } = useI18n()
   const t = dict.lenormand
+  const focus = useFocusCard()
 
   const entries = items.slice(0, 9).map((it, i) => {
     const index = indexOf(cards?.[i], it)
-    return { index, position: it.position ?? "", name: displayName(it.name) }
+    return { index, position: it.position ?? "", name: displayName(it.name), meaning: it.meaning }
   })
   if (entries.length !== 9 || entries.some((e) => e.index === null)) return null
 
   return (
-    <div className="ln-table" role="list" aria-label={t.tableLabel}>
-      {entries.map((e, i) => (
-        <div key={i} role="listitem" aria-label={`${e.position ? e.position + ": " : ""}${e.index! + 1}, ${e.name}`}>
-          <div className="ln-pos">{e.position}</div>
-          <div
-            className={`ln-card ${i === 4 ? "ln-center" : ""} ${animate ? "ln-deal" : ""}`}
-            style={{ animationDelay: animate ? `${i * STEP_MS}ms` : undefined }}
-          >
-            <span className="ln-num" aria-hidden="true">{e.index! + 1}</span>
-            <div className="ln-art" aria-hidden="true">
-              {/* gravura com fundo transparente; se a arte da carta ainda não existir, a lâmina fica só com número e nome */}
-              <img
-                src={lenormandArtSrc(lenormandId(e.index!))}
-                alt=""
-                draggable={false}
-                onError={(ev) => { ev.currentTarget.style.display = "none" }}
+    <>
+      <div className="ln-table" role="list" aria-label={t.tableLabel}>
+        {entries.map((e, i) => (
+          <div key={i} role="listitem" aria-label={`${e.position ? e.position + ": " : ""}${e.index! + 1}, ${e.name}`} className={focus.focusedIndex === i ? "fc-away" : ""}>
+            <div className="ln-pos">{e.position}</div>
+            <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={`${e.name}. ${dict.focus.open}`}>
+              <LenormandCard
+                index={e.index!}
+                name={e.name}
+                center={i === 4}
+                className={animate ? "ln-deal" : ""}
+                style={{ animationDelay: animate ? `${i * STEP_MS}ms` : undefined }}
               />
-            </div>
-            <span className="ln-name" aria-hidden="true">{e.name}</span>
+            </button>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+      <FocusCard
+        state={focus.state}
+        items={entries.map((e) => ({ position: e.position, name: `${e.index! + 1} · ${e.name}`, meaning: e.meaning }))}
+        renderFront={(i) => (
+          <LenormandCard index={entries[i].index!} name={entries[i].name} center={i === 4} style={{ "--ln-cw": "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties} />
+        )}
+        onAdvance={focus.advance}
+        onClose={focus.close}
+        width="min(78vw, 280px, 37vh)"
+        aspect="0.62"
+        live={animate}
+        backClassName="fc-back-lenormand"
+      />
+    </>
   )
 }

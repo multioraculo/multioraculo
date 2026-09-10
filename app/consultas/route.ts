@@ -4,7 +4,8 @@ import fs from "fs/promises"
 import path from "path"
 import https from "https"
 import os from "os"
-import { drawAll, newSeed, RUNES, searchTermsOf, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
+import { drawAll, newSeed, normalizeText, RUNES, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
+import { keywords, selectEvidence, type Chunk, type Evidence } from "@/lib/oracles/evidence"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import { tarotCardRef, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import { lenormandId } from "@/lib/oracles/lenormand-assets"
@@ -20,6 +21,7 @@ import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { completeReading, consumeReading, failReading, httpStatusFor } from "@/lib/billing/usage"
 import { failPreview, findPendingPreview, reservePreview, storePreviewResult, teaserCut, teaserOf } from "@/lib/billing/preview"
+import { purgeExpiredTechnicalResults, storeReadingResult } from "@/lib/billing/results"
 import { logEvent } from "@/lib/billing/events"
 import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
 import { synthesisPrompt } from "@/lib/oracles/synthesis"
@@ -30,6 +32,28 @@ export const runtime = "nodejs"
 // Netlify impõe 60 s por função (não configurável). Esta rota faz o sorteio e
 // a interpretação dos cinco oráculos; a síntese fica em /consultas/sintese.
 export const maxDuration = 60
+
+// ---------------------------------------------------------------------------
+// Orçamento de tempo. O limite duro do Netlify é 60 s: trabalhamos dentro de
+// 50 s para sempre conseguir fechar o stream com uma mensagem em vez de a
+// função ser morta no meio. Cada chamada tem teto próprio e nenhuma reserva
+// automática de tentativas do SDK.
+// ---------------------------------------------------------------------------
+const TOTAL_BUDGET_MS = 50_000
+const SAFETY_TIMEOUT_MS = 6_000
+const ORACLE_TIMEOUT_MS = 25_000
+/** só vale tentar de novo se ainda sobrar isto do orçamento total */
+const ORACLE_RETRY_MIN_REMAINING_MS = 20_000
+const INDEX_TIMEOUT_MS = 10_000
+const HEARTBEAT_MS = 8_000
+
+/** Erro com código estável; o texto mostrado à pessoa vem do dicionário do cliente. */
+class ConsultaError extends Error {
+  constructor(public code: ConsultaErrorCode, message?: string) {
+    super(message ?? code)
+  }
+}
+type ConsultaErrorCode = "oracle_failed" | "references_unavailable" | "timeout" | "storage_failed" | "internal"
 
 const INDEX_URL =
   process.env.PDFS_INDEX_URL ||
@@ -58,13 +82,11 @@ const ORACLE_SOURCES: Record<OracleKey, { files: string[]; method: string }> = {
   },
   lenormand: {
     files: ["lenormand_handbook.pdf"],
-    method: "Mesa 9 cartas (quadro curto) + confirmadores objetivos",
+    method: "Mesa 9 cartas (quadro curto) + leitura por posição e combinação",
   },
 }
 
 const ORACLE_KEYS: OracleKey[] = ["tarot", "iching", "runas", "buzios", "lenormand"]
-
-type Evidence = { source: string; excerpt: string }
 
 type OracleResult = {
   key: OracleKey
@@ -130,40 +152,10 @@ function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
   return {}
 }
 
-const stop = new Set([
-  "a","o","os","as","de","do","da","dos","das","e","é","em","no","na","nos","nas",
-  "por","para","pra","com","sem","um","uma","uns","umas","que","isso","isto","aqui",
-  "agora","hoje","já","não","sim","se","eu","você","vc","me","minha","meu","teu",
-  "tua","seu","sua","dela","dele","eles","elas","ao","à","às","é","ser","estar",
-  "como","qual","quais","quando","onde","porquê","pq",
-  // en
-  "the","and","for","with","what","this","that","have","from","are","you","your","about",
-  // es
-  "que","por","para","con","una","uno","los","las","del","qué","cómo","mis","sus",
-])
-
-function normalize(s: string) {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-}
-
-function keywords(q: string) {
-  const tokens = normalize(q)
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter(Boolean)
-    .filter((t) => t.length >= 3)
-    .filter((t) => !stop.has(t))
-  return Array.from(new Set(tokens)).slice(0, 18)
-}
-
 async function download(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const fetchUrl = (targetUrl: string) => {
-      https
+      const req = https
         .get(targetUrl, (res) => {
           // Segue redirects 301/302
           if (res.statusCode === 301 || res.statusCode === 302) {
@@ -186,6 +178,8 @@ async function download(url: string): Promise<string> {
           res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
         })
         .on("error", reject)
+      // rede parada não pode segurar a função até o limite do Netlify
+      req.setTimeout(INDEX_TIMEOUT_MS, () => req.destroy(new Error(`timeout ao baixar ${targetUrl}`)))
     }
     fetchUrl(url)
   })
@@ -213,76 +207,68 @@ async function readFromAnywhere(
 
 let indexPromise: Promise<Map<string, string[]>> | null = null
 
+/**
+ * Índice de trechos das referências, carregado uma vez por instância.
+ *
+ * Se a carga falhar, o cache é ESQUECIDO: sem isso uma única falha de rede
+ * deixava a promessa rejeitada em memória e derrubava todas as consultas
+ * seguintes daquela instância até ela ser reciclada.
+ */
 function getIndex(): Promise<Map<string, string[]>> {
   if (!indexPromise) {
-    indexPromise = readFromAnywhere(
-      LOCAL_INDEX,
-      TMP_INDEX,
-      INDEX_URL,
-      "pdfs.index.json"
-    ).then((raw) => {
-      const data = JSON.parse(raw) as {
-        index: Array<{ file: string; chunks: string[] }>
-      }
-      const map = new Map<string, string[]>()
-      for (const entry of data.index) {
-        map.set(entry.file, entry.chunks)
-      }
-      return map
-    })
+    indexPromise = readFromAnywhere(LOCAL_INDEX, TMP_INDEX, INDEX_URL, "pdfs.index.json")
+      .then((raw) => {
+        const data = JSON.parse(raw) as {
+          index: Array<{ file: string; chunks: string[] }>
+        }
+        const map = new Map<string, string[]>()
+        for (const entry of data.index) {
+          map.set(entry.file, entry.chunks)
+        }
+        return map
+      })
+      .catch((err) => {
+        indexPromise = null // permite nova tentativa na próxima consulta
+        throw err
+      })
   }
   return indexPromise
 }
 
+/** Trechos normalizados por arquivo, reaproveitados entre consultas da instância. */
+const normalizedCache = new Map<string, Array<{ raw: string; norm: string }>>()
+
+async function chunksOf(file: string): Promise<Array<{ raw: string; norm: string }>> {
+  const cached = normalizedCache.get(file)
+  if (cached) return cached
+  const index = await getIndex()
+  const built = (index.get(file) ?? []).map((raw) => ({ raw, norm: normalizeText(raw) }))
+  normalizedCache.set(file, built)
+  return built
+}
+
 /**
- * Busca trechos de referência para os SÍMBOLOS SORTEADOS.
- *
- * A pontuação é dominada pelos nomes dos símbolos (peso 3). As palavras da
- * pergunta entram só como desempate (peso 1), para que os trechos ajudem a
- * aplicar o símbolo à situação sem jamais influenciar qual símbolo saiu —
- * o sorteio já aconteceu antes desta função ser chamada.
+ * Trechos de referência deste oráculo, escolhidos POR ITEM SORTEADO. A regra
+ * de seleção vive em lib/oracles/evidence.ts (módulo puro, coberto por
+ * testes); aqui só montamos o conjunto de trechos vindos do índice.
  */
 async function getEvidenceForOracle(
   draw: OracleDraw,
+  rendered: RenderedDraw,
   question: string,
   files: string[]
 ): Promise<Evidence[]> {
-  const index = await getIndex()
-  const symbolTerms = searchTermsOf(draw)
-  const questionKeys = keywords(question)
-  const scored: Array<Evidence & { score: number }> = []
-
+  const pool: Chunk[] = []
   for (const f of files) {
-    const chunks = index.get(f) ?? []
-    for (const ch of chunks) {
-      const c = normalize(ch)
-      let score = 0
-      for (const t of symbolTerms) if (c.includes(t)) score += 3
-      if (score === 0) continue
-      for (const k of questionKeys) if (c.includes(k)) score += 1
-      score += Math.min(2, Math.floor(ch.length / 600))
-      scored.push({ source: f, excerpt: ch, score })
-    }
+    const chunks = await chunksOf(f)
+    chunks.forEach((c, i) => pool.push({ source: f, id: `${f}#${i}`, raw: c.raw, norm: c.norm }))
   }
-
-  scored.sort((a, b) => b.score - a.score)
-  const top = scored.slice(0, 6).map(({ source, excerpt }) => ({
-    source,
-    excerpt: excerpt.slice(0, 800),
-  }))
-
-  if (top.length === 0) {
-    const fallback: Evidence[] = []
-    for (const f of files) {
-      const chunks = index.get(f) ?? []
-      for (const ch of chunks.slice(0, 2)) {
-        fallback.push({ source: f, excerpt: ch.slice(0, 800) })
-      }
-    }
-    return fallback
-  }
-
-  return top
+  return selectEvidence(
+    draw.items,
+    rendered.items.map((it) => it.name),
+    keywords(question),
+    pool
+  )
 }
 
 /**
@@ -291,12 +277,12 @@ async function getEvidenceForOracle(
  */
 function validateEvidence(candidate: unknown, provided: Evidence[]): Evidence[] {
   if (!Array.isArray(candidate)) return provided
-  const haystack = provided.map((e) => ({ source: e.source, text: normalize(e.excerpt) }))
+  const haystack = provided.map((e) => ({ source: e.source, text: normalizeText(e.excerpt) }))
   const kept: Evidence[] = []
   for (const e of candidate.slice(0, 8)) {
     const excerpt = String(e?.excerpt || "").trim()
     const source = String(e?.source || "")
-    const needle = normalize(excerpt)
+    const needle = normalizeText(excerpt)
     if (needle.length < 15) continue
     const hit = haystack.find((h) => h.text.includes(needle))
     if (!hit) continue
@@ -332,7 +318,7 @@ reading: descrição técnica — nome completo do odu e variantes conhecidas, o
   lenormand: `LENORMAND — Mesa de 9 cartas (quadrado 3×3).
 meanings[i]: significado tradicional da carta i na posição i aplicado à pergunta — 1 frase.
 notes: carta central + principal combinação identificada entre as cartas listadas.
-reading: leitura sistemática — carta central como tema dominante, cruz horizontal (linha do tempo) e vertical (forças acima/abaixo), combinações entre adjacentes quando significativas, e os confirmadores objetivos: eventos concretos e verificáveis que podem se manifestar em 24-72h.`,
+reading: leitura sistemática — carta central como tema dominante, cruz horizontal (linha do tempo) e vertical (forças acima/abaixo), combinações entre adjacentes quando significativas, e o que a mesa indica de concreto na situação. Não faça previsão de eventos nem dê prazos.`,
 }
 
 function oraclePrompt(
@@ -344,9 +330,16 @@ function oraclePrompt(
   evidence: Evidence[],
   locale: Locale
 ) {
-  const ev = evidence
-    .map((e, i) => `Fonte ${i + 1} (${e.source}): ${e.excerpt}`)
-    .join("\n\n")
+  const hasEvidence = evidence.length > 0
+  const ev = hasEvidence
+    ? evidence
+        .map((e, i) => `Fonte ${i + 1}${e.about ? ` — sobre "${e.about}"` : ""} (${e.source}): ${e.excerpt}`)
+        .join("\n\n")
+    : "(Nenhum trecho específico sobre estes símbolos foi encontrado nas referências.)"
+
+  const evidenceRule = hasEvidence
+    ? `6) Inclua "evidence" com 3 a 6 itens, citando LITERALMENTE pequenos trechos (curtos, copiados palavra por palavra, no idioma original do trecho) dos trechos de referência acima, cada um com source e excerpt. Não invente citações nem páginas. Use apenas o nome do arquivo como source. Cada trecho indica a que símbolo se refere: não use um trecho de um símbolo para justificar outro.`
+    : `6) Não há trechos de referência para esta tiragem. Interprete pela tradição clássica do sistema e devolva "evidence": []. Não invente citações, fontes nem páginas.`
 
   const numbered = rendered.items
     .map((it, i) => `${i + 1}. ${it.position}: ${it.name}`)
@@ -361,8 +354,9 @@ Regras importantes:
 3) Seja específico e útil, evitando generalidades.
 4) Use os trechos de referência abaixo como base de linguagem e coerência com a tradição. Seja fiel ao sentido, mas reescreva com sua voz. Os trechos podem estar em outro idioma; a resposta não.
 5) Retorne JSON válido no formato indicado, sem texto fora do JSON.
-6) Inclua "evidence" com 3 a 6 itens, citando LITERALMENTE pequenos trechos (curtos, copiados palavra por palavra, no idioma original do trecho) dos trechos de referência, cada um com source e excerpt. Não invente citações nem páginas. Use apenas o nome do arquivo como source.
+${evidenceRule}
 7) FIDELIDADE À TIRAGEM: Seja fiel ao resultado real dos símbolos. Não suavize indicações negativas, não force otimismo, não neutralize tensão, sombra, ruptura ou dificuldade revelada pelo campo simbólico. Se a tradição aponta conflito, perigo, contradição ou verdade dolorosa, expresse isso com clareza e responsabilidade. Conforto fácil é uma traição à tiragem.
+8) PROPORÇÃO: a intensidade do texto acompanha a intensidade real do símbolo naquela posição, para cima e para baixo. Não suavize o que é difícil, mas também não dramatize além do que o símbolo e a tradição sustentam: não transforme atrito em catástrofe, hesitação em ruptura, nem lentidão em urgência. Um símbolo ameno é lido como ameno; um símbolo grave, como grave.
 
 ${languageRule(locale)}
 
@@ -421,15 +415,18 @@ Responda APENAS com uma palavra: SAFE ou RISK
 
 async function classifyForSafety(openai: OpenAI, question: string, meta?: { seed: string; userId: string | null }): Promise<boolean> {
   try {
-    const result = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0,
-      max_tokens: 5,
-      messages: [
-        { role: "system", content: SAFETY_CLASSIFIER_PROMPT },
-        { role: "user", content: question },
-      ],
-    })
+    const result = await openai.chat.completions.create(
+      {
+        model: "gpt-4o-mini",
+        temperature: 0,
+        max_tokens: 5,
+        messages: [
+          { role: "system", content: SAFETY_CLASSIFIER_PROMPT },
+          { role: "user", content: question },
+        ],
+      },
+      { timeout: SAFETY_TIMEOUT_MS, maxRetries: 0 }
+    )
     await recordAiUsage({ operation: "safety", model: result.model || "gpt-4o-mini", usage: result.usage, seed: meta?.seed, userId: meta?.userId })
     const verdict = (result.choices?.[0]?.message?.content || "SAFE").trim().toUpperCase()
     return verdict === "RISK"
@@ -438,10 +435,21 @@ async function classifyForSafety(openai: OpenAI, question: string, meta?: { seed
   }
 }
 
+/** Resposta do modelo aceitável: JSON com leitura e a lista de significados. */
+function isUsable(parsed: any): boolean {
+  return Boolean(parsed) && typeof parsed.reading === "string" && parsed.reading.trim().length > 0 && Array.isArray(parsed.meanings)
+}
+
 /**
  * Interpreta os cinco oráculos para um sorteio já feito. Usado tanto no fluxo
  * normal (resultado vai ao navegador) quanto no preview (resultado fica só no
  * servidor). A lógica é exatamente a mesma.
+ *
+ * Regra dura: ou os CINCO terminam, ou a consulta é incompleta. Um oráculo
+ * que falha (timeout, JSON inválido, resposta vazia) é tentado uma segunda
+ * vez se ainda houver orçamento; se falhar de novo, a consulta inteira é
+ * abortada com `oracle_failed` e a cota não é consumida. Nunca entregamos
+ * uma leitura com quatro oráculos.
  */
 async function interpretAll(
   openai: OpenAI,
@@ -451,39 +459,67 @@ async function interpretAll(
   rendered: Record<OracleKey, RenderedDraw>,
   locale: Locale,
   labels: Record<OracleKey, string>,
+  deadline: number,
   userId: string | null = null
 ): Promise<Record<OracleKey, OracleResult>> {
+  const remaining = () => deadline - Date.now()
+
   const oracleEntries = await Promise.all(
     ORACLE_KEYS.map(async (k) => {
       const meta = ORACLE_SOURCES[k]
       const draw = draws[k]
       const r = rendered[k]
-      const evidence = await getEvidenceForOracle(draw, question, meta.files)
+
+      let evidence: Evidence[]
+      try {
+        evidence = await getEvidenceForOracle(draw, r, question, meta.files)
+      } catch (err) {
+        console.error("[consultas] índice de referências indisponível", err)
+        throw new ConsultaError("references_unavailable")
+      }
+
       const prompt = oraclePrompt(k, labels[k], meta.method, question, r, evidence, locale)
 
-      let parsed: any = null
-      let rawText = ""
-      try {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          temperature: 0.6,
-          max_tokens: 1600,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: ORACLE_SYSTEM_MESSAGE[locale] },
-            { role: "user", content: prompt },
-          ],
-        })
+      const attempt = async (): Promise<any> => {
+        const timeout = Math.min(ORACLE_TIMEOUT_MS, Math.max(4_000, remaining()))
+        const completion = await openai.chat.completions.create(
+          {
+            model: "gpt-4o-mini",
+            temperature: 0.6,
+            max_tokens: 1600,
+            response_format: { type: "json_object" },
+            messages: [
+              { role: "system", content: ORACLE_SYSTEM_MESSAGE[locale] },
+              { role: "user", content: prompt },
+            ],
+          },
+          { timeout, maxRetries: 0 }
+        )
         await recordAiUsage({ operation: "oracle", model: completion.model || "gpt-4o-mini", usage: completion.usage, seed, userId })
-        rawText = completion.choices?.[0]?.message?.content || ""
-        parsed = JSON.parse(rawText)
+        return JSON.parse(completion.choices?.[0]?.message?.content || "")
+      }
+
+      let parsed: any = null
+      try {
+        parsed = await attempt()
       } catch (err) {
         console.error(`[consultas] ${k}: falha na interpretação`, err)
-        parsed = null
+      }
+
+      if (!isUsable(parsed) && remaining() > ORACLE_RETRY_MIN_REMAINING_MS) {
+        try {
+          parsed = await attempt()
+        } catch (err) {
+          console.error(`[consultas] ${k}: falha na segunda tentativa`, err)
+        }
+      }
+
+      if (!isUsable(parsed)) {
+        throw new ConsultaError(remaining() <= 0 ? "timeout" : "oracle_failed", `oráculo ${k} não concluiu`)
       }
 
       // draw.items vem SEMPRE do sorteio; o modelo só contribui o "meaning"
-      const meanings: unknown[] = Array.isArray(parsed?.meanings) ? parsed.meanings : []
+      const meanings: unknown[] = parsed.meanings
       const items = r.items.map((it, i) => {
         const m = meanings[i]
         return {
@@ -496,9 +532,6 @@ async function interpretAll(
       const modelNotes = typeof parsed?.notes === "string" ? parsed.notes.trim() : ""
       const notes = modelNotes ? `${r.notes} — ${modelNotes}` : r.notes
 
-      const reading =
-        typeof parsed?.reading === "string" && parsed.reading.trim() ? parsed.reading.trim() : rawText || ""
-
       const result: OracleResult = {
         key: k,
         title: labels[k],
@@ -506,7 +539,7 @@ async function interpretAll(
         seed,
         locale,
         draw: { items, notes, ...drawExtras(k, draws) },
-        reading,
+        reading: parsed.reading.trim(),
         evidence: validateEvidence(parsed?.evidence, evidence),
       }
 
@@ -529,20 +562,24 @@ async function synthesizeStreamingPreview(
   locale: Locale,
   seed: string,
   send: (obj: object) => void,
+  deadline: number,
   userId: string | null = null
 ): Promise<{ synthesis: string; teaser: string }> {
-  const stream = await openai.chat.completions.create({
-    model: "gpt-4o",
-    temperature: 0.85,
-    max_tokens: 900,
-    presence_penalty: 0.3,
-    stream: true,
-    stream_options: { include_usage: true },
-    messages: [
-      { role: "system", content: SYNTHESIS_SYSTEM_MESSAGE[locale] },
-      { role: "user", content: synthesisPrompt(question, results, locale, seed) },
-    ],
-  })
+  const stream = await openai.chat.completions.create(
+    {
+      model: "gpt-4o",
+      temperature: 0.85,
+      max_tokens: 900,
+      presence_penalty: 0.3,
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [
+        { role: "system", content: SYNTHESIS_SYSTEM_MESSAGE[locale] },
+        { role: "user", content: synthesisPrompt(question, results, locale, seed) },
+      ],
+    },
+    { timeout: Math.max(8_000, deadline - Date.now()), maxRetries: 0 }
+  )
 
   let acc = ""
   let sent = 0 // quantos caracteres já foram ao navegador
@@ -581,7 +618,7 @@ async function synthesizeStreamingPreview(
 
   await recordAiUsage({ operation: "synthesis", model, usage, seed, userId })
   const synthesis = acc.trim()
-  if (!synthesis) throw new Error("síntese vazia")
+  if (!synthesis) throw new ConsultaError("internal", "síntese vazia")
   if (!locked) {
     // síntese curta: o teaser é o que a regra final decidir (talvez tudo)
     const cut = teaserCut(synthesis)
@@ -593,22 +630,26 @@ async function synthesizeStreamingPreview(
 /** Abaixo disto o texto ainda vai ao navegador em tempo real (< TEASER_MIN). */
 const TEASER_SAFE_STREAM = 80
 
+/** Código estável de erro para o cliente; nada da OpenAI chega ao navegador. */
+function codeOf(err: unknown): ConsultaErrorCode {
+  if (err instanceof ConsultaError) return err.code
+  return "internal"
+}
+
 export async function POST(req: Request) {
+  const deadline = Date.now() + TOTAL_BUDGET_MS
   const body = await req.json().catch(() => ({}))
   const question = String(body?.question || "").trim()
   const locale = resolveLocale(body?.locale)
   const labels = getDictionary(locale).oracles
 
   if (!question) {
-    return NextResponse.json({ error: "Pergunta ausente." }, { status: 400 })
+    return NextResponse.json({ code: "no_question" }, { status: 400 })
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY não configurada no .env.local" },
-      { status: 500 }
-    )
+    return NextResponse.json({ code: "internal" }, { status: 500 })
   }
 
   // ------------------------------------------------------------------------
@@ -638,6 +679,10 @@ export async function POST(req: Request) {
 
   const seed = newSeed()
   const consume = await consumeReading({ userId, visitorId, seed, locale })
+
+  // limpeza das leituras guardadas só por necessidade técnica, fora da janela
+  // de recuperação; roda em paralelo e nunca atrasa a consulta
+  void purgeExpiredTechnicalResults().catch(() => {})
 
   // ------------------------------------------------------------------------
   // PREVIEW PAYWALL. Sem plano pago e sem cota: a tiragem acontece mesmo
@@ -696,12 +741,17 @@ export async function POST(req: Request) {
       }
     }
     if (reserved !== "reserved") {
-      return NextResponse.json({ error: "Consulta temporariamente indisponível.", code: "billing_unavailable" }, { status: 503 })
+      return NextResponse.json({ code: "billing_unavailable" }, { status: 503 })
     }
 
     const stream = new ReadableStream({
       async start(controller) {
-        const send = (obj: object) => controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
+        let closed = false
+        const send = (obj: object) => {
+          if (closed) return
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
+        }
+        const beat = setInterval(() => send({ type: "ping" }), HEARTBEAT_MS)
         try {
           send({ type: "start", locale, preview: true })
 
@@ -709,7 +759,6 @@ export async function POST(req: Request) {
           if (isHighRisk) {
             await failPreview(seed)
             send({ type: "complete", question, seed: "", locale, synthesis: SAFETY_RESPONSE[locale], oracles: null, isSafetyOverride: true })
-            controller.close()
             return
           }
 
@@ -718,25 +767,26 @@ export async function POST(req: Request) {
           const draws = drawAll(seed)
           const rendered = Object.fromEntries(ORACLE_KEYS.map((k) => [k, renderDraw(draws[k], locale)])) as Record<OracleKey, RenderedDraw>
           send({ type: "stage", stage: "oracles" })
-          const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, userId)
+          const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, deadline, userId)
           send({ type: "stage", stage: "synthesis" })
           // A síntese começa a ser escrita ao vivo; no corte do teaser o
           // navegador recebe "preview_locked" e o resto fica só aqui.
-          const { synthesis } = await synthesizeStreamingPreview(openai, question, results, locale, seed, send, userId)
+          const { synthesis } = await synthesizeStreamingPreview(openai, question, results, locale, seed, send, deadline, userId)
 
           const stored = await storePreviewResult({ seed, userId, visitorId, question, locale, oracles: results, synthesis })
-          if (!stored) throw new Error("não foi possível guardar a leitura")
+          if (!stored) throw new ConsultaError("storage_failed")
 
           await logEvent("preview_created", { userId, visitorId, seed })
           // leitura completa salva: só o aviso, sem conteúdo
           send({ type: "preview_ready", seed })
-          controller.close()
         } catch (err: any) {
           // falha técnica: libera a vaga, não há paywall falso
+          console.error("[consultas] preview", seed, err)
           await failPreview(seed).catch(() => {})
-          try {
-            send({ type: "error", message: String(err?.message || err) })
-          } catch {}
+          send({ type: "error", code: codeOf(err) })
+        } finally {
+          clearInterval(beat)
+          closed = true
           controller.close()
         }
       },
@@ -752,8 +802,14 @@ export async function POST(req: Request) {
   // ------------------------------------------------------------------------
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (obj: object) =>
+      let closed = false
+      const send = (obj: object) => {
+        if (closed) return
         controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
+      }
+      // sinal de vida enquanto o modelo trabalha: sem isso, 20 a 40 s de
+      // silêncio derrubam a conexão em redes móveis e proxies
+      const beat = setInterval(() => send({ type: "ping" }), HEARTBEAT_MS)
 
       try {
         // Primeiro byte imediato: mantém a conexão de streaming aberta
@@ -773,7 +829,6 @@ export async function POST(req: Request) {
             oracles: null,
             isSafetyOverride: true,
           })
-          controller.close()
           return
         }
 
@@ -799,22 +854,29 @@ export async function POST(req: Request) {
         })
 
         // 2) INTERPRETAÇÃO. Cada oráculo vai ao modelo separadamente.
-        const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, userId)
+        const results = await interpretAll(openai, question, seed, draws, rendered, locale, labels, deadline, userId)
 
-        // Tiragem completa: agora conta na cota e libera a síntese para este seed.
+        // 3) PERSISTÊNCIA. Os cinco resultados completos ficam no servidor
+        //    ANTES da síntese: é daqui que /consultas/sintese vai lê-los, e é
+        //    isto que permite tentar a síntese de novo sem refazer nada.
+        const persisted = await storeReadingResult({ seed, userId, visitorId, question, locale, oracles: results as any })
+        if (!persisted) throw new ConsultaError("storage_failed")
+
+        // Tiragem completa e guardada: agora conta na cota.
         await completeReading(seed)
 
         send({ type: "oracles", question, seed, locale, oracles: results })
 
         // A síntese é pedida pelo cliente em seguida, via POST /consultas/sintese.
         send({ type: "done" })
-        controller.close()
       } catch (err: any) {
         // falha do servidor não consome a cota do usuário
+        console.error("[consultas]", seed, err)
         await failReading(seed).catch(() => {})
-        try {
-          send({ type: "error", message: String(err?.message || err) })
-        } catch {}
+        send({ type: "error", code: codeOf(err) })
+      } finally {
+        clearInterval(beat)
+        closed = true
         controller.close()
       }
     },

@@ -18,6 +18,7 @@
 
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
 import { getUserEntitlement, STARTED_WINDOW_MS, type Entitlement } from "./entitlement"
+import { SYNTHESIS_LOCK_MS } from "./results"
 import { TRIAL_KINDS, type UsageKind } from "./plans"
 
 export type ConsumeCode = "limit_reached" | "plan_required" | "trial_used" | "billing_unavailable"
@@ -182,33 +183,54 @@ export async function failReading(seed: string): Promise<void> {
 }
 
 /**
- * Libera a síntese para um seed concluído do mesmo dono (conta ou cookie de
- * visitante), uma única vez. Devolve false se o seed não existe, é de outra
- * pessoa, não foi concluído ou já teve síntese.
+ * Reserva a vaga de geração da síntese de uma tiragem concluída.
+ *
+ * A dona da leitura já foi verificada antes (loadOwnedReading, por seed). Aqui
+ * a regra é só de concorrência: uma geração por vez, e uma tentativa anterior
+ * que morreu no meio libera a vaga sozinha depois de SYNTHESIS_LOCK_MS, para
+ * que a pessoa possa tentar de novo — sem novo sorteio, sem reinterpretação e
+ * sem consumir outra leitura.
  */
-export async function claimSynthesis(seed: string, userId: string | null, visitorId: string | null): Promise<boolean> {
-  if (!hasAdminClient()) return !billingUnavailableIsFatal()
-  const admin = createAdminClient()
-  let q = admin
+/** Trava equivalente em memória, só quando não há banco (desenvolvimento). */
+const devSynthesisLocks: Map<string, number> =
+  ((globalThis as { __multioraculoDevLocks?: Map<string, number> }).__multioraculoDevLocks ??= new Map())
+
+export async function claimSynthesisSlot(seed: string): Promise<boolean> {
+  if (!hasAdminClient()) {
+    if (billingUnavailableIsFatal()) return false
+    const now = Date.now()
+    const at = devSynthesisLocks.get(seed) ?? 0
+    if (now - at < SYNTHESIS_LOCK_MS) return false
+    devSynthesisLocks.set(seed, now)
+    return true
+  }
+  const stale = new Date(Date.now() - SYNTHESIS_LOCK_MS).toISOString()
+  const { data, error } = await createAdminClient()
     .from("reading_usage")
     .update({ synthesized_at: new Date().toISOString() })
     .eq("seed", seed)
     .eq("kind", "reading")
     .eq("status", "completed")
-    .is("synthesized_at", null)
-
-  // dono: a conta, ou (se a tiragem foi anônima e ainda não atribuída) o cookie
-  if (userId && visitorId) q = q.or(`user_id.eq.${userId},and(user_id.is.null,visitor_id.eq.${visitorId})`)
-  else if (userId) q = q.eq("user_id", userId)
-  else if (visitorId) q = q.is("user_id", null).eq("visitor_id", visitorId)
-  else return false
-
-  const { data, error } = await q.select("id")
+    .or(`synthesized_at.is.null,synthesized_at.lt.${stale}`)
+    .select("id")
   if (error) {
-    console.error("[billing] claimSynthesis:", error.message)
+    console.error("[billing] claimSynthesisSlot:", error.message)
     return false
   }
   return Array.isArray(data) && data.length === 1
+}
+
+/** Devolve a vaga quando a geração falha, para permitir nova tentativa. */
+export async function releaseSynthesisSlot(seed: string): Promise<void> {
+  if (!hasAdminClient()) {
+    devSynthesisLocks.delete(seed)
+    return
+  }
+  const { error } = await createAdminClient()
+    .from("reading_usage")
+    .update({ synthesized_at: null })
+    .eq("seed", seed)
+  if (error) console.warn("[billing] releaseSynthesisSlot:", error.message)
 }
 
 /** Lê o cookie de visitante de um jar do Next (cookies()). */
