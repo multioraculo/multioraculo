@@ -117,14 +117,14 @@ export const pt = {
   },
 
   hero: {
-    badge: "Síntese Multioráculo",
     titleEmphasis: "A singularidade",
     titleRest: "te trouxe",
     titleLine2: "até aqui.",
-    subtitle:
-      "A mesma pergunta, vista por vários ângulos. Tarô, I Ching, Runas, Búzios e Cartas Lenormand. Cada oráculo revela uma parte do mapa. Juntos, eles mostram o caminho inteiro.",
-    alsoIndividual: "Você também pode explorar cada oráculo individualmente e ler sua interpretação completa.",
-    prompt: "Está pronta para começar? Escreva sua pergunta.",
+    tagline: "Uma pergunta. Cinco oráculos. Uma síntese.",
+    subtitle: "As cinco leituras são feitas separadamente e depois colocadas em relação.",
+    lineup: "Tarô, I Ching, Runas, Búzios e Lenormand, reunidos em uma única leitura.",
+    alsoIndividual: "Você também pode abrir cada oráculo e ler sua interpretação completa.",
+    prompt: "Escreva sua pergunta.",
     placeholders: [
       "Onde estou confundindo desejo com destino?",
       "O que a vida já colocou diante de mim que ainda não vi?",

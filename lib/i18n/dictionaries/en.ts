@@ -115,14 +115,14 @@ export const en: Dictionary = {
   },
 
   hero: {
-    badge: "Multi-Oracle Synthesis",
     titleEmphasis: "Singularity",
     titleRest: "brought you",
     titleLine2: "this far.",
-    subtitle:
-      "The same question, seen from several angles. Tarot, I Ching, Runes, Búzios and Lenormand cards. Each oracle reveals one part of the map. Together, they show the whole path.",
-    alsoIndividual: "You can also explore each oracle on its own and read its full interpretation.",
-    prompt: "Ready to begin? Write your question.",
+    tagline: "One question. Five oracles. One synthesis.",
+    subtitle: "The five readings are made separately and then placed in relation to one another.",
+    lineup: "Tarot, I Ching, Runes, Búzios and Lenormand, brought together in a single reading.",
+    alsoIndividual: "You can also open each oracle and read its full interpretation.",
+    prompt: "Write your question.",
     placeholders: [
       "Where am I confusing desire with destiny?",
       "What has life already placed before me that I still haven't seen?",
