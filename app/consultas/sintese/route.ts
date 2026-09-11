@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { synthesisPrompt, type SynthesisInput } from "@/lib/oracles/synthesis"
+import { createSynthesisFilter, normalizeSynthesisText, synthesisPrompt, type SynthesisInput } from "@/lib/oracles/synthesis"
 import { SYNTHESIS_SYSTEM_MESSAGE } from "@/lib/oracles/language"
 import { resolveLocale } from "@/lib/i18n/config"
 import { cookies } from "next/headers"
@@ -114,18 +114,28 @@ export async function POST(req: Request) {
         let usage: TokenUsage = null
         let model = "gpt-4o"
         let acc = ""
+        // o marcador de parágrafo vira "\n\n" aqui e nunca chega ao navegador
+        const filter = createSynthesisFilter()
         for await (const chunk of synthStream) {
           if (chunk.usage) usage = chunk.usage
           if (chunk.model) model = chunk.model
           const delta = chunk.choices[0]?.delta?.content || ""
           if (delta) {
-            acc += delta
-            send({ type: "delta", text: delta })
+            const text = filter.push(delta)
+            if (text) {
+              acc += text
+              send({ type: "delta", text })
+            }
           }
+        }
+        const tail = filter.flush()
+        if (tail) {
+          acc += tail
+          send({ type: "delta", text: tail })
         }
         await recordAiUsage({ operation: "synthesis", model, usage, seed, userId: user?.id ?? null })
 
-        const synthesis = acc.trim()
+        const synthesis = normalizeSynthesisText(acc)
         if (!synthesis) throw new Error("síntese vazia")
         await storeSynthesis(seed, synthesis)
         ok = true

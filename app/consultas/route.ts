@@ -24,7 +24,7 @@ import { failPreview, findPendingPreview, reservePreview, storePreviewResult, te
 import { purgeExpiredTechnicalResults, storeReadingResult } from "@/lib/billing/results"
 import { logEvent } from "@/lib/billing/events"
 import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
-import { synthesisPrompt } from "@/lib/oracles/synthesis"
+import { createSynthesisFilter, normalizeSynthesisText, synthesisPrompt } from "@/lib/oracles/synthesis"
 import { PENDING_READING_COOKIE, serializePendingReadingCookie } from "@/lib/billing/visitor"
 import { VISITOR_COOKIE, isVisitorId, newVisitorId, serializeVisitorCookie } from "@/lib/billing/visitor"
 
@@ -357,6 +357,9 @@ Regras importantes:
 ${evidenceRule}
 7) FIDELIDADE À TIRAGEM: Seja fiel ao resultado real dos símbolos. Não suavize indicações negativas, não force otimismo, não neutralize tensão, sombra, ruptura ou dificuldade revelada pelo campo simbólico. Se a tradição aponta conflito, perigo, contradição ou verdade dolorosa, expresse isso com clareza e responsabilidade. Conforto fácil é uma traição à tiragem.
 8) PROPORÇÃO: a intensidade do texto acompanha a intensidade real do símbolo naquela posição, para cima e para baixo. Não suavize o que é difícil, mas também não dramatize além do que o símbolo e a tradição sustentam: não transforme atrito em catástrofe, hesitação em ruptura, nem lentidão em urgência. Um símbolo ameno é lido como ameno; um símbolo grave, como grave.
+9) CONCRETUDE: Prefira descrever concretamente a dinâmica indicada pelos símbolos a resumir a leitura em abstrações genéricas. Quando houver mudança, diga o que perde força, o que ganha espaço, o que se reorganiza ou o que permanece. Termos abstratos só devem aparecer quando acrescentarem significado real sustentado pelo símbolo ou pela referência. Esta regra é de linguagem, nunca de conteúdo: não altera o significado tradicional de nenhum símbolo, não suaviza símbolo difícil, não escurece símbolo favorável e não remove conceito da tradição. Se a tradição ou a referência usa um termo próprio, use-o. Fidelidade ao símbolo vem antes da preferência de linguagem.
+10) DESCREVER, NÃO PRESCREVER: a interpretação descreve o que os símbolos, suas posições e as referências indicam, e nunca converte essa indicação em instrução de comportamento para o consulente. Onde a tradição aponta cautela, nomeie o que está em jogo naquele símbolo: risco, hesitação, contenção, instabilidade, uma decisão em aberto, o que for. Regra de forma, não de conteúdo: advertência, perigo, conflito, perda, resistência e necessidade simbólica de decidir continuam aparecendo com a mesma força, apenas ditos como o que há na situação, e não como ordem a quem pergunta.
+11) A PERGUNTA CONTEXTUALIZA E NÃO PROVA: ela informa a área da vida e o objeto da consulta, e é por isso que você a lê. Mas nada que ela dê por certo vira fato sem sustentação independente dos símbolos sorteados: perguntar não estabelece que aquilo ocorreu, ocorre ou vai ocorrer. Verifique o que os símbolos sustentam sozinhos. Se não sustentam o pressuposto, não o confirme por associação; se sustentam algo próximo mas diferente, descreva concretamente o que aparece em vez de reaproveitar a palavra da pergunta.
 
 ${languageRule(locale)}
 
@@ -597,10 +600,15 @@ async function synthesizeStreamingPreview(
 
   let usage: TokenUsage = null
   let model = "gpt-4o"
+  // o marcador de parágrafo vira quebra antes de qualquer coisa: o teaser e o
+  // texto guardado já saem prontos, e nada do andaime chega ao navegador
+  const filter = createSynthesisFilter()
   for await (const chunk of stream) {
     if (chunk.usage) usage = chunk.usage
     if (chunk.model) model = chunk.model
-    const delta = chunk.choices[0]?.delta?.content || ""
+    const raw = chunk.choices[0]?.delta?.content || ""
+    if (!raw) continue
+    const delta = filter.push(raw)
     if (!delta) continue
     acc += delta
     if (locked) continue // consome sem repassar
@@ -616,8 +624,9 @@ async function synthesizeStreamingPreview(
     // entre o mínimo e o corte: segura no servidor até decidir o corte
   }
 
+  acc += filter.flush()
   await recordAiUsage({ operation: "synthesis", model, usage, seed, userId })
-  const synthesis = acc.trim()
+  const synthesis = normalizeSynthesisText(acc)
   if (!synthesis) throw new ConsultaError("internal", "síntese vazia")
   if (!locked) {
     // síntese curta: o teaser é o que a regra final decidir (talvez tudo)
