@@ -123,6 +123,7 @@ export const pt = {
     titleLine2: "até aqui.",
     subtitle:
       "A mesma pergunta, vista por vários ângulos. Tarô, I Ching, Runas, Búzios e Cartas Lenormand. Cada oráculo revela uma parte do mapa. Juntos, eles mostram o caminho inteiro.",
+    alsoIndividual: "Você também pode explorar cada oráculo individualmente e ler sua interpretação completa.",
     prompt: "Está pronta para começar? Escreva sua pergunta.",
     placeholders: [
       "Onde estou confundindo desejo com destino?",

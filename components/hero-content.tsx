@@ -528,8 +528,12 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <span className="font-light tracking-tight text-white">{dict.hero.titleLine2}</span>
             </h1>
 
-            <p className="text-base font-light text-white/80 mb-2 sm:mb-3 leading-relaxed">
+            <p className="text-base font-light text-white/80 mb-1.5 sm:mb-2 leading-relaxed">
               {dict.hero.subtitle}
+            </p>
+
+            <p className="text-[11px] sm:text-xs font-light text-white/45 mb-2 sm:mb-3 leading-snug max-w-md">
+              {dict.hero.alsoIndividual}
             </p>
 
             <div className="mb-3 sm:mb-4">

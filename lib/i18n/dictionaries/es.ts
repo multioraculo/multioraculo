@@ -121,6 +121,7 @@ export const es: Dictionary = {
     titleLine2: "hasta aquí.",
     subtitle:
       "La misma pregunta, vista desde varios ángulos. Tarot, I Ching, Runas, Búzios y cartas Lenormand. Cada oráculo revela una parte del mapa. Juntos, muestran el camino entero.",
+    alsoIndividual: "También puedes explorar cada oráculo por separado y leer su interpretación completa.",
     prompt: "¿Lista para empezar? Escribe tu pregunta.",
     placeholders: [
       "¿Dónde estoy confundiendo deseo con destino?",

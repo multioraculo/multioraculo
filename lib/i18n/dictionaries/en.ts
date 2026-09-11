@@ -121,6 +121,7 @@ export const en: Dictionary = {
     titleLine2: "this far.",
     subtitle:
       "The same question, seen from several angles. Tarot, I Ching, Runes, Búzios and Lenormand cards. Each oracle reveals one part of the map. Together, they show the whole path.",
+    alsoIndividual: "You can also explore each oracle on its own and read its full interpretation.",
     prompt: "Ready to begin? Write your question.",
     placeholders: [
       "Where am I confusing desire with destiny?",
