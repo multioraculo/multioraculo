@@ -156,9 +156,6 @@ export const es: Dictionary = {
 
   results: {
     yourQuestion: "Tu pregunta",
-    stageDraw: "• está realizando tu tirada",
-    stageOracles: "• está leyendo cada oráculo",
-    stageSynthesis: "• está escribiendo tu respuesta",
     yourAnswer: "Tu respuesta",
     yourAnswerHint: "• Esta es tu respuesta",
     readByOracle: "Leer por oráculo",

@@ -158,9 +158,6 @@ export const pt = {
 
   results: {
     yourQuestion: "Sua pergunta",
-    stageDraw: "• está realizando a sua tiragem",
-    stageOracles: "• está lendo cada oráculo",
-    stageSynthesis: "• está escrevendo a sua resposta",
     yourAnswer: "Sua resposta",
     yourAnswerHint: "• Esta é a sua resposta",
     readByOracle: "Ler por oráculo",

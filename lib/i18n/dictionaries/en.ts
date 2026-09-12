@@ -156,9 +156,6 @@ export const en: Dictionary = {
 
   results: {
     yourQuestion: "Your question",
-    stageDraw: "• is casting your reading",
-    stageOracles: "• is reading each oracle",
-    stageSynthesis: "• is writing your answer",
     yourAnswer: "Your answer",
     yourAnswerHint: "• This is your answer",
     readByOracle: "Read by oracle",

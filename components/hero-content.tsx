@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import ReadingProgress, { useReadingProgress } from "@/components/reading-progress"
 import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
 import IChingHexagram from "@/components/iching-hexagram"
@@ -39,6 +40,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [isLoading, setIsLoading] = useState(false)
   // Etapa atual da consulta, mostrada no lugar da síntese até o texto chegar
   const [stage, setStage] = useState<"draw" | "oracles" | "synthesis" | "idle">("idle")
+  // barra de luz: uma progressão só, da pergunta enviada até o texto final
+  const progresso = useReadingProgress()
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamError, setStreamError] = useState<string | null>(null)
   // seed de uma leitura já guardada cuja síntese falhou: permite tentar de novo
@@ -188,9 +191,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ seed: readingSeedValue, locale }),
     })
+    let escritos = 0
     await readNdjson(res, (event) => {
-      if (event.type === "delta") {
+      if (event.type === "start") {
+        progresso.marcar("sinteseAbriu", "sintese")
+      } else if (event.type === "delta") {
         setSynthesis((prev) => (prev ?? "") + event.text)
+        escritos += String(event.text ?? "").length
+        progresso.porTexto(escritos)
       } else if (event.type === "error") {
         const e: any = new Error(event.code || "internal")
         e.code = event.code
@@ -206,11 +214,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     setSynthesis(null)
     setIsStreaming(true)
     setStage("synthesis")
+    progresso.marcar("oraculos", "sintese")
     try {
       await requestSynthesis(synthRetrySeed)
       setSynthRetrySeed(null)
+      progresso.concluir()
     } catch (err: any) {
       console.error(err)
+      progresso.cancelar()
       setStreamError(errorText(err?.code))
     } finally {
       setIsStreaming(false)
@@ -220,6 +231,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
 
   const handleSubmit = async () => {
     if (!question.trim()) return
+    progresso.iniciar()
     setIsLoading(true)
     setIsStreaming(true)
     setStage("draw")
@@ -247,11 +259,17 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       })
 
       await readNdjson(res, (event) => {
-        if (event.type === "draw") {
+        if (event.type === "start") {
+          // primeiro byte: a conexão abriu e o classificador já está rodando
+          progresso.marcar("conexao", "conexao")
+        } else if (event.type === "draw") {
           // Símbolos sorteados chegam antes da interpretação: já dá para ler a tiragem
           seed = event.seed || ""
           setReadingSeed(seed)
           setStage("oracles")
+          // sorteio pronto; daqui até as cinco interpretações não há evento
+          // por oráculo, então a barra caminha sozinha rumo ao teto do trecho
+          progresso.marcar("sorteio", "sorteio")
           setOracles(
             Object.fromEntries(
               Object.entries(event.draws ?? {}).map(([k, d]: [string, any]) => [
@@ -270,11 +288,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
         } else if (event.type === "stage") {
           // modo preview: o servidor avisa em que etapa está, sem enviar símbolos
           if (event.stage === "oracles" || event.stage === "synthesis") setStage(event.stage)
+          if (event.stage === "oracles") progresso.marcar("sorteio", "sorteio")
+          if (event.stage === "synthesis") progresso.marcar("oraculos", "sintese")
         } else if (event.type === "delta") {
           // modo preview: a síntese começa a ser escrita ao vivo, até o corte
           setSynthesis((prev) => (prev ?? "") + event.text)
           setIsLoading(false)
         } else if (event.type === "preview_locked") {
+          progresso.concluir()
           // corte do teaser: o vidro sobe; o restante fica só no servidor
           previewLocked = true
           setPreview({ seed: String(event.seed || ""), teaser: String(event.teaser || ""), ready: false })
@@ -286,11 +307,14 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
           finalOracles = event.oracles ?? null
           seed = event.seed || seed
           setOracles(finalOracles)
+          // as cinco interpretações chegaram e já estão guardadas no servidor
+          progresso.marcar("oraculos", "oraculos")
           setIsLoading(false)
           setStage("synthesis")
         } else if (event.type === "complete") {
           // Safety-override shortcut (no oracle data)
           safetyOverride = true
+          progresso.concluir()
           setSynthesis(event.synthesis ?? null)
           setOracles(event.oracles ?? null)
           setIsLoading(false)
@@ -315,13 +339,16 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
       // oráculos continuam na tela e a pessoa pode tentar de novo.
       try {
         await requestSynthesis(seed)
+        progresso.concluir()
       } catch (err: any) {
         console.error(err)
+        progresso.cancelar()
         setStreamError(errorText(err?.code))
         setSynthRetrySeed(seed)
       }
     } catch (err: any) {
       console.error(err)
+      progresso.cancelar()
       // Bloqueios de plano vêm do servidor com um código; o texto é do dicionário.
       if (err?.code === "limit_reached") {
         const limit = err.meta?.limit ?? ""
@@ -594,20 +621,17 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="flex items-center gap-2 mb-4">
                 {isStreaming && !synthesis ? (
-                  <>
-                    <h3 className="text-white text-lg">{dict.common.appName}</h3>
-                    <span className="text-white/50 text-xs">
-                      {stage === "draw" && dict.results.stageDraw}
-                      {stage === "oracles" && dict.results.stageOracles}
-                      {stage === "synthesis" && dict.results.stageSynthesis}
-                    </span>
-                  </>
+                  <h3 className="text-white text-lg">{dict.common.appName}</h3>
                 ) : (
                   <>
                     <h3 className="text-white text-lg">{dict.results.yourAnswer}</h3>
                     <span className="text-white/50 text-xs">{dict.results.yourAnswerHint}</span>
                   </>
                 )}
+              </div>
+              {/* a barra é o único aviso de que a leitura está sendo feita */}
+              <div className="mb-4 -mt-1">
+                <ReadingProgress progresso={progresso} />
               </div>
               <div className="text-white/80 text-sm leading-relaxed">
                 {preview ? (
@@ -650,12 +674,6 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                         {dict.common.login}
                       </button>
                     )}
-                  </div>
-                ) : isStreaming ? (
-                  <div className="flex items-center gap-2 py-2" aria-live="polite">
-                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse" />
-                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse [animation-delay:200ms]" />
-                    <span className="w-2 h-2 rounded-full bg-white/50 animate-pulse [animation-delay:400ms]" />
                   </div>
                 ) : null}
               </div>
