@@ -1,7 +1,7 @@
 "use client"
 
 import { useI18n } from "@/components/i18n-provider"
-import { TAROT_CREDIT, tarotAssetPath, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { TAROT_CREDIT, tarotArtSrc, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -70,18 +70,25 @@ function stripReversed(name: string, word: string): string {
   return name.replace(re, "")
 }
 
-function Capsule({ card, label, width }: { card: TarotCardRef; label: string; width?: number }) {
+/**
+ * A carta desenhada pela interface: lâmina translúcida, filetes, número no alto
+ * e nome embaixo, na mesma linguagem do Lenormand. Da imagem vem só a gravura,
+ * com fundo transparente, e ela preenche a janela inteira.
+ *
+ * Número e nome vêm do motor, então acompanham o idioma; a carta impressa não
+ * entra com sua tipografia em francês.
+ */
+function Capsule({ card, name, label, width }: { card: TarotCardRef; name: string; label: string; width?: number }) {
+  const numeral = tarotNumeral(card)
   return (
-    <div className="tc-capsule" style={width ? { width } : undefined}>
-      <img
-        className="tc-art"
-        src={tarotAssetPath(card.id)}
-        alt=""
-        width={205}
-        height={397}
-        loading="lazy"
-        draggable={false}
-      />
+    <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: `${width ?? 150}px` }}>
+      {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
+      <span className="tk-rule tk-rule-top" aria-hidden="true" />
+      <div className="tk-art">
+        <img src={tarotArtSrc(card.id)} alt="" width={260} height={430} loading="lazy" draggable={false} />
+      </div>
+      <span className="tk-rule tk-rule-bot" aria-hidden="true" />
+      <span className="tk-nome" aria-hidden="true">{name}</span>
       <span className="sr-only">{label}</span>
     </div>
   )
@@ -130,7 +137,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                     } as React.CSSProperties
                   }
                 >
-                  <Capsule card={e.card} label={e.label} width={CARD_W} />
+                  <Capsule card={e.card} name={e.name} label={e.label} width={CARD_W} />
                 </div>
                 </button>
                 <span className={`tc-num ${animate ? "tc-num-enter" : ""}`} style={{ ...badge, animationDelay: animate ? `${i * STEP_MS + 420}ms` : undefined }} aria-hidden="true">
@@ -165,7 +172,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                   } as React.CSSProperties
                 }
               >
-                <Capsule card={e.card} label={e.label} />
+                <Capsule card={e.card} name={e.name} label={e.label} width={150} />
               </div>
               </button>
               <span className="text-white/90 text-xs font-medium leading-tight mt-2">{e.name}</span>
@@ -180,13 +187,13 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
         items={entries.map((e) => ({ position: e.position, name: e.name, orientation: e.orientation, meaning: e.meaning }))}
         renderFront={(i) => (
           <div style={{ transform: entries[i].card.reversed ? "rotate(180deg)" : undefined }}>
-            <Capsule card={entries[i].card} label={entries[i].label} />
+            <Capsule card={entries[i].card} name={entries[i].name} label={entries[i].label} width={300} />
           </div>
         )}
         onAdvance={focus.advance}
         onClose={focus.close}
         width="min(78vw, 300px, 31vh)"
-        aspect="217 / 409"
+        aspect="92 / 178"
         live={animate}
       />
 

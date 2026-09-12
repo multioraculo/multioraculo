@@ -38,6 +38,36 @@ export function tarotAssetPath(cardIdOrIndex: string | number): string {
   return `${TAROT_ASSET_BASE}/${id}.jpg`
 }
 
+/**
+ * Gravura recortada com fundo transparente, ingerida das folhas de referência
+ * com `scripts/tarot-ingest.mjs`. A carta em si é desenhada pela interface: a
+ * lâmina, o filete, o número e o nome. Da imagem vem só a figura, sem a
+ * cercadura, sem o numeral e sem a faixa em francês.
+ *
+ * Todas as 78 saem na mesma tela, então a figura preenche a janela da lâmina
+ * sem sobra. A janela em CSS tem a mesma proporção (ver `.tk-art`).
+ */
+export const TAROT_ART_BASE = "/tarot/art"
+
+export function tarotArtSrc(cardIdOrIndex: string | number): string {
+  const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
+  return `${TAROT_ART_BASE}/${id}.png`
+}
+
+const ROMANOS = [
+  "", "I", "II", "III", "IIII", "V", "VI", "VII", "VIII", "VIIII", "X",
+  "XI", "XII", "XIII", "XIIII", "XV", "XVI", "XVII", "XVIII", "XVIIII", "XX", "XXI",
+]
+
+/**
+ * Numeral que a lâmina escreve no alto, na forma de Marselha (IIII, VIIII).
+ * O Louco não tem número e as figuras da corte também não, como no impresso.
+ */
+export function tarotNumeral(card: TarotCardRef): string {
+  if (card.arcana === "major") return card.number === 0 ? "" : ROMANOS[card.number] ?? ""
+  return card.rank <= 10 ? ROMANOS[card.rank] ?? "" : ""
+}
+
 /** Estrutura enviada ao navegador para cada carta da tiragem. */
 export function tarotCardRef(index: number, reversed: boolean): TarotCardRef {
   const id = tarotCardId(index)
