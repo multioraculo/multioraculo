@@ -160,6 +160,7 @@ export const pt = {
     yourQuestion: "Sua pergunta",
     yourAnswer: "Sua resposta",
     yourAnswerHint: "• Esta é a sua resposta",
+    readingInProgress: "• está realizando a sua tiragem",
     readByOracle: "Ler por oráculo",
     drawLabel: "Tiragem",
     traditionalReading: "Leitura tradicional",

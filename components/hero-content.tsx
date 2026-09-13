@@ -621,7 +621,12 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
               <div className="flex items-center gap-2 mb-4">
                 {isStreaming && !synthesis ? (
-                  <h3 className="text-white text-lg">{dict.common.appName}</h3>
+                  <>
+                    <h3 className="text-white text-lg">{dict.common.appName}</h3>
+                    {/* uma frase só, do começo ao fim: avisa que a tiragem está
+                        sendo feita, sem virar etapa que troca de texto */}
+                    <span className="text-white/50 text-xs">{dict.results.readingInProgress}</span>
+                  </>
                 ) : (
                   <>
                     <h3 className="text-white text-lg">{dict.results.yourAnswer}</h3>
@@ -629,7 +634,8 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                   </>
                 )}
               </div>
-              {/* a barra é o único aviso de que a leitura está sendo feita */}
+              {/* a barra mostra o quanto já andou; o aviso acima diz o que está
+                  acontecendo. Nenhum dos dois troca de mensagem no caminho. */}
               <div className="mb-4 -mt-1">
                 <ReadingProgress progresso={progresso} />
               </div>

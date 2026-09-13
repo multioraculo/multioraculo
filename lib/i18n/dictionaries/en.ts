@@ -158,6 +158,7 @@ export const en: Dictionary = {
     yourQuestion: "Your question",
     yourAnswer: "Your answer",
     yourAnswerHint: "• This is your answer",
+    readingInProgress: "• is casting your reading",
     readByOracle: "Read by oracle",
     drawLabel: "Draw",
     traditionalReading: "Traditional reading",

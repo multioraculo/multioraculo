@@ -298,7 +298,9 @@
 .tk-art { position: absolute; left: 3%; right: 3%; top: 9.2%; bottom: 10.4%; z-index: 2; }
 .tk-art img {
   width: 100%; height: 100%; display: block;
-  filter: drop-shadow(0 0 0.6px rgba(255,240,220,0.28));
+  /* mesmo ajuste do Lenormand, um ponto mais contido: a gravura do Tarô já
+     tem mais massa de traço e estoura antes */
+  filter: brightness(1.16) contrast(1.12) saturate(1.05) drop-shadow(0 0 0.6px rgba(255,240,220,0.32));
   user-select: none;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -383,7 +385,12 @@
 }
 /* janela da arte: a mesma que o script de ingestão recorta (x 8–92 %, y 14–85 %) */
 .ln-art { position: absolute; left: 8%; right: 8%; top: 14%; height: 71%; z-index: 2; }
-.ln-art img { width: 100%; height: 100%; object-fit: contain; display: block; filter: drop-shadow(0 0 0.6px rgba(255,240,220,0.30)); }
+/* a gravura marfim sobre a lâmina violeta ficava apagada: brilho e contraste
+   leves devolvem o traço sem clarear o ouro nem estourar o marfim */
+.ln-art img {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+  filter: brightness(1.2) contrast(1.14) saturate(1.06) drop-shadow(0 0 0.6px rgba(255,240,220,0.34));
+}
 .ln-name {
   position: absolute; bottom: 4.5%; left: 0; right: 0; text-align: center; z-index: 2;
   font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif; font-style: italic; font-size: calc(var(--ln-cw) * 0.105); line-height: 1;

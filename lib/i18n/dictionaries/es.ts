@@ -158,6 +158,7 @@ export const es: Dictionary = {
     yourQuestion: "Tu pregunta",
     yourAnswer: "Tu respuesta",
     yourAnswerHint: "• Esta es tu respuesta",
+    readingInProgress: "• está realizando tu tirada",
     readByOracle: "Leer por oráculo",
     drawLabel: "Tirada",
     traditionalReading: "Lectura tradicional",
