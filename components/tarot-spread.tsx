@@ -1,7 +1,7 @@
 "use client"
 
 import { useI18n } from "@/components/i18n-provider"
-import { TAROT_CREDIT, tarotArtSrc, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { tarotArtSrc, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -197,16 +197,6 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
         live={animate}
       />
 
-      <p className="text-white/35 text-[10px] text-center mt-4 leading-relaxed">
-        {t.credit}{" "}
-        <a href={TAROT_CREDIT.url} target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 hover:text-white/60">
-          {TAROT_CREDIT.deck}, {TAROT_CREDIT.author}
-        </a>{" "}
-        ·{" "}
-        <a href={TAROT_CREDIT.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline decoration-white/20 hover:text-white/60">
-          {TAROT_CREDIT.license}
-        </a>
-      </p>
     </>
   )
 }

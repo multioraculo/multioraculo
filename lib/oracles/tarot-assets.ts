@@ -7,11 +7,10 @@
  * Índice 22–77 = menores: naipe × 14 + valor, na ordem do motor
  * (Copas, Espadas, Paus, Ouros; Ás … Dez, Valete, Cavaleiro, Rainha, Rei).
  *
- * Deck: CBD Tarot de Marseille (Yoav Ben-Dov, 2010, sobre Nicolas Conver 1760),
- * arquivos em public/tarot/cbd — ver CREDITS.md.
+ * A arte é a do baralho próprio, em public/tarot/art, ingerida das folhas de
+ * referência com scripts/tarot-ingest.mjs.
  */
 
-export const TAROT_ASSET_BASE = "/tarot/cbd"
 export const TAROT_DECK_SIZE = 78
 
 /** Naipes na ordem do motor (SUITS em draw.ts) → nome do arquivo. */
@@ -30,12 +29,6 @@ export function tarotCardId(index: number): string {
   if (index < 22) return `major-${pad(index)}`
   const m = index - 22
   return `${SUIT_SLUGS[Math.floor(m / 14)]}-${pad((m % 14) + 1)}`
-}
-
-/** Caminho público da imagem de uma carta. */
-export function tarotAssetPath(cardIdOrIndex: string | number): string {
-  const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
-  return `${TAROT_ASSET_BASE}/${id}.jpg`
 }
 
 /**
@@ -81,10 +74,3 @@ export function allTarotCardIds(): string[] {
   return Array.from({ length: TAROT_DECK_SIZE }, (_, i) => tarotCardId(i))
 }
 
-export const TAROT_CREDIT = {
-  deck: "CBD Tarot de Marseille",
-  author: "Dr. Yoav Ben-Dov",
-  url: "https://www.cbdtarot.com",
-  license: "CC BY-NC-SA 3.0",
-  licenseUrl: "https://creativecommons.org/licenses/by-nc-sa/3.0/",
-}

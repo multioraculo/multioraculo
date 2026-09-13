@@ -521,7 +521,6 @@ export const es: Dictionary = {
     spreadLabel: "Cruz Celta: diez cartas en las posiciones de la tirada",
     reversed: "invertida",
     upright: "derecha",
-    credit: "Cartas:",
   },
 
   iching: {

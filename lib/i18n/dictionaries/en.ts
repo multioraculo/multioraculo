@@ -521,7 +521,6 @@ export const en: Dictionary = {
     spreadLabel: "Celtic Cross: ten cards in the spread positions",
     reversed: "reversed",
     upright: "upright",
-    credit: "Cards:",
   },
 
   iching: {

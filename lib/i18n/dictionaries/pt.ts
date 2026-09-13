@@ -523,7 +523,6 @@ export const pt = {
     spreadLabel: "Cruz Celta: dez cartas nas posições da tiragem",
     reversed: "invertida",
     upright: "direita",
-    credit: "Cartas:",
   },
 
   iching: {
