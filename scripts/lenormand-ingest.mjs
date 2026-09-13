@@ -111,8 +111,63 @@ for (let r = 0; r < rows; r++) {
       } else { out[i * 4] = 244; out[i * 4 + 1] = 234; out[i * 4 + 2] = 216 }
       out[i * 4 + 3] = Math.round(a * 255)
     }
+    // --- limpeza do cisco -------------------------------------------------
+    // O desenho é uma massa grande e conexa; a craquelê e o resto da moldura
+    // da referência são manchinhas soltas, quase sempre encostadas na borda.
+    // Some com o que for pequeno, e some com mais rigor na faixa de fora, onde
+    // o símbolo raramente chega sozinho.
+    {
+      const RW = region.width, RH = region.height, n2 = RW * RH
+      // O cisco é fraco: a análise precisa enxergar alfa baixo, senão ele passa
+      // despercebido aqui e reaparece na tela quando o CSS levanta o contraste.
+      const PISO = 10
+      // Peso do próprio pixel na suavização do alfa. Alto de propósito: a
+      // média simples engrossa o traço e faz a carta parecer de baixa
+      // resolução. Aqui ela só apara o degrau de um pixel do limiar.
+      const SUAVE = 40
+      const mx = Math.round(RW * 0.08), my = Math.round(RH * 0.08)
+      const naMargem = (x, y) => x < mx || x >= RW - mx || y < my || y >= RH - my
+      const minMiolo = Math.max(12, Math.round(n2 * 0.00006))
+      const visto = new Uint8Array(n2)
+      const pilha = new Int32Array(n2)
+      for (let p0 = 0; p0 < n2; p0++) {
+        if (visto[p0] || out[p0 * 4 + 3] < PISO) continue
+        let topo = 0
+        pilha[topo++] = p0; visto[p0] = 1
+        const comp = []
+        let naMargemCont = 0
+        while (topo > 0) {
+          const q = pilha[--topo], qx = q % RW, qy = (q / RW) | 0
+          comp.push(q)
+          if (naMargem(qx, qy)) naMargemCont++
+          const viz = [qx > 0 ? q - 1 : -1, qx < RW - 1 ? q + 1 : -1, qy > 0 ? q - RW : -1, qy < RH - 1 ? q + RW : -1]
+          for (const r of viz) if (r >= 0 && !visto[r] && out[r * 4 + 3] >= PISO) { visto[r] = 1; pilha[topo++] = r }
+        }
+        // Moldura e craquelê vivem na faixa de fora; o símbolo entra no miolo.
+        // O critério é proporcional, e não "inteiramente na margem": a fita da
+        // borda às vezes avança uns poucos pixels para dentro e escapava.
+        const quaseTudoNaMargem = naMargemCont / comp.length >= 0.85
+        if (quaseTudoNaMargem || comp.length < minMiolo) for (const q of comp) out[q * 4 + 3] = 0
+      }
+      // Tira a serrilha do limiar sem engrossar o traço: média com peso 8 no
+      // próprio pixel e 1 nos oito vizinhos. Média simples, numa carta de 228
+      // px, borra o desenho e faz parecer que a resolução caiu.
+      const a0 = new Uint8Array(n2)
+      for (let i2 = 0; i2 < n2; i2++) a0[i2] = out[i2 * 4 + 3]
+      for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++) {
+        let soma = a0[y * RW + x] * SUAVE, peso = SUAVE
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue
+          const nx = x + dx, ny = y + dy
+          if (nx < 0 || ny < 0 || nx >= RW || ny >= RH) continue
+          soma += a0[ny * RW + nx]; peso++
+        }
+        out[(y * RW + x) * 4 + 3] = Math.round(soma / peso)
+      }
+    }
+
     const dest = path.join(outDir, `${id}.png`)
-    await sharp(out, { raw: { width: region.width, height: region.height, channels: 4 } }).resize({ width: Math.min(region.width, maxW) }).png({ compressionLevel: 9, palette: true, quality: 90 }).toFile(dest)
+    await sharp(out, { raw: { width: region.width, height: region.height, channels: 4 } }).resize({ width: Math.min(region.width, maxW) }).png({ compressionLevel: 9, palette: true, colours: 128, quality: 100, effort: 10 }).toFile(dest)
     console.log("ok", id.padEnd(10), found ? "carta" : "CÉLULA", `${w}×${h} @${card.x0},${card.y0}`, `arte ${region.width}×${region.height}`, `fundo ${bg.toFixed(2)} traço ${top.toFixed(2)}`)
     if (debugDir) {
       // conferência: carta original ao lado da arte recomposta sobre violeta liso

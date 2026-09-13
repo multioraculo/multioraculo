@@ -61,15 +61,15 @@ const opt = (name, def) => { const i = args.indexOf("--" + name); return i >= 0 
 /** Janela da arte dentro da carta (x0, y0, x1, y1): a mesma no CSS. */
 const JANELA = opt("art", "0.026,0.014,0.974,0.986").split(",").map(Number)
 const threshold = parseFloat(opt("threshold", "0.07"))
-const maxW = parseInt(opt("maxw", "460"), 10)
+const maxW = parseInt(opt("maxw", "760"), 10)
 /** força da recuperação de cor do traço: 1 = nenhuma, 0,35 = agressiva */
 const unmix = parseFloat(opt("unmix", "0.8"))
 /** sólido: grava a carta opaca, sem transparência (padrão) */
 const solido = !args.includes("--recortado")
 /** tela única de saída no modo recortado: todas as cartas do mesmo tamanho */
-const TELA = opt("tela", "260,430").split(",").map(Number)
+const TELA = opt("tela", "360,595").split(",").map(Number)
 /** a lâmina é a mesma para as 78: número no alto e nome embaixo em todas */
-const TELA_MAIOR = opt("tela-maior", "260,430").split(",").map(Number)
+const TELA_MAIOR = opt("tela-maior", "360,595").split(",").map(Number)
 /** deformação máxima permitida; o que faltar para encher vira corte centrado */
 const ESTICA = parseFloat(opt("estica", "0.07"))
 /** se o corte passar disso, estica mais em vez de cortar desenho */
@@ -314,19 +314,22 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
           if (conta < minArea) for (const q of comp) out[q * 4 + 3] = 0
         }
       }
-      // b) suaviza o alfa numa passada 3×3: mata o serrilhado do limiar sem
-      //    borrar o traço, porque só a transparência é filtrada.
+      // b) apara o degrau do limiar no alfa. O peso do próprio pixel é alto de
+      //    propósito: média simples engrossa o traço e faz a gravura parecer
+      //    de baixa resolução, que era o efeito da versão anterior.
       {
+        const SUAVE = 40
         const a0 = new Uint8Array(n)
         for (let i2 = 0; i2 < n; i2++) a0[i2] = out[i2 * 4 + 3]
         for (let y = 0; y < region.height; y++) for (let x = 0; x < region.width; x++) {
-          let soma = 0, cnt = 0
+          let soma = a0[y * region.width + x] * SUAVE, peso = SUAVE
           for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue
             const nx = x + dx, ny = y + dy
             if (nx < 0 || ny < 0 || nx >= region.width || ny >= region.height) continue
-            soma += a0[ny * region.width + nx]; cnt++
+            soma += a0[ny * region.width + nx]; peso++
           }
-          out[(y * region.width + x) * 4 + 3] = Math.round(soma / cnt)
+          out[(y * region.width + x) * 4 + 3] = Math.round(soma / peso)
         }
       }
 
@@ -360,7 +363,7 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
       await sharp(aparada.data)
         .resize({ width: largAjust, height: AH, fit: "fill" })
         .resize({ width: tela[0], height: tela[1], fit: "cover", position: ancora })
-        .png({ compressionLevel: 9, palette: true, quality: 92, effort: 10 })
+        .png({ compressionLevel: 9, palette: true, colours: 128, quality: 100, effort: 10 })
         .toFile(dest)
       feitas++
       console.log("ok", id.padEnd(10), found ? "carta " : "CÉLULA", `${w}×${h}`, `arte ${region.width}×${region.height}`, `proporção ${(region.width / region.height).toFixed(3)}`)
