@@ -83,6 +83,15 @@ const ESTICA_MAX = parseFloat(opt("estica-max", "0.16"))
 const nitidez = parseFloat(opt("nitidez", "0.8"))
 const deformacoes = []
 const cercaduras = []
+/**
+ * Aparo lateral extra, simétrico, em pixels da folha. Só para carta em que a
+ * recentragem deixou um pedaço de numeral impresso colado numa borda sem par
+ * na outra: o Cinco de Paus ficava com meio "V" à esquerda e nada à direita, e
+ * o pedaço lia como moldura e puxava o olho para a esquerda. Corta igual dos
+ * dois lados, então o centro não muda.
+ */
+const APARO_LATERAL = { "wands-05": 14 }
+const centragens = []
 const debugDir = opt("debug", null)
 const somente = args.filter((a) => !a.startsWith("--") && args[args.indexOf(a) - 1]?.startsWith("--") !== true)
 const filtro = somente.length ? new Set(somente.flatMap((s) => s.split(","))) : null
@@ -280,12 +289,15 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
       // gravura é quente (creme). Só na margem externa da janela, o que for
       // claro e frio vira fundo: assim a moldura some sem tocar no desenho.
       const margem = Math.round(region.width * 0.03)
+      // No modo cheio a carta sai como foi impressa, com cor e tom originais.
+      // Mesmo assim a máscara vazada é calculada inteira, com todas as limpezas:
+      // é ela que sabe onde termina o desenho e onde começa o resto de moldura,
+      // e é por ela que o recorte da carta cheia é enquadrado e centrado.
+      const opaco = cheio ? Buffer.alloc(n * 4) : null
+      if (cheio) for (let i = 0; i < n; i++) {
+        opaco[i * 4] = rgb[i * 3]; opaco[i * 4 + 1] = rgb[i * 3 + 1]; opaco[i * 4 + 2] = rgb[i * 3 + 2]; opaco[i * 4 + 3] = 255
+      }
       for (let i = 0; i < n; i++) {
-        if (cheio) {
-          // a carta como foi impressa: cor e tom originais, nada vazado
-          out[i * 4] = rgb[i * 3]; out[i * 4 + 1] = rgb[i * 3 + 1]; out[i * 4 + 2] = rgb[i * 3 + 2]; out[i * 4 + 3] = 255
-          continue
-        }
         const px_x = i % region.width, px_y = (i / region.width) | 0
         const naMargem = px_x < margem || px_x >= region.width - margem || px_y < margem || px_y >= region.height - margem
         const frio = rgb[i * 3 + 2] >= rgb[i * 3] - 4
@@ -344,17 +356,14 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
       // ornamental dos menores, por exemplo) fica.
       {
         const W2 = region.width, H2 = region.height
-        // No modo cheio o alfa é constante, então quem denuncia a cercadura é
-        // a luminância: o filete é bem mais claro que o campo da carta.
         const cobertura = (lado, d, piso = 60) => {
-          const corte = bg + span * (piso >= 60 ? 0.45 : 0.22)
           let c = 0, t = 0
           if (lado === "esq" || lado === "dir") {
             const x = lado === "esq" ? d : W2 - 1 - d
-            for (let y = 0; y < H2; y++) { t++; const i = y * W2 + x; if (cheio ? lum[i] >= corte : out[i * 4 + 3] >= piso) c++ }
+            for (let y = 0; y < H2; y++) { t++; if (out[(y * W2 + x) * 4 + 3] >= piso) c++ }
           } else {
             const y = lado === "topo" ? d : H2 - 1 - d
-            for (let x = 0; x < W2; x++) { t++; const i = y * W2 + x; if (cheio ? lum[i] >= corte : out[i * 4 + 3] >= piso) c++ }
+            for (let x = 0; x < W2; x++) { t++; if (out[(y * W2 + x) * 4 + 3] >= piso) c++ }
           }
           return c / t
         }
@@ -402,10 +411,7 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
           }
 
           if (fim >= 0) {
-            // zera também a cor no modo cheio: o aparo adiante corta a faixa
-            // comparando pixel a pixel, e faixa transparente com cor variada
-            // não é reconhecida como borda, ficando como tira no meio da lâmina
-            const apaga = (i4) => { out[i4 + 3] = 0; if (cheio) { out[i4] = 0; out[i4 + 1] = 0; out[i4 + 2] = 0 } }
+            const apaga = (i4) => { out[i4 + 3] = 0 }
             for (let d = 0; d <= fim; d++) {
               if (lado === "esq" || lado === "dir") {
                 const x = lado === "esq" ? d : W2 - 1 - d
@@ -493,13 +499,63 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
 
       // c) apara no traço: some a margem transparente, então a figura encosta
       //    nas quatro bordas e preenche a janela da lâmina.
+      // O aparo da máscara encosta no traço: tira a moldura, o cisco e o campo
+      // vazio em volta, e com isso centra o desenho. A carta cheia usa
+      // exatamente essa caixa, recortada da cor original. Antes o recorte cheio
+      // seguia a janela da folha, que é assimétrica, e trazia junto a fita de
+      // moldura da direita: a moldura voltava e o Ás de Ouros saía de lado.
+      const aparoMascara = await sharp(arteLimpa).trim({ threshold: 8 }).toBuffer({ resolveWithObject: true })
+      let caixa = {
+        left: -(aparoMascara.info.trimOffsetLeft ?? 0), top: -(aparoMascara.info.trimOffsetTop ?? 0),
+        width: aparoMascara.info.width, height: aparoMascara.info.height,
+      }
+      if (cheio) {
+        // A suavização do alfa deixa na borda da máscara um fio de um pixel
+        // que o aparo conserva. Na carta vazada ele é quase transparente e não
+        // aparece; na cheia, aquela coluna é o próprio filete impresso, claro,
+        // e virava uma linha colada na borda. Três pixels para dentro resolve.
+        const RECUO = 3
+        caixa = { left: caixa.left + RECUO, top: caixa.top + RECUO, width: caixa.width - 2 * RECUO, height: caixa.height - 2 * RECUO }
+
+        // Pip é simétrico por desenho, mas a folha nem sempre corta a carta
+        // no meio: o Ás de Ouros vinha 5% para a esquerda. Na lâmina vazada o
+        // campo era a própria lâmina e o desvio sumia; com o campo da carta,
+        // aparece. Acha o eixo onde o espelho casa melhor e tira a sobra do lado
+        // mais largo, sem cortar mais que 14% e sem mexer em figura e Maiores.
+        // (10% deixava de fora o Cinco de Paus, que vinha 5,5% fora do eixo.)
+        const ehPip = !ehMaior && Number(id.slice(-2)) <= 10
+        if (ehPip) {
+          const W2 = region.width, w = caixa.width, h = caixa.height
+          const passoY = Math.max(1, Math.floor(h / 330)), passoX = Math.max(1, Math.floor(w / 220))
+          let melhor = Infinity, eixo = Math.floor(w / 2)
+          for (let c = Math.round(w * 0.4); c <= Math.round(w * 0.6); c++) {
+            const alcance = Math.min(c, w - 1 - c)
+            let soma = 0, k = 0
+            for (let y = Math.round(h * 0.1); y < Math.round(h * 0.9); y += passoY) {
+              const base = (caixa.top + y) * W2 + caixa.left
+              for (let d = 1; d < alcance; d += passoX) { soma += Math.abs(lum[base + c - d] - lum[base + c + d]); k++ }
+            }
+            const erro = soma / Math.max(1, k)
+            if (erro < melhor) { melhor = erro; eixo = c }
+          }
+          const sobra = Math.abs(w - 1 - 2 * eixo)
+          const limite = Math.round(w * 0.14)
+          if (sobra >= 3 && sobra <= limite) {
+            if (2 * eixo < w - 1) caixa = { ...caixa, width: w - sobra }
+            else caixa = { ...caixa, left: caixa.left + sobra, width: w - sobra }
+            centragens.push(`${id} ${sobra}px ${2 * eixo < w - 1 ? "da direita" : "da esquerda"}`)
+          }
+        }
+      }
+      if (cheio && APARO_LATERAL[id]) {
+        const a = APARO_LATERAL[id]
+        caixa = { ...caixa, left: caixa.left + a, width: caixa.width - 2 * a }
+      }
       const aparada = cheio
-        ? await sharp(arteLimpa).extract({
-            left: cortes.esq, top: cortes.topo,
-            width: region.width - cortes.esq - cortes.dir,
-            height: region.height - cortes.topo - cortes.base,
-          }).toBuffer({ resolveWithObject: true })
-        : await sharp(arteLimpa).trim({ threshold: 8 }).toBuffer({ resolveWithObject: true })
+        ? await sharp(opaco, { raw: { width: region.width, height: region.height, channels: 4 } })
+            .extract(caixa)
+            .png().toBuffer({ resolveWithObject: true })
+        : aparoMascara
       const AW = aparada.info.width, AH = aparada.info.height
       const tela = ehMaior ? TELA_MAIOR : TELA
       const alvo = tela[0] / tela[1]
@@ -770,6 +826,8 @@ escala ate a tela: pior ${esc[0].f.toFixed(2)}x  mediana ${esc[Math.floor(esc.le
   for (const e of esc.slice(0, 8)) console.log(`  ${e.id.padEnd(10)} ${e.AW}x${e.AH} -> ${e.f.toFixed(2)}x`)
 }
 
+if (centragens.length) console.log(`
+pip recentrado no eixo de simetria: ${centragens.join(", ")}`)
 if (cercaduras.length) console.log(`
 cercadura aparada em ${cercaduras.length} bordas: ${cercaduras.join(", ")}`)
 

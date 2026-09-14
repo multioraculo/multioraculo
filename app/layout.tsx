@@ -36,7 +36,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: dict.meta.title,
     description: dict.meta.description,
-    generator: "v0.app",
   }
 }
 

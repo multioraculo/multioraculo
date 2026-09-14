@@ -63,6 +63,21 @@ const SLOTS: Array<{ x: number; y: number; rot: number; z: number }> = [
   { x: CROSS_W + STAFF_GAP, y: staffY(0), rot: 0, z: 1 }, // 10 resultado final
 ]
 
+/**
+ * Número de cada posição: pequeno, na calha entre as cartas, nunca por cima de
+ * uma. A regra é a mesma para todas: termina NUM_GAP px antes da borda
+ * esquerda da carta, alinhado ao topo dela. A carta que cruza não tem calha
+ * livre dos lados, porque as pontas deitam sobre a 4 e a 6; o 2 vai então para
+ * o canto oposto do centro, logo abaixo da ponta direita, na calha entre a
+ * central e a 6. Assim 1 e 2 ficam em cantos diferentes e não se tocam.
+ */
+const NUM_GAP = 4
+const NUM: Array<{ x: number; y: number; lado: "esq" | "dir" }> = SLOTS.map((s, i) =>
+  i === 1
+    ? { x: colX(1) + CARD_W + NUM_GAP, y: rowY(1) + (CARD_H + CARD_W) / 2 + 3, lado: "dir" }
+    : { x: s.x - NUM_GAP, y: s.y + 1, lado: "esq" },
+)
+
 const STEP_MS = 140
 
 function stripReversed(name: string, word: string): string {
@@ -119,11 +134,9 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
           {entries.map((e, i) => {
             const s = SLOTS[i]
             const rot = s.rot + (e.card.reversed ? 180 : 0)
-            // carta deitada (cruza): o número vai para a ponta esquerda da carta na horizontal
-            const sideways = s.rot % 180 !== 0
-            const badge = sideways ? { left: -(CARD_H - CARD_W) / 2 + 4, top: (CARD_H - CARD_W) / 2 + 4 } : { left: 4, top: 4 }
             return (
-              <div key={i} role="listitem" aria-label={e.label} className={`absolute ${focus.focusedIndex === i ? "fc-away" : ""}`} style={{ left: s.x, top: s.y, width: CARD_W, zIndex: s.z }}>
+              // tc-hit: o clique segue a lâmina girada, não a caixa em pé (ver globals.css)
+              <div key={i} role="listitem" aria-label={e.label} className={`absolute tc-hit ${focus.focusedIndex === i ? "fc-away" : ""}`} style={{ left: s.x, top: s.y, width: CARD_W, zIndex: s.z }}>
                 <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
                 <div
                   className={`tc-slot ${animate ? "tc-deal-enter" : ""}`}
@@ -140,12 +153,22 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                   <Capsule card={e.card} name={e.name} label={e.label} width={CARD_W} />
                 </div>
                 </button>
-                <span className={`tc-num ${animate ? "tc-num-enter" : ""}`} style={{ ...badge, animationDelay: animate ? `${i * STEP_MS + 420}ms` : undefined }} aria-hidden="true">
-                  {i + 1}
-                </span>
               </div>
             )
           })}
+          {/* números numa camada própria, acima de todas as cartas */}
+          {entries.map((_, i) => (
+            <span
+              key={`n${i}`}
+              className={`tc-num ${NUM[i].lado === "dir" ? "tc-num-dir" : ""} ${focus.focusedIndex === i ? "fc-away" : ""}`}
+              style={{ left: NUM[i].x, top: NUM[i].y }}
+              aria-hidden="true"
+            >
+              <span className={animate ? "tc-num-enter" : undefined} style={{ animationDelay: animate ? `${i * STEP_MS + 420}ms` : undefined }}>
+                {i + 1}
+              </span>
+            </span>
+          ))}
         </div>
       </div>
 

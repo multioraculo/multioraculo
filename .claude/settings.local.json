@@ -11,7 +11,6 @@
       "Bash(claude:*)",
       "Bash(npm run:*)",
       "Bash(xargs grep:*)",
-      "Bash(Get-ChildItem -Recurse \"C:\\\\dev\\\\v0-shaders-hero-section\\\\app\" -Filter \"route.ts\")",
       "Bash(Select-Object FullName)",
       "Bash(python *)",
       "Bash(npm install *)",
