@@ -90,7 +90,6 @@ export const en: Dictionary = {
 
   header: {
     backToStart: "Back to start",
-    circularText: "oracle • multi-oracle synthesis • tarot • i ching • runes • búzios • lenormand • ",
     sessionEnded: "You have been signed out.",
   },
 

@@ -92,7 +92,6 @@ export const pt = {
 
   header: {
     backToStart: "Voltar ao início",
-    circularText: "oráculo • síntese multi-oráculo • tarô • i ching • runas • búzios • lenormand • ",
     sessionEnded: "Sessão encerrada.",
   },
 
