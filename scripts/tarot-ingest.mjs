@@ -64,18 +64,25 @@ const threshold = parseFloat(opt("threshold", "0.07"))
 const maxW = parseInt(opt("maxw", "760"), 10)
 /** força da recuperação de cor do traço: 1 = nenhuma, 0,35 = agressiva */
 const unmix = parseFloat(opt("unmix", "0.8"))
+/** cheio: recorta a figura como no modo transparente, mas guarda o campo da
+ *  própria carta em vez de vazá-lo. O céu estrelado e a trama da gravura são
+ *  parte do desenho: vazados, o traço fino some e a carta fica apagada. */
+const cheio = args.includes("--cheio")
 /** sólido: grava a carta opaca, sem transparência (padrão) */
-const solido = !args.includes("--recortado")
+const solido = !args.includes("--recortado") && !cheio
 /** tela única de saída no modo recortado: todas as cartas do mesmo tamanho */
-const TELA = opt("tela", "360,595").split(",").map(Number)
+const TELA = opt("tela", "600,992").split(",").map(Number)
 /** a lâmina é a mesma para as 78: número no alto e nome embaixo em todas */
-const TELA_MAIOR = opt("tela-maior", "360,595").split(",").map(Number)
+const TELA_MAIOR = opt("tela-maior", "600,992").split(",").map(Number)
 /** deformação máxima permitida; o que faltar para encher vira corte centrado */
 const ESTICA = parseFloat(opt("estica", "0.07"))
 /** se o corte passar disso, estica mais em vez de cortar desenho */
 const CORTE_MAX = parseFloat(opt("corte-max", "0.12"))
 const ESTICA_MAX = parseFloat(opt("estica-max", "0.16"))
+/** realce do traço depois da reamostragem; 0 desliga */
+const nitidez = parseFloat(opt("nitidez", "0.8"))
 const deformacoes = []
+const cercaduras = []
 const debugDir = opt("debug", null)
 const somente = args.filter((a) => !a.startsWith("--") && args[args.indexOf(a) - 1]?.startsWith("--") !== true)
 const filtro = somente.length ? new Set(somente.flatMap((s) => s.split(","))) : null
@@ -252,9 +259,18 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
         rgb[di * 3] = px[si]; rgb[di * 3 + 1] = px[si + 1]; rgb[di * 3 + 2] = px[si + 2]
         lum[di] = (0.2126 * px[si] + 0.7152 * px[si + 1] + 0.0722 * px[si + 2]) / 255
       }
-      const sorted = Float32Array.from(lum).sort()
-      const bg = sorted[Math.floor(n * 0.5)]
-      const topo = sorted[Math.floor(n * 0.995)]
+      // A escala de luz sai do MIOLO da janela, nunca da faixa de fora. Ali
+      // mora a cercadura impressa, que é o ponto mais claro da carta: usá-la
+      // como topo estica a escala e deixa a gravura inteira em alfa parcial.
+      // Era o que apagava os Maiores, gravados em traço fino, que nunca
+      // chegam ao branco da moldura.
+      const miolo = []
+      const mx0 = Math.round(region.width * 0.09), mx1 = region.width - mx0
+      const my0 = Math.round(region.height * 0.09), my1 = region.height - my0
+      for (let y = my0; y < my1; y++) for (let x = mx0; x < mx1; x++) miolo.push(lum[y * region.width + x])
+      const sorted = Float32Array.from(miolo.length > 1000 ? miolo : lum).sort()
+      const bg = sorted[Math.floor(sorted.length * 0.5)]
+      const topo = sorted[Math.floor(sorted.length * 0.995)]
       const span = Math.max(topo - bg, 0.05)
       let br = 0, bgc = 0, bb = 0, bn = 0
       for (let i = 0; i < n; i++) if (Math.abs(lum[i] - bg) < 0.03) { br += rgb[i * 3]; bgc += rgb[i * 3 + 1]; bb += rgb[i * 3 + 2]; bn++ }
@@ -265,6 +281,11 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
       // claro e frio vira fundo: assim a moldura some sem tocar no desenho.
       const margem = Math.round(region.width * 0.03)
       for (let i = 0; i < n; i++) {
+        if (cheio) {
+          // a carta como foi impressa: cor e tom originais, nada vazado
+          out[i * 4] = rgb[i * 3]; out[i * 4 + 1] = rgb[i * 3 + 1]; out[i * 4 + 2] = rgb[i * 3 + 2]; out[i * 4 + 3] = 255
+          continue
+        }
         const px_x = i % region.width, px_y = (i / region.width) | 0
         const naMargem = px_x < margem || px_x >= region.width - margem || px_y < margem || px_y >= region.height - margem
         const frio = rgb[i * 3 + 2] >= rgb[i * 3] - 4
@@ -281,6 +302,140 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
         } else { out[i * 4] = 244; out[i * 4 + 1] = 234; out[i * 4 + 2] = 216 }
         out[i * 4 + 3] = Math.round(a * 255)
       }
+      // --- ponto de branco do alfa ------------------------------------------
+      // Na lâmina, alfa parcial lê como carta apagada. Os Maiores são
+      // gravados em traço fino e mal chegavam a 190 de alfa, enquanto os
+      // Menores, de traço cheio, passavam de 240: lado a lado, os Maiores
+      // pareciam desbotados. Aqui o topo do traço de CADA carta vai a opaco,
+      // e o pé da escala sobe um pouco, o que ainda tira véu. Não mexe em cor
+      // nem em desenho, só na presença.
+      {
+        const PISO = parseInt(opt("piso-alfa", "28"), 10)
+        const alvoP90 = parseInt(opt("alvo-alfa", "238"), 10)
+        const amostra = []
+        for (let i = 0; i < n; i++) { const a = out[i * 4 + 3]; if (a > 12) amostra.push(a) }
+        if (amostra.length > 500) {
+          amostra.sort((a, b) => a - b)
+          // O ponto de branco sai do percentil 90 do traço, não do topo: o
+          // topo já satura em todas as cartas, e o que separa um Maior de um
+          // Menor é o corpo da escala, não a ponta. Onde o corpo está baixo,
+          // o traço fino sobe; onde já está alto, quase nada muda.
+          const branco = Math.max(PISO + 40, amostra[Math.floor(amostra.length * 0.90)])
+          if (process.env.VERBRANCO) console.log("   branco", id, branco)
+          if (branco < alvoP90) {
+            const escala = 255 / (branco - PISO)
+            for (let i = 0; i < n; i++) {
+              const a = out[i * 4 + 3]
+              out[i * 4 + 3] = a <= PISO ? 0 : Math.min(255, Math.round((a - PISO) * escala))
+            }
+          }
+        }
+      }
+
+      // quanto saiu de cada lado; no modo cheio é por aqui que a faixa é
+      // recortada, já que não há transparência em volta para aparar
+      const cortes = { esq: 0, dir: 0, topo: 0, base: 0 }
+      // --- resto da cercadura impressa ------------------------------------
+      // Mesmo com o filete localizado na folha, sobra rente a borda uma tira
+      // do que ficou de fora: o filete de baixo, a craquele e um fio do campo
+      // azul. Ela aparece como LINHA CHEIA atravessando a janela inteira, o
+      // que o desenho nunca faz. Acha a linha mais externa de cada lado e
+      // apaga dela para fora; o que estiver mais para dentro (a cercadura
+      // ornamental dos menores, por exemplo) fica.
+      {
+        const W2 = region.width, H2 = region.height
+        // No modo cheio o alfa é constante, então quem denuncia a cercadura é
+        // a luminância: o filete é bem mais claro que o campo da carta.
+        const cobertura = (lado, d, piso = 60) => {
+          const corte = bg + span * (piso >= 60 ? 0.45 : 0.22)
+          let c = 0, t = 0
+          if (lado === "esq" || lado === "dir") {
+            const x = lado === "esq" ? d : W2 - 1 - d
+            for (let y = 0; y < H2; y++) { t++; const i = y * W2 + x; if (cheio ? lum[i] >= corte : out[i * 4 + 3] >= piso) c++ }
+          } else {
+            const y = lado === "topo" ? d : H2 - 1 - d
+            for (let x = 0; x < W2; x++) { t++; const i = y * W2 + x; if (cheio ? lum[i] >= corte : out[i * 4 + 3] >= piso) c++ }
+          }
+          return c / t
+        }
+        for (const lado of ["esq", "dir", "topo", "base"]) {
+          const n = lado === "esq" || lado === "dir" ? W2 : H2
+          const busca = Math.round(n * 0.12)
+          const teto = Math.round(n * 0.06)
+          const fino = Math.max(2, Math.round(n * 0.008))
+          const v = []
+          for (let d = 0; d <= busca + 6; d++) v.push(cobertura(lado, d))
+          let fim = -1
+          for (let d = 0; d <= busca; d++) {
+            if (v[d] < 0.72) continue
+            let e = d
+            while (e + 1 <= busca + 4 && v[e + 1] >= 0.55) e++
+            const pico = Math.max(...v.slice(d, e + 1))
+            // linha impressa: ou atravessa quase inteira, ou e fina e isolada,
+            // com o desenho sumindo logo depois dela
+            const cheia = pico >= 0.88
+            const isolada = e - d + 1 <= fino && Math.min(v[e + 1] ?? 1, v[e + 2] ?? 1) <= 0.20
+            // guarda a MAIS FUNDA que ainda esta na faixa de fora: uma
+            // fiapo de um pixel rente a borda escondia a cercadura de verdade
+            // logo atras dela
+            if ((cheia || isolada) && e <= teto) fim = e
+          }
+          // Segunda passada, no alfa fraco. A cercadura deixa um halo de alfa
+          // baixo rente a borda que o limiar de 60 nao enxerga e que a lamina,
+          // com o brilho que subimos, mostra como um fio de moldura. O halo
+          // morre depressa para dentro; o desenho, nao.
+          {
+            const gatilho = Math.max(3, Math.round(n * 0.015))
+            const tetoFraco = Math.round(n * 0.04)
+            const f = []
+            for (let d = 0; d <= tetoFraco + 2; d++) f.push(cobertura(lado, d, 16))
+            let inicio = -1
+            // 0,70 e nao 0,80: em varias cartas a tira saiu picotada na
+            // impressao e nunca fecha a borda inteira, mas ainda le como
+            // moldura na tela
+            for (let d = 0; d <= gatilho; d++) if (f[d] >= 0.70) { inicio = d; break }
+            if (inicio >= 0) {
+              let e = inicio
+              while (e + 1 <= tetoFraco && f[e + 1] >= 0.45) e++
+              if (e > fim) fim = e
+            }
+          }
+
+          if (fim >= 0) {
+            // zera também a cor no modo cheio: o aparo adiante corta a faixa
+            // comparando pixel a pixel, e faixa transparente com cor variada
+            // não é reconhecida como borda, ficando como tira no meio da lâmina
+            const apaga = (i4) => { out[i4 + 3] = 0; if (cheio) { out[i4] = 0; out[i4 + 1] = 0; out[i4 + 2] = 0 } }
+            for (let d = 0; d <= fim; d++) {
+              if (lado === "esq" || lado === "dir") {
+                const x = lado === "esq" ? d : W2 - 1 - d
+                for (let y = 0; y < H2; y++) apaga((y * W2 + x) * 4)
+              } else {
+                const y = lado === "topo" ? d : H2 - 1 - d
+                for (let x = 0; x < W2; x++) apaga((y * W2 + x) * 4)
+              }
+            }
+            cortes[lado] = fim + 1
+            cercaduras.push(`${id} ${lado} ${fim + 1}px`)
+          }
+          // Resta a neblina: alfa fraco espalhado na faixa de fora, herdado do
+          // papel em volta do filete. Some com ela onde o alfa e baixo demais
+          // para ser traco; o desenho que encosta na borda tem alfa cheio no
+          // miolo e so perde a franja, que a suavizacao adiante refaz.
+          const faixa = Math.round(n * 0.025)
+          const dInicio = Math.max(0, fim + 1)
+          for (let d = dInicio; d < Math.min(n, dInicio + faixa); d++) {
+            if (lado === "esq" || lado === "dir") {
+              const x = lado === "esq" ? d : W2 - 1 - d
+              for (let y = 0; y < H2; y++) { const i3 = (y * W2 + x) * 4 + 3; if (out[i3] < 70) out[i3] = 0 }
+            } else {
+              const y = lado === "topo" ? d : H2 - 1 - d
+              for (let x = 0; x < W2; x++) { const i3 = (y * W2 + x) * 4 + 3; if (out[i3] < 70) out[i3] = 0 }
+            }
+          }
+        }
+      }
+
       const dest = path.join(OUT, `${id}.png`)
       const arte = await sharp(out, { raw: { width: region.width, height: region.height, channels: 4 } }).png().toBuffer()
       // o sharp aplica resize ANTES do composite no mesmo pipeline, então a
@@ -338,7 +493,13 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
 
       // c) apara no traço: some a margem transparente, então a figura encosta
       //    nas quatro bordas e preenche a janela da lâmina.
-      const aparada = await sharp(arteLimpa).trim({ threshold: 8 }).toBuffer({ resolveWithObject: true })
+      const aparada = cheio
+        ? await sharp(arteLimpa).extract({
+            left: cortes.esq, top: cortes.topo,
+            width: region.width - cortes.esq - cortes.dir,
+            height: region.height - cortes.topo - cortes.base,
+          }).toBuffer({ resolveWithObject: true })
+        : await sharp(arteLimpa).trim({ threshold: 8 }).toBuffer({ resolveWithObject: true })
       const AW = aparada.info.width, AH = aparada.info.height
       const tela = ehMaior ? TELA_MAIOR : TELA
       const alvo = tela[0] / tela[1]
@@ -358,11 +519,25 @@ for (const [arquivo, cols, rows, ids] of FOLHAS) {
       }
       const largAjust = Math.max(8, Math.round(AW * fator))
       const deformacao = Math.abs(fator - 1)
-      deformacoes.push({ id, deformacao, antes, corte: corteResultante, topoFrac: corte[0], baseFrac: corte[1], lateral })
+      deformacoes.push({ id, deformacao, antes, corte: corteResultante, topoFrac: corte[0], baseFrac: corte[1], lateral, AW, AH })
       const ancora = ehMaior || ehFigura ? "top" : "centre"
-      await sharp(aparada.data)
-        .resize({ width: largAjust, height: AH, fit: "fill" })
-        .resize({ width: tela[0], height: tela[1], fit: "cover", position: ancora })
+      // Uma reamostragem só. Encadear "fill" e depois "cover" interpola duas
+      // vezes a mesma gravura, e cada passagem tira nitidez: a conta do
+      // esticão e a do enquadramento entram juntas num único resize, e o que
+      // sobrar vira recorte, que não interpola nada.
+      const escala = Math.max(tela[0] / largAjust, tela[1] / AH)
+      const LW = Math.max(tela[0], Math.round(largAjust * escala))
+      const LH = Math.max(tela[1], Math.round(AH * escala))
+      const esq = Math.round((LW - tela[0]) / 2)
+      const alto = ancora === "top" ? 0 : Math.round((LH - tela[1]) / 2)
+      let pipe = sharp(aparada.data)
+        .resize({ width: LW, height: LH, fit: "fill", kernel: "lanczos3" })
+        .extract({ left: esq, top: alto, width: tela[0], height: tela[1] })
+      // A gravura é traço fino: depois de qualquer reamostragem ela perde
+      // acutância. A máscara devolve a borda do traço sem inventar textura —
+      // é a mesma ideia do realce de escaneamento, com mão leve.
+      if (nitidez > 0) pipe = pipe.sharpen({ sigma: nitidez, m1: 0.5, m2: 2.2 })
+      await pipe
         .png({ compressionLevel: 9, palette: true, colours: 128, quality: 100, effort: 10 })
         .toFile(dest)
       feitas++
@@ -440,7 +615,163 @@ alvo do baralho, medido só na gravura: meio ${alvo.meio.toFixed(0)} · faixa ${
     console.log(`  ${a.id.padEnd(10)} meio ${a.meio.toFixed(0).padStart(3)} → ganho ${a.ganho.toFixed(3)} desloc ${a.desloc.toFixed(1)}`)
   return tocadas
 }
-if (!filtro && !args.includes("--sem-equalizar")) await equalizar()
+/**
+ * Equalização do baralho cheio, ancorada no material da carta: o azul do
+ * campo e o creme do traço. Para cada carta mede-se a cor dessas duas
+ * âncoras; o alvo é a mediana do baralho. O que leva uma à outra é uma reta
+ * por canal — ganho e deslocamento — e é justamente ela que acerta de uma vez
+ * brilho (deslocamento), contraste (distância entre as âncoras), temperatura
+ * (canais separados) e força do azul e do creme.
+ *
+ * Não é correção por carta: é o mesmo critério para as 78, e quem já está no
+ * registro quase não se mexe. A força fica abaixo de 1 de propósito, para
+ * deixar viva a diferença natural entre um arcano denso e um pip vazio.
+ */
+async function equalizarCheio() {
+  const forca = parseFloat(opt("forca", "0.85"))
+  /** o quanto a densidade de cada carta é puxada para a do baralho */
+  const forcaDens = parseFloat(opt("forca-densidade", "0.6"))
+  /** tinta quente comum, em passos de canal sobre as âncoras do baralho */
+  const quente = parseFloat(opt("quente", "1"))
+  /** quanto o campo azul deixa a lâmina passar, no mais escuro da carta */
+  const vazado = parseFloat(opt("vazado", "0.38"))
+  /** translucidez leve também no creme: a lâmina tinge o alto e tira o neon */
+  const vazadoTraco = parseFloat(opt("vazado-traco", "0.08"))
+  /** percentil que define o campo: baixo isola o azul limpo, alto mistura a
+   *  trama da gravura, o que fazia o arcano denso parecer de fundo mais claro */
+  const pCampo = parseFloat(opt("percentil-campo", "0.15"))
+  // Acabamento de cor. Tira croma sem tirar luz: a luminância de cada pixel
+  // fica onde está, então contraste e leitura não mudam. O corte é mais forte
+  // nas duas pontas, onde a cor grita — o azul saturado do campo e o amarelo
+  // do creme — e leve no meio-tom, onde vive a trama da gravura.
+  const satAzul = parseFloat(opt("sat-azul", "0.72"))
+  const satMeio = parseFloat(opt("sat-meio", "0.92"))
+  const satCreme = parseFloat(opt("sat-creme", "0.70"))
+  /** ombro do alto: acima dele a luz sobe mais devagar, e o creme para de estourar */
+  const ombro = parseFloat(opt("ombro", "0.88"))
+  const ombroForca = parseFloat(opt("ombro-forca", "0.55"))
+  const arquivos = fs.readdirSync(OUT).filter((f) => f.endsWith(".png"))
+  if (arquivos.length < 10) return
+  const medir = async (f) => {
+    const { data, info } = await sharp(path.join(OUT, f)).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const n = info.width * info.height
+    const lum = new Float32Array(n)
+    for (let i = 0; i < n; i++) lum[i] = 0.2126 * data[i * 4] + 0.7152 * data[i * 4 + 1] + 0.0722 * data[i * 4 + 2]
+    const ord = Float32Array.from(lum).sort()
+    const q = (p) => ord[Math.floor(n * p)]
+    // campo: o terço mais escuro, que é o azul; traço: o creme, sem o estouro
+    const escuro = q(pCampo), claro = q(0.92), teto = q(0.995)
+    const campo = [[], [], []], traco = [[], [], []]
+    for (let i = 0; i < n; i++) {
+      if (lum[i] <= escuro) for (let c = 0; c < 3; c++) campo[c].push(data[i * 4 + c])
+      else if (lum[i] >= claro && lum[i] <= teto) for (let c = 0; c < 3; c++) traco[c].push(data[i * 4 + c])
+    }
+    const med = (v) => { v.sort((a, b) => a - b); return v[v.length >> 1] ?? 0 }
+    const cm = campo.map(med), tm = traco.map(med)
+    // densidade: onde cai o pixel do meio entre o campo e o traço. É o que
+    // separa um Maior, de trama fina que enche o campo de meio-tom, de um
+    // pip de traço cheio sobre azul limpo — e era o que continuava
+    // destoando depois de acertar as duas pontas.
+    const lumDe = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    const lc = lumDe(cm), lt = lumDe(tm)
+    const x50 = (q(0.5) - lc) / Math.max(1, lt - lc)
+    return { f, campo: cm, traco: tm, x50 }
+  }
+  const medidas = []
+  for (const f of arquivos) medidas.push(await medir(f))
+  const mediana = (v) => { const o = v.slice().sort((a, b) => a - b); return o[o.length >> 1] }
+  // Alvo do baralho, com uma pitada de ouro: o mesmo desvio quente para as
+  // 78 não descaracteriza nenhuma, e é o que dá liga ao conjunto.
+  // O ouro vem quase todo de tirar azul, não de somar vermelho: o creme já
+  // está perto de 250 no vermelho e somar ali estoura o alto da gravura.
+  const QUENTE_TRACO = [2, 0, -6], QUENTE_CAMPO = [3, 1, -7]
+  const trava = (v) => Math.max(0, Math.min(255, Math.round(v)))
+  const alvoCampo = [0, 1, 2].map((c) => trava(mediana(medidas.map((m) => m.campo[c])) + quente * QUENTE_CAMPO[c]))
+  const alvoTraco = [0, 1, 2].map((c) => trava(mediana(medidas.map((m) => m.traco[c])) + quente * QUENTE_TRACO[c]))
+  const alvoX50 = mediana(medidas.map((m) => m.x50))
+  const lum = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+  console.log(`
+âncoras do baralho: campo ${alvoCampo.join(",")} · traço ${alvoTraco.join(",")}`)
+  const tocadas = []
+  for (const m of medidas) {
+    const ganho = [1, 1, 1], desloc = [0, 0, 0]
+    for (let c = 0; c < 3; c++) {
+      const vao = m.traco[c] - m.campo[c]
+      if (Math.abs(vao) < 20) continue
+      const a = (alvoTraco[c] - alvoCampo[c]) / vao
+      const b = alvoCampo[c] - a * m.campo[c]
+      ganho[c] = Math.min(1.45, Math.max(0.75, 1 - forca + forca * a))
+      desloc[c] = Math.min(60, Math.max(-60, forca * b))
+    }
+    // gama que leva a densidade da carta para perto da do baralho sem tocar
+    // nas duas âncoras: só o miolo da escala se move
+    let gama = 1
+    if (m.x50 > 0.01 && m.x50 < 0.99 && alvoX50 > 0.01) {
+      const g = Math.log(alvoX50) / Math.log(m.x50)
+      gama = Math.min(1.35, Math.max(0.8, 1 - forcaDens + forcaDens * g))
+    }
+    const { data, info } = await sharp(path.join(OUT, m.f)).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const n = info.width * info.height
+    const vao = [0, 1, 2].map((c) => Math.max(1, alvoTraco[c] - alvoCampo[c]))
+    const PESO = [0.2126, 0.7152, 0.0722]
+    const rgb = [0, 0, 0]
+    for (let i = 0; i < n; i++) {
+      let soma = 0
+      for (let c = 0; c < 3; c++) {
+        const v = data[i * 4 + c] * ganho[c] + desloc[c]
+        const x = (v - alvoCampo[c]) / vao[c]
+        // a gama só vale dentro das âncoras; fora delas a reta segue, para
+        // não inventar nem cortar o que passa do creme ou fica abaixo do azul
+        const y = x <= 0 || x >= 1 ? x : Math.pow(x, gama)
+        rgb[c] = alvoCampo[c] + y * vao[c]
+        soma += PESO[c] * Math.max(0, Math.min(1.2, y))
+      }
+      // ombro: a luz acima do ombro é comprimida na direção do campo, sem
+      // girar a cor; o creme continua claro, só não bate mais no teto
+      if (soma > ombro) {
+        const alvo = ombro + (soma - ombro) * ombroForca
+        const f = alvo / soma
+        for (let c = 0; c < 3; c++) rgb[c] = alvoCampo[c] + (rgb[c] - alvoCampo[c]) * f
+      }
+      // croma por posição na escala: azul no fundo, meio-tom, creme no alto
+      const pos = Math.max(0, Math.min(1, soma))
+      const sat = pos < 0.5 ? satAzul + (satMeio - satAzul) * (pos / 0.5) : satMeio + (satCreme - satMeio) * ((pos - 0.5) / 0.5)
+      const L = PESO[0] * rgb[0] + PESO[1] * rgb[1] + PESO[2] * rgb[2]
+      for (let c = 0; c < 3; c++) data[i * 4 + c] = Math.max(0, Math.min(255, Math.round(L + sat * (rgb[c] - L))))
+      soma = Math.min(1, soma)
+      // o campo deixa a lâmina passar um fio; o traço continua opaco
+      // A translucidez é o que a versão vazada tinha de bom: a lâmina atravessa
+      // a carta e quebra o azul e o amarelo. Forte no campo, leve no creme,
+      // e o traço nunca fica ralo a ponto de perder corpo.
+      if (vazado > 0 || vazadoTraco > 0) {
+        const opac = 1 - vazado * Math.pow(1 - soma, 1.2) - vazadoTraco * soma
+        data[i * 4 + 3] = Math.max(0, Math.min(255, Math.round(255 * opac)))
+      }
+    }
+    const buf = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+      .png({ compressionLevel: 9, palette: true, colours: 128, quality: 100, effort: 10 }).toBuffer()
+    fs.writeFileSync(path.join(OUT, m.f), buf)
+    tocadas.push({ id: m.f.replace(/\.png$/, ""), ganho, desloc, gama, dCampo: lum(m.campo) - lum(alvoCampo), dTraco: lum(m.traco) - lum(alvoTraco) })
+  }
+  tocadas.sort((a, b) => Math.abs(b.dTraco) - Math.abs(a.dTraco))
+  console.log(`${tocadas.length} de ${medidas.length} cartas ajustadas`)
+  for (const t of tocadas.slice(0, 10))
+    console.log(`  ${t.id.padEnd(10)} campo ${t.dCampo > 0 ? "+" : ""}${t.dCampo.toFixed(0).padStart(3)} traço ${t.dTraco > 0 ? "+" : ""}${t.dTraco.toFixed(0).padStart(4)}  ganho ${t.ganho.map((g) => g.toFixed(2)).join("/")}  gama ${t.gama.toFixed(2)}`)
+  return tocadas
+}
+
+if (!filtro && !args.includes("--sem-equalizar")) await (cheio ? equalizarCheio() : equalizar())
+
+{
+  const esc = deformacoes.map((d) => ({ id: d.id, f: Math.max(TELA[0] / d.AW, TELA[1] / d.AH), AW: d.AW, AH: d.AH }))
+  esc.sort((a, b) => b.f - a.f)
+  console.log(`
+escala ate a tela: pior ${esc[0].f.toFixed(2)}x  mediana ${esc[Math.floor(esc.length / 2)].f.toFixed(2)}x  melhor ${esc[esc.length - 1].f.toFixed(2)}x`)
+  for (const e of esc.slice(0, 8)) console.log(`  ${e.id.padEnd(10)} ${e.AW}x${e.AH} -> ${e.f.toFixed(2)}x`)
+}
+
+if (cercaduras.length) console.log(`
+cercadura aparada em ${cercaduras.length} bordas: ${cercaduras.join(", ")}`)
 
 if (deformacoes.length) {
   deformacoes.sort((a, b) => b.deformacao - a.deformacao)
