@@ -1,0 +1,148 @@
+{
+  "descricao": "Referência da síntese C-base-min aprovada (teste de variância, 6 casos × 3 amostras). Só muda com nova versão de prompt aprovada.",
+  "pdfsIndexSha256": "390ea4d85fabfe288e653a465939fd3f479a0b3a128c635602d462093209a173",
+  "itens": [
+    {
+      "seed": "1842fd9a799c8accc32e5c0efe6a565f",
+      "locale": "pt",
+      "origem": "leitura real de produção",
+      "sha256": "c631b5b98c086cd1491e5164187332d0cbdf5e9a287f0889cfad66e27d7feedf"
+    },
+    {
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "pt",
+      "origem": "caso 5 do teste",
+      "sha256": "6e0995e41e098c6703878ab8beff0c90823107375f559c5b44e5332ec5fd1c27"
+    },
+    {
+      "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
+      "locale": "pt",
+      "origem": "caso 21 do teste",
+      "sha256": "8fd765de87d40f2bd2a0fdf95da29275b0d8b530695e512cfc161f12a5d23365"
+    },
+    {
+      "seed": "08da4d419fd87deca7fe7d2b2ae54506",
+      "locale": "pt",
+      "origem": "caso 36 do teste",
+      "sha256": "61f9a50a0ac96b8370b7475b4edc7a93f2da1ef7d9b1963c74edeac983a1b5d5"
+    },
+    {
+      "seed": "f37215242ebd664846b7938bc612315a",
+      "locale": "pt",
+      "origem": "caso 6 do teste",
+      "sha256": "fd4cc4d953b7cb50190323ac190c2dd7b12488d352df309638d343b02eb1cce4"
+    },
+    {
+      "seed": "7a65af7a922aa250325478cccf4925d6",
+      "locale": "pt",
+      "origem": "caso 30 do teste",
+      "sha256": "3ecd1e4526730361deeea4965e14ac857a7ccadf9c4899778f8a8fca06181b0d"
+    },
+    {
+      "seed": "f85789b89b26e67d455b69f1907d7d64",
+      "locale": "pt",
+      "origem": "caso 9 do teste",
+      "sha256": "5c96b1c36d78cd749713c6ffd8dfc0eebbe0d8e96498ea1631ab7993628efdd8"
+    },
+    {
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "en",
+      "origem": "caso 5 do teste",
+      "sha256": "8795e5764a540e42c57e2714434164cd074a0581d1b3219d9e252fda5f901570"
+    },
+    {
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "es",
+      "origem": "caso 5 do teste",
+      "sha256": "3437449bc9a0d50cb2e9df8bd770b74e5d77d4fd38e357c2634ef10d1f739edf"
+    }
+  ],
+  "promptComTrechosDeTeste": [
+    {
+      "pergunta": "O que fazer agora que perdi minha chance na carreira?",
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "pt",
+      "sha256": "d9d257034d9fbd9cfaa07ec0d2a99a5a5a2fa53a60c2537cfdc8aa9cbb034121"
+    },
+    {
+      "pergunta": "O que envolve a decisão de voltar a estudar?",
+      "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
+      "locale": "pt",
+      "sha256": "10e9d67c8797d28dbf99eaa0672fb82cb59d77470f176af5603c3563ba76965e"
+    },
+    {
+      "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
+      "seed": "08da4d419fd87deca7fe7d2b2ae54506",
+      "locale": "pt",
+      "sha256": "c676ad49bb956e85e5353c8208b4efabab9c4c760d5bf059366e8ae5593b63bb"
+    },
+    {
+      "pergunta": "Minha família está contra mim nessa decisão?",
+      "seed": "f37215242ebd664846b7938bc612315a",
+      "locale": "pt",
+      "sha256": "9c5b714d0123f84600cc3ae3ee862f062fcb1d08dd0c600241926f47f3afcd6b"
+    },
+    {
+      "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
+      "seed": "7a65af7a922aa250325478cccf4925d6",
+      "locale": "pt",
+      "sha256": "ca43159931d686583bdd94f624a16760ec4404fc1c2f19ddd721f3e7f8239603"
+    },
+    {
+      "pergunta": "Estou sendo sabotado no trabalho?",
+      "seed": "f85789b89b26e67d455b69f1907d7d64",
+      "locale": "pt",
+      "sha256": "6d16922b5f4e3c6dafa1d78b4c0357740fbcce5d978723b02687ffbb8d8cedeb"
+    },
+    {
+      "pergunta": "O que fazer agora que perdi minha chance na carreira?",
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "en",
+      "sha256": "6f30ce294a991592d9f131840bea9747e504dc5c1850051778bcadee2f1e59d3"
+    },
+    {
+      "pergunta": "O que fazer agora que perdi minha chance na carreira?",
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "locale": "es",
+      "sha256": "e9d466cf8729b691d5066d18be95b10b8cfedf253221e1049aef26046f8451c3"
+    }
+  ],
+  "casosAprovados": [
+    {
+      "id": 5,
+      "pergunta": "O que fazer agora que perdi minha chance na carreira?",
+      "seed": "907b5dd13a58cb6bc28628def33eb705",
+      "sha256": "c40ad95250f945100aac91b2ec4fa75f55c0c3aadb5f4f70f2995de28c82ddbc"
+    },
+    {
+      "id": 21,
+      "pergunta": "O que envolve a decisão de voltar a estudar?",
+      "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
+      "sha256": "69fccd9a55b9d8612c29dc558d02db40690210be05c06686c1aece4f12237a4b"
+    },
+    {
+      "id": 36,
+      "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
+      "seed": "08da4d419fd87deca7fe7d2b2ae54506",
+      "sha256": "c3bb71c69c373d016f421eb6136d89489572ff67d7ea41f09348eaf30a346f6d"
+    },
+    {
+      "id": 6,
+      "pergunta": "Minha família está contra mim nessa decisão?",
+      "seed": "f37215242ebd664846b7938bc612315a",
+      "sha256": "91a70bc47fd1281fe9e763f1c9a5272d02eba0a6eabb76bfd77b0cfde212ba44"
+    },
+    {
+      "id": 30,
+      "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
+      "seed": "7a65af7a922aa250325478cccf4925d6",
+      "sha256": "a0f46d98d732c4b7763f53739cd13319d138c1c73de3b7a7fe9a0d763127a7df"
+    },
+    {
+      "id": 9,
+      "pergunta": "Estou sendo sabotado no trabalho?",
+      "seed": "f85789b89b26e67d455b69f1907d7d64",
+      "sha256": "b1b3f3962b9537ec8cc01f8c28d2ab749f3412869020b78d93bac722d859a9db"
+    }
+  ]
+}

@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "prebuild": "npm run verify:synthesis",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "verify:synthesis": "node --import ./scripts/ts-register.mjs scripts/verify-cbase-min.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

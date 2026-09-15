@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { createSynthesisFilter, normalizeSynthesisText, synthesisPrompt, type SynthesisInput } from "@/lib/oracles/synthesis"
+import { createSynthesisFilter, normalizeSynthesisText } from "@/lib/oracles/synthesis"
+import { cbaseMinSynthesisPrompt } from "@/lib/oracles/synthesis-cbase-min"
+import { buildCBaseMinMaterial } from "@/lib/oracles/references"
 import { SYNTHESIS_SYSTEM_MESSAGE } from "@/lib/oracles/language"
 import { resolveLocale } from "@/lib/i18n/config"
 import { cookies } from "next/headers"
@@ -79,7 +81,6 @@ export async function POST(req: Request) {
   }
 
   const openai = new OpenAI({ apiKey })
-  const oracles = record.oracles as unknown as SynthesisInput
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -95,6 +96,10 @@ export async function POST(req: Request) {
       try {
         send({ type: "start", locale })
 
+        // síntese C-base-min: o sorteio é refeito pelo seed, no idioma em que a
+        // leitura foi feita, com os trechos de referência escolhidos por item
+        const material = await buildCBaseMinMaterial(record.question, seed, resolveLocale(record.locale))
+
         const synthStream = await openai.chat.completions.create(
           {
             model: "gpt-4o",
@@ -105,7 +110,7 @@ export async function POST(req: Request) {
             stream_options: { include_usage: true },
             messages: [
               { role: "system", content: SYNTHESIS_SYSTEM_MESSAGE[locale] },
-              { role: "user", content: synthesisPrompt(record.question, oracles, locale, seed) },
+              { role: "user", content: cbaseMinSynthesisPrompt(record.question, material, locale, seed) },
             ],
           },
           { timeout: SYNTHESIS_TIMEOUT_MS, maxRetries: 0 }

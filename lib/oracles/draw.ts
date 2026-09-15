@@ -635,6 +635,15 @@ export type AllDraws = {
  * Realiza as cinco tiragens de uma vez. Cada oráculo recebe seu próprio RNG
  * derivado do seed, de modo que o resultado de um nunca influencia o outro e
  * cada tiragem é reproduzível isoladamente.
+ *
+ * ATENÇÃO: leituras já guardadas dependem desta função. A síntese C-base-min
+ * (lib/oracles/references.ts → buildCBaseMinMaterial) refaz o sorteio a partir
+ * do seed guardado para montar o material; se o resultado de drawAll (ou de
+ * renderDraw) mudar para um seed antigo, a síntese dessa leitura passa a
+ * descrever símbolos diferentes dos que a pessoa viu. Qualquer mudança aqui,
+ * nas tabelas de símbolos, no RNG ou na ordem das chamadas precisa manter a
+ * mesma saída para seeds existentes; `npm run verify:synthesis` confere isso
+ * em seeds conhecidos, incluindo uma leitura real de produção.
  */
 export function drawAll(seed: string): AllDraws {
   return {
@@ -648,7 +657,7 @@ export function drawAll(seed: string): AllDraws {
 
 /**
  * A busca de referências acontece POR ITEM (ver getEvidenceForOracle em
- * app/consultas/route.ts), usando searchTerms/broadTerms de cada DrawItem.
+ * lib/oracles/references.ts), usando searchTerms/broadTerms de cada DrawItem.
  * Não existe mais um saco único de termos por oráculo: ele fazia uma carta
  * bem documentada tomar as vagas das outras.
  */

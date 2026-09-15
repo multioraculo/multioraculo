@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import fs from "fs/promises"
-import path from "path"
-import https from "https"
-import os from "os"
-import { drawAll, newSeed, normalizeText, RUNES, type OracleDraw, type OracleKey } from "@/lib/oracles/draw"
-import { keywords, selectEvidence, type Chunk, type Evidence } from "@/lib/oracles/evidence"
+import { drawAll, newSeed, normalizeText, RUNES, type OracleKey } from "@/lib/oracles/draw"
+import { type Evidence } from "@/lib/oracles/evidence"
+import { buildCBaseMinMaterial, getEvidenceForOracle, ORACLE_SOURCES } from "@/lib/oracles/references"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import { tarotCardRef, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import { lenormandId } from "@/lib/oracles/lenormand-assets"
@@ -24,7 +21,8 @@ import { failPreview, findPendingPreview, reservePreview, storePreviewResult, te
 import { purgeExpiredTechnicalResults, storeReadingResult } from "@/lib/billing/results"
 import { logEvent } from "@/lib/billing/events"
 import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
-import { createSynthesisFilter, normalizeSynthesisText, synthesisPrompt } from "@/lib/oracles/synthesis"
+import { createSynthesisFilter, normalizeSynthesisText } from "@/lib/oracles/synthesis"
+import { cbaseMinSynthesisPrompt } from "@/lib/oracles/synthesis-cbase-min"
 import { PENDING_READING_COOKIE, serializePendingReadingCookie } from "@/lib/billing/visitor"
 import { VISITOR_COOKIE, isVisitorId, newVisitorId, serializeVisitorCookie } from "@/lib/billing/visitor"
 
@@ -44,7 +42,6 @@ const SAFETY_TIMEOUT_MS = 6_000
 const ORACLE_TIMEOUT_MS = 25_000
 /** só vale tentar de novo se ainda sobrar isto do orçamento total */
 const ORACLE_RETRY_MIN_REMAINING_MS = 20_000
-const INDEX_TIMEOUT_MS = 10_000
 const HEARTBEAT_MS = 8_000
 
 /** Erro com código estável; o texto mostrado à pessoa vem do dicionário do cliente. */
@@ -54,37 +51,6 @@ class ConsultaError extends Error {
   }
 }
 type ConsultaErrorCode = "oracle_failed" | "references_unavailable" | "timeout" | "storage_failed" | "internal"
-
-const INDEX_URL =
-  process.env.PDFS_INDEX_URL ||
-  "https://github.com/multioraculo/multioraculo/releases/download/v1-data/pdfs.index.json"
-
-const LOCAL_INDEX = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.json")
-const TMP_DIR = os.tmpdir()
-const TMP_INDEX = path.join(TMP_DIR, "pdfs.index.json")
-
-const ORACLE_SOURCES: Record<OracleKey, { files: string[]; method: string }> = {
-  tarot: {
-    files: ["jung_tarot.pdf"],
-    method: "Cruz Celta (10 posições) com leitura arquetípica",
-  },
-  iching: {
-    files: ["i_ching_original.pdf"],
-    method: "Hexagrama principal + linhas mutantes + hexagrama resultante",
-  },
-  runas: {
-    files: ["futhark_handbook.pdf"],
-    method: "Tiragem 9 runas (mapa de forças) com aplicação prática",
-  },
-  buzios: {
-    files: ["jogo_buzios.pdf", "odus_afro_brasileiros.pdf", "umbandadobrasil.pdf"],
-    method: "Leitura por Odus (qualidade do tempo, risco, proteção, direção)",
-  },
-  lenormand: {
-    files: ["lenormand_handbook.pdf"],
-    method: "Mesa 9 cartas (quadro curto) + leitura por posição e combinação",
-  },
-}
 
 const ORACLE_KEYS: OracleKey[] = ["tarot", "iching", "runas", "buzios", "lenormand"]
 
@@ -150,125 +116,6 @@ function drawExtras(k: OracleKey, draws: ReturnType<typeof drawAll>) {
     }
   }
   return {}
-}
-
-async function download(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const fetchUrl = (targetUrl: string) => {
-      const req = https
-        .get(targetUrl, (res) => {
-          // Segue redirects 301/302
-          if (res.statusCode === 301 || res.statusCode === 302) {
-            const redirectUrl = res.headers.location
-            if (!redirectUrl) {
-              reject(new Error(`Redirect sem location header de ${targetUrl}`))
-              return
-            }
-            fetchUrl(redirectUrl)
-            return
-          }
-
-          if (res.statusCode !== 200) {
-            reject(new Error(`HTTP ${res.statusCode} from ${targetUrl}`))
-            return
-          }
-
-          const chunks: Buffer[] = []
-          res.on("data", (chunk) => chunks.push(chunk))
-          res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")))
-        })
-        .on("error", reject)
-      // rede parada não pode segurar a função até o limite do Netlify
-      req.setTimeout(INDEX_TIMEOUT_MS, () => req.destroy(new Error(`timeout ao baixar ${targetUrl}`)))
-    }
-    fetchUrl(url)
-  })
-}
-
-async function readFromAnywhere(
-  localPath: string,
-  tmpPath: string,
-  url: string,
-  label: string
-): Promise<string> {
-  try {
-    return await fs.readFile(localPath, "utf8")
-  } catch {}
-
-  try {
-    return await fs.readFile(tmpPath, "utf8")
-  } catch {}
-
-  console.log(`[consultas] downloading ${label} from ${url}`)
-  const content = await download(url)
-  await fs.writeFile(tmpPath, content, "utf8").catch(() => {})
-  return content
-}
-
-let indexPromise: Promise<Map<string, string[]>> | null = null
-
-/**
- * Índice de trechos das referências, carregado uma vez por instância.
- *
- * Se a carga falhar, o cache é ESQUECIDO: sem isso uma única falha de rede
- * deixava a promessa rejeitada em memória e derrubava todas as consultas
- * seguintes daquela instância até ela ser reciclada.
- */
-function getIndex(): Promise<Map<string, string[]>> {
-  if (!indexPromise) {
-    indexPromise = readFromAnywhere(LOCAL_INDEX, TMP_INDEX, INDEX_URL, "pdfs.index.json")
-      .then((raw) => {
-        const data = JSON.parse(raw) as {
-          index: Array<{ file: string; chunks: string[] }>
-        }
-        const map = new Map<string, string[]>()
-        for (const entry of data.index) {
-          map.set(entry.file, entry.chunks)
-        }
-        return map
-      })
-      .catch((err) => {
-        indexPromise = null // permite nova tentativa na próxima consulta
-        throw err
-      })
-  }
-  return indexPromise
-}
-
-/** Trechos normalizados por arquivo, reaproveitados entre consultas da instância. */
-const normalizedCache = new Map<string, Array<{ raw: string; norm: string }>>()
-
-async function chunksOf(file: string): Promise<Array<{ raw: string; norm: string }>> {
-  const cached = normalizedCache.get(file)
-  if (cached) return cached
-  const index = await getIndex()
-  const built = (index.get(file) ?? []).map((raw) => ({ raw, norm: normalizeText(raw) }))
-  normalizedCache.set(file, built)
-  return built
-}
-
-/**
- * Trechos de referência deste oráculo, escolhidos POR ITEM SORTEADO. A regra
- * de seleção vive em lib/oracles/evidence.ts (módulo puro, coberto por
- * testes); aqui só montamos o conjunto de trechos vindos do índice.
- */
-async function getEvidenceForOracle(
-  draw: OracleDraw,
-  rendered: RenderedDraw,
-  question: string,
-  files: string[]
-): Promise<Evidence[]> {
-  const pool: Chunk[] = []
-  for (const f of files) {
-    const chunks = await chunksOf(f)
-    chunks.forEach((c, i) => pool.push({ source: f, id: `${f}#${i}`, raw: c.raw, norm: c.norm }))
-  }
-  return selectEvidence(
-    draw.items,
-    rendered.items.map((it) => it.name),
-    keywords(question),
-    pool
-  )
 }
 
 /**
@@ -561,13 +408,14 @@ async function interpretAll(
 async function synthesizeStreamingPreview(
   openai: OpenAI,
   question: string,
-  results: Record<OracleKey, OracleResult>,
   locale: Locale,
   seed: string,
   send: (obj: object) => void,
   deadline: number,
   userId: string | null = null
 ): Promise<{ synthesis: string; teaser: string }> {
+  // síntese C-base-min: lê o resultado bruto dos sorteios, não as interpretações
+  const material = await buildCBaseMinMaterial(question, seed, locale)
   const stream = await openai.chat.completions.create(
     {
       model: "gpt-4o",
@@ -578,7 +426,7 @@ async function synthesizeStreamingPreview(
       stream_options: { include_usage: true },
       messages: [
         { role: "system", content: SYNTHESIS_SYSTEM_MESSAGE[locale] },
-        { role: "user", content: synthesisPrompt(question, results, locale, seed) },
+        { role: "user", content: cbaseMinSynthesisPrompt(question, material, locale, seed) },
       ],
     },
     { timeout: Math.max(8_000, deadline - Date.now()), maxRetries: 0 }
@@ -780,7 +628,7 @@ export async function POST(req: Request) {
           send({ type: "stage", stage: "synthesis" })
           // A síntese começa a ser escrita ao vivo; no corte do teaser o
           // navegador recebe "preview_locked" e o resto fica só aqui.
-          const { synthesis } = await synthesizeStreamingPreview(openai, question, results, locale, seed, send, deadline, userId)
+          const { synthesis } = await synthesizeStreamingPreview(openai, question, locale, seed, send, deadline, userId)
 
           const stored = await storePreviewResult({ seed, userId, visitorId, question, locale, oracles: results, synthesis })
           if (!stored) throw new ConsultaError("storage_failed")
