@@ -6,7 +6,7 @@ import { useI18n } from "@/components/i18n-provider"
 
 /**
  * Painel "Explorar": bottom sheet leve com os destinos de descoberta do
- * produto (Oráculos e FAQ), visível também para quem não fez login.
+ * produto (Oráculos, Planos e FAQ), visível também para quem não fez login.
  * Sem busca textual. Fecha ao tocar fora, no Esc ou ao escolher um destino.
  */
 export default function ExploreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -24,6 +24,7 @@ export default function ExploreSheet({ open, onClose }: { open: boolean; onClose
 
   const items = [
     { href: "/oraculos", label: t.oracles, hint: t.exploreOracles },
+    { href: "/assinatura", label: t.plans, hint: t.explorePlans },
     { href: "/faq", label: t.faq, hint: t.exploreFaq },
   ]
 

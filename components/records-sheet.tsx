@@ -8,8 +8,8 @@ import type { Dictionary } from "@/lib/i18n"
 
 /**
  * "Registros": área pessoal da navegação principal. Reúne o que a pessoa
- * guardou no produto (leituras salvas, sonhos salvos, Grimório), tudo em
- * rotas que já existem. Sem novos tipos de registro.
+ * guardou no produto (leituras salvas e sonhos salvos), tudo em rotas que já
+ * existem. O Grimório não entra aqui: ele já é item principal da navegação.
  *
  * É pessoal: sem login o painel explica e oferece entrar (abre o modal de
  * login do cabeçalho pelo evento "open-login"). As rotas mantêm as próprias
@@ -20,7 +20,6 @@ export function recordLinks(dict: Dictionary) {
   return [
     { href: "/leituras-salvas", label: dict.nav.savedReadings, hint: t.savedReadingsHint },
     { href: "/sonhos-salvos", label: dict.nav.savedDreams, hint: t.savedDreamsHint },
-    { href: "/diario", label: dict.nav.grimoire, hint: t.grimoireHint },
   ]
 }
 

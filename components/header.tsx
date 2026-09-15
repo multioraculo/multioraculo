@@ -10,7 +10,7 @@ import { upsertProfile } from "@/lib/supabase/queries"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
-import { RecordsIcon, SearchIcon } from "@/components/nav-icons"
+import { SearchIcon } from "@/components/nav-icons"
 import { RecordsLoginPrompt, recordLinks } from "@/components/records-sheet"
 import { useI18n } from "@/components/i18n-provider"
 import BrandLogo from "@/components/brand-logo"
@@ -95,6 +95,7 @@ export default function Header({ initialUser }: HeaderProps) {
   ]
   const exploreLinks = [
     { href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles },
+    { href: "/assinatura", label: dict.nav.plans, hint: dict.nav.explorePlans },
     { href: "/faq", label: dict.nav.faq, hint: dict.nav.exploreFaq },
   ]
   const menuButtonClass = "text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5"
@@ -134,7 +135,6 @@ export default function Header({ initialUser }: HeaderProps) {
             {/* Registros: área pessoal; sem login, convida a entrar */}
             <div className="relative">
               <button type="button" onClick={() => setOpenMenu((m) => (m === "records" ? null : "records"))} aria-haspopup="menu" aria-expanded={openMenu === "records"} className={menuButtonClass}>
-                <RecordsIcon className="w-4 h-4" />
                 {dict.nav.records}
               </button>
               {openMenu === "records" && (
