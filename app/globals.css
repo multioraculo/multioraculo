@@ -645,9 +645,9 @@
   .rp-luz { transition: none; }
   .rp-luz::after { animation: none; }
 }
-/* Marca: o círculo de luz e o logo tipográfico, centrados um sobre o outro. */
+/* Marca: o M, centrado na caixa. */
 .bl-root { position: relative; display: flex; align-items: center; justify-content: center; }
-.bl-logo, .bl-circulo {
+.bl-logo {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: none; user-select: none;
 }
