@@ -1,0 +1,1743 @@
+{
+  "gerado": "2026-09-16T06:43:10.856Z",
+  "datas": [
+    "2026-09-16",
+    "2026-09-21",
+    "2026-10-02",
+    "2026-11-13",
+    "2027-01-07",
+    "2027-02-26",
+    "2027-06-11",
+    "2028-03-30"
+  ],
+  "linhas": [
+    {
+      "dia": "2026-09-16",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.83291364
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7332193440000001
+        },
+        {
+          "id": "aspecto:mercury~saturn:opposition",
+          "nota": 0.5693079600000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 1.004618472
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.65655792
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~saturn:opposition",
+          "nota": 0.7825207338000001
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.6331651199999999
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.65187936
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.77547132
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.70671744
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~saturn:opposition",
+          "nota": 0.7825207338000001
+        },
+        {
+          "id": "posicao:sun",
+          "nota": 0.747162
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.9707549279999999
+        },
+        {
+          "id": "posicao:mercury",
+          "nota": 0.6650864000000002
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.65655792
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 1.179334728
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 1.0807654000000002
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.7214079599999998
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.70671744
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.66123648
+        },
+        {
+          "id": "regente:jupiter",
+          "nota": 0.621
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~saturn:opposition",
+          "nota": 0.8285513652000003
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.6331651199999999
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.6472008000000001
+        },
+        {
+          "id": "aspecto:mercury~saturn:opposition",
+          "nota": 0.7214936976000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-16",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7279189632
+        },
+        {
+          "id": "aspecto:sun~mars:sextile",
+          "nota": 0.65187936
+        },
+        {
+          "id": "regente:neptune",
+          "nota": 0.5564160000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8770215167999998
+        },
+        {
+          "id": "regente:mars",
+          "nota": 0.7038000000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8644326912
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8644326912
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.8598624862500001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 1.0203404543999999
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 1.0203404543999999
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8644326912
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.8598624862500001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8644326912
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "posicao:mercury",
+          "nota": 0.6650864000000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8770215167999998
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.7263788400000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.9104426325000001
+        },
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8770215167999998
+        },
+        {
+          "id": "aspecto:venus~pluto:square",
+          "nota": 0.43528320000000004
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "posicao:moon",
+          "nota": 0.9964175
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        },
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8833159295999999
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8833159295999999
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.639999873
+        },
+        {
+          "id": "regente:uranus",
+          "nota": 0.5564160000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-09-21",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~moon:trine",
+          "nota": 0.8770215167999998
+        },
+        {
+          "id": "aspecto:mercury~jupiter:sextile",
+          "nota": 0.7929148320000001
+        },
+        {
+          "id": "regente:neptune",
+          "nota": 0.5564160000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.368987345
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8042067990000004
+        },
+        {
+          "id": "aspecto:mars~neptune:trine",
+          "nota": 0.9526740300000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.1076888130000002
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8159185485000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.368987345
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 0.954707
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8159185485000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.0687770280000004
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8217744232500003
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.0687770280000004
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.9844376107500004
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.368987345
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8159185485000002
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 1.120297662
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.1076888130000002
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8159185485000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~pluto:opposition",
+          "nota": 1.5074541504
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 1.3151320380000002
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.7924950495000003
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.1076888130000002
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.8042067990000004
+        },
+        {
+          "id": "regente:jupiter",
+          "nota": 0.621
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 1.0969137828000004
+        },
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.0687770280000004
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.8400533328000002
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~mars:square",
+          "nota": 1.0687770280000004
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.9834399432000003
+        },
+        {
+          "id": "regente:uranus",
+          "nota": 0.5564160000000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-10-02",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~neptune:trine",
+          "nota": 1.1495664180000003
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.8706377988
+        },
+        {
+          "id": "aspecto:sun~saturn:opposition",
+          "nota": 0.7924950495000003
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.3024767600000002
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.8025937919999999
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.62826192
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9831267000000002
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.8531712000000002
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.826315776
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9831267000000002
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.8531712000000002
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.826315776
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.0044475200000003
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.996982272
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.0044475200000003
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.832246272
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9831267000000002
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.8531712000000002
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.826315776
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "posicao:venus",
+          "nota": 1.17548032
+        },
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9831267000000002
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.826315776
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.1258433
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 1.013072346
+        },
+        {
+          "id": "posicao:sun",
+          "nota": 0.747162
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.3790930400000003
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.8025937919999999
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.6518217420000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 1.133822976
+        },
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9475920000000001
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 0.9964175
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.9754128383999999
+        },
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 0.9475920000000001
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.6471097776000001
+        }
+      ]
+    },
+    {
+      "dia": "2026-11-13",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~jupiter:conjunction",
+          "nota": 1.2008995200000003
+        },
+        {
+          "id": "aspecto:moon~saturn:square",
+          "nota": 0.814454784
+        },
+        {
+          "id": "aspecto:mercury~pluto:square",
+          "nota": 0.6706695995999999
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.154725
+        },
+        {
+          "id": "regente:mars",
+          "nota": 0.7038000000000001
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6703167150000002
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.13815
+        },
+        {
+          "id": "ingresso:venus",
+          "nota": 1.012
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.8874742050000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.13815
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6848537040000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.4824
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6460884000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.2044499999999998
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6703167150000002
+        },
+        {
+          "id": "posicao:jupiter",
+          "nota": 0.5244456000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.13815
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6654710520000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.13815
+        },
+        {
+          "id": "ingresso:venus",
+          "nota": 1.012
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.9122409270000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.154725
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6703167150000002
+        },
+        {
+          "id": "regente:pluto",
+          "nota": 0.4968
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.154725
+        },
+        {
+          "id": "ingresso:venus",
+          "nota": 0.7562500000000001
+        },
+        {
+          "id": "regente:jupiter",
+          "nota": 0.6955200000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.453765625
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 0.9964175
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6654710520000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.1630125
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 1.0708915230000002
+        },
+        {
+          "id": "ingresso:venus",
+          "nota": 0.6413000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-01-07",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "lunacao:new",
+          "nota": 1.154725
+        },
+        {
+          "id": "aspecto:venus~neptune:trine",
+          "nota": 0.8678103480000002
+        },
+        {
+          "id": "aspecto:venus~uranus:opposition",
+          "nota": 0.6460884000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9966440880000002
+        },
+        {
+          "id": "regente:mars",
+          "nota": 0.7882560000000002
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.6918110154
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9680322960000001
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.6918110154
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.0037970360000001
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.8531712000000002
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.9294725902500002
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.1943833616000001
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.6918110154
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9966440880000002
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        },
+        {
+          "id": "posicao:mars",
+          "nota": 0.6882198400000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.0037970360000001
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.8531712000000002
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.9294725902500002
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9680322960000001
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.6918110154
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.0109499840000002
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 0.9825140000000001
+        },
+        {
+          "id": "regente:pluto",
+          "nota": 0.4968
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.3398796224000002
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.9841474485000002
+        },
+        {
+          "id": "regente:jupiter",
+          "nota": 0.6955200000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9894911400000003
+        },
+        {
+          "id": "posicao:venus",
+          "nota": 0.6650864000000002
+        },
+        {
+          "id": "regente:saturn",
+          "nota": 0.5796
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 0.9680322960000001
+        },
+        {
+          "id": "posicao:mercury",
+          "nota": 0.7448967680000003
+        },
+        {
+          "id": "regente:uranus",
+          "nota": 0.4968
+        }
+      ]
+    },
+    {
+      "dia": "2027-02-26",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:moon~jupiter:square",
+          "nota": 1.1930057568000003
+        },
+        {
+          "id": "posicao:sun",
+          "nota": 0.747162
+        },
+        {
+          "id": "aspecto:mercury~jupiter:opposition",
+          "nota": 0.8571051936000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8568252000000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8150999999999999
+        },
+        {
+          "id": "regente:mars",
+          "nota": 0.7038000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8034
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 1.1769446149999998
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8034
+        },
+        {
+          "id": "posicao:venus",
+          "nota": 0.6650864000000002
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 1.0463999999999998
+        },
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        },
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8568252000000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8502
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 1.2180008224999999
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 1.00425
+        },
+        {
+          "id": "posicao:moon",
+          "nota": 0.954707
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8034
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8150999999999999
+        },
+        {
+          "id": "regente:pluto",
+          "nota": 0.5564160000000001
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8889561450000003
+        },
+        {
+          "id": "aspecto:sun~jupiter:sextile",
+          "nota": 0.8155516590000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8150999999999999
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8209500000000001
+        },
+        {
+          "id": "regente:saturn",
+          "nota": 0.5796
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:venus~uranus:conjunction",
+          "nota": 0.9175157550000002
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8209500000000001
+        },
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 0.8825299560000002
+        }
+      ]
+    },
+    {
+      "dia": "2027-06-11",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:mercury~neptune:square",
+          "nota": 1.4298270525000003
+        },
+        {
+          "id": "lunacao:first_quarter",
+          "nota": 0.8150999999999999
+        },
+        {
+          "id": "aspecto:sun~jupiter:sextile",
+          "nota": 0.7063703010000001
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 0,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 1.0674830400000002
+        },
+        {
+          "id": "posicao:mars",
+          "nota": 0.9696799999999998
+        },
+        {
+          "id": "aspecto:mars~pluto:sextile",
+          "nota": 0.8073577875
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 1,
+      "movimentos": [
+        {
+          "id": "posicao:venus",
+          "nota": 1.0495359999999998
+        },
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8414611200000002
+        },
+        {
+          "id": "aspecto:mars~pluto:sextile",
+          "nota": 0.6318452250000001
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 2,
+      "movimentos": [
+        {
+          "id": "posicao:moon",
+          "nota": 0.954707
+        },
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8114803200000001
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 3,
+      "movimentos": [
+        {
+          "id": "regente:moon",
+          "nota": 0.9522
+        },
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8354649600000001
+        },
+        {
+          "id": "aspecto:mars~pluto:sextile",
+          "nota": 0.6230287800000001
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 4,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.9938635200000001
+        },
+        {
+          "id": "regente:sun",
+          "nota": 0.7452000000000001
+        },
+        {
+          "id": "aspecto:mercury~venus:sextile",
+          "nota": 0.4283136
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 5,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8114803200000001
+        },
+        {
+          "id": "regente:mercury",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "posicao:jupiter",
+          "nota": 0.531867
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 6,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8414611200000002
+        },
+        {
+          "id": "regente:venus",
+          "nota": 0.7617600000000001
+        },
+        {
+          "id": "aspecto:mars~pluto:sextile",
+          "nota": 0.6098041125000001
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 7,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~pluto:sextile",
+          "nota": 1.06768781625
+        },
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.92457456
+        },
+        {
+          "id": "aspecto:mars~neptune:conjunction",
+          "nota": 0.7414692
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 8,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8474572800000002
+        },
+        {
+          "id": "regente:jupiter",
+          "nota": 0.6955200000000001
+        },
+        {
+          "id": "aspecto:mercury~venus:sextile",
+          "nota": 0.44437536000000005
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 9,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8114803200000001
+        },
+        {
+          "id": "regente:saturn",
+          "nota": 0.5796
+        },
+        {
+          "id": "aspecto:mercury~venus:sextile",
+          "nota": 0.45401241600000003
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 10,
+      "movimentos": [
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8294688000000002
+        },
+        {
+          "id": "regente:uranus",
+          "nota": 0.4968
+        },
+        {
+          "id": "aspecto:mercury~venus:sextile",
+          "nota": 0.45401241600000003
+        }
+      ]
+    },
+    {
+      "dia": "2028-03-30",
+      "signo": 11,
+      "movimentos": [
+        {
+          "id": "aspecto:mars~neptune:conjunction",
+          "nota": 1.02178908
+        },
+        {
+          "id": "posicao:mercury",
+          "nota": 0.6744980000000002
+        },
+        {
+          "id": "aspecto:sun~mars:conjunction",
+          "nota": 0.8354649600000001
+        }
+      ]
+    }
+  ]
+}

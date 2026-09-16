@@ -7,7 +7,7 @@
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
 import { PRICING_VERSION, estimateCostUsd } from "./pricing"
 
-export type AiOperation = "safety" | "oracle" | "synthesis" | "dream" | "journey" | "transcribe"
+export type AiOperation = "safety" | "oracle" | "synthesis" | "dream" | "journey" | "transcribe" | "horoscope"
 
 /** Formato de `usage` devolvido pela OpenAI (respostas normais e último chunk do streaming). */
 export type TokenUsage =

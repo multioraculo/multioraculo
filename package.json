@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:astro",
+    "prebuild": "npm run verify:synthesis && npm run verify:astro && npm run verify:horoscopo",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
     "verify:synthesis": "node --import ./scripts/ts-register.mjs scripts/verify-cbase-min.ts",
     "verify:astro": "node --import ./scripts/ts-register.mjs scripts/verify-astro.ts",
-    "verify:astro:cross": "node --import ./scripts/ts-register.mjs scripts/verify-astro.ts --cross"
+    "verify:astro:cross": "node --import ./scripts/ts-register.mjs scripts/verify-astro.ts --cross",
+    "verify:horoscopo": "node --import ./scripts/ts-register.mjs scripts/verify-horoscopo.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
