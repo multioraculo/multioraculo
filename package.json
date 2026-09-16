@@ -3,12 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis",
+    "prebuild": "npm run verify:synthesis && npm run verify:astro",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "verify:synthesis": "node --import ./scripts/ts-register.mjs scripts/verify-cbase-min.ts"
+    "verify:synthesis": "node --import ./scripts/ts-register.mjs scripts/verify-cbase-min.ts",
+    "verify:astro": "node --import ./scripts/ts-register.mjs scripts/verify-astro.ts",
+    "verify:astro:cross": "node --import ./scripts/ts-register.mjs scripts/verify-astro.ts --cross"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -44,6 +46,8 @@
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.102.1",
     "autoprefixer": "^10.4.20",
+    "caelus": "0.24.1",
+    "caelus-birth": "0.24.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -75,6 +79,8 @@
     "@types/node": "^22",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
+    "@xalen/wasm": "0.6.0",
+    "astronomy-engine": "2.1.19",
     "dotenv": "^17.3.1",
     "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.5.207",
