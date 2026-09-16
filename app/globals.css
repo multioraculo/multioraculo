@@ -645,6 +645,20 @@
   .rp-luz { transition: none; }
   .rp-luz::after { animation: none; }
 }
+/* Roda do mapa: gravura em marfim. Capitulares em serifa, números em sans,
+   nada de cor de sinalização — tensão e fluidez se distinguem pelo traço. */
+.aw-root { color: #f4ead8; }
+.aw-signo {
+  font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
+  font-size: 30px; letter-spacing: 0.12em;
+}
+.aw-eixo {
+  font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
+  font-size: 26px; letter-spacing: 0.1em;
+}
+.aw-casa { font-size: 21px; font-variant-numeric: tabular-nums; }
+.aw-grau { font-size: 19px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+
 /* Marca: o M, centrado na caixa. */
 .bl-root { position: relative; display: flex; align-items: center; justify-content: center; }
 .bl-logo {
