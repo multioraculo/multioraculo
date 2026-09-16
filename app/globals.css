@@ -650,7 +650,7 @@
 .aw-root { color: #f4ead8; }
 .aw-signo {
   font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;
-  font-size: 30px; letter-spacing: 0.12em;
+  font-size: 23px; letter-spacing: 0.1em;
 }
 .aw-eixo {
   font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif;

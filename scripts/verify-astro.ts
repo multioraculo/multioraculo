@@ -54,11 +54,15 @@ if (process.argv.includes("--write")) {
   process.exit(0)
 }
 
-if (process.argv.includes("--cross")) {
-  await cruzado()
-} else {
-  conferir()
+async function main() {
+  if (process.argv.includes("--cross")) await cruzado()
+  else conferir()
 }
+
+main().catch((err) => {
+  console.error("[verify:astro] erro ao conferir o motor:", err)
+  process.exit(1)
+})
 
 function conferir() {
   if (!fs.existsSync(arquivo)) {

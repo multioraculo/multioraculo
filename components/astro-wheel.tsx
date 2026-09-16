@@ -27,7 +27,7 @@ export type RodaProps = {
   className?: string
 }
 
-const SIGNOS_PT = ["ÁRI", "TOU", "GÊM", "CÂN", "LEÃ", "VIR", "LIB", "ESC", "SAG", "CAP", "AQU", "PEI"]
+const SIGNOS_PT = ["ÁRIES", "TOURO", "GÊMEOS", "CÂNCER", "LEÃO", "VIRGEM", "LIBRA", "ESCORPIÃO", "SAGITÁRIO", "CAPRICÓRNIO", "AQUÁRIO", "PEIXES"]
 
 /** Raios, em fração do lado: de fora para dentro. */
 const R = {
@@ -162,6 +162,12 @@ export default function AstroWheel({
         {Array.from({ length: 12 }, (_, i) => {
           const inicio = i * 30
           const [x, y] = P(inicio + 15, R.rotulo)
+          // o nome acompanha o anel: assim cabe inteiro, sem abreviação que
+          // deixe o signo ambíguo. Quando a tangente aponta para baixo, gira
+          // meia volta para o texto não ficar de cabeça para baixo.
+          let giro = (Math.atan2(y - c, x - c) * 180) / Math.PI + 90
+          giro = ((giro % 360) + 360) % 360
+          if (giro > 90 && giro < 270) giro += 180
           return (
             <g key={`s${i}`}>
               <path d={linha(inicio, R.signoDentro, R.signoFora)} strokeWidth={1.25} opacity={0.72} />
@@ -173,7 +179,8 @@ export default function AstroWheel({
                 dominantBaseline="central"
                 fill="currentColor"
                 stroke="none"
-                opacity={0.72}
+                opacity={0.75}
+                transform={`rotate(${giro.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})`}
               >
                 {signos[i]}
               </text>
