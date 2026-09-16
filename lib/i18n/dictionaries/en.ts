@@ -35,9 +35,10 @@ export const en: Dictionary = {
 
   nav: {
     home: "Multioráculo",
-    dreams: "Dream Journal",
+    dreams: "Dreams",
     dreamsShort: "Dreams",
-    grimoire: "Grimoire",
+    grimoire: "Journal",
+    horoscope: "Horoscope",
     subscription: "Subscription",
     savedReadings: "Saved Readings",
     oracles: "Oracles",
@@ -57,6 +58,7 @@ export const en: Dictionary = {
     title: "Records",
     savedReadingsHint: "Readings you kept",
     savedDreamsHint: "Interpreted dreams you saved",
+    grimoireHint: "Your notes and entries",
     loginTitle: "Records are personal.",
     loginText: "Sign in to see your saved readings, dreams and notes.",
     login: "Sign in",
@@ -249,7 +251,7 @@ export const en: Dictionary = {
       },
       {
         q: "What do I get in each reading?",
-        a: "A simultaneous reading of Tarot, I Ching, Runes, Búzios and Lenormand with a unified synthesis and the five oracles in tabs for full consultation. It includes a practical sign for the next 24 to 72 hours. The plans also include dream interpretation, the Dream Journey and the Grimoire.",
+        a: "A simultaneous reading of Tarot, I Ching, Runes, Búzios and Lenormand with a unified synthesis and the five oracles in tabs for full consultation. It includes a practical sign for the next 24 to 72 hours. The plans also include dream interpretation, the Dream Journey and the Journal.",
       },
       {
         q: "How many readings do I get on each plan?",
@@ -325,7 +327,7 @@ export const en: Dictionary = {
         "8 complete readings per month: 5 oracles + integrated synthesis",
         "3 dream interpretations per month",
         "Dream Journey: 1 evolutionary analysis of your dreams per month",
-        "Saved readings, notes and Grimoire linked to your consultations",
+        "Saved readings, notes and Journal linked to your consultations",
       ],
       forWhom: "prefer one good question at a time, week after week, and record what they live.",
       cta: "Start with Essential",
@@ -339,7 +341,7 @@ export const en: Dictionary = {
         "Unlimited complete readings",
         "Unlimited dream interpretations",
         "Dream Journey whenever you want",
-        "Full history of readings, dreams and Grimoire",
+        "Full history of readings, dreams and Journal",
       ],
       forWhom: "create, lead or adjust course often and want zero friction.",
       cta: "Subscribe to Unlimited",
@@ -407,7 +409,7 @@ export const en: Dictionary = {
     saveToJournal: "Save to Journal",
     waitToFinish: "Wait for the interpretation to finish...",
     anotherDream: "Interpret another dream",
-    shareTitle: "Dream Journal",
+    shareTitle: "Dreams",
     errorInterpret: "Error interpreting the dream.",
     noResponse: "No response from the server.",
     savedOk: "Dream saved successfully!",
@@ -447,18 +449,23 @@ export const en: Dictionary = {
     errorNotes: "Error updating notes.",
   },
 
+  horoscope: {
+    title: "Horoscope",
+    soon: "This area is under construction. The daily horoscope for the twelve signs and the natal chart reading are on the way.",
+  },
+
   grimoire: {
-    title: "Grimoire",
+    title: "Journal",
     intro:
       "Your sacred space to record what life reveals. Each entry holds a fragment of your inner crossing. Write about what you felt, understood or lived.",
-    loginToAccess: "Sign in to access your Grimoire.",
+    loginToAccess: "Sign in to access your Journal.",
     newEntry: "New Entry",
     newNote: "New note",
     titlePlaceholder: "Today my day...",
     contentPlaceholder: "Write about your day...",
     editTitlePlaceholder: "Title (optional)",
-    saveToGrimoire: "Save to Grimoire",
-    empty: "No notes in the Grimoire yet.",
+    saveToGrimoire: "Save to Journal",
+    empty: "No notes in the Journal yet.",
     createFirst: "Create your first note",
     confirmDelete: "Delete this note?",
     linkedToReading: "Linked to a reading",
@@ -550,7 +557,7 @@ export const en: Dictionary = {
   billing: {
     planNames: { free: "Free", essential: "Essential", unlimited: "Unlimited" },
     currentPlan: "Your current plan",
-    freeDescription: "1 complete reading and 1 dream interpretation free of charge, no account needed. With an account, 1 of each per month, plus saved dreams and the Grimoire. The Dream Journey is part of the paid plans.",
+    freeDescription: "1 complete reading and 1 dream interpretation free of charge, no account needed. With an account, 1 of each per month, plus saved dreams and the Journal. The Dream Journey is part of the paid plans.",
     trialUsed: "You have already used your free reading. Sign in to continue.",
     freeDreamAvailable: "You have 1 free dream interpretation available this month.",
     freeDreamUsed: "You have already used your free dream interpretation this month. Subscribe to continue.",

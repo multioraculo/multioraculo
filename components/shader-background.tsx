@@ -14,7 +14,7 @@ import { MeshGradient } from "@paper-design/shaders-react";
  *
  *   Multioráculo → violeta puro (tom original)
  *   Sonhos       → violeta + dourado lunar
- *   Grimório     → violeta + prata mineral
+ *   Diário     → violeta + prata mineral
  */
 
 export type BackgroundTone = "multioraculo" | "sonhos" | "grimorio";

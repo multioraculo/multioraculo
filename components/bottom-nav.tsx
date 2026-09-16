@@ -6,14 +6,14 @@ import { usePathname, useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
 import RecordsSheet, { RECORD_PATHS } from "@/components/records-sheet"
-import { BookIcon, MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon } from "@/components/nav-icons"
+import { MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon, StarIcon } from "@/components/nav-icons"
 
 /**
  * Navegação principal no celular, fixa no rodapé, iconográfica:
- * Sonhos | Grimório | Multioráculo | Registros | Explorar.
+ * Sonhos | Horóscopo | Multioráculo | Registros | Explorar.
  * O Multioráculo é a entrada real do produto e fica no centro, com um pouco
  * mais de presença. "Registros" abre o painel pessoal (leituras salvas,
- * sonhos salvos, Grimório); "Explorar" abre o painel público com Oráculos e
+ * sonhos salvos, Diário); "Explorar" abre o painel público com Oráculos e
  * FAQ. A assinatura vive no painel do avatar. Cada rota mantém as próprias
  * regras. No desktop (sm+) some: o cabeçalho leva os mesmos destinos.
  */
@@ -69,7 +69,7 @@ export default function BottomNav() {
     <>
       <nav className="bnav sm:hidden" aria-label={t.mainNav}>
         {item("/sonhos", t.dreamsShort, MoonIcon)}
-        {item("/diario", t.grimoire, BookIcon)}
+        {item("/horoscopo", t.horoscope, StarIcon)}
         {item("/", t.home, MultioraculoIcon, { center: true, onClick: goHome })}
         {sheetButton(t.records, RecordsIcon, recordsActive, records, () => setRecords(true))}
         {sheetButton(t.explore, SearchIcon, exploreActive, explore, () => setExplore(true))}

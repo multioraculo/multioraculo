@@ -91,7 +91,7 @@ export default function Header({ initialUser }: HeaderProps) {
   const navItems = [
     { href: "/", label: dict.nav.home, onClick: handleLogoClick },
     { href: "/sonhos", label: dict.nav.dreamsShort },
-    { href: "/diario", label: dict.nav.grimoire },
+    { href: "/horoscopo", label: dict.nav.horoscope },
   ]
   const exploreLinks = [
     { href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles },

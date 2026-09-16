@@ -35,9 +35,10 @@ export const es: Dictionary = {
 
   nav: {
     home: "Multioráculo",
-    dreams: "Diario de Sueños",
+    dreams: "Sueños",
     dreamsShort: "Sueños",
-    grimoire: "Grimorio",
+    grimoire: "Diario",
+    horoscope: "Horóscopo",
     subscription: "Suscripción",
     savedReadings: "Lecturas Guardadas",
     oracles: "Oráculos",
@@ -57,6 +58,7 @@ export const es: Dictionary = {
     title: "Registros",
     savedReadingsHint: "Lecturas que guardaste",
     savedDreamsHint: "Sueños interpretados y guardados",
+    grimoireHint: "Tus anotaciones y registros",
     loginTitle: "Los registros son personales.",
     loginText: "Entra para ver tus lecturas guardadas, sueños y anotaciones.",
     login: "Entrar",
@@ -249,7 +251,7 @@ export const es: Dictionary = {
       },
       {
         q: "¿Qué recibo en cada tirada?",
-        a: "Una lectura simultánea de Tarot, I Ching, Runas, Búzios y Lenormand con síntesis unificada y los cinco oráculos en pestañas para consulta completa. Incluye una señal práctica para las próximas 24 a 72 horas. Los planes incluyen también interpretación de sueños, el Viaje onírico y el Grimorio.",
+        a: "Una lectura simultánea de Tarot, I Ching, Runas, Búzios y Lenormand con síntesis unificada y los cinco oráculos en pestañas para consulta completa. Incluye una señal práctica para las próximas 24 a 72 horas. Los planes incluyen también interpretación de sueños, el Viaje onírico y el Diario.",
       },
       {
         q: "¿Cuántas tiradas tengo en cada plan?",
@@ -325,7 +327,7 @@ export const es: Dictionary = {
         "8 tiradas completas al mes: 5 oráculos + síntesis integrada",
         "3 interpretaciones de sueños al mes",
         "Viaje onírico: 1 análisis evolutivo de tus sueños al mes",
-        "Lecturas guardadas, notas y Grimorio vinculados a las consultas",
+        "Lecturas guardadas, notas y Diario vinculados a las consultas",
       ],
       forWhom: "prefiere una buena pregunta a la vez, semana tras semana, y registra lo que vive.",
       cta: "Empezar con Esencial",
@@ -339,7 +341,7 @@ export const es: Dictionary = {
         "Tiradas completas ilimitadas",
         "Interpretaciones de sueños ilimitadas",
         "Viaje onírico siempre que quieras",
-        "Historial completo de lecturas, sueños y Grimorio",
+        "Historial completo de lecturas, sueños y Diario",
       ],
       forWhom: "crea, lidera o ajusta el rumbo con frecuencia y quiere cero fricción.",
       cta: "Suscribirme a Ilimitado",
@@ -407,7 +409,7 @@ export const es: Dictionary = {
     saveToJournal: "Guardar en el Diario",
     waitToFinish: "Espera a que termine la interpretación...",
     anotherDream: "Interpretar otro sueño",
-    shareTitle: "Diario de Sueños",
+    shareTitle: "Sueños",
     errorInterpret: "Error al interpretar el sueño.",
     noResponse: "Sin respuesta del servidor.",
     savedOk: "¡Sueño guardado con éxito!",
@@ -447,18 +449,23 @@ export const es: Dictionary = {
     errorNotes: "Error al actualizar las notas.",
   },
 
+  horoscope: {
+    title: "Horóscopo",
+    soon: "Esta área está en construcción. Pronto, el horóscopo diario de los doce signos y la lectura de la carta natal.",
+  },
+
   grimoire: {
-    title: "Grimorio",
+    title: "Diario",
     intro:
       "Tu espacio sagrado para registrar lo que la vida revela. Cada registro guarda un fragmento de tu travesía interior. Escribe sobre lo que sentiste, comprendiste o viviste.",
-    loginToAccess: "Inicia sesión para acceder a tu Grimorio.",
+    loginToAccess: "Inicia sesión para acceder a tu Diario.",
     newEntry: "Nuevo Registro",
     newNote: "Nueva nota",
     titlePlaceholder: "Hoy mi día...",
     contentPlaceholder: "Escribe sobre tu día...",
     editTitlePlaceholder: "Título (opcional)",
-    saveToGrimoire: "Guardar en el Grimorio",
-    empty: "Todavía no hay anotaciones en el Grimorio.",
+    saveToGrimoire: "Guardar en el Diario",
+    empty: "Todavía no hay anotaciones en el Diario.",
     createFirst: "Crear la primera anotación",
     confirmDelete: "¿Deseas eliminar esta nota?",
     linkedToReading: "Vinculada a una lectura",
@@ -550,7 +557,7 @@ export const es: Dictionary = {
   billing: {
     planNames: { free: "Free", essential: "Esencial", unlimited: "Ilimitado" },
     currentPlan: "Tu plan actual",
-    freeDescription: "1 tirada completa y 1 interpretación de sueño gratuitas, sin registro. Con cuenta, 1 de cada al mes, además de sueños guardados y Grimorio. El Viaje onírico forma parte de los planes de pago.",
+    freeDescription: "1 tirada completa y 1 interpretación de sueño gratuitas, sin registro. Con cuenta, 1 de cada al mes, además de sueños guardados y Diario. El Viaje onírico forma parte de los planes de pago.",
     trialUsed: "Ya usaste tu tirada gratuita. Entra para continuar.",
     freeDreamAvailable: "Tienes 1 interpretación de sueño gratuita disponible este mes.",
     freeDreamUsed: "Ya utilizaste tu interpretación de sueño gratuita de este mes. Suscríbete para continuar.",

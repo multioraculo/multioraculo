@@ -16,7 +16,7 @@ import type { Plan } from "@/lib/billing/plans"
  *            Stripe acima de Free), leituras disponíveis e a ação certa
  *   HOJE   — fase da Lua real do dia com significado simbólico fixo
  *   CONTA  — administração (se for admin) e sair
- * O conteúdo pessoal (leituras, sonhos, Grimório) vive em "Registros", na
+ * O conteúdo pessoal (leituras, sonhos, Diário) vive em "Registros", na
  * navegação principal.
  */
 

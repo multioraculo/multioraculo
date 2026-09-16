@@ -37,9 +37,10 @@ export const pt = {
 
   nav: {
     home: "Multioráculo",
-    dreams: "Diário de Sonhos",
+    dreams: "Sonhos",
     dreamsShort: "Sonhos",
-    grimoire: "Grimório",
+    grimoire: "Diário",
+    horoscope: "Horóscopo",
     subscription: "Assinatura",
     savedReadings: "Leituras Salvas",
     oracles: "Oráculos",
@@ -59,6 +60,7 @@ export const pt = {
     title: "Registros",
     savedReadingsHint: "Leituras que você guardou",
     savedDreamsHint: "Sonhos interpretados e guardados",
+    grimoireHint: "Suas anotações e registros",
     loginTitle: "Registros são pessoais.",
     loginText: "Entre para ver suas leituras salvas, sonhos e anotações.",
     login: "Entrar",
@@ -251,7 +253,7 @@ export const pt = {
       },
       {
         q: "O que recebo em cada tiragem?",
-        a: "Uma leitura simultânea de Tarô, I Ching, Runas, Búzios e Lenormand com síntese unificada e os cinco oráculos em abas para consulta completa. Inclui um sinal prático para as próximas 24 a 72 horas. Os planos incluem também interpretação de sonhos, a Jornada onírica e o Grimório.",
+        a: "Uma leitura simultânea de Tarô, I Ching, Runas, Búzios e Lenormand com síntese unificada e os cinco oráculos em abas para consulta completa. Inclui um sinal prático para as próximas 24 a 72 horas. Os planos incluem também interpretação de sonhos, a Jornada onírica e o Diário.",
       },
       {
         q: "Quantas tiragens tenho em cada plano?",
@@ -327,7 +329,7 @@ export const pt = {
         "8 tiragens completas por mês: 5 oráculos + síntese integrada",
         "3 interpretações de sonho por mês",
         "Jornada onírica: 1 análise evolutiva dos seus sonhos por mês",
-        "Leituras salvas, notas e Grimório vinculados às consultas",
+        "Leituras salvas, notas e Diário vinculados às consultas",
       ],
       forWhom: "prefere uma pergunta boa por vez, semana após semana, e registra o que vive.",
       cta: "Começar com Essencial",
@@ -341,7 +343,7 @@ export const pt = {
         "Tiragens completas ilimitadas",
         "Interpretações de sonho ilimitadas",
         "Jornada onírica sempre que quiser",
-        "Histórico completo de leituras, sonhos e Grimório",
+        "Histórico completo de leituras, sonhos e Diário",
       ],
       forWhom: "cria, lidera ou ajusta rota com frequência e quer fricção zero.",
       cta: "Assinar Ilimitado",
@@ -409,7 +411,7 @@ export const pt = {
     saveToJournal: "Salvar no Diário",
     waitToFinish: "Aguarde a interpretação concluir...",
     anotherDream: "Interpretar outro sonho",
-    shareTitle: "Diário de Sonhos",
+    shareTitle: "Sonhos",
     errorInterpret: "Erro ao interpretar sonho.",
     noResponse: "Sem resposta do servidor.",
     savedOk: "Sonho salvo com sucesso!",
@@ -449,18 +451,23 @@ export const pt = {
     errorNotes: "Erro ao atualizar notas.",
   },
 
+  horoscope: {
+    title: "Horóscopo",
+    soon: "Esta área está em construção. Em breve, o horóscopo diário dos doze signos e a leitura do mapa astral.",
+  },
+
   grimoire: {
-    title: "Grimório",
+    title: "Diário",
     intro:
       "Seu espaço sagrado para registrar o que a vida revela. Cada registro guarda um fragmento da sua travessia interior. Escreva sobre o que sentiu, compreendeu ou viveu.",
-    loginToAccess: "Faça login para acessar seu Grimório.",
+    loginToAccess: "Faça login para acessar seu Diário.",
     newEntry: "Novo Registro",
     newNote: "Nova nota",
     titlePlaceholder: "Hoje meu dia...",
     contentPlaceholder: "Escreva sobre o seu dia...",
     editTitlePlaceholder: "Título (opcional)",
-    saveToGrimoire: "Salvar no Grimório",
-    empty: "Nenhuma anotação no Grimório ainda.",
+    saveToGrimoire: "Salvar no Diário",
+    empty: "Nenhuma anotação no Diário ainda.",
     createFirst: "Criar primeira anotação",
     confirmDelete: "Deseja excluir esta nota?",
     linkedToReading: "Vinculada a uma leitura",
@@ -552,7 +559,7 @@ export const pt = {
   billing: {
     planNames: { free: "Free", essential: "Essencial", unlimited: "Ilimitado" },
     currentPlan: "Seu plano atual",
-    freeDescription: "1 tiragem completa e 1 interpretação de sonho gratuitas, sem cadastro. Com conta, 1 de cada por mês, além de sonhos salvos e Grimório. A Jornada onírica faz parte dos planos pagos.",
+    freeDescription: "1 tiragem completa e 1 interpretação de sonho gratuitas, sem cadastro. Com conta, 1 de cada por mês, além de sonhos salvos e Diário. A Jornada onírica faz parte dos planos pagos.",
     trialUsed: "Você já usou sua tiragem gratuita. Entre para continuar.",
     freeDreamAvailable: "Você tem 1 interpretação de sonho gratuita disponível este mês.",
     freeDreamUsed: "Você já utilizou sua interpretação de sonho gratuita deste mês. Assine para continuar.",

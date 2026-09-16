@@ -41,7 +41,7 @@ export function isPaidPlan(v: unknown): v is Exclude<Plan, "free"> {
  * - reading: tiragem completa (cinco oráculos + síntese), contada uma vez
  * - dream:   interpretação de um sonho
  * - journey: análise evolutiva dos sonhos salvos (Jornada onírica)
- * Sonhos salvos, Grimório e leituras salvas são só armazenamento: exigem
+ * Sonhos salvos, Diário e leituras salvas são só armazenamento: exigem
  * login, não consomem cota.
  */
 export type UsageKind = "reading" | "dream" | "journey"

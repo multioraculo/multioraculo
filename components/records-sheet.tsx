@@ -8,8 +8,9 @@ import type { Dictionary } from "@/lib/i18n"
 
 /**
  * "Registros": área pessoal da navegação principal. Reúne o que a pessoa
- * guardou no produto (leituras salvas e sonhos salvos), tudo em rotas que já
- * existem. O Grimório não entra aqui: ele já é item principal da navegação.
+ * guardou no produto — leituras salvas, sonhos salvos e o Diário —, tudo em
+ * rotas que já existem. O Diário entrou aqui quando deixou de ser item da
+ * navegação principal; aquele lugar passou a ser do Horóscopo.
  *
  * É pessoal: sem login o painel explica e oferece entrar (abre o modal de
  * login do cabeçalho pelo evento "open-login"). As rotas mantêm as próprias
@@ -20,10 +21,11 @@ export function recordLinks(dict: Dictionary) {
   return [
     { href: "/leituras-salvas", label: dict.nav.savedReadings, hint: t.savedReadingsHint },
     { href: "/sonhos-salvos", label: dict.nav.savedDreams, hint: t.savedDreamsHint },
+    { href: "/diario", label: dict.nav.grimoire, hint: t.grimoireHint },
   ]
 }
 
-export const RECORD_PATHS = ["/leituras-salvas", "/sonhos-salvos"]
+export const RECORD_PATHS = ["/leituras-salvas", "/sonhos-salvos", "/diario"]
 
 /** Estado de login só quando o painel abre; null = ainda não sabe. */
 export function useLoggedIn(active: boolean): boolean | null {

@@ -26,12 +26,22 @@ export function MoonIcon(p: P) {
   )
 }
 
-/** Grimório: livro aberto */
+/** Diário: livro aberto */
 export function BookIcon(p: P) {
   return (
     <svg {...base(p)}>
       <path d="M12 6.5c-1.6-1.4-4.2-2-8-2v13c3.8 0 6.4.6 8 2 1.6-1.4 4.2-2 8-2v-13c-3.8 0-6.4.6-8 2z" />
       <path d="M12 6.5v13" />
+    </svg>
+  )
+}
+
+/** Horóscopo: a estrela de quatro pontas da marca, com um brilho menor ao lado */
+export function StarIcon(p: P) {
+  return (
+    <svg {...base(p)}>
+      <path d="M10.5 3c0 4.1 3.4 7.5 7.5 7.5-4.1 0-7.5 3.4-7.5 7.5 0-4.1-3.4-7.5-7.5-7.5 4.1 0 7.5-3.4 7.5-7.5z" />
+      <path d="M18.5 16v4M16.5 18h4" />
     </svg>
   )
 }
