@@ -16,7 +16,7 @@ import { languageRule } from "@/lib/oracles/language"
 import type { CardMovimento } from "./apresentar"
 import { EXPRESSOES_EVITAR, REGRAS_COMUNS } from "./editorial"
 import { CORPOS, SIGNOS } from "./nomes"
-import { LINHA_SIGNO, REGENTE } from "./simbolos"
+import { LINHA_SIGNO, REGENTE, SOMBRA_SIGNO } from "./simbolos"
 
 export type RelacaoEscrita = { n: number; polaridade: [string, string]; explicacao: string }
 
@@ -60,6 +60,7 @@ export function promptHoroscopo(params: {
 
 O SIGNO
 ${nomeSigno}: ${LINHA_SIGNO[locale][signo]}
+Excesso possível, quando essa força passa do ponto: ${SOMBRA_SIGNO[locale][signo]}. Isso não é defeito de ninguém e não se diz ao leitor como rótulo; é o outro lado da mesma qualidade.
 Regente: ${regente}. Quando o regente aparece nos movimentos, a leitura passa por ele com mais peso.
 
 OS MOVIMENTOS DO CÉU DE HOJE
@@ -75,7 +76,8 @@ O QUE VOCÊ ESCREVE
 1. "foco": de três a dez palavras, nascido do CONJUNTO dos movimentos. Prefira uma pergunta. Precisa ser entendida por quem não sabe nada de astrologia e precisa ser específica deste céu: se serve para qualquer dia, está errada. Rótulo abstrato não serve ("Equilíbrio entre pensamento e estrutura" não diz o que está em jogo); a pergunta que aquele conflito faz, sim ("Até onde continuar refinando?"). Não pode conter nome de planeta, de signo nem de aspecto.
 
 2. "relacoes": uma entrada para cada movimento, na ordem, com o número dele.
-   - "polaridade": dois lados, cada um de duas a seis palavras, em linguagem comum. Cada lado é uma AÇÃO ou uma EXIGÊNCIA, não um rótulo: dá para ver o que aquele lado quer fazer. O primeiro diz o que uma força quer; o segundo, o que a outra exige dela. Dois conceitos abstratos em oposição não servem ("Profundidade emocional × escolhas racionais" são dois rótulos, não duas forças); o que serve é do tipo "Continuar analisando × chegar a uma conclusão", em que se enxerga o conflito. Sem nome de planeta, de signo ou de aspecto.
+   - "polaridade": dois lados, cada um de duas a seis palavras, em linguagem comum. Cada lado é uma AÇÃO ou uma EXIGÊNCIA, não um rótulo: dá para ver o que aquele lado quer fazer. O primeiro diz o que uma força quer; o segundo, o que a outra exige dela. Dois conceitos abstratos em oposição não servem ("Profundidade emocional × escolhas racionais" são dois rótulos, não duas forças); o que serve é do tipo "Continuar analisando × chegar a uma conclusão", em que se enxerga o conflito. Sem nome de planeta, de signo ou de aspecto. E não repita os verbos dos dois planetas: eles já estão na tela, na coluna logo acima da polaridade. "Distinguir e examinar × Delimitar e concluir" devolve ao leitor o que ele acabou de ler; a polaridade precisa dizer o que essa relação exige de quem é deste signo.
+     Num movimento de POSIÇÃO não há duas forças em ângulo, e por isso a polaridade não pode sair de duas palavras quaisquer: a tensão está entre o que aquele planeta traz ao atravessar o signo e o excesso do próprio signo, listado acima. É de lá que sai o segundo lado.
    - "explicacao": de três a cinco frases, respondendo quatro coisas na ordem natural: o que o primeiro planeta faz aqui; o que o segundo faz (quando houver dois); o que este ângulo estabelece entre os dois; por que isso ganha esse sentido ao passar por ${nomeSigno}, usando as palavras que definem o signo. Cite os planetas pelo nome e o signo pelo nome. A tradução do ângulo já está na tela logo acima da sua explicação: não a parafraseie, parta dela. A última frase é a mais importante: ela nomeia a tensão concreta que isso cria neste signo, com as palavras do próprio signo. Não termine com "destaca a importância de", "ressalta a necessidade de" nem "sublinha o valor de": isso não diz nada.
 
 3. "tendencias": o fecho da página.
@@ -85,6 +87,8 @@ O QUE VOCÊ ESCREVE
    As duas últimas descrevem, não aconselham: nada de verbo no imperativo, nada de "aproveite", "evite", "procure".
 
 ${languageRule(locale)}
+
+LEMBRETE FINAL: nenhuma destas expressões pode aparecer em campo nenhum, nem no meio de uma frase: ${EXPRESSOES_EVITAR[locale].map((e) => `"${e}"`).join(", ")}. Nenhum travessão. Nenhuma forma da palavra "arquétipo".
 
 Devolva JSON exatamente nesta forma:
 {"foco": "...", "relacoes": [{"n": 1, "polaridade": ["...", "..."], "explicacao": "..."}], "tendencias": {"texto": "...", "disponivel": "...", "emJogo": "..."}}`

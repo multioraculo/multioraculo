@@ -91,6 +91,59 @@ export const LINHA_SIGNO: Record<Locale, string[]> = {
   ],
 }
 
+/**
+ * O excesso de cada signo: o que acontece quando a força dele passa do ponto.
+ *
+ * Não é defeito de pessoa e não vai para a tela como rótulo. Serve ao card de
+ * posição, onde não há duas forças em ângulo: ali a tensão é entre o que o
+ * planeta traz e o exagero do próprio signo. Sem isso, a polaridade de um
+ * trânsito sai sem conflito nenhum.
+ */
+export const SOMBRA_SIGNO: Record<Locale, string[]> = {
+  pt: [
+    "pressa, disputa, impulso sem direção",
+    "apego, inércia, posse",
+    "dispersão, superfície, palavra sem peso",
+    "refúgio, dependência, apego ao passado",
+    "vaidade, plateia como medida",
+    "crítica, controle, exigência, correção sem fim",
+    "indecisão, agrado, fuga do atrito",
+    "domínio, suspeita, tudo ou nada",
+    "excesso, dogma, promessa maior que o passo",
+    "dureza, cálculo, obra acima da vida",
+    "frieza, abstração, distância de todos",
+    "fuga, difusão, contorno que se perde",
+  ],
+  en: [
+    "haste, contest, impulse without direction",
+    "attachment, inertia, possession",
+    "scattering, surface, words without weight",
+    "retreat, dependence, clinging to the past",
+    "vanity, the audience as measure",
+    "criticism, control, demand, endless correction",
+    "indecision, pleasing, avoiding friction",
+    "domination, suspicion, all or nothing",
+    "excess, dogma, promises larger than the step",
+    "hardness, calculation, the work above the life",
+    "coldness, abstraction, distance from everyone",
+    "escape, diffusion, an outline that dissolves",
+  ],
+  es: [
+    "prisa, disputa, impulso sin dirección",
+    "apego, inercia, posesión",
+    "dispersión, superficie, palabra sin peso",
+    "refugio, dependencia, apego al pasado",
+    "vanidad, el público como medida",
+    "crítica, control, exigencia, corrección sin fin",
+    "indecisión, complacencia, huida del roce",
+    "dominio, sospecha, todo o nada",
+    "exceso, dogma, promesa mayor que el paso",
+    "dureza, cálculo, la obra por encima de la vida",
+    "frialdad, abstracción, distancia de todos",
+    "huida, difusión, contorno que se pierde",
+  ],
+}
+
 /** Os três substantivos que aparecem sob o nome do planeta no card. */
 export const FUNCAO_NOMES: Record<Locale, Record<Corpo, string>> = {
   pt: {

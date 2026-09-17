@@ -38,6 +38,21 @@ const palavras = (texto: string) => texto.trim().split(/\s+/).filter(Boolean).le
 
 const frases = (texto: string) => texto.split(/[.!?]+/).map((f) => f.trim()).filter(Boolean).length
 
+/** Palavras que carregam sentido: as curtas são ligação, não conteúdo. */
+const significativas = (texto: string) =>
+  semAcento(texto)
+    .split(/[^\p{L}]+/u)
+    .filter((p) => p.length >= 4)
+
+/** Este lado da polaridade é só a lista de verbos daquele planeta? */
+function eco(lado: string, verbos: string[]): boolean {
+  const palavrasDoLado = significativas(lado)
+  if (!palavrasDoLado.length) return false
+  const doPlaneta = new Set(verbos.flatMap(significativas))
+  const repetidas = palavrasDoLado.filter((p) => doPlaneta.has(p)).length
+  return repetidas / palavrasDoLado.length >= 0.6
+}
+
 function contem(texto: string, termo: string): boolean {
   const t = semAcento(termo).trim()
   if (t.length < 3) return false
@@ -157,6 +172,13 @@ export function verificarLeitura(params: {
     }
     if (relacao.polaridade[0] && semAcento(relacao.polaridade[0]) === semAcento(relacao.polaridade[1])) {
       violacoes.push(`${rotulo}: os dois lados da polaridade são iguais`)
+    }
+
+    // os verbos dos dois planetas já estão na tela, na coluna acima da
+    // polaridade. Repetir os dois lados devolve ao leitor o que ele acabou de
+    // ler, sem dizer o que a relação exige dele
+    if (card.b && eco(relacao.polaridade[0], card.a.verbos) && eco(relacao.polaridade[1], card.b.verbos)) {
+      violacoes.push(`${rotulo}: a polaridade só repete os verbos dos dois planetas`)
     }
 
     if (!relacao.explicacao) {
