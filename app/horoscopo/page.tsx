@@ -1,6 +1,7 @@
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import HoroscopePage from "@/components/horoscope-page"
+import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 
@@ -15,6 +16,9 @@ export default async function HoroscopoPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   const { dict } = await getI18n()
+  // o céu não depende do signo: pode ser desenhado antes de qualquer escolha,
+  // e é o que a página tem para mostrar na primeira tela
+  const ceu = estadoDoCeu(diaDeHoje())
 
   return (
     <ShaderBackground>
@@ -23,7 +27,7 @@ export default async function HoroscopoPage() {
       <div className="relative z-10 min-h-screen pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-8">
           <h1 className="text-white text-5xl sm:text-6xl font-light italic instrument mb-6">{dict.horoscope.title}</h1>
-          <HoroscopePage />
+          <HoroscopePage ceu={ceu} />
         </div>
       </div>
     </ShaderBackground>

@@ -15,7 +15,8 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { GlifoPlaneta } from "@/components/astro-wheel"
+import { GlifoPlaneta, GlifoSigno } from "@/components/astro-wheel"
+import { DiagramaAngulo, DiagramaPosicao, FaseLua, RodaDoDia } from "@/components/astro-ilustracoes"
 import { fmt } from "@/lib/i18n"
 import type { Locale } from "@/lib/i18n/config"
 import type { CardMovimento } from "@/lib/astro/apresentar"
@@ -35,6 +36,11 @@ type Resposta = {
 }
 
 const CHAVE = "multioraculo:signo"
+
+/** O card traz o nome do ângulo traduzido; o desenho precisa da chave do motor. */
+function chaveDoAspecto(card: CardMovimento): string {
+  return card.mencoes.aspectos[0] ?? "conjunction"
+}
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -78,6 +84,7 @@ function CardRelacao({
   rotuloEm,
   rotuloNo,
   signos,
+  lons,
   aberto,
 }: {
   card: CardMovimento
@@ -85,11 +92,20 @@ function CardRelacao({
   rotuloEm: string
   rotuloNo: string
   signos: string[]
+  lons: Partial<Record<string, number>>
   aberto: boolean
 }) {
   // num aspecto o lado direito é o outro planeta; numa posição é o campo por
   // onde ele passa, que é o signo
   const campo = card.b ? null : signos[card.mencoes.signos[0] ?? 0]
+  const lonA = lons[card.a.corpo]
+  const lonB = card.b ? lons[card.b.corpo] : undefined
+  const diagrama =
+    card.b && card.simbolo && lonA !== undefined && lonB !== undefined ? (
+      <DiagramaAngulo aLon={lonA} bLon={lonB} aspecto={chaveDoAspecto(card)} />
+    ) : lonA !== undefined ? (
+      <DiagramaPosicao lon={lonA} />
+    ) : null
   const conteudo = (
     <>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -113,16 +129,19 @@ function CardRelacao({
         )}
       </div>
 
-      <div className="mt-4 rounded-lg bg-black/20 px-3 py-2.5">
-        {card.b ? (
-          <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">
-            {card.titulo}
-            <span className="text-white/40 normal-case tracking-normal"> {card.detalhe}</span>
-          </p>
-        ) : (
-          <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">{card.titulo}</p>
-        )}
-        <p className="text-white/55 text-[11.5px] leading-relaxed mt-1">{card.glosa}</p>
+      <div className="mt-4 rounded-lg bg-black/20 px-3 py-3 flex items-center gap-3">
+        {diagrama && <span className="text-white/70">{diagrama}</span>}
+        <div className="min-w-0">
+          {card.b ? (
+            <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">
+              {card.titulo}
+              <span className="text-white/40 normal-case tracking-normal"> {card.detalhe}</span>
+            </p>
+          ) : (
+            <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">{card.titulo}</p>
+          )}
+          <p className="text-white/55 text-[11.5px] leading-relaxed mt-1">{card.glosa}</p>
+        </div>
       </div>
 
       {relacao && (
@@ -173,6 +192,11 @@ function CeuDeHoje({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<str
               {numero(p.grau)}° {signos[p.signo]}
               {p.retrogrado && <span className="text-white/40"> ℞</span>}
             </span>
+            {p.corpo === "moon" && (
+              <span className="text-white/55">
+                <FaseLua fase={ceu.faseLua} tamanho={16} />
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -211,8 +235,8 @@ function CeuDeHoje({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<str
   )
 }
 
-export default function HoroscopePage() {
-  const { dict, locale } = useI18n()
+export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
+  const { dict, locale, formatDate } = useI18n()
   const t = dict.horoscope
   const signos = SIGNOS[locale]
 
@@ -266,6 +290,16 @@ export default function HoroscopePage() {
     <div className="space-y-8">
       <p className="text-white/60 text-base leading-relaxed max-w-xl">{t.intro}</p>
 
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 flex flex-col items-center">
+        <span className="text-white/70">
+          <RodaDoDia ceu={ceu} tamanho={250} />
+        </span>
+        <div className="flex items-center gap-2 mt-3 text-white/45 text-xs">
+          <FaseLua fase={ceu.faseLua} tamanho={18} />
+          <span>{formatDate(`${ceu.dia}T12:00:00`)}</span>
+        </div>
+      </div>
+
       <div>
         <Rotulo>{t.chooseSign}</Rotulo>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-3">
@@ -283,8 +317,11 @@ export default function HoroscopePage() {
                     : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <span className="block text-sm instrument italic">{nome}</span>
-                <span className="block text-[10px] text-white/35 tabular-nums">{t.dates[i]}</span>
+                <span className="flex items-center gap-2">
+                  <GlifoSigno indice={i} tamanho={17} className={ativo ? "text-white/85" : "text-white/45"} />
+                  <span className="block text-sm instrument italic">{nome}</span>
+                </span>
+                <span className="block text-[10px] text-white/35 tabular-nums mt-0.5">{t.dates[i]}</span>
               </button>
             )
           })}
@@ -327,6 +364,7 @@ export default function HoroscopePage() {
                   rotuloEm={rotuloEm}
                   rotuloNo={t.inWord}
                   signos={signos}
+                  lons={Object.fromEntries(dados.ceu.posicoes.map((p) => [p.corpo, p.lon]))}
                   aberto={i === 0}
                 />
               ))}

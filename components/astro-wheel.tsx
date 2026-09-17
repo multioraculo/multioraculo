@@ -274,3 +274,45 @@ export default function AstroWheel({
     </svg>
   )
 }
+
+/**
+ * Os doze signos na mesma gravura dos planetas: traço aberto, sem
+ * preenchimento, dentro da caixa de dezoito por dezoito. Desenhados à mão
+ * porque a fonte do sistema não tem como garantir o mesmo peso de linha.
+ */
+export const GLIFOS_SIGNO: string[] = [
+  // Áries: o carneiro, duas voltas saindo de um eixo
+  "M0 6.5V-1.2 M0 -1.2c0 -3 -1.5 -4.8 -3.2 -4.8c-1.8 0 -3 1.5 -3 3.4c0 1.3 0.6 2.4 1.4 3 M0 -1.2c0 -3 1.5 -4.8 3.2 -4.8c1.8 0 3 1.5 3 3.4c0 1.3 -0.6 2.4 -1.4 3",
+  // Touro: o disco com os chifres
+  "M0 -1.1a3.9 3.9 0 1 0 0 7.8a3.9 3.9 0 1 0 0 -7.8 M-6 -7.2c0 3.1 2.7 5.6 6 5.6c3.3 0 6 -2.5 6 -5.6",
+  // Gêmeos: as duas colunas
+  "M-4.6 -6.4h9.2 M-4.6 6.4h9.2 M-2.3 -6.4v12.8 M2.3 -6.4v12.8",
+  // Câncer: as duas voltas opostas
+  "M-7 -2.6c1.4 -2.3 4 -3.6 6.8 -3.4 M-3.2 -5.4a2.1 2.1 0 1 0 0 4.2a2.1 2.1 0 1 0 0 -4.2 M7 2.6c-1.4 2.3 -4 3.6 -6.8 3.4 M3.2 1.2a2.1 2.1 0 1 0 0 4.2a2.1 2.1 0 1 0 0 -4.2",
+  // Leão: o disco e a cauda
+  "M-2.3 6a2.8 2.8 0 1 0 0 -5.6a2.8 2.8 0 1 0 0 5.6 M0.3 2.2c1.8 -1.4 2.6 -3.8 1.6 -5.8c-1 -2 -3.4 -2.4 -4.8 -1 M0.3 2.2c1.2 1.6 3 2.4 4.8 2.2",
+  // Virgem: o eme fechado com a volta
+  "M-6.3 -4.4v9 M-6.3 -4.4c0 -1.4 0.9 -2.3 2 -2.3s2 0.9 2 2.3v9 M-2.3 -4.4c0 -1.4 0.9 -2.3 2 -2.3s2 0.9 2 2.3v6.2 M1.7 1.8c0 2.6 1.7 4.4 4.2 5 M1.7 4.8c2.6 0 4.6 -1.6 4.6 -3.8",
+  // Libra: a balança
+  "M-6.4 3.7h12.8 M-6.4 -0.5h3.2 M3.2 -0.5h3.2 M-3.2 -0.5a3.2 3.2 0 0 1 6.4 0",
+  // Escorpião: o eme com o ferrão
+  "M-7.1 -3v8 M-7.1 -3c0 -1.4 0.9 -2.2 1.9 -2.2s1.9 0.8 1.9 2.2v8 M-3.3 -3c0 -1.4 0.9 -2.2 1.9 -2.2s1.9 0.8 1.9 2.2v8 M0.5 -3c0 -1.4 0.9 -2.2 1.9 -2.2s1.9 0.8 1.9 2.2v6.4l2.6 2.6 M4.3 6.4h2.8v-2.8",
+  // Sagitário: a flecha e a trave
+  "M-6 6L5.2 -5.2 M0.4 -5.2h4.8v4.8 M-3.4 -0.6l4 4",
+  // Capricórnio: o corpo e a cauda
+  "M-7 -4.7c1.7 0 2.7 1.3 2.7 3.2v5.4 M-4.3 -1.5c0 -2.1 1.3 -3.4 2.9 -3.4c1.7 0 2.7 1.3 2.7 3.4v3.6 M1.3 2.1c0 1.7 1.3 2.8 2.8 2.8c1.7 0 2.9 -1.3 2.9 -3c0 -1.5 -1.1 -2.5 -2.5 -2.5c-1.1 0 -1.9 0.6 -2.2 1.5",
+  // Aquário: as duas águas
+  "M-5.4 -2.2l2.7 -2.3l2.7 2.3l2.7 -2.3l2.7 2.3 M-5.4 3.6l2.7 -2.3l2.7 2.3l2.7 -2.3l2.7 2.3",
+  // Peixes: os dois peixes e o laço
+  "M-3.6 -6.6c-2.8 2.3 -2.8 11 0 13.3 M3.6 -6.6c2.8 2.3 2.8 11 0 13.3 M-6.6 0h13.2",
+]
+
+export function GlifoSigno({ indice, tamanho = 18, className = "" }: { indice: number; tamanho?: number; className?: string }) {
+  const d = GLIFOS_SIGNO[indice]
+  if (!d) return null
+  return (
+    <svg viewBox="-9 -9 18 18" width={tamanho} height={tamanho} className={className} aria-hidden="true" focusable="false">
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={1.3} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
