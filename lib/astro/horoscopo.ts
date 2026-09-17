@@ -52,17 +52,23 @@ export type HoroscopoDoDia = {
 const TENTATIVAS = 3
 
 /**
- * Existe onde guardar? Perguntado uma vez por processo. Enquanto a resposta
- * for não, não se gera nada: cache ausente é trava de custo, não detalhe.
+ * Existe onde guardar? Enquanto a resposta for não, não se gera nada: cache
+ * ausente é trava de custo, não detalhe.
+ *
+ * O sim vale para sempre; o não vale por um minuto. Guardar o não para sempre
+ * faria a migration parecer que não funcionou: a instância que perguntou antes
+ * dela continuaria recusando até ser reciclada, sem novo deploy que a
+ * acordasse.
  */
-let temOndeGuardar: boolean | null = null
+let temOndeGuardar = false
+let ultimaPergunta = 0
+const VALIDADE_DO_NAO = 60_000
 
 export async function cacheDisponivel(): Promise<boolean> {
-  if (temOndeGuardar !== null) return temOndeGuardar
-  if (!hasAdminClient()) {
-    temOndeGuardar = false
-    return false
-  }
+  if (temOndeGuardar) return true
+  if (ultimaPergunta && Date.now() - ultimaPergunta < VALIDADE_DO_NAO) return false
+  ultimaPergunta = Date.now()
+  if (!hasAdminClient()) return false
   const { error } = await createAdminClient().from("horoscope_daily").select("dia").limit(1)
   temOndeGuardar = !error
   if (error) console.warn("[horoscopo] sem tabela de cache, geração desligada:", error.message)
