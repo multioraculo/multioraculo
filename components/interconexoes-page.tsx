@@ -68,13 +68,9 @@ export default function InterconexoesPage({ initialUser }: { initialUser: User |
 
   return (
     <div>
-      {/* a promessa, que é o que justifica o pedido */}
-      {!temMapa && (
-        <div className="max-w-xl">
-          <h2 className="text-white instrument italic text-[26px] sm:text-3xl leading-snug">{t.callBody}</h2>
-          <p className="text-white/65 text-[15px] leading-relaxed font-light mt-4">{t.sameForAll}</p>
-        </div>
-      )}
+      {/* a explicação, que é o que justifica o pedido: ninguém entrega data,
+          hora e cidade de nascimento antes de entender para quê */}
+      {!temMapa && <Abertura t={t} exemplos={dict.interconexoes.examples} />}
 
       {carregando && <div className="h-24 mt-10 rounded bg-white/[0.04] animate-pulse" />}
 
@@ -108,6 +104,48 @@ export default function InterconexoesPage({ initialUser }: { initialUser: User |
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * A abertura das Interconexões: o que isto é, antes de qualquer campo.
+ *
+ * A página pedia data, hora e cidade e parecia querer montar um mapa astral,
+ * que é uma coisa que existe em qualquer lugar. Não é isso que ela faz. Ela
+ * cruza duas camadas: uma que não muda mais, o céu do nascimento, e outra que
+ * muda todo dia, o céu de agora.
+ *
+ * A ordem do texto é a ordem do entendimento: primeiro a ideia, depois o que
+ * é a base fixa, depois o que se move, depois exemplos concretos do encontro
+ * entre as duas, e só então a diferença em relação ao horóscopo de signo. Sem
+ * nada disso, os três campos parecem um cadastro.
+ */
+function Abertura({ t, exemplos }: { t: Record<string, string>; exemplos: readonly string[] }) {
+  return (
+    <div className="max-w-xl">
+      <h2 className="text-white instrument italic text-[25px] sm:text-[29px] leading-snug">{t.sameForAll}</h2>
+      <p className="text-white/75 text-[15.5px] leading-relaxed font-light mt-5">{t.whatItDoes}</p>
+
+      <div className="h-px bg-white/[0.07] mt-9" />
+
+      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-8">{t.natalIs}</p>
+      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-5">{t.skyMoves}</p>
+
+      <ul className="mt-6 space-y-2">
+        {exemplos.map((linha) => (
+          <li key={linha} className="flex gap-3 text-white/50 text-[13.5px] leading-relaxed font-light">
+            <span className="text-white/25 shrink-0">·</span>
+            {linha}
+          </li>
+        ))}
+      </ul>
+
+      {/* a frase que a pessoa precisa levar embora */}
+      <p className="text-white/85 instrument italic text-[19px] sm:text-xl leading-snug mt-9">{t.mapStays}</p>
+      <p className="text-white/50 text-[14px] leading-relaxed font-light mt-2">{t.mapStaysBody}</p>
+
+      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-8">{t.vsHoroscope}</p>
+    </div>
+  )
+}
 
 function Formulario({
   t,
@@ -313,6 +351,7 @@ function Mapa({
   return (
     <div>
       <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.mapTitle}</p>
+      <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.mapSubtitle}</p>
       <h2 className="text-white instrument italic text-[24px] sm:text-[28px] leading-snug mt-3">{nascimento.place_label}</h2>
       <p className="text-white/35 text-[12.5px] font-light mt-1.5 tabular-nums">
         {formatDate(`${nascimento.born_on}T12:00:00`)}
@@ -422,6 +461,7 @@ function Hoje({
         {t.todayTitle}
         {dia && <span className="text-white/20"> · {formatDate(`${dia}T12:00:00`)}</span>}
       </p>
+      <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
 
       {interconexoes.length === 0 ? (
         <p className="text-white/50 text-[14px] leading-relaxed font-light mt-5 max-w-lg">{t.none}</p>
