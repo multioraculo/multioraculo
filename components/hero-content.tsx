@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import { consumirPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import ReadingProgress, { useReadingProgress } from "@/components/reading-progress"
 import BuziosCasts from "@/components/buzios-board"
 import RunesSpread from "@/components/runes-spread"
@@ -24,8 +25,6 @@ const ORACLE_KEYS = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
 
 export default function HeroContent({ initialUser }: HeroContentProps) {
   const { dict, locale, formatDate } = useI18n()
-  const placeholders = dict.hero.placeholders
-  const [currentPlaceholder, setCurrentPlaceholder] = useState(0)
   const [question, setQuestion] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -51,7 +50,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [isSaved, setIsSaved] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  // a sugestão da vez, da mesma lista e na mesma cadência que a Home usa; ela
+  // para de girar quando o campo tem foco ou texto, porque ali vira exemplo
+  const { pergunta: sugestao } = usePerguntaSugerida(isFocused || isTyping || question !== "")
+  const campoRef = useRef<HTMLTextAreaElement>(null)
   // Métrica de produto: qual cartão de oráculo a pessoa abre (uma vez por
   // oráculo por tiragem). Só tipo, oráculo e seed; nenhum conteúdo.
   const loggedOpensRef = useRef<Set<string>>(new Set())
@@ -122,24 +124,19 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
     return () => window.removeEventListener("reset-hero", handler)
   }, [])
 
+  // Quem escolheu uma pergunta na Home chega aqui com ela. Ela entra como
+  // texto de verdade do campo, não como dica: dá para apagar, completar ou
+  // reescrever, e nada é enviado antes de a pessoa mandar.
   useEffect(() => {
-    if (!isFocused && !isTyping && question === "") {
-      intervalRef.current = setInterval(() => {
-        setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length)
-      }, 8000)
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [isFocused, isTyping, question, placeholders.length])
+    const escolhida = consumirPerguntaEscolhida()
+    if (!escolhida) return
+    setQuestion(escolhida)
+    setIsTyping(true)
+    const campo = campoRef.current
+    if (!campo) return
+    campo.focus()
+    campo.setSelectionRange(escolhida.length, escolhida.length)
+  }, [])
 
   // Lê um stream NDJSON e chama onEvent para cada linha válida
   const readNdjson = async (res: Response, onEvent: (event: any) => void) => {
@@ -565,6 +562,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               <p className="text-xs font-light text-white/60 mb-2">{dict.hero.prompt}</p>
               <div className="relative">
               <textarea
+                ref={campoRef}
                 value={question}
                 onChange={(e) => {
                   setQuestion(e.target.value)
@@ -578,7 +576,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                 }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={placeholders[currentPlaceholder % placeholders.length]}
+                placeholder={sugestao}
                 className="w-full h-20 sm:h-24 pl-4 pr-14 py-3 rounded-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 text-base resize-none focus:outline-none focus:border-white/40 transition-all duration-200 placeholder:transition-opacity placeholder:duration-300"
                 style={{ filter: "url(#glass-effect)" }}
               />

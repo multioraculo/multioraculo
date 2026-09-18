@@ -22,6 +22,7 @@ import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
 import MoonToday from "@/components/moon-today"
 import MarcosHome from "@/components/marcos-home"
+import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import { SIGNOS } from "@/lib/astro/nomes"
@@ -190,6 +191,9 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
         <p className="text-white/35 text-[13px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
       ) : null}
 
+      {/* e a sua? a consulta começa por uma pergunta, e a pergunta já está ali */}
+      {tiragem && <ConviteDePergunta convite={t.andYours} />}
+
       {/* O DIÁRIO, quase um rodapé */}
       <div className="h-16" />
       <div className="h-px bg-white/[0.055]" />
@@ -215,6 +219,53 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
 
       {/* MARCOS: o tempo que a pessoa conta */}
       <MarcosHome logado={Boolean(initialUser)} />
+    </div>
+  )
+}
+
+/**
+ * O convite para a consulta pessoal, logo depois da leitura que é de todos.
+ *
+ * Não é botão nem anúncio: é a mesma pergunta sugerida que gira no campo do
+ * Multioráculo, na mesma lista e na mesma cadência, aqui em voz alta. Quem
+ * tocar nela chega em "/" com ela escrita no campo, editável, sem nada
+ * enviado; o login, a cota e o paywall da consulta continuam sendo os mesmos.
+ *
+ * A que vale é a que está na tela: a troca espera o texto apagar antes de
+ * mudar, então ninguém clica numa pergunta e leva outra.
+ */
+function ConviteDePergunta({ convite }: { convite: string }) {
+  const { pergunta } = usePerguntaSugerida(false)
+  const [mostrada, setMostrada] = useState(pergunta)
+  const [opacidade, setOpacidade] = useState(1)
+
+  useEffect(() => {
+    if (!pergunta || pergunta === mostrada) return
+    setOpacidade(0)
+    const id = setTimeout(() => {
+      setMostrada(pergunta)
+      setOpacidade(1)
+    }, 400)
+    return () => clearTimeout(id)
+  }, [pergunta, mostrada])
+
+  if (!mostrada) return null
+
+  return (
+    <div className="mt-11">
+      <p className="text-white/45 text-[13px] leading-relaxed font-light">{convite}</p>
+      <Link
+        href="/"
+        onClick={() => guardarPerguntaEscolhida(mostrada)}
+        className="group block mt-3.5 min-h-[3.2em] sm:min-h-[2.4em]"
+      >
+        <span
+          className="instrument italic text-white/85 group-hover:text-white text-[19px] sm:text-[21px] leading-snug transition-opacity duration-[400ms] motion-reduce:transition-none"
+          style={{ opacity: opacidade }}
+        >
+          {mostrada}
+        </span>
+      </Link>
     </div>
   )
 }

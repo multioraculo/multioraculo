@@ -87,6 +87,7 @@ export const pt = {
     drawQuestion: "O que está em evidência hoje?",
     drawShared: "A mesma para todas as pessoas",
     drawWaiting: "A leitura do cruzamento está sendo escrita.",
+    andYours: "Essa é a leitura do dia para todos. E a sua?",
     horoscope: "Seu horóscopo hoje",
     horoscopeGeneric: "Horóscopo do dia",
     horoscopePickSign: "Escolha seu signo",

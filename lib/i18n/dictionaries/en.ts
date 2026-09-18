@@ -85,6 +85,7 @@ export const en: Dictionary = {
     drawQuestion: "What is in focus today?",
     drawShared: "The same one for everyone",
     drawWaiting: "The reading of the crossing is being written.",
+    andYours: "That is today's reading for everyone. And yours?",
     horoscope: "Your horoscope today",
     horoscopeGeneric: "Horoscope of the day",
     horoscopePickSign: "Choose your sign",
