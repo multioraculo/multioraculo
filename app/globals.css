@@ -664,4 +664,41 @@
 .bl-logo {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: none; user-select: none;
+  /*
+   * O fundo é um gradiente que se move, e o M tinha borda dura contra ele: em
+   * cima das faixas mais claras parecia colado por cima, recortado. O halo não
+   * muda o desenho; ele só dá uma zona de passagem entre a marca e o fundo.
+   *
+   * São três luzes na silhueta, não numa caixa, porque drop-shadow segue o
+   * alfa do PNG. Duas claras, que abrem a marca sobre o fundo escuro, e uma
+   * violeta escura curtíssima, que é o que separa a marca quando o gradiente
+   * clareia: sozinha, a luz branca some justamente aí.
+   */
+  filter:
+    drop-shadow(0 0 5px rgba(255, 255, 255, 0.22))
+    drop-shadow(0 0 14px rgba(196, 181, 253, 0.18))
+    drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
+  animation: bl-respira 7.5s ease-in-out infinite;
+  will-change: filter;
+}
+
+/* Respiração: a luz varia pouco e devagar, para se notar sem se ver. */
+@keyframes bl-respira {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 5px rgba(255, 255, 255, 0.22))
+      drop-shadow(0 0 14px rgba(196, 181, 253, 0.18))
+      drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.34))
+      drop-shadow(0 0 22px rgba(196, 181, 253, 0.26))
+      drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
+  }
+}
+
+/* Sem animação, o halo fica: ele resolve o recorte, que não é enfeite. */
+@media (prefers-reduced-motion: reduce) {
+  .bl-logo { animation: none; }
 }

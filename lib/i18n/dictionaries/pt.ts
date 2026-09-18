@@ -82,7 +82,7 @@ export const pt = {
   },
 
   home: {
-    brandSubtitle: "Céu, oráculos e ciclos pessoais.",
+    brandSubtitle: "Diferentes caminhos para ler o presente.",
     today: "Hoje",
     drawQuestion: "O que está em evidência hoje?",
     drawShared: "A mesma para todas as pessoas",

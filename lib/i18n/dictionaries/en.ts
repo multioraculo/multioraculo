@@ -80,7 +80,7 @@ export const en: Dictionary = {
   },
 
   home: {
-    brandSubtitle: "Sky, oracles and personal cycles.",
+    brandSubtitle: "Different paths to read the present.",
     today: "Today",
     drawQuestion: "What is in focus today?",
     drawShared: "The same one for everyone",
