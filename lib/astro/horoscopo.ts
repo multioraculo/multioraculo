@@ -23,6 +23,7 @@ import type { Locale } from "@/lib/i18n/config"
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
 import { apresentar, type CardMovimento } from "./apresentar"
 import { estadoDoCeu, type Ceu } from "./ceu"
+import { lerLinhaGravada } from "./linha-gravada"
 import { promptHoroscopo, type Leitura } from "./prompt-horoscopo"
 import { selecionarMovimentos } from "./relevancia"
 import { LINHA_SIGNO } from "./simbolos"
@@ -107,8 +108,21 @@ function montar(
   }
 }
 
-export async function lerCache(dia: string, signo: number, locale: Locale): Promise<HoroscopoDoDia | null> {
-  if (!hasAdminClient()) return null
+/**
+ * O que havia gravado, com a diferença entre não ter nada e ter algo que não
+ * serve mais. São dois casos parecidos e com consequências diferentes: linha
+ * ausente é gravada com `ignoreDuplicates`, porque outra visita pode ter
+ * gerado no mesmo instante e as duas leituras valem; linha incompatível
+ * precisa ser SUBSTITUÍDA, senão ela fica lá e todo pedido seguinte paga uma
+ * geração nova sem nunca conseguir guardar o resultado.
+ */
+type Guardado =
+  | { estado: "ausente" }
+  | { estado: "incompativel" }
+  | { estado: "ok"; horoscopo: HoroscopoDoDia }
+
+async function buscarCache(dia: string, signo: number, locale: Locale): Promise<Guardado> {
+  if (!hasAdminClient()) return { estado: "ausente" }
   const { data, error } = await createAdminClient()
     .from("horoscope_daily")
     .select("leitura, cards, model, tentativas")
@@ -116,16 +130,38 @@ export async function lerCache(dia: string, signo: number, locale: Locale): Prom
     .eq("signo", signo)
     .eq("locale", locale)
     .maybeSingle()
-  if (error || !data?.leitura) return null
+  if (error || !data?.leitura) return { estado: "ausente" }
+
+  // formato antigo ou estranho é tratado como ausência: a tela nunca recebe
+  // linha que ela não sabe ler. Ver lerLinhaGravada.
+  const gravado = lerLinhaGravada({ leitura: data.leitura, cards: data.cards })
+  if (!gravado) {
+    console.warn(`[horoscopo] cache em formato incompatível, regerando: ${dia} signo ${signo} ${locale}`)
+    return { estado: "incompativel" }
+  }
+
   // o céu é recalculado, nunca lido do banco: é barato, e assim a seção
   // factual nunca fica dessincronizada do motor
   const { ceu } = prepararDia(dia, signo, locale)
-  return montar(dia, signo, locale, ceu, data.cards as CardMovimento[], {
-    leitura: data.leitura as Leitura,
-    model: data.model as string,
-    cache: true,
-    tentativas: (data.tentativas as number) ?? 1,
-  })
+  return {
+    estado: "ok",
+    horoscopo: montar(dia, signo, locale, ceu, gravado.cards, {
+      leitura: gravado.leitura,
+      model: typeof data.model === "string" ? data.model : null,
+      cache: true,
+      tentativas: typeof data.tentativas === "number" ? data.tentativas : 1,
+    }),
+  }
+}
+
+/**
+ * A leitura gravada daquele dia, ou nula. Nula também quando existe linha mas
+ * ela está em formato que esta versão não lê: cache válido se usa, cache
+ * incompatível se ignora e se gera de novo.
+ */
+export async function lerCache(dia: string, signo: number, locale: Locale): Promise<HoroscopoDoDia | null> {
+  const guardado = await buscarCache(dia, signo, locale)
+  return guardado.estado === "ok" ? guardado.horoscopo : null
 }
 
 /**
@@ -143,8 +179,9 @@ export async function horoscopoDoSigno(params: {
   const { ceu, cards } = prepararDia(dia, signo, locale)
   if (!(await cacheDisponivel())) return montar(dia, signo, locale, ceu, cards, { violacoes: ["cache indisponível"] })
 
-  const guardado = await lerCache(dia, signo, locale)
-  if (guardado) return guardado
+  const guardado = await buscarCache(dia, signo, locale)
+  if (guardado.estado === "ok") return guardado.horoscopo
+  const substituir = guardado.estado === "incompativel"
 
   const prompt = promptHoroscopo({ dia, signo, cards, locale })
   let violacoes: string[] = []
@@ -163,7 +200,7 @@ export async function horoscopoDoSigno(params: {
       violacoes = veredito.violacoes
       continue
     }
-    await gravar({ dia, signo, locale, leitura: veredito.leitura, cards, model, tentativas: tentativa })
+    await gravar({ dia, signo, locale, leitura: veredito.leitura, cards, model, tentativas: tentativa, substituir })
     return montar(dia, signo, locale, ceu, cards, { leitura: veredito.leitura, model, tentativas: tentativa })
   }
 
@@ -190,6 +227,8 @@ async function gravar(linha: {
   cards: CardMovimento[]
   model: string
   tentativas: number
+  /** havia linha, mas em formato que não se lê mais: esta precisa passar por cima */
+  substituir: boolean
 }): Promise<void> {
   if (!hasAdminClient()) return
   try {
@@ -206,7 +245,7 @@ async function gravar(linha: {
           model: linha.model,
           tentativas: linha.tentativas,
         },
-        { onConflict: "dia,signo,locale", ignoreDuplicates: true },
+        { onConflict: "dia,signo,locale", ignoreDuplicates: !linha.substituir },
       )
   } catch {
     // gravar é otimização, não requisito: sem cache o próximo pedido gera de novo

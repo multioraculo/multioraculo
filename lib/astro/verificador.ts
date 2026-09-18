@@ -76,8 +76,8 @@ function contem(texto: string, termo: string): boolean {
   return new RegExp(`(^|[^\\p{L}])${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}])`, "u").test(semAcento(texto))
 }
 
-/** Quantos termos aquela forma admite. */
-function termosEsperados(card: CardMovimento): number {
+/** Quantos termos aquela forma admite. Também usada ao reler o cache. */
+export function termosEsperados(card: CardMovimento): number {
   return card.forma === "posicao" ? 0 : 2
 }
 
