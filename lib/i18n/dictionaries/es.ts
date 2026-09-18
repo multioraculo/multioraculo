@@ -34,7 +34,8 @@ export const es: Dictionary = {
   },
 
   nav: {
-    home: "Multioráculo",
+    home: "Home",
+    consult: "Consultar",
     dreams: "Sueños",
     dreamsShort: "Sueños",
     grimoire: "Diario",
@@ -78,6 +79,52 @@ export const es: Dictionary = {
     illuminated: "{pct}% iluminada",
   },
 
+  home: {
+    brandSubtitle: "Cielo, oráculos y ciclos personales.",
+    today: "Hoy",
+    drawQuestion: "¿Qué está en evidencia hoy?",
+    drawShared: "La misma para todas las personas",
+    drawWaiting: "La lectura del cruce se está escribiendo.",
+    horoscope: "Tu horóscopo hoy",
+    horoscopeGeneric: "Horóscopo del día",
+    horoscopePickSign: "Elige tu signo",
+    horoscopePickHint: "La lectura del día se escribe signo a signo.",
+    horoscopeVisitor: "Mira la lectura de tu signo",
+    horoscopeVisitorHint: "Los doce signos, leídos por el cielo de hoy.",
+    horoscopeWaiting: "La lectura de hoy aún no está lista.",
+    diaryQuestion: "¿Qué quedó de hoy?",
+    diaryCta: "Escribir en el Diario",
+    diaryToday: "Ya escribiste hoy.",
+    diaryContinue: "Continuar la entrada",
+  },
+
+  marcos: {
+    title: "Hitos",
+    days: "{n} días",
+    oneDay: "1 día",
+    zeroDays: "empieza hoy",
+    since: "desde {data}",
+    add: "añadir un hito",
+    all: "ver todos",
+    intro: "Cuentas que tú defines. No es un marcador de la aplicación, y reiniciar no te quita nada.",
+    name: "Qué estás acompañando",
+    namePlaceholder: "sin fumar, meditando, caminando",
+    start: "Desde cuándo",
+    note: "Una nota, si quieres",
+    create: "Crear hito",
+    save: "Guardar",
+    cancel: "Cancelar",
+    edit: "Editar",
+    restart: "Reiniciar hoy",
+    restartHint: "Reiniciar cambia la fecha de inicio a hoy.",
+    archive: "Archivar",
+    unarchive: "Reactivar",
+    remove: "Borrar",
+    needAccount: "Los hitos viven en tu cuenta. Entra para crear el primero.",
+    archivedTitle: "Archivados",
+    empty: "Todavía no tienes hitos.",
+  },
+
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
   // fase (inspiração em temas da psicologia analítica, sem atribuir a Jung).
   moon: {
@@ -119,7 +166,7 @@ export const es: Dictionary = {
   hero: {
     titleEmphasis: "La singularidad",
     titleRest: "te trajo",
-    titleLine2: "hasta aquí.",
+    titleLine2: "hasta el Multioráculo",
     tagline: "Una pregunta. Cinco oráculos. Una síntesis.",
     subtitle: "Las cinco lecturas se hacen por separado y después se ponen en relación.",
     lineup: "Tarot, I Ching, Runas, Búzios y Lenormand, reunidos en una sola lectura.",

@@ -93,7 +93,7 @@ function stripReversed(name: string, word: string): string {
  * Número e nome vêm do motor, então acompanham o idioma; a carta impressa não
  * entra com sua tipografia em francês.
  */
-function Capsule({ card, name, label, width }: { card: TarotCardRef; name: string; label: string; width?: number }) {
+export function TarotCapsule({ card, name, label, width }: { card: TarotCardRef; name: string; label: string; width?: number }) {
   const numeral = tarotNumeral(card)
   return (
     <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: `${width ?? 150}px` }}>
@@ -150,7 +150,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                     } as React.CSSProperties
                   }
                 >
-                  <Capsule card={e.card} name={e.name} label={e.label} width={CARD_W} />
+                  <TarotCapsule card={e.card} name={e.name} label={e.label} width={CARD_W} />
                 </div>
                 </button>
               </div>
@@ -195,7 +195,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                   } as React.CSSProperties
                 }
               >
-                <Capsule card={e.card} name={e.name} label={e.label} width={150} />
+                <TarotCapsule card={e.card} name={e.name} label={e.label} width={150} />
               </div>
               </button>
               <span className="text-white/90 text-xs font-medium leading-tight mt-2">{e.name}</span>
@@ -210,7 +210,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
         items={entries.map((e) => ({ position: e.position, name: e.name, orientation: e.orientation, meaning: e.meaning }))}
         renderFront={(i) => (
           <div style={{ transform: entries[i].card.reversed ? "rotate(180deg)" : undefined }}>
-            <Capsule card={entries[i].card} name={entries[i].name} label={entries[i].label} width={300} />
+            <TarotCapsule card={entries[i].card} name={entries[i].name} label={entries[i].label} width={300} />
           </div>
         )}
         onAdvance={focus.advance}

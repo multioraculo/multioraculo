@@ -81,7 +81,14 @@ export default function Header({ initialUser }: HeaderProps) {
     router.refresh()
   }
 
+  // o logo passa a levar para a Home
   function handleLogoClick() {
+    router.push("/home")
+  }
+
+  // a consulta continua em "/", e continua se limpando quando alguém volta
+  // para ela pelo menu
+  function handleConsultaClick() {
     window.dispatchEvent(new CustomEvent("reset-hero"))
     router.push("/")
   }
@@ -89,7 +96,8 @@ export default function Header({ initialUser }: HeaderProps) {
   // Destinos principais (os mesmos da barra inferior no celular). O
   // Multioráculo é a entrada real do produto; não existe "Início" à parte.
   const navItems = [
-    { href: "/", label: dict.nav.home, onClick: handleLogoClick },
+    { href: "/home", label: dict.nav.home },
+    { href: "/", label: dict.nav.consult, onClick: handleConsultaClick },
     { href: "/sonhos", label: dict.nav.dreamsShort },
     { href: "/horoscopo", label: dict.nav.horoscope },
   ]

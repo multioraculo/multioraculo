@@ -36,7 +36,8 @@ export const pt = {
   },
 
   nav: {
-    home: "Multioráculo",
+    home: "Home",
+    consult: "Consultar",
     dreams: "Sonhos",
     dreamsShort: "Sonhos",
     grimoire: "Diário",
@@ -80,6 +81,52 @@ export const pt = {
     illuminated: "{pct}% iluminada",
   },
 
+  home: {
+    brandSubtitle: "Céu, oráculos e ciclos pessoais.",
+    today: "Hoje",
+    drawQuestion: "O que está em evidência hoje?",
+    drawShared: "A mesma para todas as pessoas",
+    drawWaiting: "A leitura do cruzamento está sendo escrita.",
+    horoscope: "Seu horóscopo hoje",
+    horoscopeGeneric: "Horóscopo do dia",
+    horoscopePickSign: "Escolha seu signo",
+    horoscopePickHint: "A leitura do dia é escrita signo a signo.",
+    horoscopeVisitor: "Veja a leitura do seu signo",
+    horoscopeVisitorHint: "Os doze signos, lidos pelo céu de hoje.",
+    horoscopeWaiting: "A leitura de hoje ainda não está pronta.",
+    diaryQuestion: "O que ficou de hoje?",
+    diaryCta: "Registrar no Diário",
+    diaryToday: "Você já escreveu hoje.",
+    diaryContinue: "Continuar o registro",
+  },
+
+  marcos: {
+    title: "Marcos",
+    days: "{n} dias",
+    oneDay: "1 dia",
+    zeroDays: "começa hoje",
+    since: "desde {data}",
+    add: "adicionar um marco",
+    all: "ver todos",
+    intro: "Contagens que você define. Não é placar do aplicativo, e reiniciar não tira nada de você.",
+    name: "O que você está acompanhando",
+    namePlaceholder: "sem fumar, meditando, caminhando",
+    start: "Desde quando",
+    note: "Observação, se quiser",
+    create: "Criar marco",
+    save: "Salvar",
+    cancel: "Cancelar",
+    edit: "Editar",
+    restart: "Reiniciar hoje",
+    restartHint: "Reiniciar muda a data de início para hoje.",
+    archive: "Arquivar",
+    unarchive: "Reativar",
+    remove: "Apagar",
+    needAccount: "Os marcos ficam na sua conta. Entre para criar o primeiro.",
+    archivedTitle: "Arquivados",
+    empty: "Você ainda não tem marcos.",
+  },
+
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
   // fase (inspiração em temas da psicologia analítica, sem atribuir a Jung).
   moon: {
@@ -121,7 +168,7 @@ export const pt = {
   hero: {
     titleEmphasis: "A singularidade",
     titleRest: "te trouxe",
-    titleLine2: "até aqui.",
+    titleLine2: "até o Multioráculo",
     tagline: "Uma pergunta. Cinco oráculos. Uma síntese.",
     subtitle: "As cinco leituras são feitas separadamente e depois colocadas em relação.",
     lineup: "Tarô, I Ching, Runas, Búzios e Lenormand, reunidos em uma única leitura.",

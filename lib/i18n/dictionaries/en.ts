@@ -34,7 +34,8 @@ export const en: Dictionary = {
   },
 
   nav: {
-    home: "Multioráculo",
+    home: "Home",
+    consult: "Consult",
     dreams: "Dreams",
     dreamsShort: "Dreams",
     grimoire: "Journal",
@@ -78,6 +79,52 @@ export const en: Dictionary = {
     illuminated: "{pct}% illuminated",
   },
 
+  home: {
+    brandSubtitle: "Sky, oracles and personal cycles.",
+    today: "Today",
+    drawQuestion: "What is in focus today?",
+    drawShared: "The same one for everyone",
+    drawWaiting: "The reading of the crossing is being written.",
+    horoscope: "Your horoscope today",
+    horoscopeGeneric: "Horoscope of the day",
+    horoscopePickSign: "Choose your sign",
+    horoscopePickHint: "The daily reading is written sign by sign.",
+    horoscopeVisitor: "See your sign's reading",
+    horoscopeVisitorHint: "The twelve signs, read by today's sky.",
+    horoscopeWaiting: "Today's reading is not ready yet.",
+    diaryQuestion: "What stayed with you today?",
+    diaryCta: "Write in the Journal",
+    diaryToday: "You have written today.",
+    diaryContinue: "Continue the entry",
+  },
+
+  marcos: {
+    title: "Milestones",
+    days: "{n} days",
+    oneDay: "1 day",
+    zeroDays: "starts today",
+    since: "since {data}",
+    add: "add a milestone",
+    all: "see all",
+    intro: "Counts you define. Not an app score, and restarting takes nothing from you.",
+    name: "What you are keeping track of",
+    namePlaceholder: "without smoking, meditating, walking",
+    start: "Since when",
+    note: "A note, if you want",
+    create: "Create milestone",
+    save: "Save",
+    cancel: "Cancel",
+    edit: "Edit",
+    restart: "Restart today",
+    restartHint: "Restarting moves the start date to today.",
+    archive: "Archive",
+    unarchive: "Reactivate",
+    remove: "Delete",
+    needAccount: "Milestones live in your account. Sign in to create the first one.",
+    archivedTitle: "Archived",
+    empty: "You have no milestones yet.",
+  },
+
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
   // fase (inspiração em temas da psicologia analítica, sem atribuir a Jung).
   moon: {
@@ -119,7 +166,7 @@ export const en: Dictionary = {
   hero: {
     titleEmphasis: "Singularity",
     titleRest: "brought you",
-    titleLine2: "this far.",
+    titleLine2: "to Multioráculo",
     tagline: "One question. Five oracles. One synthesis.",
     subtitle: "The five readings are made separately and then placed in relation to one another.",
     lineup: "Tarot, I Ching, Runes, Búzios and Lenormand, brought together in a single reading.",

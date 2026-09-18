@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
 import RecordsSheet, { RECORD_PATHS } from "@/components/records-sheet"
-import { MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon, StarIcon } from "@/components/nav-icons"
+import { MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon, StarIcon, TodayIcon } from "@/components/nav-icons"
 
 /**
  * Navegação principal no celular, fixa no rodapé, iconográfica:
@@ -68,9 +68,10 @@ export default function BottomNav() {
   return (
     <>
       <nav className="bnav sm:hidden" aria-label={t.mainNav}>
+        {item("/home", t.home, TodayIcon)}
         {item("/sonhos", t.dreamsShort, MoonIcon)}
         {item("/horoscopo", t.horoscope, StarIcon)}
-        {item("/", t.home, MultioraculoIcon, { center: true, onClick: goHome })}
+        {item("/", t.consult, MultioraculoIcon, { center: true, onClick: goHome })}
         {sheetButton(t.records, RecordsIcon, recordsActive, records, () => setRecords(true))}
         {sheetButton(t.explore, SearchIcon, exploreActive, explore, () => setExplore(true))}
       </nav>

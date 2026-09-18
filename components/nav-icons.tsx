@@ -36,6 +36,20 @@ export function BookIcon(p: P) {
   )
 }
 
+/**
+ * Hoje: o disco do dia, círculo aberto com raios curtos e um ponto no centro,
+ * na mesma gravura de filete fino dos outros.
+ */
+export function TodayIcon(p: P) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="10.5" cy="10.5" r="6.2" />
+      <path d="M2.5 10.5h3M15.5 10.5h3M10.5 2.5v3M10.5 15.5v3" />
+      <circle cx="10.5" cy="10.5" r="1.1" />
+    </svg>
+  )
+}
+
 /** Horóscopo: a estrela de quatro pontas da marca, com um brilho menor ao lado */
 export function StarIcon(p: P) {
   return (
