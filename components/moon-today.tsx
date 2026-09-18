@@ -11,11 +11,21 @@ import { moonState, type MoonState } from "@/lib/moon"
  * simbólica fixa por fase, do i18n. Sem IA, sem horóscopo, sem previsão.
  * Calculado só no navegador (useEffect) para não divergir do servidor.
  *
- * Duas composições, uma fonte só. O painel do usuário usa a compacta; a Home
- * usa a ampla, com mais respiro. Os dados e as frases são os mesmos: se a Lua
- * mudar, os dois lugares mudam juntos, porque só existe esta Lua.
+ * Três composições, uma fonte só, e a diferença entre elas é o que cada lugar
+ * precisa mostrar:
+ *
+ *  - `compacta`: tudo, em corpo pequeno. É o painel do usuário.
+ *  - `cabecalho`: fase, porcentagem e as três palavras, SEM a frase longa. É o
+ *    alto da Home, onde a Lua é atmosfera e data, e onde um parágrafo empurraria
+ *    a tiragem para fora da primeira dobra.
+ *  - `leitura`: o glifo maior, a fase e a frase, SEM repetir porcentagem e
+ *    palavras. É a seção do céu, lá embaixo, onde a Lua volta desenvolvida.
+ *    Repetir ali o que já foi dito no topo soaria como tela duplicada.
+ *
+ * Os dados e as frases são os mesmos nas três: se a Lua mudar, todos os lugares
+ * mudam juntos, porque só existe esta Lua.
  */
-export default function MoonToday({ variante = "compacta" }: { variante?: "compacta" | "ampla" }) {
+export default function MoonToday({ variante = "compacta" }: { variante?: "compacta" | "cabecalho" | "leitura" }) {
   const { dict } = useI18n()
   const [moon, setMoon] = useState<MoonState | null>(null)
   useEffect(() => {
@@ -27,23 +37,26 @@ export default function MoonToday({ variante = "compacta" }: { variante?: "compa
 
   const phase = dict.moon[moon.key]
   const pct = Math.round(moon.illumination * 100)
-  const ampla = variante === "ampla"
+  const leitura = variante === "leitura"
+  const cabecalho = variante === "cabecalho"
 
   return (
     <div>
-      <div className={`flex items-center ${ampla ? "gap-4" : "gap-2.5"}`}>
-        <MoonGlyph illumination={moon.illumination} waxing={moon.waxing} size={ampla ? 44 : 22} />
-        <p className={ampla ? "text-white text-xl instrument italic" : "text-white/90 text-sm"}>
+      <div className={`flex items-center ${leitura ? "gap-3.5" : "gap-2.5"}`}>
+        <MoonGlyph illumination={moon.illumination} waxing={moon.waxing} size={leitura ? 32 : 22} />
+        <p className={leitura ? "text-white/90 text-[15px]" : "text-white/90 text-sm"}>
           {phase.name}
-          <span className={ampla ? "text-white/40 text-sm not-italic" : "text-white/45"}>
-            {" "}· {fmt(dict.account.illuminated, { pct })}
-          </span>
+          {!leitura && <span className="text-white/45"> · {fmt(dict.account.illuminated, { pct })}</span>}
         </p>
       </div>
-      <p className={`text-white/60 tracking-wide ${ampla ? "text-[13px] mt-3" : "text-xs mt-2"}`}>{phase.keywords}</p>
-      <p className={`text-white/80 leading-relaxed font-light ${ampla ? "text-[15px] mt-2 max-w-xl" : "text-[13px] mt-1.5"}`}>
-        {phase.text}
-      </p>
+
+      {!leitura && <p className="text-white/50 tracking-wide text-xs mt-2">{phase.keywords}</p>}
+
+      {!cabecalho && (
+        <p className={`text-white/70 leading-relaxed font-light ${leitura ? "text-[13.5px] mt-2.5 max-w-xl" : "text-[13px] mt-1.5"}`}>
+          {phase.text}
+        </p>
+      )}
     </div>
   )
 }
