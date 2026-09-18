@@ -536,7 +536,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
                 type="button"
                 onClick={() => escolher(i)}
                 aria-pressed={ativo}
-                className={`rounded-lg border px-3 py-2.5 text-left transition-colors duration-200 ${
+                className={`rounded-lg border px-3 py-2.5 text-left transition-colors duration-200 cursor-pointer ${
                   ativo
                     ? "bg-white/15 border-white/30 text-white"
                     : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white"

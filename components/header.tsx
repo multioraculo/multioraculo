@@ -105,7 +105,7 @@ export default function Header({ initialUser }: HeaderProps) {
     { href: "/assinatura", label: dict.nav.plans, hint: dict.nav.explorePlans },
     { href: "/faq", label: dict.nav.faq, hint: dict.nav.exploreFaq },
   ]
-  const menuButtonClass = "text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5"
+  const menuButtonClass = "text-white/80 hover:text-white text-sm font-light transition-colors duration-200 flex items-center gap-1.5 cursor-pointer"
   const menuPanelClass = "absolute left-1/2 -translate-x-1/2 top-9 z-50 w-60 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5"
   const menuLinks = (links: { href: string; label: string; hint: string }[]) =>
     links.map((it) => (
@@ -166,7 +166,7 @@ export default function Header({ initialUser }: HeaderProps) {
           ) : (
             <button
               onClick={() => setShowLogin(true)}
-              className="h-10 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200"
+              className="h-10 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               {dict.common.login}
             </button>

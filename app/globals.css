@@ -446,7 +446,7 @@
   flex: 1 1 0; min-width: 0; min-height: 52px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   color: rgba(255,255,255,0.5); text-decoration: none; background: none; border: 0; padding: 4px 2px;
-  -webkit-tap-highlight-color: transparent; transition: color 160ms ease;
+  -webkit-tap-highlight-color: transparent; transition: color 160ms ease; cursor: pointer;
 }
 .bnav-item:active { color: rgba(255,255,255,0.85); }
 .bnav-item.is-active { color: #ffffff; }
@@ -475,6 +475,7 @@
   color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease; -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 .voice-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .voice-btn:hover, .voice-btn:focus-visible { color: #fff; background: rgba(255,255,255,0.12); outline: none; }
