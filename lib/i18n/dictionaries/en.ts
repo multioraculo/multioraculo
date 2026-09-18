@@ -35,7 +35,7 @@ export const en: Dictionary = {
 
   nav: {
     home: "Home",
-    consult: "Consult",
+    consult: "Multioráculo",
     dreams: "Dreams",
     dreamsShort: "Dreams",
     grimoire: "Journal",

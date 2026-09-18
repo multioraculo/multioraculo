@@ -37,7 +37,7 @@ export const pt = {
 
   nav: {
     home: "Home",
-    consult: "Consultar",
+    consult: "Multioráculo",
     dreams: "Sonhos",
     dreamsShort: "Sonhos",
     grimoire: "Diário",

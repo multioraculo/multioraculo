@@ -23,6 +23,7 @@ import { useI18n } from "@/components/i18n-provider"
 import MoonToday from "@/components/moon-today"
 import MarcosHome from "@/components/marcos-home"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
+import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import { SIGNOS } from "@/lib/astro/nomes"
@@ -174,19 +175,7 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
 
       <div className="flex items-end justify-center gap-5 mt-8">
         {tiragem ? (
-          <>
-            <TarotCapsule
-              card={tiragem.tiragem.tarot.carta}
-              name={tiragem.tiragem.tarot.nome}
-              label={tiragem.tiragem.tarot.nome}
-              width={LARGURA_TAROT}
-            />
-            <LenormandCard
-              index={tiragem.tiragem.lenormand.indice}
-              name={semNumero(tiragem.tiragem.lenormand.nome)}
-              style={{ ["--ln-cw" as string]: `${LARGURA_LENORMAND}px` }}
-            />
-          </>
+          <CartasDoDia tiragem={tiragem} />
         ) : (
           <>
             <div className="rounded-[6px] bg-white/[0.04] animate-pulse" style={{ width: LARGURA_TAROT, height: 201 }} />
@@ -244,6 +233,90 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       {/* MARCOS: o tempo que a pessoa conta */}
       <MarcosHome logado={Boolean(initialUser)} />
     </div>
+  )
+}
+
+/**
+ * As duas cartas do dia, consultáveis como as da leitura.
+ *
+ * Mesma peça e mesmo gesto do resultado do Multioráculo: um toque tira a carta
+ * da mesa e a mostra maior, outro a vira, e o terceiro devolve. Quem faz isso é
+ * o FocusCard, que já existia; aqui ele só é chamado.
+ *
+ * São duas instâncias e não uma porque as lâminas têm proporções diferentes, e
+ * o FocusCard recebe uma proporção por vez. Cada carta tem o seu foco.
+ */
+function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
+  const { dict } = useI18n()
+  const focoTarot = useFocusCard()
+  const focoLenormand = useFocusCard()
+  const tarot = tiragem.tiragem.tarot
+  const lenormand = tiragem.tiragem.lenormand
+  const nomeLenormand = semNumero(lenormand.nome)
+  // a leitura do dia é do CRUZAMENTO das duas, então é ela que aparece no
+  // verso de qualquer uma: não existe leitura separada por carta
+  const leitura = tiragem.sintese ?? undefined
+  const orientacao = tarot.invertida ? dict.tarot.reversed : dict.tarot.upright
+
+  return (
+    <>
+      <div className={focoTarot.focusedIndex === 0 ? "fc-away" : ""}>
+        <button
+          type="button"
+          className="fc-btn"
+          onClick={() => focoTarot.open(0)}
+          aria-label={`${tarot.nome}. ${dict.focus.open}`}
+        >
+          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} />
+        </button>
+      </div>
+
+      <div className={focoLenormand.focusedIndex === 0 ? "fc-away" : ""}>
+        <button
+          type="button"
+          className="fc-btn"
+          onClick={() => focoLenormand.open(0)}
+          aria-label={`${nomeLenormand}. ${dict.focus.open}`}
+        >
+          <LenormandCard
+            index={lenormand.indice}
+            name={nomeLenormand}
+            style={{ ["--ln-cw" as string]: `${LARGURA_LENORMAND}px` }}
+          />
+        </button>
+      </div>
+
+      <FocusCard
+        state={focoTarot.state}
+        items={[{ position: dict.oracles.tarot, name: tarot.nome, orientation: orientacao, meaning: leitura }]}
+        renderFront={() => (
+          <div style={{ transform: tarot.carta.reversed ? "rotate(180deg)" : undefined }}>
+            <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={300} />
+          </div>
+        )}
+        onAdvance={focoTarot.advance}
+        onClose={focoTarot.close}
+        width="min(78vw, 300px, 31vh)"
+        aspect="92 / 178"
+      />
+
+      <FocusCard
+        state={focoLenormand.state}
+        items={[{ position: dict.oracles.lenormand, name: `${lenormand.indice + 1} · ${nomeLenormand}`, meaning: leitura }]}
+        renderFront={() => (
+          <LenormandCard
+            index={lenormand.indice}
+            name={nomeLenormand}
+            style={{ ["--ln-cw" as string]: "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties}
+          />
+        )}
+        onAdvance={focoLenormand.advance}
+        onClose={focoLenormand.close}
+        width="min(78vw, 280px, 37vh)"
+        aspect="0.62"
+        backClassName="fc-back-lenormand"
+      />
+    </>
   )
 }
 
