@@ -17,7 +17,7 @@
  * três aspectos pessoais, e não há de onde tirar diferença.
  */
 import { ORBE_MAX, ORBE_MAX_LUA, posicaoDe, type Ceu, type Corpo, type Evento } from "./ceu"
-import { ELEMENTO, LENTOS, PESSOAIS, REGENTE, REGENTE_TRADICIONAL } from "./simbolos"
+import { LENTOS, PESSOAIS, REGENTE, REGENTE_TRADICIONAL } from "./simbolos"
 
 export type MovimentoBase = { id: string; nota: number }
 
@@ -57,20 +57,18 @@ export function papel(corpo: Corpo, signo: number): number {
 }
 
 /**
- * Quanto a função daquele planeta conversa com o que o signo põe em
- * movimento. Deriva só da regência, e não de uma tabela de cento e vinte
- * células escolhida a dedo: regente do signo, regente tradicional, regente do
- * signo oposto (o eixo) e regente de signo do mesmo elemento.
+ * Quanto aquele corpo pesa para ESTE signo. Só regência direta do signo
+ * escolhido e os luminares.
+ *
+ * Havia aqui duas afinidades indiretas, por eixo (regente do signo oposto) e
+ * por elemento (regente de signo da mesma triplicidade). Saíram: ninguém
+ * mostrou que elas melhoram a seleção, e cada uma delas é um degrau a mais
+ * entre o dado calculado e a nota. Um ranking que não se explica em uma linha
+ * não é auditável.
  */
 export function afinidade(corpo: Corpo, signo: number): number {
   if (corpo === REGENTE[signo]) return 1
   if (corpo === REGENTE_TRADICIONAL[signo]) return 0.85
-  const oposto = (signo + 6) % 12
-  if (corpo === REGENTE[oposto] || corpo === REGENTE_TRADICIONAL[oposto]) return 0.75
-  for (let s = 0; s < 12; s++) {
-    if (ELEMENTO[s] !== ELEMENTO[signo]) continue
-    if (corpo === REGENTE[s] || corpo === REGENTE_TRADICIONAL[s]) return 0.7
-  }
   if (corpo === "sun" || corpo === "moon") return 0.6
   return 0.5
 }
@@ -193,7 +191,12 @@ function semelhanca(cand: Movimento, escolhidos: Movimento[]): number {
   let maior = 0
   for (const e of escolhidos) {
     let s = 0
-    if (corposDe(cand).some((c) => corposDe(e).includes(c))) s += 0.5
+    const mesmoCorpo = corposDe(cand).some((c) => corposDe(e).includes(c))
+    if (mesmoCorpo) s += 0.5
+    // a posição de um corpo que já aparece num aspecto escolhido conta a
+    // mesma história duas vezes: o leitor veria a oposição como card e de
+    // novo como contexto da posição
+    if (mesmoCorpo && cand.tipo !== e.tipo && (cand.tipo === "posicao" || e.tipo === "posicao")) s += 0.3
     if (cand.tipo === "aspecto" && e.tipo === "aspecto" && duro(cand.aspecto) === duro(e.aspecto)) s += 0.2
     if (cand.tipo === "posicao" && e.tipo === "posicao") s += 0.2
     maior = Math.max(maior, s)

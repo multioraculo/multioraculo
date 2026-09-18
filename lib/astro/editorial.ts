@@ -37,7 +37,7 @@ export const PROIBIDAS: Record<Locale, RegExp[]> = {
     /\barquétipo\w*/i,
     /\bvai (acontecer|dar certo|melhorar|mudar)\b/i,
     /\b(sorte|azar|infelizmente|felizmente)\b/i,
-    /\b(energia|vibe|vibração) (positiva|negativa|boa|ruim|do dia)\b/i,
+    /\b(energias?|vibe|vibração)\b/i,
     /\b(universo conspira|confie no universo|tudo vai ficar bem)\b/i,
     /\b(diagnóstic|transtorno|depressão|ansiedade|doença|cura)\w*/i,
     /\b(jung|freud|greene|tarnas|hillman)\b/i,
@@ -49,6 +49,19 @@ export const PROIBIDAS: Record<Locale, RegExp[]> = {
     /\b(paz interior|equilíbrio interior)\b/i,
     /(^|[^\p{L}])(um convite para|pedem? atenção especial|é fundamental|destaca a importância|ressalta a necessidade)/iu,
     /\b(virginian|arian|taurin|gemini|canceri|leonin|libria|escorpian|sagitarian|capricornian|aquarian|piscian)\w*\s+(são|tendem|costumam)\b/i,
+    // Construções que serviriam a qualquer céu. O problema nunca é a palavra
+    // do signo repetida quando o dado a sustenta; é a frase que continuaria
+    // valendo se os planetas fossem outros.
+    /\b(busca por (harmonia|equilíbrio)|encontrar (harmonia|equilíbrio)|novas conexões|novos entendimentos)\b/i,
+    /\btípic[oa]s? d[eo]\b/i,
+    // o signo como sujeito de um verbo de vontade. O olhar para trás evita o
+    // falso positivo de "Mercúrio em Libra busca", onde quem busca é o planeta
+    /(?<!\b(?:em|de|do|da|no|na)\s)\b(áries|touro|gêmeos|câncer|leão|virgem|libra|escorpião|sagitário|capricórnio|aquário|peixes)\s+(sente|precisa|busca|deve|quer|tende)\b/i,
+    /\b(este|esse|essa|esta)\s+(aspecto|configuração|posição|movimento)\s+(pede|sugere|indica|traz|convida)\b/i,
+    /\bsugerindo (um |uma )?(potencial|possibilidade)/i,
+    // a regra 2 diz que nada influencia ninguém: aqui ela passa a ser cobrada
+    /\b(influenci|impact)\w+/i,
+    /\b(causa|causando|determina|determinando) (o|a|os|as|que)\b/i,
   ],
   en: [
     /\barchetyp\w*/i,
@@ -101,6 +114,12 @@ export const EXPRESSOES_EVITAR: Record<Locale, string[]> = {
     "autoconhecimento",
     "jornada interior",
     "configuração celeste",
+    "energia",
+    "busca por harmonia",
+    "encontrar equilíbrio",
+    "novas conexões",
+    "típico de",
+    "este aspecto pede",
     "sorte",
     "felizmente",
   ],
@@ -124,17 +143,6 @@ export const EXPRESSOES_EVITAR: Record<Locale, string[]> = {
     "suerte",
     "afortunadamente",
   ],
-}
-
-/**
- * Começos de frase que transformam as duas linhas finais em conselho. Elas
- * descrevem o que a configuração oferece e o que ela cobra; no imperativo,
- * viram receita.
- */
-export const IMPERATIVOS: Record<Locale, RegExp> = {
-  pt: /^\s*(aproveite|evite|procure|tente|faça|busque|permita|deixe|observe|reconheça|aceite|confie|cuide|lembre|use|aprenda|mantenha|pare|comece)\b/i,
-  en: /^\s*(take advantage|avoid|try|make|seek|allow|let|observe|acknowledge|accept|trust|care|remember|use|learn|keep|stop|start)\b/i,
-  es: /^\s*(aprovecha|evita|intenta|haz|busca|permite|deja|observa|reconoce|acepta|confía|cuida|recuerda|usa|aprende|mantén|para|empieza)\b/i,
 }
 
 /** Travessão e meia risca, proibidos em qualquer campo gerado. */

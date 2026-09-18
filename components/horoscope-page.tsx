@@ -1,14 +1,14 @@
 "use client"
 
 /**
- * O horóscopo do dia: o signo, a pergunta do dia, três relações do céu e as
- * tendências. Embaixo, o céu calculado, sem interpretação.
+ * O horóscopo do dia: a roda do céu, o foco, três relações e os fatos
+ * calculados.
  *
- * Cada relação é um pequeno diagrama de duas forças: os dois planetas em
- * colunas, o símbolo do ângulo entre elas e a tradução do que aquele ângulo
- * estabelece. Fechado, o card já diz quem, que relação e o que isso mobiliza
- * no signo. A explicação só aparece ao abrir, para a primeira tela não ser um
- * paredão de texto.
+ * Cada relação é um pequeno diagrama, e a FORMA dele vem da geometria, não da
+ * diagramação: oposição e quadratura mostram dois termos em tensão; sextil e
+ * trígono mostram dois termos que se somam, sem conflito fabricado; uma
+ * posição não recebe termo nenhum. Fechado, o card já diz quem, que relação e
+ * o que ela mobiliza. A explicação aparece ao abrir.
  *
  * A leitura vem da rota, que gera sob demanda: só o signo em que alguém
  * clicou é gerado, uma vez por dia, e daí em diante todo mundo lê o mesmo.
@@ -37,11 +37,6 @@ type Resposta = {
 
 const CHAVE = "multioraculo:signo"
 
-/** O card traz o nome do ângulo traduzido; o desenho precisa da chave do motor. */
-function chaveDoAspecto(card: CardMovimento): string {
-  return card.mencoes.aspectos[0] ?? "conjunction"
-}
-
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return (
     <svg className={className} style={{ animation: "oracle-spin 0.8s linear infinite" }} viewBox="0 0 24 24" fill="none">
@@ -55,7 +50,7 @@ function Rotulo({ children }: { children: React.ReactNode }) {
   return <p className="text-white/25 text-[10px] uppercase tracking-widest">{children}</p>
 }
 
-/** Uma coluna do card: glifo, nome, e os verbos onde o contraste fica visível. */
+/** Uma coluna do card: glifo, nome, onde ele está, e o que ele faz. */
 function Coluna({ lado, alinhamento }: { lado: CardMovimento["a"]; alinhamento: "esquerda" | "direita" }) {
   const direita = alinhamento === "direita"
   return (
@@ -64,6 +59,10 @@ function Coluna({ lado, alinhamento }: { lado: CardMovimento["a"]; alinhamento: 
         <GlifoPlaneta id={lado.corpo} tamanho={22} />
       </span>
       <span className="text-white text-[13px] tracking-[0.08em] mt-2">{lado.nome.toUpperCase()}</span>
+      <span className="text-white/45 text-[11px] mt-0.5 tabular-nums">
+        {lado.nomeSigno} {lado.grauTexto}
+        {lado.retrogrado && <span className="text-white/40"> ℞</span>}
+      </span>
       {lado.regente && lado.rotuloRegente && (
         <span className="text-white/35 text-[9px] uppercase tracking-[0.12em] mt-0.5">{lado.rotuloRegente}</span>
       )}
@@ -78,34 +77,57 @@ function Coluna({ lado, alinhamento }: { lado: CardMovimento["a"]; alinhamento: 
   )
 }
 
+/** Os termos, com o sinal que a forma do movimento pede. */
+function Termos({
+  relacao,
+  card,
+  rotuloEm,
+  t,
+}: {
+  relacao: RelacaoEscrita
+  card: CardMovimento
+  rotuloEm: string
+  t: Record<string, string>
+}) {
+  if (!relacao.termos.length) return null
+  const sinal = card.forma === "contraste" ? "×" : card.forma === "convergencia" ? "·" : "+"
+  const rotulo = card.forma === "contraste" ? rotuloEm : card.forma === "convergencia" ? t.convergence : t.articulation
+  return (
+    <div className="mt-4 pt-3 border-t border-white/10">
+      <Rotulo>{rotulo}</Rotulo>
+      <p className="text-white text-[13.5px] tracking-[0.05em] leading-relaxed mt-1.5 uppercase">
+        {relacao.termos[0]?.texto} <span className="text-white/40">{sinal}</span> {relacao.termos[1]?.texto}
+      </p>
+    </div>
+  )
+}
+
 function CardRelacao({
   card,
   relacao,
   rotuloEm,
   rotuloNo,
-  signos,
   lons,
   aberto,
+  t,
 }: {
   card: CardMovimento
   relacao: RelacaoEscrita | null
   rotuloEm: string
   rotuloNo: string
-  signos: string[]
   lons: Partial<Record<string, number>>
   aberto: boolean
+  t: Record<string, string>
 }) {
-  // num aspecto o lado direito é o outro planeta; numa posição é o campo por
-  // onde ele passa, que é o signo
-  const campo = card.b ? null : signos[card.mencoes.signos[0] ?? 0]
   const lonA = lons[card.a.corpo]
   const lonB = card.b ? lons[card.b.corpo] : undefined
   const diagrama =
-    card.b && card.simbolo && lonA !== undefined && lonB !== undefined ? (
-      <DiagramaAngulo aLon={lonA} bLon={lonB} aspecto={chaveDoAspecto(card)} />
+    card.b && card.aspecto && lonA !== undefined && lonB !== undefined ? (
+      <DiagramaAngulo aLon={lonA} bLon={lonB} aspecto={card.aspecto} />
     ) : lonA !== undefined ? (
       <DiagramaPosicao lon={lonA} />
     ) : null
+
   const conteudo = (
     <>
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -113,7 +135,13 @@ function CardRelacao({
 
         <div className="flex sm:flex-col items-center justify-center gap-2 sm:w-20 shrink-0">
           <span className="h-px flex-1 sm:flex-none sm:h-8 sm:w-px bg-white/15" />
-          <span className={card.simbolo ? "text-white/75 text-lg leading-none" : "text-white/45 text-[10px] uppercase tracking-[0.16em]"}>
+          <span
+            className={
+              card.simbolo
+                ? "text-white/75 text-lg leading-none"
+                : "text-white/45 text-[10px] uppercase tracking-[0.16em]"
+            }
+          >
             {card.simbolo ?? rotuloNo}
           </span>
           <span className="h-px flex-1 sm:flex-none sm:h-8 sm:w-px bg-white/15" />
@@ -123,8 +151,8 @@ function CardRelacao({
           <Coluna lado={card.b} alinhamento="esquerda" />
         ) : (
           <div className="flex-1 flex flex-col justify-center">
-            <span className="text-white text-[13px] tracking-[0.08em]">{(campo ?? "").toUpperCase()}</span>
-            <span className="text-white/45 text-[11px] mt-1 tabular-nums">{card.detalhe}</span>
+            <span className="text-white text-[13px] tracking-[0.08em]">{card.a.nomeSigno.toUpperCase()}</span>
+            <span className="text-white/45 text-[11px] mt-1 leading-relaxed">{card.a.campo}</span>
           </div>
         )}
       </div>
@@ -132,26 +160,21 @@ function CardRelacao({
       <div className="mt-4 rounded-lg bg-black/20 px-3 py-3 flex items-center gap-3">
         {diagrama && <span className="text-white/70">{diagrama}</span>}
         <div className="min-w-0">
-          {card.b ? (
-            <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">
-              {card.titulo}
-              <span className="text-white/40 normal-case tracking-normal"> {card.detalhe}</span>
-            </p>
-          ) : (
-            <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">{card.titulo}</p>
-          )}
+          <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">
+            {card.titulo}
+            <span className="text-white/40 normal-case tracking-normal"> {card.detalhe}</span>
+          </p>
           <p className="text-white/55 text-[11.5px] leading-relaxed mt-1">{card.glosa}</p>
         </div>
       </div>
 
-      {relacao && (
-        <div className="mt-4 pt-3 border-t border-white/10">
-          <Rotulo>{rotuloEm}</Rotulo>
-          <p className="text-white text-[13.5px] tracking-[0.05em] leading-relaxed mt-1.5 uppercase">
-            {relacao.polaridade[0]} <span className="text-white/40">×</span> {relacao.polaridade[1]}
-          </p>
-        </div>
+      {card.contexto.length > 0 && (
+        <p className="text-white/35 text-[11px] leading-relaxed mt-3">
+          <span className="uppercase tracking-[0.12em] text-white/25">{t.alsoToday}</span> {card.contexto.join("; ")}
+        </p>
       )}
+
+      {relacao && <Termos relacao={relacao} card={card} rotuloEm={rotuloEm} t={t} />}
     </>
   )
 
@@ -285,6 +308,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
 
   const leitura = dados?.leitura ?? null
   const rotuloEm = dados ? fmt(t.inSign, { signo: dados.nomeSigno }) : ""
+  const rotulos = t as unknown as Record<string, string>
 
   return (
     <div className="space-y-8">
@@ -363,32 +387,15 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
                   relacao={leitura?.relacoes[i] ?? null}
                   rotuloEm={rotuloEm}
                   rotuloNo={t.inWord}
-                  signos={signos}
                   lons={Object.fromEntries(dados.ceu.posicoes.map((p) => [p.corpo, p.lon]))}
                   aberto={i === 0}
+                  t={rotulos}
                 />
               ))}
             </div>
           )}
 
-          {leitura && (
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-              <Rotulo>{t.trends}</Rotulo>
-              <p className="text-white/80 text-base leading-relaxed mt-3">{leitura.tendencias.texto}</p>
-              <div className="grid sm:grid-cols-2 gap-4 mt-5 pt-4 border-t border-white/10">
-                <div>
-                  <Rotulo>{t.available}</Rotulo>
-                  <p className="text-white/70 text-[13px] leading-relaxed mt-1.5">{leitura.tendencias.disponivel}</p>
-                </div>
-                <div>
-                  <Rotulo>{t.atStake}</Rotulo>
-                  <p className="text-white/70 text-[13px] leading-relaxed mt-1.5">{leitura.tendencias.emJogo}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <CeuDeHoje ceu={dados.ceu} locale={locale} t={t as unknown as Record<string, string>} />
+          <CeuDeHoje ceu={dados.ceu} locale={locale} t={rotulos} />
         </div>
       )}
     </div>

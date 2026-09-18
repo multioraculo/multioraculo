@@ -1,24 +1,38 @@
 /**
- * O movimento calculado vira card: nomes, funções, símbolo, orbe e a tradução
- * do ângulo, tudo no idioma do leitor.
+ * O movimento calculado vira card, com a configuração INTEIRA.
  *
- * Esta é a fronteira entre número e palavra, e ela é nossa: a mesma estrutura
- * alimenta a tela e o prompt. O modelo recebe exatamente o que o usuário vê, e
- * por isso não tem como afirmar uma posição que a tela não mostre.
+ * Um aspecto não é "Mercúrio oposição Saturno". É Mercúrio a 11,3° de Libra,
+ * direto, em oposição de 178,7° com orbe de 1,29° ainda se fechando, contra
+ * Saturno a 12,6° de Áries, retrógrado. Tudo isso entra aqui e segue junto
+ * para o prompt e para a tela, porque interpretar só o par de nomes produz
+ * frase plausível e genérica.
+ *
+ * O card também carrega o CONTEXTO: os outros aspectos que os corpos dele
+ * fazem no mesmo dia. Sem isso, o Sol em Virgem seria lido como peça isolada
+ * quando na verdade está acoplado a Marte.
+ *
+ * E carrega a FORMA, decidida pela geometria e não pelo layout: oposição e
+ * quadratura admitem dois polos; sextil e trígono não viram conflito; uma
+ * posição não precisa de polaridade nenhuma.
  */
 import type { Locale } from "@/lib/i18n/config"
-import type { Corpo } from "./ceu"
+import type { Ceu, Corpo } from "./ceu"
 import type { Movimento } from "./relevancia"
 import { ASPECTOS, CORPOS, LUNACOES, RETROGRADO, SIGNOS } from "./nomes"
 import {
+  ANGULO_ASPECTO,
   FUNCAO_NOMES,
   FUNCAO_VERBOS,
   GLOSA_ASPECTO,
   GLOSA_MOVIMENTO,
+  LINHA_SIGNO,
   REGENTE,
   ROTULO_REGENTE,
   SIMBOLO_ASPECTO,
 } from "./simbolos"
+
+/** A forma do card nasce do ângulo, não da diagramação. */
+export type FormaCard = "contraste" | "articulacao" | "convergencia" | "posicao"
 
 export type LadoCard = {
   corpo: Corpo
@@ -27,24 +41,38 @@ export type LadoCard = {
   funcoes: string
   /** os três verbos da coluna, onde o contraste fica visível */
   verbos: string[]
-  /** este planeta rege o signo do leitor */
+  /** este corpo rege o signo do leitor */
   regente: boolean
   rotuloRegente: string | null
+  /** onde ele está: o campo em que a função dele opera hoje */
+  signo: number
+  nomeSigno: string
+  campo: string
+  grau: number
+  grauTexto: string
+  retrogrado: boolean
 }
 
 export type CardMovimento = {
   id: string
   tipo: "aspecto" | "posicao" | "evento"
+  forma: FormaCard
   a: LadoCard
   b: LadoCard | null
-  /** símbolo do ângulo, quando há dois corpos */
+  /** chave do motor, quando há ângulo */
+  aspecto: string | null
   simbolo: string | null
   /** a faixa do meio: "OPOSIÇÃO" ou "SOL EM VIRGEM" */
   titulo: string
-  /** "orbe 2,9°, aplicativo" ou "23,8°, retrógrado" */
+  /** "orbe 1,3°, aplicativo" ou "24,7°" */
   detalhe: string
   /** o que o ângulo estabelece, ou o que a posição é, em linguagem comum */
   glosa: string
+  anguloReal: number | null
+  orbe: number | null
+  aplicativo: boolean | null
+  /** outros aspectos que os corpos deste card fazem hoje */
+  contexto: string[]
   /**
    * O que este card autoriza o texto a nomear. O verificador usa isto para
    * reprovar qualquer planeta, signo ou aspecto que a leitura cite sem que o
@@ -55,91 +83,175 @@ export type CardMovimento = {
 
 const numero = (n: number, locale: Locale) => (locale === "en" ? n.toFixed(1) : n.toFixed(1).replace(".", ","))
 
-function lado(corpo: Corpo, signo: number, locale: Locale): LadoCard {
-  const regente = REGENTE[signo] === corpo
+export function formaDoAspecto(aspecto: string | null): FormaCard {
+  if (!aspecto) return "posicao"
+  if (aspecto === "conjunction") return "convergencia"
+  if (aspecto === "opposition" || aspecto === "square") return "contraste"
+  return "articulacao"
+}
+
+function lado(corpo: Corpo, signoDoLeitor: number, ceu: Ceu, locale: Locale): LadoCard {
+  const pos = ceu.posicoes.find((p) => p.corpo === corpo)!
+  const regente = REGENTE[signoDoLeitor] === corpo
   return {
     corpo,
     nome: CORPOS[locale][corpo],
     funcoes: FUNCAO_NOMES[locale][corpo],
     verbos: FUNCAO_VERBOS[locale][corpo],
     regente,
-    rotuloRegente: regente ? ROTULO_REGENTE[locale](SIGNOS[locale][signo]) : null,
+    rotuloRegente: regente ? ROTULO_REGENTE[locale](SIGNOS[locale][signoDoLeitor]) : null,
+    signo: pos.signo,
+    nomeSigno: SIGNOS[locale][pos.signo],
+    campo: LINHA_SIGNO[locale][pos.signo],
+    grau: pos.grau,
+    grauTexto: `${numero(pos.grau, locale)}°`,
+    retrogrado: pos.retrogrado,
   }
 }
 
-export function apresentar(movimento: Movimento, signo: number, locale: Locale): CardMovimento {
-  const signos = SIGNOS[locale]
+/**
+ * Os outros aspectos que estes corpos fazem hoje, para a peça não ser lida
+ * isolada. Devolve também o que essas linhas nomeiam: o texto pode falar do
+ * que está no contexto, e o verificador precisa saber disso ou reprova uma
+ * citação que o próprio prompt autorizou.
+ */
+function contextoDe(
+  corpos: Corpo[],
+  idProprio: string,
+  ceu: Ceu,
+  locale: Locale,
+): { linhas: string[]; corpos: Corpo[]; signos: number[]; aspectos: string[] } {
+  const com = { pt: "com", en: "with", es: "con" }[locale]
+  const tambem = { pt: "também faz", en: "also makes", es: "también hace" }[locale]
+  const relevantes = ceu.aspectos
+    .filter((x) => `aspecto:${x.a}~${x.b}:${x.aspecto}` !== idProprio)
+    .filter((x) => corpos.includes(x.a) || corpos.includes(x.b))
+  const citados = { corpos: [] as Corpo[], signos: [] as number[], aspectos: [] as string[] }
+  const linhas = relevantes.map((x) => {
+      const quem = corpos.includes(x.a) ? x.a : x.b
+      const outro = corpos.includes(x.a) ? x.b : x.a
+      const pos = ceu.posicoes.find((p) => p.corpo === outro)!
+      const ritmo = x.aplicativo
+        ? { pt: "aplicativo", en: "applying", es: "aplicativo" }[locale]
+        : { pt: "separativo", en: "separating", es: "separativo" }[locale]
+      const orbe = locale === "en" ? "orb" : "orbe"
+      citados.corpos.push(quem, outro)
+      citados.signos.push(pos.signo)
+      citados.aspectos.push(x.aspecto)
+      return `${CORPOS[locale][quem]} ${tambem} ${ASPECTOS[locale][x.aspecto]} ${com} ${CORPOS[locale][outro]} em ${SIGNOS[locale][pos.signo]} ${numero(pos.grau, locale)}° (${orbe} ${numero(x.orbe, locale)}°, ${ritmo})`
+    })
+  return { linhas, ...citados }
+}
+
+export function apresentar(movimento: Movimento, signo: number, locale: Locale, ceu: Ceu): CardMovimento {
   const glosaMov = GLOSA_MOVIMENTO[locale]
+  const orbeRotulo = locale === "en" ? "orb" : "orbe"
 
   if (movimento.tipo === "aspecto") {
+    const a = lado(movimento.a, signo, ceu, locale)
+    const b = lado(movimento.b, signo, ceu, locale)
+    const contexto = contextoDe([movimento.a, movimento.b], movimento.id, ceu, locale)
     const modificador = movimento.aplicativo ? glosaMov.aplicativo : glosaMov.separativo
-    const orbe = locale === "en" ? `orb ${numero(movimento.orbe, locale)}°` : `orbe ${numero(movimento.orbe, locale)}°`
     const ritmo = movimento.aplicativo
       ? { pt: "aplicativo", en: "applying", es: "aplicativo" }[locale]
       : { pt: "separativo", en: "separating", es: "separativo" }[locale]
+    const separacao = (((b.grau + b.signo * 30 - (a.grau + a.signo * 30)) % 360) + 360) % 360
+    const anguloReal = separacao > 180 ? 360 - separacao : separacao
     return {
       id: movimento.id,
       tipo: "aspecto",
-      a: lado(movimento.a, signo, locale),
-      b: lado(movimento.b, signo, locale),
+      forma: formaDoAspecto(movimento.aspecto),
+      a,
+      b,
+      aspecto: movimento.aspecto,
       simbolo: SIMBOLO_ASPECTO[movimento.aspecto] ?? null,
       titulo: ASPECTOS[locale][movimento.aspecto] ?? movimento.aspecto,
-      detalhe: `${orbe}, ${ritmo}`,
+      detalhe: `${numero(anguloReal, locale)}°, ${orbeRotulo} ${numero(movimento.orbe, locale)}°, ${ritmo}`,
       glosa: `${GLOSA_ASPECTO[locale][movimento.aspecto]}. ${maiuscula(modificador)}.`,
-      mencoes: { corpos: [movimento.a, movimento.b], signos: [], aspectos: [movimento.aspecto] },
+      anguloReal,
+      orbe: movimento.orbe,
+      aplicativo: movimento.aplicativo,
+      contexto: contexto.linhas,
+      mencoes: {
+        corpos: [movimento.a, movimento.b, ...contexto.corpos],
+        signos: [a.signo, b.signo, ...contexto.signos],
+        aspectos: [movimento.aspecto, ...contexto.aspectos],
+      },
     }
   }
 
   if (movimento.tipo === "posicao") {
-    const nome = CORPOS[locale][movimento.corpo]
+    const a = lado(movimento.corpo, signo, ceu, locale)
+    const contexto = contextoDe([movimento.corpo], movimento.id, ceu, locale)
     const em = { pt: "em", en: "in", es: "en" }[locale]
-    const detalhe = movimento.retrogrado
-      ? `${numero(movimento.grau, locale)}°, ${RETROGRADO[locale].retrograde}`
-      : `${numero(movimento.grau, locale)}°`
-    const glosaBase = movimento.noProprioSigno
-      ? PERMANENCIA[locale](nome, signos[movimento.signo], true)
-      : PERMANENCIA[locale](nome, signos[movimento.signo], false)
+    const glosaBase = PERMANENCIA[locale](a.nome, a.nomeSigno, movimento.noProprioSigno)
     return {
       id: movimento.id,
       tipo: "posicao",
-      a: lado(movimento.corpo, signo, locale),
+      forma: "posicao",
+      a,
       b: null,
+      aspecto: null,
       simbolo: null,
-      titulo: `${nome} ${em} ${signos[movimento.signo]}`,
-      detalhe,
-      glosa: movimento.retrogrado ? `${glosaBase}. ${maiuscula(glosaMov.retrogrado)}.` : `${glosaBase}.`,
-      mencoes: { corpos: [movimento.corpo], signos: [movimento.signo], aspectos: [] },
+      titulo: `${a.nome} ${em} ${a.nomeSigno}`,
+      detalhe: a.retrogrado ? `${a.grauTexto}, ${RETROGRADO[locale].retrograde}` : a.grauTexto,
+      glosa: a.retrogrado ? `${glosaBase}. ${maiuscula(glosaMov.retrogrado)}.` : `${glosaBase}.`,
+      anguloReal: null,
+      orbe: null,
+      aplicativo: null,
+      contexto: contexto.linhas,
+      mencoes: {
+        corpos: [movimento.corpo, ...contexto.corpos],
+        signos: [a.signo, ...contexto.signos],
+        aspectos: contexto.aspectos,
+      },
     }
   }
 
   const evento = movimento.evento
   const corpo: Corpo = evento.tipo === "estacao" || evento.tipo === "ingresso" ? evento.corpo : "moon"
-  const titulo = tituloDoEvento(movimento, signo, locale)
+  const a = lado(corpo, signo, ceu, locale)
+  const contextoEvento = contextoDe([corpo], movimento.id, ceu, locale)
   return {
     id: movimento.id,
     tipo: "evento",
-    a: lado(corpo, signo, locale),
-    b: evento.tipo === "lunacao" || evento.tipo === "eclipse" ? lado("sun", signo, locale) : null,
+    forma: "posicao",
+    a,
+    b: evento.tipo === "lunacao" || evento.tipo === "eclipse" ? lado("sun", signo, ceu, locale) : null,
+    aspecto: null,
     simbolo: null,
-    titulo,
-    detalhe: `${numero(evento.grau, locale)}° ${signos[evento.signo]}`,
+    titulo: tituloDoEvento(movimento, locale),
+    detalhe: `${numero(evento.grau, locale)}° ${SIGNOS[locale][evento.signo]}`,
     glosa: `${GLOSA_EVENTO[locale][evento.tipo]}.`,
+    anguloReal: null,
+    orbe: null,
+    aplicativo: null,
+    contexto: contextoEvento.linhas,
     mencoes: {
-      corpos: evento.tipo === "lunacao" || evento.tipo === "eclipse" ? [corpo, "sun"] : [corpo],
-      signos: [evento.signo],
-      aspectos: [],
+      corpos: [...(evento.tipo === "lunacao" || evento.tipo === "eclipse" ? [corpo, "sun" as Corpo] : [corpo]), ...contextoEvento.corpos],
+      signos: [evento.signo, ...contextoEvento.signos],
+      aspectos: contextoEvento.aspectos,
     },
   }
 }
 
-function tituloDoEvento(movimento: Movimento, signo: number, locale: Locale): string {
+/** O ângulo exato que o aspecto procura, para o texto poder comparar com o real. */
+export function anguloNominal(aspecto: string | null): number | null {
+  return aspecto ? (ANGULO_ASPECTO[aspecto] ?? null) : null
+}
+
+function tituloDoEvento(movimento: Movimento, locale: Locale): string {
   if (movimento.tipo !== "evento") return ""
   const evento = movimento.evento
   const signos = SIGNOS[locale]
   const em = { pt: "em", en: "in", es: "en" }[locale]
   if (evento.tipo === "lunacao") return `${LUNACOES[locale][evento.fase] ?? evento.fase} ${em} ${signos[evento.signo]}`
   if (evento.tipo === "eclipse") {
-    const nome = { pt: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar", en: evento.especie === "solar" ? "Solar eclipse" : "Lunar eclipse", es: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar" }[locale]
+    const nome = {
+      pt: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar",
+      en: evento.especie === "solar" ? "Solar eclipse" : "Lunar eclipse",
+      es: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar",
+    }[locale]
     return `${nome} ${em} ${signos[evento.signo]}`
   }
   if (evento.tipo === "estacao") {

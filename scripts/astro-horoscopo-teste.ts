@@ -21,7 +21,7 @@ config({ path: ".env.local", quiet: true })
 const MODELO = process.env.MODELO_ASTRO ?? "gpt-4o"
 const TEMPERATURA = Number(process.env.TEMP_ASTRO ?? 0.7)
 const locale = "pt" as const
-const TENTATIVAS = 3
+const TENTATIVAS = 4
 
 async function main() {
   const chave = process.env.OPENAI_API_KEY
@@ -72,17 +72,20 @@ async function main() {
     }
 
     const leitura = (bruto ?? {}) as Record<string, any>
-    console.log(`\n  EM FOCO HOJE: ${leitura.foco ?? "?"}`)
+    console.log(`
+  EM FOCO HOJE: ${leitura.foco ?? "?"}`)
     for (const [i, card] of cards.entries()) {
       const r = (leitura.relacoes ?? []).find((x: any) => Number(x?.n) === i + 1) ?? (leitura.relacoes ?? [])[i]
-      console.log(`\n  [${i + 1}] ${card.titulo}`)
-      console.log(`      ${(r?.polaridade ?? []).join("  ×  ")}`)
+      const sinal = card.forma === "contraste" ? " × " : card.forma === "convergencia" ? " · " : " + "
+      const termos = (r?.termos ?? []).map((t: any) => `${t?.texto} [${t?.origem}]`).join(sinal)
+      console.log(`
+  [${i + 1}] ${card.forma.toUpperCase()} · ${card.a.nome} em ${card.a.nomeSigno} ${card.a.grauTexto}${card.a.retrogrado ? " R" : ""}${card.b ? ` ${card.titulo} ${card.b.nome} em ${card.b.nomeSigno} ${card.b.grauTexto}${card.b.retrogrado ? " R" : ""}` : ""}`)
+      if (card.detalhe) console.log(`      ${card.detalhe}`)
+      if (card.contexto.length) console.log(`      também hoje: ${card.contexto.join("; ")}`)
+      if (termos) console.log(`      ${termos}`)
       console.log(`      ${r?.explicacao ?? ""}`)
     }
-    const t = leitura.tendencias ?? {}
-    console.log(`\n  TENDÊNCIAS: ${t.texto ?? ""}`)
-    console.log(`  disponível: ${t.disponivel ?? ""}`)
-    console.log(`  em jogo: ${t.emJogo ?? ""}\n`)
+    console.log("")
 
     if (veredito.ok) break
   }

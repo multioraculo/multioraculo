@@ -1,35 +1,104 @@
 /**
- * O prompt do horóscopo do dia. Recebe os movimentos já calculados e já
- * traduzidos em palavras nossas, e devolve instruções.
+ * O prompt do horóscopo do dia.
  *
- * O modelo escreve quatro coisas e mais nada: a pergunta do dia, a polaridade
- * de cada relação, a explicação de cada relação e as tendências do fim. Nome
- * de planeta, grau, orbe, símbolo e tradução do ângulo já chegam prontos.
- * Nenhuma posição astrológica nasce aqui.
+ * O modelo recebe a configuração INTEIRA de cada movimento (planeta, signo,
+ * grau, movimento direto ou retrógrado, ângulo real, orbe, aplicativo ou
+ * separativo, regência, e os outros aspectos que aqueles corpos fazem hoje) e
+ * escreve duas coisas: o foco do dia e, para cada movimento, os termos e a
+ * explicação.
  *
- * Os movimentos vão numerados, não por id: modelo copiando string longa erra
- * (mediu-se: truncava `aspecto:venus~pluto:square` em `aspecto:venus~pluto`).
- * Ele cita números, e o código traduz de volta.
+ * Duas regras estruturais nasceram de erros medidos:
+ *
+ *  - cada termo declara DE ONDE veio. Sem isso o modelo completa o segundo
+ *    lado por plausibilidade, e foi exatamente assim que apareceu um
+ *    "necessidade de ação" que nenhum dado sustentava;
+ *  - a forma do card vem do ângulo. Sextil e trígono não viram conflito só
+ *    porque o layout tem dois lados; posição não recebe polaridade nenhuma.
  */
 import type { Locale } from "@/lib/i18n/config"
 import { languageRule } from "@/lib/oracles/language"
-import type { CardMovimento } from "./apresentar"
+import { anguloNominal, type CardMovimento } from "./apresentar"
 import { EXPRESSOES_EVITAR, REGRAS_COMUNS } from "./editorial"
-import { CORPOS, SIGNOS } from "./nomes"
-import { LINHA_SIGNO, REGENTE, SOMBRA_SIGNO } from "./simbolos"
+import { CORPOS, RETROGRADO, SIGNOS } from "./nomes"
+import { LINHA_SIGNO, REGENTE } from "./simbolos"
 
-export type RelacaoEscrita = { n: number; polaridade: [string, string]; explicacao: string }
+/** De qual elemento calculado aquele termo saiu. O verificador confere. */
+export const ORIGENS = ["planetaA", "signoA", "movimentoA", "planetaB", "signoB", "movimentoB", "regencia"] as const
+export type Origem = (typeof ORIGENS)[number]
+
+export type TermoEscrito = { texto: string; origem: Origem }
+
+export type RelacaoEscrita = {
+  n: number
+  /** dois termos nas formas com dois corpos; nenhum numa posição */
+  termos: TermoEscrito[]
+  explicacao: string
+}
 
 export type Leitura = {
   foco: string
   relacoes: RelacaoEscrita[]
-  tendencias: { texto: string; disponivel: string; emJogo: string }
 }
 
-export const SISTEMA_HOROSCOPO: Record<Locale, string> = {
+const SISTEMA_BASE: Record<Locale, string> = {
   pt: "Responda apenas com JSON válido, sem Markdown. Todo texto destinado ao leitor é escrito em português do Brasil.",
   en: "Respond only with valid JSON, no Markdown. All text addressed to the reader is written in English.",
   es: "Responde solo con JSON válido, sin Markdown. Todo el texto dirigido al lector se escribe en español.",
+}
+
+const VETO: Record<Locale, string> = {
+  pt: "Nenhum campo pode conter travessão, meia risca, qualquer flexão de \"arquétipo\", nem estas expressões:",
+  en: "No field may contain an em dash, an en dash, any form of \"archetype\", or these expressions:",
+  es: "Ningún campo puede contener raya, semirraya, ninguna flexión de \"arquetipo\", ni estas expresiones:",
+}
+
+/**
+ * O veto vai na mensagem de sistema, e não só no corpo do pedido: medido, o
+ * modelo continuava escrevendo "à tona" e "destaca a importância" mesmo com a
+ * lista repetida duas vezes no fim do prompt.
+ */
+export const SISTEMA_HOROSCOPO: Record<Locale, string> = {
+  pt: `${SISTEMA_BASE.pt} ${VETO.pt} ${EXPRESSOES_EVITAR.pt.map((e) => `"${e}"`).join(", ")}.`,
+  en: `${SISTEMA_BASE.en} ${VETO.en} ${EXPRESSOES_EVITAR.en.map((e) => `"${e}"`).join(", ")}.`,
+  es: `${SISTEMA_BASE.es} ${VETO.es} ${EXPRESSOES_EVITAR.es.map((e) => `"${e}"`).join(", ")}.`,
+}
+
+const NOME_FORMA: Record<string, string> = {
+  contraste: "CONTRASTE",
+  articulacao: "ARTICULAÇÃO",
+  convergencia: "CONVERGÊNCIA",
+  posicao: "POSIÇÃO",
+}
+
+function descreverLado(rotulo: "A" | "B", lado: CardMovimento["a"], locale: Locale): string {
+  const movimento = lado.retrogrado
+    ? `${RETROGRADO[locale].retrograde.toUpperCase()} (movimento aparente para trás, um tema que volta para revisão)`
+    : "direto"
+  return [
+    `    ${rotulo} · ${lado.nome}${lado.regente ? ` (${lado.rotuloRegente})` : ""}`,
+    `       função: ${lado.funcoes}`,
+    `       faz: ${lado.verbos.join(", ")}`,
+    `       está em: ${lado.nomeSigno} ${lado.grauTexto}, ${movimento}`,
+    `       campo de ${lado.nomeSigno}: ${lado.campo}`,
+  ].join("\n")
+}
+
+function descreverCard(card: CardMovimento, i: number, locale: Locale): string {
+  const linhas: string[] = []
+  const nominal = anguloNominal(card.aspecto)
+  if (card.forma === "posicao") {
+    linhas.push(`[${i + 1}] ${NOME_FORMA.posicao} · ${card.titulo} (${card.detalhe})`)
+    linhas.push(`    o que esta posição é: ${card.glosa}`)
+    linhas.push(descreverLado("A", card.a, locale))
+  } else {
+    linhas.push(`[${i + 1}] ${NOME_FORMA[card.forma]} · ${card.a.nome} ${card.titulo.toUpperCase()} ${card.b?.nome}`)
+    linhas.push(`    ângulo: ${card.detalhe}${nominal !== null ? ` (o exato deste aspecto é ${nominal}°)` : ""}`)
+    linhas.push(`    o que este ângulo estabelece: ${card.glosa}`)
+    linhas.push(descreverLado("A", card.a, locale))
+    if (card.b) linhas.push(descreverLado("B", card.b, locale))
+  }
+  if (card.contexto.length) linhas.push(`    também hoje: ${card.contexto.join("; ")}`)
+  return linhas.join("\n")
 }
 
 export function promptHoroscopo(params: {
@@ -41,57 +110,71 @@ export function promptHoroscopo(params: {
   const { dia, signo, cards, locale } = params
   const nomeSigno = SIGNOS[locale][signo]
   const regente = CORPOS[locale][REGENTE[signo]]
+  const lista = cards.map((card, i) => descreverCard(card, i, locale)).join("\n\n")
 
-  const lista = cards
+  const formas = cards
     .map((card, i) => {
-      const linhas = [`[${i + 1}] ${card.titulo.toUpperCase()} (${card.detalhe})`]
-      linhas.push(`    ${card.a.nome}: ${card.a.funcoes}${card.a.regente ? ` (${card.a.rotuloRegente})` : ""}`)
-      linhas.push(`    o que ${card.a.nome} faz: ${card.a.verbos.join(", ")}`)
-      if (card.b) {
-        linhas.push(`    ${card.b.nome}: ${card.b.funcoes}${card.b.regente ? ` (${card.b.rotuloRegente})` : ""}`)
-        linhas.push(`    o que ${card.b.nome} faz: ${card.b.verbos.join(", ")}`)
-      }
-      linhas.push(`    o que esta relação estabelece: ${card.glosa}`)
-      return linhas.join("\n")
+      if (card.forma === "contraste") return `[${i + 1}] dois termos em tensão real, um de cada lado`
+      if (card.forma === "articulacao") return `[${i + 1}] dois termos que SE SOMAM. Não invente conflito: este ângulo não é conflito`
+      if (card.forma === "convergencia") return `[${i + 1}] dois termos operando no mesmo ponto, sem oposição entre eles`
+      return `[${i + 1}] NENHUM termo. Só a explicação`
     })
-    .join("\n\n")
+    .join("\n")
 
   const user = `Escreva a leitura do dia ${dia} para quem é de ${nomeSigno}.
 
-O SIGNO
+O SIGNO DO LEITOR
 ${nomeSigno}: ${LINHA_SIGNO[locale][signo]}
-Excesso possível, quando essa força passa do ponto: ${SOMBRA_SIGNO[locale][signo]}. Isso não é defeito de ninguém e não se diz ao leitor como rótulo; é o outro lado da mesma qualidade.
-Regente: ${regente}. Quando o regente aparece nos movimentos, a leitura passa por ele com mais peso.
+Regente: ${regente}.
 
-OS MOVIMENTOS DO CÉU DE HOJE
-Calculados. Não existe nada além destes, e as palavras de cada planeta e de cada ângulo já estão definidas: use essas, não outras.
+OS MOVIMENTOS SELECIONADOS
+Calculados, com a configuração inteira. Não existe nada além do que está aqui.
 
 ${lista}
 
 ${REGRAS_COMUNS}
 11. Estas expressões reprovam o texto inteiro. Não use nenhuma delas, em campo nenhum: ${EXPRESSOES_EVITAR[locale].map((e) => `"${e}"`).join(", ")}.
 
+COMO RACIOCINAR, ANTES DE ESCREVER
+
+Para cada movimento, nesta ordem:
+1. Como a função de A se expressa DENTRO DO CAMPO em que A está? Não é "Mercúrio é pensamento". É o que distinguir e nomear se torna no campo daquele signo, naquele grau, com aquele movimento.
+2. O mesmo para B, quando houver B.
+3. O que este ângulo faz entre essas duas expressões já situadas? Use o ângulo real, o orbe e o fato de estar se fechando ou se afastando.
+4. Qual dimensão do signo do leitor ISTO ativa? Pergunte o que este céu específico toca em ${nomeSigno}, e não como encaixar a configuração na característica mais conhecida do signo. Se a configuração não ativa o excesso conhecido de ${nomeSigno}, não o mencione.
+5. Se o movimento tiver linha "também hoje", ela participa: o corpo não está isolado, e o outro aspecto muda como ele se expressa. Num movimento de POSIÇÃO isso é obrigatório: a explicação precisa dizer o que aquele outro aspecto faz com a expressão do corpo, nomeando o outro planeta.
+
 O QUE VOCÊ ESCREVE
 
-1. "foco": de três a dez palavras, nascido do CONJUNTO dos movimentos. Prefira uma pergunta. Precisa ser entendida por quem não sabe nada de astrologia e precisa ser específica deste céu: se serve para qualquer dia, está errada. Rótulo abstrato não serve ("Equilíbrio entre pensamento e estrutura" não diz o que está em jogo); a pergunta que aquele conflito faz, sim ("Até onde continuar refinando?"). Não pode conter nome de planeta, de signo nem de aspecto.
+1. "relacoes": EXATAMENTE ${cards.length} entradas, uma por movimento, na ordem, cada uma com o número dela. Nenhum movimento pode ficar de fora.
 
-2. "relacoes": uma entrada para cada movimento, na ordem, com o número dele.
-   - "polaridade": dois lados, cada um de duas a seis palavras, em linguagem comum. Cada lado é uma AÇÃO ou uma EXIGÊNCIA, não um rótulo: dá para ver o que aquele lado quer fazer. O primeiro diz o que uma força quer; o segundo, o que a outra exige dela. Dois conceitos abstratos em oposição não servem ("Profundidade emocional × escolhas racionais" são dois rótulos, não duas forças); o que serve é do tipo "Continuar analisando × chegar a uma conclusão", em que se enxerga o conflito. Sem nome de planeta, de signo ou de aspecto. E não repita os verbos dos dois planetas: eles já estão na tela, na coluna logo acima da polaridade. "Distinguir e examinar × Delimitar e concluir" devolve ao leitor o que ele acabou de ler; a polaridade precisa dizer o que essa relação exige de quem é deste signo.
-     Num movimento de POSIÇÃO não há duas forças em ângulo, e por isso a polaridade não pode sair de duas palavras quaisquer: a tensão está entre o que aquele planeta traz ao atravessar o signo e o excesso do próprio signo, listado acima. É de lá que sai o segundo lado.
-   - "explicacao": de três a cinco frases, respondendo quatro coisas na ordem natural: o que o primeiro planeta faz aqui; o que o segundo faz (quando houver dois); o que este ângulo estabelece entre os dois; por que isso ganha esse sentido ao passar por ${nomeSigno}, usando as palavras que definem o signo. Cite os planetas pelo nome e o signo pelo nome. A tradução do ângulo já está na tela logo acima da sua explicação: não a parafraseie, parta dela. A última frase é a mais importante: ela nomeia a tensão concreta que isso cria neste signo, com as palavras do próprio signo. Não termine com "destaca a importância de", "ressalta a necessidade de" nem "sublinha o valor de": isso não diz nada.
+   "termos": conforme a forma de cada movimento:
+${formas}
+   Cada termo tem de duas a seis palavras, em linguagem comum, sem nome de planeta, de signo ou de aspecto.
+   Um termo é a função SITUADA, nunca a função solta. Dois verbos da lista colados ("sentir e guardar", "distinguir e nomear") são reprovados automaticamente, porque devolvem ao leitor o que ele já está lendo na coluna ao lado. Acrescente o campo, o grau ou o movimento: "guardar o que ainda não tem nome", "nomear no outro", "rever a forma já dada".
 
-3. "tendencias": o fecho da página.
-   - "texto": um parágrafo de 60 a 100 palavras que reúne os movimentos numa leitura só, mostrando o que eles têm em comum. Não repita as explicações nem a pergunta do foco; diga o que os três formam juntos. Cuidado com a descrição do ângulo: oposição não é dois planetas "trabalhando juntos". Nada de "o céu convida", "pede atenção especial", "é fundamental": descreva, não exorte.
-   - "disponivel": de quatro a dezoito palavras. O que esta configuração torna disponível.
-   - "emJogo": de quatro a dezoito palavras. O que ela cobra. Precisa ser diferente da linha anterior, não a mesma ideia com outras palavras.
-   As duas últimas descrevem, não aconselham: nada de verbo no imperativo, nada de "aproveite", "evite", "procure".
+   "origem": cada termo declara de qual elemento calculado ele saiu:
+     planetaA, planetaB      a função do corpo
+     signoA, signoB          o campo do signo onde o corpo está
+     movimentoA, movimentoB  a retrogradação daquele corpo (só existe se ele estiver retrógrado)
+     regencia                o fato daquele corpo reger ${nomeSigno}
+   O PRIMEIRO termo sai do corpo A e o SEGUNDO sai do corpo B: cada lado se sustenta na configuração do seu próprio corpo. O ângulo NÃO é origem de termo, porque ele é o que põe os dois em relação, e não um dos lados. Copiar a frase que descreve o ângulo não é um termo.
+   Se um termo não puder ser rastreado a um destes, ele não existe: escreva outro termo. Nunca complete um lado por plausibilidade.
+
+   "explicacao": de três a cinco frases, seguindo o raciocínio acima.
+   ESPECIFICIDADE, a regra mais importante: cada frase precisa depender de algum fato desta configuração. São fatos o signo onde o corpo está, a retrogradação, o tipo de ângulo, o grau, o orbe, estar se fechando ou se afastando, a regência, e o outro aspecto que aparece em "também hoje". Teste cada frase assim: se eu apagar os fatos, ela continua valendo para outro signo ou outro dia? Então ela está genérica e não serve.
+   A explicação inteira precisa tocar pelo menos três fatos diferentes, e no máximo uma frase pode ficar sem nenhum.
+   Cite os planetas pelo nome e diga em que signo cada um está. A última frase responde por que isto importa a ${nomeSigno} hoje, e também precisa se apoiar em fato.
+   Não escreva "busca por harmonia", "novas conexões e entendimentos", "encontrar equilíbrio", "típico de ${nomeSigno}", "${nomeSigno} sente a necessidade de", "este aspecto pede". Não troque essas expressões por sinônimos: reconstrua a frase a partir do dado.
 
 ${languageRule(locale)}
 
-LEMBRETE FINAL: nenhuma destas expressões pode aparecer em campo nenhum, nem no meio de uma frase: ${EXPRESSOES_EVITAR[locale].map((e) => `"${e}"`).join(", ")}. Nenhum travessão. Nenhuma forma da palavra "arquétipo".
+2. "foco": escrito POR ÚLTIMO, depois das ${cards.length} relações, condensando o que elas têm em comum. De três a dez palavras, imediatamente compreensível, sem nome de planeta, de signo ou de aspecto. Não é resumo abstrato: se a frase continuar valendo com outros planetas em outro dia, está errada. Pode ser afirmação ou pergunta, como você preferir.
 
-Devolva JSON exatamente nesta forma:
-{"foco": "...", "relacoes": [{"n": 1, "polaridade": ["...", "..."], "explicacao": "..."}], "tendencias": {"texto": "...", "disponivel": "...", "emJogo": "..."}}`
+Devolva JSON exatamente nesta ordem, com "relacoes" ANTES de "foco", porque o foco só existe depois delas:
+{"relacoes": [{"n": 1, "termos": [{"texto": "...", "origem": "signoA"}, {"texto": "...", "origem": "movimentoB"}], "explicacao": "..."}], "foco": "..."}
+
+LEMBRETE FINAL: nenhum travessão, nenhuma forma da palavra "arquétipo", e nenhuma das expressões proibidas da regra 11.`
 
   return { system: SISTEMA_HOROSCOPO[locale], user }
 }

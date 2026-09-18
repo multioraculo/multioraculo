@@ -49,7 +49,7 @@ export type HoroscopoDoDia = {
   violacoes: string[]
 }
 
-const TENTATIVAS = 3
+const TENTATIVAS = 4
 
 /**
  * Existe onde guardar? Enquanto a resposta for não, não se gera nada: cache
@@ -78,7 +78,7 @@ export async function cacheDisponivel(): Promise<boolean> {
 /** A tiragem do dia para um signo: céu, três movimentos e os cards prontos. */
 export function prepararDia(dia: string, signo: number, locale: Locale): { ceu: Ceu; cards: CardMovimento[] } {
   const ceu = estadoDoCeu(dia)
-  const cards = selecionarMovimentos(ceu, signo).map((m) => apresentar(m, signo, locale))
+  const cards = selecionarMovimentos(ceu, signo).map((m) => apresentar(m, signo, locale, ceu))
   return { ceu, cards }
 }
 
