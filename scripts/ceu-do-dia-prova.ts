@@ -225,7 +225,9 @@ E o termo não pode ser apenas a base da origem repetida. Ele situa aquilo no qu
 
 O QUE DEVOLVER
 - termos: de 3 a 5 entradas com texto e origem. A origem é exatamente uma das ORIGENS listadas no fato. O texto é a palavra ou expressão curta como ela aparece na síntese.
-- sintese: DUAS frases curtas, no máximo 38 palavras somadas, contendo todos os termos. Sem cauda explicativa no fim: se a frase já disse o que tinha para dizer, ela acaba.
+- sintese: DUAS frases, no máximo 45 palavras somadas, contendo todos os termos. Sem cauda explicativa no fim: se a frase já disse o que tinha para dizer, ela acaba.
+
+O MOVIMENTO PRIMEIRO, O ENCONTRO DEPOIS. A primeira frase nomeia o que está sendo mobilizado hoje. A segunda nomeia o que esse movimento encontra: o que o sustenta, o que o atravessa, o que o revisa. Quem lê não sabe astrologia e precisa entender a frase como entenderia qualquer outra em português.
 
 PELO MENOS UM TERMO VEM DE UM ÂNGULO. O que mudou hoje é a relação entre os corpos, não a qualidade de cada um deles isolado. Uma síntese que só enfileira qualidades de planetas e signos perdeu a notícia.
 
@@ -387,7 +389,7 @@ function verificar(saida: Saida, escolhidos: Fato[]): string[] {
   const frases = texto.split(/(?<=[.!?])\s+/).filter(Boolean)
   if (frases.length !== 2) falhas.push(`${frases.length} frases (queremos 2)`)
   const palavras = texto.trim().split(/\s+/).length
-  if (palavras > 38) falhas.push(`${palavras} palavras, acima de 38`)
+  if (palavras > 45) falhas.push(`${palavras} palavras, acima de 45`)
 
   return falhas
 }

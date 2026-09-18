@@ -20,6 +20,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
+import { fmt } from "@/lib/i18n"
 import MoonToday from "@/components/moon-today"
 import MarcosHome from "@/components/marcos-home"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
@@ -52,8 +53,12 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
   const [horoscopo, setHoroscopo] = useState<RespostaHoroscopo | null>(null)
   const [signo, setSigno] = useState<number | null>(null)
   const [hoje, setHoje] = useState("")
+  // a leitura coletiva do céu, para quem ainda não escolheu signo
+  const [ceuDoDia, setCeuDoDia] = useState<{ factual: string[]; sintese: string | null } | null>(null)
   // null enquanto não se sabe: assim a chamada não pisca para quem já tem mapa
-  const [temMapa, setTemMapa] = useState<boolean | null>(initialUser ? null : false)
+  const [mapa, setMapa] = useState<{ temMapa: boolean; primeira: string | null } | null>(
+    initialUser ? null : { temMapa: false, primeira: null },
+  )
 
   useEffect(() => {
     setHoje(
@@ -66,11 +71,18 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
   }, [])
 
   useEffect(() => {
-    if (!initialUser) return
-    fetch("/api/mapa?resumo=1")
+    fetch("/api/ceu-dia")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setTemMapa(Boolean(d?.temMapa)))
-      .catch(() => setTemMapa(false))
+      .then((d) => d && setCeuDoDia({ factual: d.factual ?? [], sintese: d.sintese ?? null }))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!initialUser) return
+    fetch("/api/mapa")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setMapa({ temMapa: Boolean(d?.mapa), primeira: null }))
+      .catch(() => setMapa({ temMapa: false, primeira: null }))
   }, [initialUser])
 
   // o signo mora no navegador, escolhido na página do Horóscopo. É ele, e não
@@ -115,57 +127,16 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
 
       <div className="h-px bg-white/[0.055] mt-7" />
 
-      {/* O HORÓSCOPO: a área inteira leva à leitura */}
-      <Link href="/horoscopo" className="group block mt-6">
-        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">
-          {signo === null && !initialUser ? t.horoscopeGeneric : t.horoscope}
-        </p>
-
-        {signo !== null ? (
-          <>
-            <div className="flex items-baseline gap-2.5 mt-3">
-              <span className="text-white/40 text-[13px]">{GLIFOS_SIGNO[signo]}</span>
-              <span className="instrument italic text-white text-xl">{SIGNOS[locale][signo]}</span>
-              <span className="ml-auto text-white/20 group-hover:text-white/40 text-[11px] transition-colors">↗</span>
-            </div>
-            {foco ? (
-              <>
-                <p className="text-white/80 text-[14px] leading-relaxed font-light mt-2">{foco}</p>
-                {primeiraFrase && (
-                  <p className="text-white/45 text-[12.5px] leading-relaxed font-light mt-1.5">{primeiraFrase}</p>
-                )}
-              </>
-            ) : (
-              <p className="text-white/35 text-[13px] leading-relaxed font-light mt-2">{t.horoscopeWaiting}</p>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="flex items-baseline gap-2.5 mt-3">
-              <span className="instrument italic text-white/85 text-lg">
-                {initialUser ? t.horoscopePickSign : t.horoscopeVisitor}
-              </span>
-              <span className="ml-auto text-white/20 group-hover:text-white/40 text-[11px] transition-colors">↗</span>
-            </div>
-            <p className="text-white/45 text-[12.5px] leading-relaxed font-light mt-2">
-              {initialUser ? t.horoscopePickHint : t.horoscopeVisitorHint}
-            </p>
-          </>
-        )}
-      </Link>
-
-      {/* a passagem do signo para o mapa, em duas linhas e só para quem ainda
-          não tem mapa: quem já tem não precisa ser convidado de novo */}
-      {signo !== null && temMapa === false && (
-        <Link href="/interconexoes" className="group block mt-6">
-          <p className="text-white/50 group-hover:text-white/70 text-[13px] leading-relaxed font-light transition-colors">
-            {ti.homeLead}
-          </p>
-          <p className="text-white/35 group-hover:text-white/55 text-[13px] leading-relaxed font-light transition-colors">
-            {ti.homeBody}
-          </p>
-        </Link>
-      )}
+      {/* O HORÓSCOPO, em três níveis: o céu, o signo, o mapa */}
+      <HoroscopoDaHome
+        signo={signo}
+        foco={foco}
+        ceu={ceuDoDia}
+        mapa={mapa}
+        t={t as unknown as Record<string, string>}
+        ti={ti as unknown as Record<string, string>}
+        locale={locale}
+      />
 
       {/* A TIRAGEM COLETIVA: a leitura acontece aqui, sem link */}
       <div className="h-16 sm:h-20" />
@@ -367,6 +338,117 @@ function ConviteDePergunta({ rotulo, convite }: { rotulo: string; convite: strin
         >
           {mostrada}
         </span>
+      </Link>
+    </div>
+  )
+}
+
+/**
+ * O horóscopo na Home, em três estados, e a diferença entre eles é conceitual.
+ *
+ * Sem signo, a leitura é do céu: coletiva, para todo mundo, com os fatos por
+ * cima e a tradução simbólica embaixo. Com signo, é a leitura daquele signo,
+ * que continua sendo compartilhada, e é isso que a frase precisa dizer com
+ * todas as letras. Com mapa, é a única que é de fato pessoal.
+ *
+ * A progressão importa: céu, signo, mapa. É ela que faz alguém entender por
+ * que o mapa natal oferece outra camada, sem ninguém precisar explicar.
+ */
+function HoroscopoDaHome({
+  signo,
+  foco,
+  ceu,
+  mapa,
+  t,
+  ti,
+  locale,
+}: {
+  signo: number | null
+  foco: string | null
+  ceu: { factual: string[]; sintese: string | null } | null
+  mapa: { temMapa: boolean; primeira: string | null } | null
+  t: Record<string, string>
+  ti: Record<string, string>
+  locale: string
+}) {
+  const signos = SIGNOS[locale as keyof typeof SIGNOS]
+
+  // C. quem tem mapa: a leitura que é mesmo da pessoa, sem chamada comercial
+  if (mapa?.temMapa) {
+    return (
+      <Link href="/interconexoes" className="group block mt-6">
+        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.horoscope}</p>
+        {signo !== null && (
+          <div className="flex items-baseline gap-2.5 mt-3">
+            <span className="text-white/40 text-[13px]">{GLIFOS_SIGNO[signo]}</span>
+            <span className="instrument italic text-white text-xl">{signos[signo]}</span>
+          </div>
+        )}
+        <p className="text-white/80 text-[14px] leading-relaxed font-light mt-3">
+          {mapa.primeira ?? ti.todayTitle}
+        </p>
+        <span className="block text-white/25 group-hover:text-white/45 text-[11px] font-light mt-3 transition-colors">
+          {t.seeFullReading} ↗
+        </span>
+      </Link>
+    )
+  }
+
+  // B. quem tem signo e não tem mapa: a leitura do signo, dita como o que ela é
+  if (signo !== null) {
+    return (
+      <div className="mt-6">
+        <Link href="/horoscopo" className="group block">
+          <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">
+            {fmt(t.signToday, { signo: signos[signo] })}
+          </p>
+          <div className="flex items-baseline gap-2.5 mt-3">
+            <span className="text-white/40 text-[13px]">{GLIFOS_SIGNO[signo]}</span>
+            <span className="text-white/80 text-[14px] leading-relaxed font-light">
+              {foco ?? t.horoscopeWaiting}
+            </span>
+            <span className="ml-auto text-white/20 group-hover:text-white/40 text-[11px] transition-colors">↗</span>
+          </div>
+        </Link>
+
+        {/* a distinção, explícita: o de cima é de todo mundo do signo, o do
+            mapa é o único que é só seu */}
+        <Link href="/interconexoes" className="group block mt-5">
+          <p className="text-white/45 text-[12.5px] leading-relaxed font-light">
+            {fmt(t.sharedWithSign, { signo: signos[signo] })}
+          </p>
+          <p className="text-white/45 text-[12.5px] leading-relaxed font-light mt-1">{t.yourChartDiffers}</p>
+          <span className="block text-white/70 group-hover:text-white text-[13px] mt-3 transition-colors">
+            {ti.callCta} ↗
+          </span>
+          <span className="block text-white/25 text-[10.5px] font-light mt-1.5">{ti.callFields}</span>
+        </Link>
+      </div>
+    )
+  }
+
+  // A. sem signo: o céu, que é de todo mundo, com fato em cima e tradução embaixo
+  return (
+    <div className="mt-6">
+      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.skyToday}</p>
+      {ceu?.factual.map((linha) => (
+        <p key={linha} className="text-white/70 text-[13px] leading-relaxed font-light mt-2 tabular-nums">
+          {linha}
+        </p>
+      ))}
+
+      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light mt-6">{t.evidence}</p>
+      {ceu?.sintese ? (
+        <p className="text-white/85 text-[14.5px] leading-[1.75] font-light mt-2.5">{ceu.sintese}</p>
+      ) : (
+        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-2.5">{t.horoscopeWaiting}</p>
+      )}
+
+      <Link
+        href="/horoscopo"
+        className="group inline-block text-white/30 hover:text-white/55 text-[11.5px] font-light mt-4 transition-colors"
+      >
+        {t.seeHoroscope} ↗
       </Link>
     </div>
   )

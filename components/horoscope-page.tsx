@@ -296,75 +296,54 @@ function CardRelacao({
 }
 
 /**
- * O dia em resumo, logo abaixo da roda: o que o céu está fazendo hoje, dito em
- * signos e em palavras, antes de qualquer escolha de signo.
+ * Uma gaveta de fatos: o rótulo fica sempre à vista e a lista abre ao toque.
  *
- * Não repete a tabela do fim da página. Lá estão os graus e os orbes de tudo;
- * aqui está só o que muda a cara do dia: onde estão os luminares e a fase da
- * Lua, onde andam os outros, quem está retrógrado, qual é o ângulo mais
- * fechado, e o acontecimento do dia quando existe um. Tudo calculado.
+ * As três listas somadas são longas demais para ficarem abertas no celular, e
+ * elas são conferência: quem quer o número vai atrás dele. O que não pode
+ * sumir é o nome da gaveta, porque é ele que diz o que existe ali dentro.
  */
-function ResumoDoDia({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<string, string> }) {
-  const nome = CORPOS[locale]
-  const signos = SIGNOS[locale]
-  const aspectos = ASPECTOS[locale]
-  const numero = (n: number) => (locale === "en" ? n.toFixed(1) : n.toFixed(1).replace(".", ","))
-  const onde = (corpo: string) => ceu.posicoes.find((p) => p.corpo === corpo)
-
-  const sol = onde("sun")
-  const lua = onde("moon")
-  const luminares =
-    sol && lua
-      ? `${nome.sun} ${t.inWord} ${signos[sol.signo]} · ${nome.moon} ${FASES[locale][ceu.faseLua]} ${t.inWord} ${signos[lua.signo]}`
-      : ""
-
-  const demais = ceu.posicoes
-    .filter((p) => p.corpo !== "sun" && p.corpo !== "moon")
-    .map((p) => `${nome[p.corpo]} ${t.inWord} ${signos[p.signo]}`)
-    .join(" · ")
-
-  const retrogrados = ceu.posicoes.filter((p) => p.retrogrado).map((p) => nome[p.corpo])
-
-  // o mais exato entre os que mudam de semana para semana: dois lentos a três
-  // graus um do outro são o pano de fundo de anos, e não a notícia de hoje
-  const pessoais = ceu.aspectos.filter((a) => !(LENTOS.has(a.a) && LENTOS.has(a.b)))
-  const maisExato = pessoais.slice().sort((a, b) => a.orbe - b.orbe)[0]
-
-  const acontecimentos = ceu.eventos.map((e) => {
-    if (e.tipo === "lunacao") return fmt(t.summaryLunation, { fase: LUNACOES[locale][e.fase] ?? e.fase, signo: signos[e.signo] })
-    if (e.tipo === "ingresso") return fmt(t.summaryEnters, { corpo: nome[e.corpo], signo: signos[e.signo] })
-    if (e.tipo === "estacao") {
-      const chave = e.sentido === "direct" ? t.summaryStationDirect : t.summaryStationRetro
-      return fmt(chave, { corpo: nome[e.corpo] })
-    }
-    return fmt(e.especie === "solar" ? t.summaryEclipseSolar : t.summaryEclipseLunar, { signo: signos[e.signo] })
-  })
-
+function Gaveta({ titulo, nota, children }: { titulo: string; nota?: string; children: React.ReactNode }) {
   return (
-    <div>
-      <Rotulo>{t.summary}</Rotulo>
-      <div className="mt-3 space-y-1.5 text-white/65 text-[12.5px] leading-relaxed font-light">
-        {luminares && <p className="text-white/80">{luminares}</p>}
-        {demais && <p>{demais}</p>}
-        <p>{retrogrados.length ? fmt(t.summaryRetro, { corpos: retrogrados.join(", ") }) : t.summaryNoRetro}</p>
-        {maisExato && (
-          <p className="tabular-nums">
-            {fmt(t.summaryTightest, {
-              texto: `${nome[maisExato.a]} ${aspectos[maisExato.aspecto]} ${nome[maisExato.b]}, ${t.orb} ${numero(maisExato.orbe)}°`,
-            })}
-          </p>
-        )}
-        {acontecimentos.map((texto) => (
-          <p key={texto} className="text-white/85">
-            {texto}
-          </p>
-        ))}
-      </div>
-    </div>
+    <details className="group border-t border-white/10">
+      <summary className="px-6 py-4 flex items-center gap-3 cursor-pointer list-none marker:hidden [&::-webkit-details-marker]:hidden">
+        <span className="flex-1">
+          <Rotulo>{titulo}</Rotulo>
+          {nota && <span className="block text-white/30 text-[11px] leading-relaxed mt-1">{nota}</span>}
+        </span>
+        <span className="text-white/30 group-hover:text-white/55 text-[10px] transition-transform duration-200 group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <div className="px-6 pb-6">{children}</div>
+    </details>
   )
 }
 
-function CeuDeHoje({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<string, string> }) {
+/**
+ * O CÉU DE HOJE: uma seção só, do desenho ao número.
+ *
+ * Antes eram dois blocos que pareciam repetir a mesma coisa: a mandala com um
+ * resumo no alto da página, e lá embaixo uma tabela de posições e aspectos. O
+ * resumo listava os mesmos planetas nos mesmos signos que a tabela, escritos
+ * de outro jeito. Agora é um bloco: a mandala introduz, e o que vem abaixo
+ * explica o que ela está desenhando.
+ *
+ * NINGUÉM É OBRIGADO A CONHECER GLIFO. O símbolo continua, porque ele é a
+ * língua visual da roda, mas nunca sozinho: ao lado dele vem sempre o nome por
+ * extenso. Dentro da mandala só cabem os símbolos, e é por isso que a legenda
+ * vem imediatamente abaixo, sem rolagem, como chave de leitura.
+ */
+function CeuDeHoje({
+  ceu,
+  locale,
+  formatDate,
+  t,
+}: {
+  ceu: Ceu
+  locale: Locale
+  formatDate: (iso: string, estilo?: any) => string
+  t: Record<string, string>
+}) {
   const nome = CORPOS[locale]
   const signos = SIGNOS[locale]
   const aspectos = ASPECTOS[locale]
@@ -372,59 +351,102 @@ function CeuDeHoje({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<str
   const pessoais = ceu.aspectos.filter((a) => !(LENTOS.has(a.a) && LENTOS.has(a.b)))
   const coletivos = ceu.aspectos.filter((a) => LENTOS.has(a.a) && LENTOS.has(a.b))
 
+  const Aspecto = ({ a, comRitmo }: { a: Ceu["aspectos"][number]; comRitmo: boolean }) => (
+    <div className="flex gap-3 text-[12.5px]">
+      <span className="flex items-center gap-1 text-white/45 shrink-0 pt-0.5">
+        <GlifoPlaneta id={a.a} tamanho={14} />
+        <span className="text-white/70">{SIMBOLO_ASPECTO[a.aspecto]}</span>
+        <GlifoPlaneta id={a.b} tamanho={14} />
+      </span>
+      <span className="text-white/75 leading-relaxed">
+        {nome[a.a]} {aspectos[a.aspecto]} {nome[a.b]}
+        <span className="text-white/40 tabular-nums">
+          {" · "}
+          {t.orb} {numero(a.orbe)}°{comRitmo ? ` · ${a.aplicativo ? t.applying : t.separating}` : ""}
+        </span>
+      </span>
+    </div>
+  )
+
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
-      <Rotulo>{t.sky}</Rotulo>
+    <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden">
+      <div className="p-6 flex flex-col items-center">
+        <Rotulo>{t.sky}</Rotulo>
+        <span className="text-white/70 mt-4">
+          <RodaDoDia ceu={ceu} tamanho={250} />
+        </span>
+        <div className="flex items-center gap-2 mt-3 text-white/45 text-xs">
+          <FaseLua fase={ceu.faseLua} tamanho={18} />
+          <span>{formatDate(`${ceu.dia}T12:00:00`)}</span>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 mt-4">
-        {ceu.posicoes.map((p) => (
-          <div key={p.corpo} className="flex items-center gap-2 text-white/65 text-[12px] tabular-nums">
-            <span className="text-white/45">
-              <GlifoPlaneta id={p.corpo} tamanho={14} />
-            </span>
-            <span>
-              {numero(p.grau)}° {signos[p.signo]}
-              {p.retrogrado && <span className="text-white/40"> ℞</span>}
-            </span>
-            {p.corpo === "moon" && (
-              <span className="text-white/55">
-                <FaseLua fase={ceu.faseLua} tamanho={16} />
+      {/* a legenda: o mesmo símbolo da roda, agora com o nome ao lado */}
+      <Gaveta titulo={t.planetsInSky}>
+        <div className="space-y-2">
+          {ceu.posicoes.map((p) => (
+            <div key={p.corpo} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px]">
+              <span className="text-white/45 w-4 shrink-0 self-center">
+                <GlifoPlaneta id={p.corpo} tamanho={14} />
               </span>
-            )}
-          </div>
-        ))}
-      </div>
+              <span className="text-white/80 w-[5.5rem] shrink-0">{nome[p.corpo]}</span>
+              <span className="text-white/90 tabular-nums">
+                {signos[p.signo]} {numero(p.grau)}°
+              </span>
+              {p.retrogrado && <span className="text-white/40 text-[11px]">℞</span>}
+              {p.corpo === "moon" && (
+                <span className="flex items-center gap-1.5 text-white/40 text-[11.5px]">
+                  <FaseLua fase={ceu.faseLua} tamanho={13} />
+                  {FASES[locale][ceu.faseLua]}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </Gaveta>
 
-      <div className="mt-4 pt-3 border-t border-white/10 space-y-1.5">
-        {pessoais.map((a) => (
-          <div key={`${a.a}-${a.b}-${a.aspecto}`} className="flex items-center gap-2 text-white/65 text-[12px]">
-            <span className="flex items-center gap-1 text-white/45">
-              <GlifoPlaneta id={a.a} tamanho={14} />
-              <span className="text-white/70">{SIMBOLO_ASPECTO[a.aspecto]}</span>
-              <GlifoPlaneta id={a.b} tamanho={14} />
-            </span>
-            <span className="tabular-nums">
-              {nome[a.a]} {aspectos[a.aspecto]} {nome[a.b]}, {t.orb} {numero(a.orbe)}°,{" "}
-              {a.aplicativo ? t.applying : t.separating}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {coletivos.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-white/10">
-          <p className="text-white/30 text-[11px] leading-relaxed">{t.collective}</p>
-          <div className="mt-2 space-y-1">
-            {coletivos.map((a) => (
-              <p key={`${a.a}-${a.b}-${a.aspecto}`} className="text-white/45 text-[12px] tabular-nums">
-                {nome[a.a]} {aspectos[a.aspecto]} {nome[a.b]}, {t.orb} {numero(a.orbe)}°
-              </p>
+      {pessoais.length > 0 && (
+        <Gaveta titulo={t.mainAspects}>
+          <div className="space-y-2.5">
+            {pessoais.map((a) => (
+              <Aspecto key={`${a.a}-${a.b}-${a.aspecto}`} a={a} comRitmo />
             ))}
           </div>
-        </div>
+        </Gaveta>
       )}
 
-      <p className="text-white/30 text-xs mt-4 pt-3 border-t border-white/10">{t.skyNote}</p>
+      {coletivos.length > 0 && (
+        <Gaveta titulo={t.collectiveTitle} nota={t.collective}>
+          <div className="space-y-2.5">
+            {coletivos.map((a) => (
+              <Aspecto key={`${a.a}-${a.b}-${a.aspecto}`} a={a} comRitmo={false} />
+            ))}
+          </div>
+        </Gaveta>
+      )}
+
+      <p className="px-6 py-4 border-t border-white/10 text-white/30 text-xs">{t.skyNote}</p>
+    </div>
+  )
+}
+
+/**
+ * A tradução: o mesmo céu, dito para quem não sabe astrologia.
+ *
+ * A separação das duas camadas é deliberada e está na tela: acima fica a
+ * medida, com todos os nomes; aqui fica o que aquilo estabelece, sem repetir
+ * nome nenhum. Por baixo cada termo continua declarando de que fato saiu, e o
+ * verificador do servidor confere isso antes de a frase existir.
+ */
+function EvidenciaDoCeu({ sintese, t }: { sintese: string | null; t: Record<string, string> }) {
+  return (
+    <div className="pt-2">
+      <Rotulo>{t.evidence}</Rotulo>
+      {sintese ? (
+        <p className="text-white/85 text-[15px] sm:text-base leading-[1.75] font-light mt-3.5 max-w-xl">{sintese}</p>
+      ) : (
+        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-3.5">{t.evidenceWaiting}</p>
+      )}
     </div>
   )
 }
@@ -435,6 +457,8 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
   const signos = SIGNOS[locale]
 
   const [signo, setSigno] = useState<number | null>(null)
+  // a tradução simbólica do céu: coletiva, uma por dia, e a mesma da Home
+  const [evidencia, setEvidencia] = useState<string | null>(null)
   const [dados, setDados] = useState<Resposta | null>(null)
   const [carregando, setCarregando] = useState(false)
 
@@ -477,6 +501,13 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
     void buscar(indice)
   }
 
+  useEffect(() => {
+    fetch("/api/ceu-dia")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setEvidencia(d?.sintese ?? null))
+      .catch(() => {})
+  }, [])
+
   const leitura = dados?.leitura ?? null
   const rotuloEm = dados ? fmt(t.inSign, { signo: dados.nomeSigno }) : ""
   const rotulos = t as unknown as Record<string, string>
@@ -485,19 +516,9 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
     <div className="space-y-8">
       <p className="text-white/60 text-base leading-relaxed max-w-xl">{t.intro}</p>
 
-      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 flex flex-col items-center">
-        <span className="text-white/70">
-          <RodaDoDia ceu={ceu} tamanho={250} />
-        </span>
-        <div className="flex items-center gap-2 mt-3 text-white/45 text-xs">
-          <FaseLua fase={ceu.faseLua} tamanho={18} />
-          <span>{formatDate(`${ceu.dia}T12:00:00`)}</span>
-        </div>
+      <CeuDeHoje ceu={ceu} locale={locale} formatDate={formatDate} t={rotulos} />
 
-        <div className="w-full mt-5 pt-4 border-t border-white/10">
-          <ResumoDoDia ceu={ceu} locale={locale} t={rotulos} />
-        </div>
-      </div>
+      <EvidenciaDoCeu sintese={evidencia} t={rotulos} />
 
       {/* a passagem para o mapa vem antes da escolha do signo: o céu desenhado
           acima é de todo mundo, e é esse o momento de dizer que ele não toca
@@ -576,7 +597,6 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
             </div>
           )}
 
-          <CeuDeHoje ceu={dados.ceu} locale={locale} t={rotulos} />
         </div>
       )}
     </div>
@@ -594,9 +614,10 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
  */
 function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno: string | null }) {
   return (
-    <div className="pt-6">
-      <div className="h-px bg-white/10" />
-      <div className="mt-8 max-w-lg">
+    // entre dois filetes: a passagem tem começo e fim, e não se confunde com
+    // o que vem antes nem com a escolha do signo que vem depois
+    <div className="border-y border-white/10 py-9">
+      <div className="max-w-lg">
         <h2 className="text-white instrument italic text-[23px] sm:text-[26px] leading-snug">{t.callTitle}</h2>
         {/* com signo escolhido a frase nomeia o signo, porque é dele que a
             pessoa precisa entender que a leitura é compartilhada */}
@@ -606,10 +627,10 @@ function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno:
         <p className="text-white/65 text-[14px] leading-relaxed font-light">{t.callBody}</p>
         <Link
           href="/interconexoes"
-          className="group inline-flex items-baseline gap-2 mt-6 text-white/85 hover:text-white text-[14.5px] transition-colors"
+          className="group inline-flex items-center gap-2 mt-7 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-light text-sm transition-all duration-300"
         >
           {t.callCta}
-          <span className="text-white/25 group-hover:text-white/50 text-[11px] transition-colors">↗</span>
+          <span className="text-white/45 group-hover:text-white/70 text-[11px] transition-colors">↗</span>
         </Link>
         {/* o tamanho do pedido fica à vista antes do clique */}
         <p className="text-white/25 text-[11px] font-light mt-2.5">{t.callFields}</p>
