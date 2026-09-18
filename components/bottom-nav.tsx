@@ -5,29 +5,32 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
-import RecordsSheet, { RECORD_PATHS } from "@/components/records-sheet"
-import { MoonIcon, MultioraculoIcon, RecordsIcon, SearchIcon, StarIcon, TodayIcon } from "@/components/nav-icons"
+import { MoonIcon, MultioraculoIcon, SearchIcon, SolIcon, StarIcon } from "@/components/nav-icons"
 
 /**
  * Navegação principal no celular, fixa no rodapé, iconográfica:
- * Sonhos | Horóscopo | Multioráculo | Registros | Explorar.
- * O Multioráculo é a entrada real do produto e fica no centro, com um pouco
- * mais de presença. "Registros" abre o painel pessoal (leituras salvas,
- * sonhos salvos, Diário); "Explorar" abre o painel público com Oráculos e
- * FAQ. A assinatura vive no painel do avatar. Cada rota mantém as próprias
- * regras. No desktop (sm+) some: o cabeçalho leva os mesmos destinos.
+ * Home | Sonhos | Multioráculo | Horóscopo | Explorar.
+ *
+ * A Home é o Sol, e o Multioráculo fica no centro geométrico da barra, com
+ * um pouco mais de presença, porque é a entrada real do produto. Com cinco
+ * itens o centro é a terceira posição, e é lá que ele está. "Explorar" abre o painel
+ * público com Oráculos, planos e FAQ.
+ *
+ * Registros não está aqui: ele é conteúdo pessoal, e conteúdo pessoal mora no
+ * painel do avatar, junto com a conta. Tirá-lo daqui também devolveu espaço
+ * aos cinco que sobraram, que no celular estreito já estavam truncando.
+ *
+ * No desktop (sm+) esta barra some: o cabeçalho leva os mesmos destinos.
  */
 export default function BottomNav() {
   const { dict } = useI18n()
   const pathname = usePathname()
   const router = useRouter()
   const [explore, setExplore] = useState(false)
-  const [records, setRecords] = useState(false)
   const t = dict.nav
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/leitura") : pathname.startsWith(href))
   const exploreActive = pathname.startsWith("/oraculos") || pathname.startsWith("/faq")
-  const recordsActive = RECORD_PATHS.some((p) => pathname.startsWith(p))
 
   const goHome = (e: React.MouseEvent) => {
     if (pathname === "/") {
@@ -68,14 +71,12 @@ export default function BottomNav() {
   return (
     <>
       <nav className="bnav sm:hidden" aria-label={t.mainNav}>
-        {item("/home", t.home, TodayIcon)}
+        {item("/home", t.home, SolIcon)}
         {item("/sonhos", t.dreamsShort, MoonIcon)}
-        {item("/horoscopo", t.horoscope, StarIcon)}
         {item("/", t.consult, MultioraculoIcon, { center: true, onClick: goHome })}
-        {sheetButton(t.records, RecordsIcon, recordsActive, records, () => setRecords(true))}
+        {item("/horoscopo", t.horoscope, StarIcon)}
         {sheetButton(t.explore, SearchIcon, exploreActive, explore, () => setExplore(true))}
       </nav>
-      <RecordsSheet open={records} onClose={() => setRecords(false)} />
       <ExploreSheet open={explore} onClose={() => setExplore(false)} />
     </>
   )

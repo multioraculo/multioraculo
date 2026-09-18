@@ -127,19 +127,8 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
 
       <div className="h-px bg-white/[0.055] mt-7" />
 
-      {/* O HORÓSCOPO, em três níveis: o céu, o signo, o mapa */}
-      <HoroscopoDaHome
-        signo={signo}
-        foco={foco}
-        ceu={ceuDoDia}
-        mapa={mapa}
-        t={t as unknown as Record<string, string>}
-        ti={ti as unknown as Record<string, string>}
-        locale={locale}
-      />
-
       {/* A TIRAGEM COLETIVA: a leitura acontece aqui, sem link */}
-      <div className="h-16 sm:h-20" />
+      <div className="h-7" />
 
       {/* dois níveis, e o rótulo em cima diz qual é qual antes da pergunta */}
       <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.drawCollective}</p>
@@ -179,6 +168,20 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       {/* o segundo nível: a mesma pergunta do dia, agora virada para dentro.
           A consulta começa por uma pergunta, e a pergunta já está ali */}
       {tiragem && <ConviteDePergunta rotulo={t.drawPersonal} convite={t.andYouToday} />}
+
+      <div className="h-14" />
+      <div className="h-px bg-white/[0.055]" />
+
+      {/* O HORÓSCOPO, em três níveis: o céu, o signo, o mapa */}
+      <HoroscopoDaHome
+        signo={signo}
+        foco={foco}
+        ceu={ceuDoDia}
+        mapa={mapa}
+        t={t as unknown as Record<string, string>}
+        ti={ti as unknown as Record<string, string>}
+        locale={locale}
+      />
 
       {/* O DIÁRIO, quase um rodapé */}
       <div className="h-16" />

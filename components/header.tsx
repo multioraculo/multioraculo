@@ -11,7 +11,6 @@ import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
 import { SearchIcon } from "@/components/nav-icons"
-import { RecordsLoginPrompt, recordLinks } from "@/components/records-sheet"
 import { useI18n } from "@/components/i18n-provider"
 import BrandLogo from "@/components/brand-logo"
 
@@ -25,9 +24,9 @@ export default function Header({ initialUser }: HeaderProps) {
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
-  // Menus leves do desktop: "Registros" (pessoal) e "Explorar" (Oráculos e
+  // Menu leve do desktop: "Explorar" (Oráculos e
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
-  const [openMenu, setOpenMenu] = useState<"records" | "explore" | null>(null)
+  const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
   const menusRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!openMenu) return
@@ -120,7 +119,7 @@ export default function Header({ initialUser }: HeaderProps) {
     <>
       <header className="relative z-50 flex items-center gap-2 p-4 sm:p-6">
         <div className="flex items-center shrink-0">
-          <button onClick={handleLogoClick} className="relative" aria-label={dict.header.backToStart}>
+          <button onClick={handleLogoClick} className="relative cursor-pointer" aria-label={dict.header.backToStart}>
             <BrandLogo size={80} />
           </button>
         </div>
@@ -140,17 +139,6 @@ export default function Header({ initialUser }: HeaderProps) {
             </Link>
           ))}
           <div className="contents" ref={menusRef}>
-            {/* Registros: área pessoal; sem login, convida a entrar */}
-            <div className="relative">
-              <button type="button" onClick={() => setOpenMenu((m) => (m === "records" ? null : "records"))} aria-haspopup="menu" aria-expanded={openMenu === "records"} className={menuButtonClass}>
-                {dict.nav.records}
-              </button>
-              {openMenu === "records" && (
-                <div role="menu" className={menuPanelClass}>
-                  {user ? menuLinks(recordLinks(dict)) : <RecordsLoginPrompt compact onLogin={() => { setOpenMenu(null); setShowLogin(true) }} />}
-                </div>
-              )}
-            </div>
             <div className="relative">
               <button type="button" onClick={() => setOpenMenu((m) => (m === "explore" ? null : "explore"))} aria-haspopup="menu" aria-expanded={openMenu === "explore"} className={menuButtonClass}>
                 <SearchIcon className="w-4 h-4" />

@@ -37,15 +37,18 @@ export function BookIcon(p: P) {
 }
 
 /**
- * Hoje: o disco do dia, círculo aberto com raios curtos e um ponto no centro,
- * na mesma gravura de filete fino dos outros.
+ * Home: o Sol, entrada principal do app.
+ *
+ * Oito raios e não quatro, porque com quatro a figura lia como alvo ou mira.
+ * Os diagonais são mais curtos, do jeito que o Sol é sempre desenhado, e o
+ * disco fica aberto para manter a gravura de filete fino dos outros ícones.
  */
-export function TodayIcon(p: P) {
+export function SolIcon(p: P) {
   return (
     <svg {...base(p)}>
-      <circle cx="10.5" cy="10.5" r="6.2" />
-      <path d="M2.5 10.5h3M15.5 10.5h3M10.5 2.5v3M10.5 15.5v3" />
-      <circle cx="10.5" cy="10.5" r="1.1" />
+      <circle cx="10.5" cy="10.5" r="4.4" />
+      <path d="M10.5 1.4v2.6M10.5 17v2.6M1.4 10.5h2.6M17 10.5h2.6" />
+      <path d="M4.1 4.1l1.8 1.8M15.1 15.1l1.8 1.8M16.9 4.1l-1.8 1.8M5.9 15.1l-1.8 1.8" />
     </svg>
   )
 }

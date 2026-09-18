@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import { recordLinks } from "@/components/records-sheet"
+import { BookIcon } from "@/components/nav-icons"
 import { useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
@@ -141,6 +143,26 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
 
           <SectionLabel>{t.today}</SectionLabel>
           <MoonToday />
+
+          <Divider />
+
+          {/* Registros: o conteúdo pessoal vive aqui, e só aqui. Saiu da barra
+              inferior e do cabeçalho para não existir em dois lugares. */}
+          <SectionLabel>{dict.nav.records}</SectionLabel>
+          <div className="space-y-0.5">
+            {recordLinks(dict).map((it) => (
+              <button
+                key={it.href}
+                onClick={() => go(it.href)}
+                className="group flex w-full items-center gap-2.5 text-left py-1.5 text-white/80 hover:text-white text-sm transition-colors"
+              >
+                <span className="text-white/35 group-hover:text-white/55 transition-colors shrink-0">
+                  <BookIcon className="w-[15px] h-[15px]" />
+                </span>
+                {it.label}
+              </button>
+            ))}
+          </div>
 
           <Divider />
 
