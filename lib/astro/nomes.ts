@@ -28,6 +28,16 @@ export const ASPECTOS: Record<Locale, Record<string, string>> = {
 }
 
 /** Fases da Lua em oito faixas, pela elongação Sol-Lua. */
+/**
+ * A palavra que liga os dois nomes no título: "em oposição A Saturno", mas
+ * "em quadratura COM Plutão". Sem isto o título sai torto em português.
+ */
+export const LIGACAO_ASPECTO: Record<Locale, Record<string, string>> = {
+  pt: { conjunction: "com", opposition: "a", square: "com", trine: "com", sextile: "com", quincunx: "com" },
+  en: { conjunction: "with", opposition: "to", square: "to", trine: "to", sextile: "to", quincunx: "to" },
+  es: { conjunction: "con", opposition: "a", square: "con", trine: "con", sextile: "con", quincunx: "con" },
+}
+
 export const FASES: Record<Locale, string[]> = {
   pt: ["nova", "crescente côncava", "quarto crescente", "crescente gibosa", "cheia", "minguante gibosa", "quarto minguante", "minguante côncava"],
   en: ["new", "waxing crescent", "first quarter", "waxing gibbous", "full", "waning gibbous", "last quarter", "waning crescent"],

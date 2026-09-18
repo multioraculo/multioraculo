@@ -23,7 +23,7 @@ import type { Locale } from "@/lib/i18n/config"
 import type { CardMovimento } from "@/lib/astro/apresentar"
 import type { Ceu } from "@/lib/astro/ceu"
 import type { Leitura, RelacaoEscrita } from "@/lib/astro/prompt-horoscopo"
-import { ASPECTOS, CORPOS, FASES, LUNACOES, SIGNOS } from "@/lib/astro/nomes"
+import { ASPECTOS, CORPOS, FASES, LIGACAO_ASPECTO, LUNACOES, SIGNOS } from "@/lib/astro/nomes"
 import { LENTOS, SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
 
 type Resposta = {
@@ -51,29 +51,86 @@ function Rotulo({ children }: { children: React.ReactNode }) {
   return <p className="text-white/25 text-[10px] uppercase tracking-widest">{children}</p>
 }
 
-/** Uma coluna do card: glifo, nome, onde ele está, e o que ele faz. */
-function Coluna({ lado, alinhamento }: { lado: CardMovimento["a"]; alinhamento: "esquerda" | "direita" }) {
-  const direita = alinhamento === "direita"
+/**
+ * Um corpo da relação: quem é, onde está, e o que ele faz.
+ *
+ * Uma linha só para o nome e a posição, e outra para os verbos. Espelhado, ele
+ * vira o outro polo de um eixo sem precisar de segunda coluna, que no celular
+ * não caberia.
+ */
+function CorpoDaRelacao({ lado, espelhado = false }: { lado: CardMovimento["a"]; espelhado?: boolean }) {
   return (
-    <div className={`flex-1 ${direita ? "sm:text-right sm:items-end" : ""} flex flex-col`}>
-      <span className={`text-white/70 ${direita ? "sm:self-end" : "self-start"}`}>
-        <GlifoPlaneta id={lado.corpo} tamanho={22} />
-      </span>
-      <span className="text-white text-[13px] tracking-[0.08em] mt-2">{lado.nome.toUpperCase()}</span>
-      <span className="text-white/45 text-[11px] mt-0.5 tabular-nums">
-        {lado.nomeSigno} {lado.grauTexto}
-        {lado.retrogrado && <span className="text-white/40"> ℞</span>}
-      </span>
-      {lado.regente && lado.rotuloRegente && (
-        <span className="text-white/35 text-[9px] uppercase tracking-[0.12em] mt-0.5">{lado.rotuloRegente}</span>
-      )}
-      <span className="text-white/65 text-[12px] leading-[1.75] mt-2">
-        {lado.verbos.map((verbo) => (
-          <span key={verbo} className="block">
-            {verbo}
+    <div className={espelhado ? "text-right" : ""}>
+      <div className={`flex items-baseline justify-between gap-3 ${espelhado ? "flex-row-reverse" : ""}`}>
+        <span className="flex items-baseline gap-2.5 min-w-0">
+          <span className="text-white/70 shrink-0 self-center">
+            <GlifoPlaneta id={lado.corpo} tamanho={17} />
           </span>
-        ))}
-      </span>
+          <span className="text-white text-[13px] tracking-[0.1em] uppercase truncate">{lado.nome}</span>
+        </span>
+        <span className="text-white/45 text-[11.5px] tabular-nums shrink-0">
+          {lado.nomeSigno} {lado.grauTexto}
+          {lado.retrogrado && <span className="text-white/35"> ℞</span>}
+        </span>
+      </div>
+      {lado.regente && lado.rotuloRegente && (
+        <p className="text-white/35 text-[9px] uppercase tracking-[0.12em] mt-1.5">{lado.rotuloRegente}</p>
+      )}
+      <p className="text-white/65 text-[12.5px] leading-relaxed mt-1.5">{lado.verbos.join(" · ")}</p>
+    </div>
+  )
+}
+
+/**
+ * O que liga os dois corpos, desenhado pela geometria e não pela diagramação.
+ *
+ * A oposição é um eixo com uma ponta de cada lado. A quadratura é o ângulo
+ * reto, que é literalmente o que a palavra quer dizer. Trígono e sextil correm
+ * numa linha só, sem tensão inventada. A conjunção não tem distância para
+ * desenhar: os dois se encostam e a linha não existe.
+ */
+function Conector({ card, fase, t }: { card: CardMovimento; fase: number; t: Record<string, string> }) {
+  // um evento da Lua com o Sol nao tem simbolo de aspecto, e nao precisa: a
+  // relacao entre os dois E a fase, entao o circulo mostra a Lua como ela esta
+  const glifo = (
+    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.07] border border-white/15 text-white/80 text-[13px] leading-none shrink-0">
+      {card.simbolo ?? <FaseLua fase={fase} tamanho={15} />}
+    </span>
+  )
+
+  if (card.aspecto === "opposition") {
+    return (
+      <div className="flex items-center gap-2.5 my-4">
+        <span className="h-px flex-1 bg-white/20" />
+        {glifo}
+        <span className="h-px flex-1 bg-white/20" />
+      </div>
+    )
+  }
+
+  if (card.aspecto === "square") {
+    return (
+      <div className="flex items-stretch gap-2.5 my-4 h-7">
+        <span className="w-9 border-l border-b border-white/25 rounded-bl-sm" />
+        <span className="self-end">{glifo}</span>
+        <span className="flex-1 border-b border-white/25 rounded-br-sm" />
+      </div>
+    )
+  }
+
+  if (card.forma === "convergencia") {
+    return (
+      <div className="flex items-center gap-2.5 my-3">
+        {glifo}
+        <span className="text-white/30 text-[10px] uppercase tracking-[0.14em]">{t.convergence}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-2.5 my-4">
+      {glifo}
+      <span className="h-px flex-1 bg-gradient-to-r from-white/25 to-transparent" />
     </div>
   )
 }
@@ -94,7 +151,7 @@ function Termos({
   const sinal = card.forma === "contraste" ? "×" : card.forma === "convergencia" ? "·" : "+"
   const rotulo = card.forma === "contraste" ? rotuloEm : card.forma === "convergencia" ? t.convergence : t.articulation
   return (
-    <div className="mt-4 pt-3 border-t border-white/10">
+    <div className="mt-5 pt-4 border-t border-white/10">
       <Rotulo>{rotulo}</Rotulo>
       <p className="text-white text-[13.5px] tracking-[0.05em] leading-relaxed mt-1.5 uppercase">
         {relacao.termos[0]?.texto} <span className="text-white/40">{sinal}</span> {relacao.termos[1]?.texto}
@@ -103,84 +160,127 @@ function Termos({
   )
 }
 
+/** O título por extenso: "Mercúrio em oposição a Saturno", e não um símbolo. */
+function tituloDaRelacao(card: CardMovimento, t: Record<string, string>, locale: Locale): string {
+  if (card.tituloSemSigno) return card.tituloSemSigno
+  if (card.tipo === "aspecto" && card.b && card.aspecto) {
+    const nome = ASPECTOS[locale][card.aspecto] ?? card.aspecto
+    const ligacao = LIGACAO_ASPECTO[locale][card.aspecto] ?? ""
+    return `${card.a.nome} ${t.inWord} ${nome} ${ligacao} ${card.b.nome}`
+  }
+  return card.titulo
+}
+
+/** A linha técnica, sempre na mesma ordem e sempre escaneável. */
+function linhaTecnica(card: CardMovimento, t: Record<string, string>, locale: Locale): string {
+  const numero = (n: number) => (locale === "en" ? n.toFixed(1) : n.toFixed(1).replace(".", ","))
+  if (card.tipo === "aspecto" && card.anguloReal !== null && card.orbe !== null) {
+    return [
+      `${numero(card.anguloReal)}°`,
+      `${t.orb} ${numero(card.orbe)}°`,
+      card.aplicativo ? t.applying : t.separating,
+    ].join(" · ")
+  }
+  return card.detalhe.split(", ").join(" · ")
+}
+
+/**
+ * O card de uma relação, pensado no celular antes de tudo.
+ *
+ * A ordem responde quatro perguntas, nesta sequência: quem está em relação, de
+ * que tipo ela é e com que números, quem são esses corpos, e o que aquilo
+ * estabelece. O diagrama é apoio: ilustra a glosa e não carrega sozinho o
+ * entendimento, porque ninguém deveria precisar decifrar um desenho para saber
+ * que dois planetas estão frente a frente.
+ *
+ * Fechado, o card é a relação. Aberto, vêm a leitura e o contexto do dia, que
+ * é secundário e não pode competir com ela.
+ */
 function CardRelacao({
   card,
   relacao,
   rotuloEm,
-  rotuloNo,
   lons,
+  fase,
   aberto,
   t,
+  locale,
 }: {
   card: CardMovimento
   relacao: RelacaoEscrita | null
   rotuloEm: string
-  rotuloNo: string
   lons: Partial<Record<string, number>>
+  /** fase da Lua de hoje, de 0 a 7: o conector do evento lunar desenha ela */
+  fase: number
   aberto: boolean
   t: Record<string, string>
+  locale: Locale
 }) {
   const lonA = lons[card.a.corpo]
   const lonB = card.b ? lons[card.b.corpo] : undefined
   const diagrama =
     card.b && card.aspecto && lonA !== undefined && lonB !== undefined ? (
-      <DiagramaAngulo aLon={lonA} bLon={lonB} aspecto={card.aspecto} />
+      <DiagramaAngulo aLon={lonA} bLon={lonB} aspecto={card.aspecto} tamanho={54} />
     ) : lonA !== undefined ? (
-      <DiagramaPosicao lon={lonA} />
+      <DiagramaPosicao lon={lonA} tamanho={54} />
     ) : null
 
   const conteudo = (
     <>
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <Coluna lado={card.a} alinhamento="direita" />
+      <h3 className="text-white text-[12.5px] sm:text-[13px] tracking-[0.12em] uppercase leading-[1.55]">
+        {tituloDaRelacao(card, t, locale)}
+      </h3>
+      <p className="text-white/40 text-[11.5px] tabular-nums mt-1.5">{linhaTecnica(card, t, locale)}</p>
 
-        <div className="flex sm:flex-col items-center justify-center gap-2 sm:w-20 shrink-0">
-          <span className="h-px flex-1 sm:flex-none sm:h-8 sm:w-px bg-white/15" />
-          <span
-            className={
-              card.simbolo
-                ? "text-white/75 text-lg leading-none"
-                : "text-white/45 text-[10px] uppercase tracking-[0.16em]"
-            }
-          >
-            {card.simbolo ?? rotuloNo}
-          </span>
-          <span className="h-px flex-1 sm:flex-none sm:h-8 sm:w-px bg-white/15" />
-        </div>
-
+      <div className="mt-5">
+        <CorpoDaRelacao lado={card.a} />
         {card.b ? (
-          <Coluna lado={card.b} alinhamento="esquerda" />
+          <>
+            <Conector card={card} fase={fase} t={t} />
+            <CorpoDaRelacao lado={card.b} espelhado={card.aspecto === "opposition"} />
+          </>
         ) : (
-          <div className="flex-1 flex flex-col justify-center">
-            <span className="text-white text-[13px] tracking-[0.08em]">{card.a.nomeSigno.toUpperCase()}</span>
-            <span className="text-white/45 text-[11px] mt-1 leading-relaxed">{card.a.campo}</span>
+          <div className="mt-4 pt-3.5 border-t border-white/10">
+            <p className="text-white text-[13px] tracking-[0.1em] uppercase">{card.a.nomeSigno}</p>
+            <p className="text-white/50 text-[12px] leading-relaxed mt-1.5">{card.a.campo}</p>
           </div>
         )}
       </div>
 
-      <div className="mt-4 rounded-lg bg-black/20 px-3 py-3 flex items-center gap-3">
-        {diagrama && <span className="text-white/70">{diagrama}</span>}
+      <div className="mt-5 pt-4 border-t border-white/10 flex gap-3.5">
+        {diagrama && <span className="text-white/60 shrink-0">{diagrama}</span>}
         <div className="min-w-0">
-          <p className="text-white/80 text-[10px] uppercase tracking-[0.14em]">
-            {card.titulo}
-            <span className="text-white/40 normal-case tracking-normal"> {card.detalhe}</span>
-          </p>
-          <p className="text-white/55 text-[11.5px] leading-relaxed mt-1">{card.glosa}</p>
+          {card.tipo === "aspecto" && (
+            <p className="text-white/85 text-[10.5px] uppercase tracking-[0.14em]">{card.titulo}</p>
+          )}
+          <p className="text-white/60 text-[12.5px] leading-relaxed mt-1">{card.glosa}</p>
         </div>
       </div>
-
-      {card.contexto.length > 0 && (
-        <p className="text-white/35 text-[11px] leading-relaxed mt-3">
-          <span className="uppercase tracking-[0.12em] text-white/25">{t.alsoToday}</span> {card.contexto.join("; ")}
-        </p>
-      )}
 
       {relacao && <Termos relacao={relacao} card={card} rotuloEm={rotuloEm} t={t} />}
     </>
   )
 
+  const tambemHoje = card.contexto.length > 0 && (
+    <div className="mt-4 pt-3 border-t border-white/[0.07]">
+      <Rotulo>{t.alsoToday}</Rotulo>
+      <div className="mt-1.5 space-y-1">
+        {card.contexto.map((linha) => (
+          <p key={linha} className="text-white/35 text-[11.5px] leading-relaxed">
+            {linha}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+
   if (!relacao) {
-    return <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10">{conteudo}</div>
+    return (
+      <div className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10">
+        {conteudo}
+        {tambemHoje}
+      </div>
+    )
   }
 
   return (
@@ -190,6 +290,7 @@ function CardRelacao({
     >
       <summary className="list-none cursor-pointer marker:hidden [&::-webkit-details-marker]:hidden">{conteudo}</summary>
       <p className="text-white/75 text-[13px] leading-relaxed mt-4">{relacao.explicacao}</p>
+      {tambemHoje}
     </details>
   )
 }
@@ -465,10 +566,11 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
                   card={card}
                   relacao={leitura?.relacoes[i] ?? null}
                   rotuloEm={rotuloEm}
-                  rotuloNo={t.inWord}
                   lons={Object.fromEntries(dados.ceu.posicoes.map((p) => [p.corpo, p.lon]))}
+                  fase={dados.ceu.faseLua}
                   aberto={i === 0}
                   t={rotulos}
+                  locale={locale}
                 />
               ))}
             </div>

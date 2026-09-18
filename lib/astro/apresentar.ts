@@ -64,6 +64,12 @@ export type CardMovimento = {
   simbolo: string | null
   /** a faixa do meio: "OPOSIÇÃO" ou "SOL EM VIRGEM" */
   titulo: string
+  /**
+   * O acontecimento dito sem o signo: "Lua em quarto crescente", "Eclipse
+   * solar", "Marte retrógrado". Só os eventos têm. Na tela o título fica com
+   * isto e o signo desce para a linha técnica, que é onde ele pesa menos.
+   */
+  tituloSemSigno: string | null
   /** "orbe 1,3°, aplicativo" ou "24,7°" */
   detalhe: string
   /** o que o ângulo estabelece, ou o que a posição é, em linguagem comum */
@@ -166,6 +172,7 @@ export function apresentar(movimento: Movimento, signo: number, locale: Locale, 
       aspecto: movimento.aspecto,
       simbolo: SIMBOLO_ASPECTO[movimento.aspecto] ?? null,
       titulo: ASPECTOS[locale][movimento.aspecto] ?? movimento.aspecto,
+      tituloSemSigno: null,
       detalhe: `${numero(anguloReal, locale)}°, ${orbeRotulo} ${numero(movimento.orbe, locale)}°, ${ritmo}`,
       glosa: `${GLOSA_ASPECTO[locale][movimento.aspecto]}. ${maiuscula(modificador)}.`,
       anguloReal,
@@ -194,6 +201,7 @@ export function apresentar(movimento: Movimento, signo: number, locale: Locale, 
       aspecto: null,
       simbolo: null,
       titulo: `${a.nome} ${em} ${a.nomeSigno}`,
+      tituloSemSigno: null,
       detalhe: a.retrogrado ? `${a.grauTexto}, ${RETROGRADO[locale].retrograde}` : a.grauTexto,
       glosa: a.retrogrado ? `${glosaBase}. ${maiuscula(glosaMov.retrogrado)}.` : `${glosaBase}.`,
       anguloReal: null,
@@ -221,6 +229,7 @@ export function apresentar(movimento: Movimento, signo: number, locale: Locale, 
     aspecto: null,
     simbolo: null,
     titulo: tituloDoEvento(movimento, locale),
+    tituloSemSigno: eventoSemSigno(movimento, locale),
     detalhe: `${numero(evento.grau, locale)}° ${SIGNOS[locale][evento.signo]}`,
     glosa: `${GLOSA_EVENTO[locale][evento.tipo]}.`,
     anguloReal: null,
@@ -238,6 +247,31 @@ export function apresentar(movimento: Movimento, signo: number, locale: Locale, 
 /** O ângulo exato que o aspecto procura, para o texto poder comparar com o real. */
 export function anguloNominal(aspecto: string | null): number | null {
   return aspecto ? (ANGULO_ASPECTO[aspecto] ?? null) : null
+}
+
+/**
+ * O mesmo acontecimento sem o signo, para a tela pôr o signo na linha técnica.
+ * O ingresso fica de fora: "Marte entra em" não existe sem o destino.
+ */
+function eventoSemSigno(movimento: Movimento, locale: Locale): string | null {
+  if (movimento.tipo !== "evento") return null
+  const evento = movimento.evento
+  const em = { pt: "em", en: "in", es: "en" }[locale]
+  if (evento.tipo === "lunacao") {
+    return `${CORPOS[locale].moon} ${em} ${LUNACOES[locale][evento.fase] ?? evento.fase}`
+  }
+  if (evento.tipo === "eclipse") {
+    return {
+      pt: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar",
+      en: evento.especie === "solar" ? "Solar eclipse" : "Lunar eclipse",
+      es: evento.especie === "solar" ? "Eclipse solar" : "Eclipse lunar",
+    }[locale]
+  }
+  if (evento.tipo === "estacao") {
+    const sentido = evento.sentido === "retrograde" ? RETROGRADO[locale].retrograde : RETROGRADO[locale].direct
+    return `${CORPOS[locale][evento.corpo]} ${sentido}`
+  }
+  return null
 }
 
 function tituloDoEvento(movimento: Movimento, locale: Locale): string {
