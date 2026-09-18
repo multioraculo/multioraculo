@@ -502,7 +502,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
       {/* a passagem para o mapa vem antes da escolha do signo: o céu desenhado
           acima é de todo mundo, e é esse o momento de dizer que ele não toca
           todo mundo no mesmo lugar */}
-      <ChamadaDoMapa t={dict.interconexoes as unknown as Record<string, string>} />
+      <ChamadaDoMapa t={dict.interconexoes as unknown as Record<string, string>} nomeSigno={signo === null ? null : signos[signo]} />
 
       <div>
         <Rotulo>{t.chooseSign}</Rotulo>
@@ -592,13 +592,17 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
  * a chamada não é um anúncio à parte nem um botão de assinatura: é a última
  * camada da mesma leitura.
  */
-function ChamadaDoMapa({ t }: { t: Record<string, string> }) {
+function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno: string | null }) {
   return (
     <div className="pt-6">
       <div className="h-px bg-white/10" />
       <div className="mt-8 max-w-lg">
         <h2 className="text-white instrument italic text-[23px] sm:text-[26px] leading-snug">{t.callTitle}</h2>
-        <p className="text-white/65 text-[14px] leading-relaxed font-light mt-3.5">{t.callLead}</p>
+        {/* com signo escolhido a frase nomeia o signo, porque é dele que a
+            pessoa precisa entender que a leitura é compartilhada */}
+        <p className="text-white/65 text-[14px] leading-relaxed font-light mt-3.5">
+          {nomeSigno ? fmt(t.callLead, { signo: nomeSigno }) : t.callLeadNoSign}
+        </p>
         <p className="text-white/65 text-[14px] leading-relaxed font-light">{t.callBody}</p>
         <Link
           href="/interconexoes"

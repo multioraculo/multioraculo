@@ -128,9 +128,10 @@ export const en: Dictionary = {
 
   interconexoes: {
     callTitle: "And in your chart?",
-    callLead: "Your sign is only one part.",
-    callBody: "See how today's sky meets your Moon, Ascendant, planets and houses.",
-    callCta: "See my interconnections",
+    callLead: "{signo} is the reading you share with everyone else of your sign.",
+    callLeadNoSign: "A sign reading is the same for everyone of that sign.",
+    callBody: "Your chart shows how that same sky meets your Moon, Ascendant, planets and houses.",
+    callCta: "See my personal horoscope for today",
     callFields: "date · time · city of birth",
     homeLead: "Your sign is only the beginning.",
     homeBody: "See where today's sky meets your chart.",
@@ -214,10 +215,14 @@ export const en: Dictionary = {
     accountCreated: "Account created. Check your email to confirm your registration before signing in.",
   },
 
+  brand: {
+    name: "Multioráculo",
+  },
+
   hero: {
     titleEmphasis: "Singularity",
     titleRest: "brought you",
-    titleLine2: "to Multioráculo",
+    titleLine2: "to",
     tagline: "One question. Five oracles. One synthesis.",
     subtitle: "The five readings are made separately and then placed in relation to one another.",
     lineup: "Tarot, I Ching, Runes, Búzios and Lenormand, brought together in a single reading.",

@@ -539,7 +539,10 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
             <h1 className="text-4xl sm:text-5xl md:text-6xl leading-[1.08] sm:leading-tight md:leading-16 tracking-tight font-light text-white mb-1.5 sm:mb-2">
               <span className="font-medium italic instrument">{dict.hero.titleEmphasis}</span> {dict.hero.titleRest}
               <br />
-              <span className="font-light tracking-tight text-white">{dict.hero.titleLine2}</span>
+              <span className="font-light tracking-tight text-white">
+                {dict.hero.titleLine2}{" "}
+                <span className="font-medium italic instrument">{dict.brand.name}</span>
+              </span>
             </h1>
 
             <p className="text-base sm:text-lg font-light text-white mb-2 sm:mb-2.5 leading-snug">

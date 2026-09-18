@@ -130,9 +130,10 @@ export const pt = {
 
   interconexoes: {
     callTitle: "E no seu mapa?",
-    callLead: "Seu signo é só uma parte.",
-    callBody: "Veja como o céu de hoje encontra sua Lua, Ascendente, planetas e casas.",
-    callCta: "Ver minhas interconexões",
+    callLead: "{signo} é a leitura que você compartilha com outras pessoas do seu signo.",
+    callLeadNoSign: "A leitura do signo é a mesma para todas as pessoas dele.",
+    callBody: "Seu mapa mostra como esse mesmo céu encontra sua Lua, Ascendente, planetas e casas.",
+    callCta: "Ver meu horóscopo pessoal de hoje",
     callFields: "data · hora · cidade de nascimento",
     homeLead: "Seu signo é só o começo.",
     homeBody: "Veja onde o céu de hoje encontra o seu mapa.",
@@ -216,10 +217,14 @@ export const pt = {
     accountCreated: "Conta criada. Verifique seu email para confirmar o cadastro antes de entrar.",
   },
 
+  brand: {
+    name: "Multioráculo",
+  },
+
   hero: {
     titleEmphasis: "A singularidade",
     titleRest: "te trouxe",
-    titleLine2: "até o Multioráculo",
+    titleLine2: "até o",
     tagline: "Uma pergunta. Cinco oráculos. Uma síntese.",
     subtitle: "As cinco leituras são feitas separadamente e depois colocadas em relação.",
     lineup: "Tarô, I Ching, Runas, Búzios e Lenormand, reunidos em uma única leitura.",
