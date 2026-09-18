@@ -683,3 +683,82 @@
    */
   filter: drop-shadow(0 0 1.2px rgba(246, 248, 255, 0.3));
 }
+
+/*
+ * A luz que atravessa o material, e não o contorno.
+ *
+ * A camada usa o alfa do próprio PNG como máscara, então nada acende fora do
+ * desenho: é isso que separa isto do halo antigo. O que se move é uma faixa
+ * clara e larga, na diagonal, com duas passagens de velocidades diferentes
+ * para o ritmo não ficar mecânico. Em `screen` ela soma luz em vez de pintar
+ * por cima, que é o que dá a sensação de vidro.
+ *
+ * A marca tem 80px: a faixa é propositalmente maior do que ela, para o que se
+ * vê ser sempre um trecho da passagem, nunca a faixa inteira.
+ */
+.bl-luz {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  -webkit-mask-image: url("/brand/multioraculo-m.png");
+  mask-image: url("/brand/multioraculo-m.png");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  /* claridade parada, de dentro: como a camada e mascarada pelo alfa do PNG,
+     ela acende o meio da fita e some sozinha na borda, sem virar contorno */
+  background-color: rgba(255, 255, 255, 0.13);
+}
+
+/* Duas passagens em camadas próprias: a mesma propriedade animada duas vezes
+   no mesmo elemento se anularia, e o ritmo ficaria de um pêndulo só. */
+.bl-luz::before,
+.bl-luz::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+}
+
+.bl-luz::before {
+  background-image: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  background-size: 260% 260%;
+  animation: bl-passagem 11s linear infinite;
+}
+
+.bl-luz::after {
+  background-image: linear-gradient(
+    72deg,
+    rgba(232, 240, 255, 0) 40%,
+    rgba(232, 240, 255, 0.2) 50%,
+    rgba(232, 240, 255, 0) 60%
+  );
+  background-size: 320% 320%;
+  animation: bl-passagem-lenta 17s linear infinite;
+}
+
+@keyframes bl-passagem {
+  0% { background-position: 150% 150%; }
+  100% { background-position: -60% -60%; }
+}
+
+@keyframes bl-passagem-lenta {
+  0% { background-position: -60% 150%; }
+  100% { background-position: 160% -60%; }
+}
+
+/* Sem movimento, sobra uma claridade parada no material: a marca não apaga. */
+@media (prefers-reduced-motion: reduce) {
+  .bl-luz::before,
+  .bl-luz::after {
+    animation: none;
+    background-position: 50% 50%;
+  }
+}
