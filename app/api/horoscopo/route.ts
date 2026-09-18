@@ -4,8 +4,13 @@
  * Devolve a leitura do dia de um signo, no idioma do cookie.
  *
  * Geração sob demanda: a primeira pessoa daquele signo no dia paga uma
- * chamada, e todas as outras leem do banco. Signo que ninguém abriu não é
- * gerado. É por isso que a rota não tem um job diário de doze signos.
+ * chamada, e todas as outras leem do banco.
+ *
+ * Desde a função agendada netlify/functions/pregerar-horoscopo.ts, os doze
+ * signos costumam já estar gravados quando o dia começa, e esta rota devolve
+ * do cache. O caminho sob demanda continua aqui inteiro, e é ele que responde
+ * quando a função não rodou, falhou naquele signo, ou o idioma está fora da
+ * lista de pré-geração.
  *
  * Aberta a visitante de propósito: o horóscopo geral é a porta de entrada do
  * módulo, não consome cota e não tem dado pessoal em ponto nenhum.

@@ -16,6 +16,14 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# Funções próprias, ao lado das que o adaptador do Next gera sozinho. Hoje só
+# uma: netlify/functions/pregerar-horoscopo.ts, agendada para 03:05 UTC, que é
+# 00:05 em America/Sao_Paulo. Ela pede as doze leituras do dia à própria rota
+# /api/horoscopo, para ninguém esperar a geração de manhã. O horário fica
+# declarado no arquivo, em `export const config`, e não aqui.
+[functions]
+  directory = "netlify/functions"
+
 # Variáveis de ambiente necessárias (defina em Site configuration →
 # Environment variables, nunca aqui):
 #   OPENAI_API_KEY
@@ -28,6 +36,11 @@
 #   STRIPE_PRICE_ILIMITADO
 #   NEXT_PUBLIC_SITE_URL        (https://multioraculo.com; URLs de retorno do Checkout)
 #   PDFS_INDEX_URL              (opcional; padrão: release v1-data no GitHub)
+#   HOROSCOPO_PREGERAR_LOCALES  (opcional; padrão "pt". Idiomas que a função
+#                                agendada pré-gera. Cada idioma são 12 gerações
+#                                por dia, então ampliar isto triplica o custo
+#                                do módulo; quem ficar de fora continua sendo
+#                                gerado sob demanda.)
 #
 # Webhook da Stripe: POST https://multioraculo.com/api/billing/webhook
 # (fora do middleware do Supabase; responde só com escrita no banco).
