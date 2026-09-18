@@ -37,18 +37,28 @@ export function BookIcon(p: P) {
 }
 
 /**
- * Home: o Sol, entrada principal do app.
+ * Home: o Sol.
  *
- * Oito raios e não quatro, porque com quatro a figura lia como alvo ou mira.
- * Os diagonais são mais curtos, do jeito que o Sol é sempre desenhado, e o
- * disco fica aberto para manter a gravura de filete fino dos outros ícones.
+ * O DISCO É CHEIO, e é só isso que separa um sol de um ícone de brilho de
+ * tela. Anéis finos com oito raios longos são o glifo universal de
+ * luminosidade, e era exatamente o que estava aqui: a 22px o anel sumia entre
+ * os raios e sobrava uma estrelinha. Disco sólido com raios curtos, e a leitura
+ * vira sol antes de qualquer legenda.
+ *
+ * Os raios começam longe da borda do disco, com folga visível, e são curtos: o
+ * sol é sobretudo corpo, e o ícone de brilho é sobretudo raio. Os diagonais
+ * ficam um pouco menores que os cardeais, que é como o sol sempre foi
+ * desenhado.
+ *
+ * A figura também voltou para o centro do quadro: estava em 10,5 e agora está
+ * em 12, e ocupa 18 dos 24, a mesma largura da lua ao lado.
  */
 export function SolIcon(p: P) {
   return (
     <svg {...base(p)}>
-      <circle cx="10.5" cy="10.5" r="4.4" />
-      <path d="M10.5 1.4v2.6M10.5 17v2.6M1.4 10.5h2.6M17 10.5h2.6" />
-      <path d="M4.1 4.1l1.8 1.8M15.1 15.1l1.8 1.8M16.9 4.1l-1.8 1.8M5.9 15.1l-1.8 1.8" />
+      <circle cx="12" cy="12" r="4.7" fill="currentColor" stroke="none" />
+      <path d="M12 5.4V3M18.6 12H21M12 18.6V21M5.4 12H3" />
+      <path d="M16.67 7.33l1.48-1.48M16.67 16.67l1.48 1.48M7.33 16.67l-1.48 1.48M7.33 7.33L5.85 5.85" />
     </svg>
   )
 }
