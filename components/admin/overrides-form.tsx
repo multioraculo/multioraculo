@@ -106,3 +106,51 @@ export function RevokeButton({ id, email }: { id: string; email: string }) {
     </button>
   )
 }
+
+/**
+ * Promover a beta tester direto da lista de usuários.
+ *
+ * É o mesmo acesso especial do formulário da página Beta, sem nada novo por
+ * baixo: plano ilimitado, motivo beta_tester, sem expiração, sem Stripe, sem
+ * virar receita. A diferença é só de lugar. Quem administra já está olhando a
+ * pessoa na lista, com o e-mail e o consumo do mês na frente, e tinha que
+ * copiar o e-mail e ir até outra página para conceder.
+ *
+ * Confirma antes porque a concessão é imediata e vale para sempre; revogar
+ * continua sendo na página Beta, que é onde os acessos moram.
+ */
+export function PromoteButton({ email }: { email: string }) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+
+  async function promote() {
+    if (!window.confirm(`Promover ${email} a beta tester, com acesso ilimitado e sem expiração?`)) return
+    setBusy(true)
+    try {
+      const res = await fetch("/api/admin/overrides", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, plan: "unlimited", reason: "beta_tester" }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast.error(json?.error || "Não foi possível promover.")
+        return
+      }
+      toast.success(`${email} agora é beta tester.`)
+      router.refresh()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <button
+      onClick={promote}
+      disabled={busy}
+      className="text-xs whitespace-nowrap rounded-full border border-white/20 bg-white/5 px-3 py-1 text-white/75 hover:bg-white/10 hover:text-white disabled:opacity-50 cursor-pointer"
+    >
+      {busy ? "…" : "Beta tester"}
+    </button>
+  )
+}

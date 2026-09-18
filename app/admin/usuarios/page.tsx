@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { USERS_PAGE_SIZE, listUsers } from "@/lib/admin/metrics"
+import { PromoteButton } from "@/components/admin/overrides-form"
 import { Badge, Note, Section, Table, fmtDate, fmtDateTime, fmtInt } from "@/components/admin/ui"
 
 export const dynamic = "force-dynamic"
@@ -34,7 +35,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
         </form>
 
         <Table
-          head={["E-mail", "Plano", "Acesso", "Tiragens (mês)", "Sonhos (mês)", "Jornadas (mês)", "Tiragens (total)", "Última atividade", "Cadastro"]}
+          head={["E-mail", "Plano", "Acesso", "Tiragens (mês)", "Sonhos (mês)", "Jornadas (mês)", "Tiragens (total)", "Última atividade", "Cadastro", ""]}
           rows={rows.map((u) => {
             const access = accessOf(u)
             return [
@@ -53,6 +54,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
               fmtInt(u.readings_total),
               fmtDateTime(u.last_activity),
               fmtDate(u.created_at),
+              <Acao key="p" u={u} />,
             ]
           })}
           empty={q ? "Nenhum usuário com esse e-mail." : "Nenhum usuário."}
@@ -71,6 +73,21 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
       </Section>
     </>
   )
+}
+
+/**
+ * A coluna de ação. Só aparece botão para quem ainda não tem o acesso: admin
+ * já é ilimitado por outro caminho, e quem já tem acesso especial vigente
+ * receberia 409 do servidor, então a lista diz o estado em vez de oferecer uma
+ * ação que vai falhar. Revogar continua na página Beta, que é onde os acessos
+ * moram e onde dá para ver expiração e histórico.
+ */
+function Acao({ u }: { u: { email: string; role: string; override_plan: string | null; override_reason: string | null } }) {
+  if (u.role === "admin") return <span className="text-white/25 text-[11px]">—</span>
+  if (u.override_plan) {
+    return <span className="text-white/35 text-[11px] whitespace-nowrap">{u.override_reason ?? "acesso especial"}</span>
+  }
+  return <PromoteButton email={u.email} />
 }
 
 function accessOf(u: { role: string; plan: string | null; sub_status: string | null; cancel_at_period_end: boolean | null; current_period_end: string | null; provider: string | null; override_plan: string | null; override_reason: string | null; override_expires_at: string | null }) {
