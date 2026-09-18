@@ -665,40 +665,21 @@
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   pointer-events: none; user-select: none;
   /*
-   * O fundo é um gradiente que se move, e o M tinha borda dura contra ele: em
-   * cima das faixas mais claras parecia colado por cima, recortado. O halo não
-   * muda o desenho; ele só dá uma zona de passagem entre a marca e o fundo.
+   * A borda roxa não vinha daqui: vinha do próprio PNG, que trazia um halo
+   * violeta desenhado no alfa. Medido, o miolo da marca é lilás claro com
+   * saturação de 0,22 estável, e a contaminação era uma rampa nos quatro
+   * pixels mais externos, chegando a 0,66 na borda. Sobre as faixas escuras do
+   * gradiente aquilo somia; sobre as claras virava anel. O arquivo foi limpo
+   * por profundidade, então a marca continua a mesma e a borda deixou de ser
+   * violeta.
    *
-   * São três luzes na silhueta, não numa caixa, porque drop-shadow segue o
-   * alfa do PNG. Duas claras, que abrem a marca sobre o fundo escuro, e uma
-   * violeta escura curtíssima, que é o que separa a marca quando o gradiente
-   * clareia: sozinha, a luz branca some justamente aí.
+   * Tirar a cor do halo, sozinho, não bastava: o peso dele vinha do roxo, e
+   * sem roxo a mesma opacidade virava mancha clara em volta da marca. Por isso
+   * o halo do arquivo também perdeu alfa, e a forma voltou a aparecer.
+   *
+   * O que sobra aqui é só luz de separação: uma sombra curtíssima e fria, na
+   * silhueta e não numa caixa, porque drop-shadow segue o alfa. Sem cor, sem
+   * nuvem e sem animação: nada aqui muda com o tempo.
    */
-  filter:
-    drop-shadow(0 0 5px rgba(255, 255, 255, 0.22))
-    drop-shadow(0 0 14px rgba(196, 181, 253, 0.18))
-    drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
-  animation: bl-respira 7.5s ease-in-out infinite;
-  will-change: filter;
-}
-
-/* Respiração: a luz varia pouco e devagar, para se notar sem se ver. */
-@keyframes bl-respira {
-  0%, 100% {
-    filter:
-      drop-shadow(0 0 5px rgba(255, 255, 255, 0.22))
-      drop-shadow(0 0 14px rgba(196, 181, 253, 0.18))
-      drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
-  }
-  50% {
-    filter:
-      drop-shadow(0 0 8px rgba(255, 255, 255, 0.34))
-      drop-shadow(0 0 22px rgba(196, 181, 253, 0.26))
-      drop-shadow(0 1px 2px rgba(49, 26, 94, 0.28));
-  }
-}
-
-/* Sem animação, o halo fica: ele resolve o recorte, que não é enfeite. */
-@media (prefers-reduced-motion: reduce) {
-  .bl-logo { animation: none; }
+  filter: drop-shadow(0 0 1.2px rgba(246, 248, 255, 0.3));
 }
