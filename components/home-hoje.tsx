@@ -46,10 +46,13 @@ const semNumero = (nome: string) => nome.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 export default function HomeHoje({ initialUser, registro }: { initialUser: User | null; registro: RegistroDeHoje }) {
   const { dict, locale, formatDate } = useI18n()
   const t = dict.home
+  const ti = dict.interconexoes
   const [tiragem, setTiragem] = useState<RespostaTiragem | null>(null)
   const [horoscopo, setHoroscopo] = useState<RespostaHoroscopo | null>(null)
   const [signo, setSigno] = useState<number | null>(null)
   const [hoje, setHoje] = useState("")
+  // null enquanto não se sabe: assim a chamada não pisca para quem já tem mapa
+  const [temMapa, setTemMapa] = useState<boolean | null>(initialUser ? null : false)
 
   useEffect(() => {
     setHoje(
@@ -60,6 +63,14 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       .then((d) => d && setTiragem(d as RespostaTiragem))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (!initialUser) return
+    fetch("/api/mapa?resumo=1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setTemMapa(Boolean(d?.temMapa)))
+      .catch(() => setTemMapa(false))
+  }, [initialUser])
 
   // o signo mora no navegador, escolhido na página do Horóscopo. É ele, e não
   // a sessão, que decide se há leitura pessoal para mostrar: quem escolheu
@@ -141,6 +152,19 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
           </>
         )}
       </Link>
+
+      {/* a passagem do signo para o mapa, em duas linhas e só para quem ainda
+          não tem mapa: quem já tem não precisa ser convidado de novo */}
+      {signo !== null && temMapa === false && (
+        <Link href="/interconexoes" className="group block mt-6">
+          <p className="text-white/50 group-hover:text-white/70 text-[13px] leading-relaxed font-light transition-colors">
+            {ti.homeLead}
+          </p>
+          <p className="text-white/35 group-hover:text-white/55 text-[13px] leading-relaxed font-light transition-colors">
+            {ti.homeBody}
+          </p>
+        </Link>
+      )}
 
       {/* A TIRAGEM COLETIVA: a leitura acontece aqui, sem link */}
       <div className="h-16 sm:h-20" />

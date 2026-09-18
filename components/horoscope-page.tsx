@@ -14,6 +14,7 @@
  * clicou é gerado, uma vez por dia, e daí em diante todo mundo lê o mesmo.
  */
 import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
 import { GlifoPlaneta, GlifoSigno } from "@/components/astro-wheel"
 import { DiagramaAngulo, DiagramaPosicao, FaseLua, RodaDoDia } from "@/components/astro-ilustracoes"
@@ -22,7 +23,7 @@ import type { Locale } from "@/lib/i18n/config"
 import type { CardMovimento } from "@/lib/astro/apresentar"
 import type { Ceu } from "@/lib/astro/ceu"
 import type { Leitura, RelacaoEscrita } from "@/lib/astro/prompt-horoscopo"
-import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
+import { ASPECTOS, CORPOS, FASES, LUNACOES, SIGNOS } from "@/lib/astro/nomes"
 import { LENTOS, SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
 
 type Resposta = {
@@ -193,6 +194,75 @@ function CardRelacao({
   )
 }
 
+/**
+ * O dia em resumo, logo abaixo da roda: o que o céu está fazendo hoje, dito em
+ * signos e em palavras, antes de qualquer escolha de signo.
+ *
+ * Não repete a tabela do fim da página. Lá estão os graus e os orbes de tudo;
+ * aqui está só o que muda a cara do dia: onde estão os luminares e a fase da
+ * Lua, onde andam os outros, quem está retrógrado, qual é o ângulo mais
+ * fechado, e o acontecimento do dia quando existe um. Tudo calculado.
+ */
+function ResumoDoDia({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<string, string> }) {
+  const nome = CORPOS[locale]
+  const signos = SIGNOS[locale]
+  const aspectos = ASPECTOS[locale]
+  const numero = (n: number) => (locale === "en" ? n.toFixed(1) : n.toFixed(1).replace(".", ","))
+  const onde = (corpo: string) => ceu.posicoes.find((p) => p.corpo === corpo)
+
+  const sol = onde("sun")
+  const lua = onde("moon")
+  const luminares =
+    sol && lua
+      ? `${nome.sun} ${t.inWord} ${signos[sol.signo]} · ${nome.moon} ${FASES[locale][ceu.faseLua]} ${t.inWord} ${signos[lua.signo]}`
+      : ""
+
+  const demais = ceu.posicoes
+    .filter((p) => p.corpo !== "sun" && p.corpo !== "moon")
+    .map((p) => `${nome[p.corpo]} ${t.inWord} ${signos[p.signo]}`)
+    .join(" · ")
+
+  const retrogrados = ceu.posicoes.filter((p) => p.retrogrado).map((p) => nome[p.corpo])
+
+  // o mais exato entre os que mudam de semana para semana: dois lentos a três
+  // graus um do outro são o pano de fundo de anos, e não a notícia de hoje
+  const pessoais = ceu.aspectos.filter((a) => !(LENTOS.has(a.a) && LENTOS.has(a.b)))
+  const maisExato = pessoais.slice().sort((a, b) => a.orbe - b.orbe)[0]
+
+  const acontecimentos = ceu.eventos.map((e) => {
+    if (e.tipo === "lunacao") return fmt(t.summaryLunation, { fase: LUNACOES[locale][e.fase] ?? e.fase, signo: signos[e.signo] })
+    if (e.tipo === "ingresso") return fmt(t.summaryEnters, { corpo: nome[e.corpo], signo: signos[e.signo] })
+    if (e.tipo === "estacao") {
+      const chave = e.sentido === "direct" ? t.summaryStationDirect : t.summaryStationRetro
+      return fmt(chave, { corpo: nome[e.corpo] })
+    }
+    return fmt(e.especie === "solar" ? t.summaryEclipseSolar : t.summaryEclipseLunar, { signo: signos[e.signo] })
+  })
+
+  return (
+    <div>
+      <Rotulo>{t.summary}</Rotulo>
+      <div className="mt-3 space-y-1.5 text-white/65 text-[12.5px] leading-relaxed font-light">
+        {luminares && <p className="text-white/80">{luminares}</p>}
+        {demais && <p>{demais}</p>}
+        <p>{retrogrados.length ? fmt(t.summaryRetro, { corpos: retrogrados.join(", ") }) : t.summaryNoRetro}</p>
+        {maisExato && (
+          <p className="tabular-nums">
+            {fmt(t.summaryTightest, {
+              texto: `${nome[maisExato.a]} ${aspectos[maisExato.aspecto]} ${nome[maisExato.b]}, ${t.orb} ${numero(maisExato.orbe)}°`,
+            })}
+          </p>
+        )}
+        {acontecimentos.map((texto) => (
+          <p key={texto} className="text-white/85">
+            {texto}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function CeuDeHoje({ ceu, locale, t }: { ceu: Ceu; locale: Locale; t: Record<string, string> }) {
   const nome = CORPOS[locale]
   const signos = SIGNOS[locale]
@@ -322,7 +392,16 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
           <FaseLua fase={ceu.faseLua} tamanho={18} />
           <span>{formatDate(`${ceu.dia}T12:00:00`)}</span>
         </div>
+
+        <div className="w-full mt-5 pt-4 border-t border-white/10">
+          <ResumoDoDia ceu={ceu} locale={locale} t={rotulos} />
+        </div>
       </div>
+
+      {/* a passagem para o mapa vem antes da escolha do signo: o céu desenhado
+          acima é de todo mundo, e é esse o momento de dizer que ele não toca
+          todo mundo no mesmo lugar */}
+      <ChamadaDoMapa t={dict.interconexoes as unknown as Record<string, string>} />
 
       <div>
         <Rotulo>{t.chooseSign}</Rotulo>
@@ -398,6 +477,37 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
           <CeuDeHoje ceu={dados.ceu} locale={locale} t={rotulos} />
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * A passagem do coletivo para o pessoal, no fim da página e não antes dela.
+ *
+ * Aqui a pessoa acabou de ver a roda do dia e a nota de que aquele céu vale
+ * para todo mundo. É esse o momento em que "seu signo é só uma parte" deixa
+ * de ser argumento de venda e vira a conclusão do que está na tela. Por isso
+ * a chamada não é um anúncio à parte nem um botão de assinatura: é a última
+ * camada da mesma leitura.
+ */
+function ChamadaDoMapa({ t }: { t: Record<string, string> }) {
+  return (
+    <div className="pt-6">
+      <div className="h-px bg-white/10" />
+      <div className="mt-8 max-w-lg">
+        <h2 className="text-white instrument italic text-[23px] sm:text-[26px] leading-snug">{t.callTitle}</h2>
+        <p className="text-white/65 text-[14px] leading-relaxed font-light mt-3.5">{t.callLead}</p>
+        <p className="text-white/65 text-[14px] leading-relaxed font-light">{t.callBody}</p>
+        <Link
+          href="/interconexoes"
+          className="group inline-flex items-baseline gap-2 mt-6 text-white/85 hover:text-white text-[14.5px] transition-colors"
+        >
+          {t.callCta}
+          <span className="text-white/25 group-hover:text-white/50 text-[11px] transition-colors">↗</span>
+        </Link>
+        {/* o tamanho do pedido fica à vista antes do clique */}
+        <p className="text-white/25 text-[11px] font-light mt-2.5">{t.callFields}</p>
+      </div>
     </div>
   )
 }

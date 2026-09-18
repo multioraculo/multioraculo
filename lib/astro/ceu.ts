@@ -141,6 +141,22 @@ export function posicaoDe(ceu: Ceu, corpo: Corpo): Posicao {
   return ceu.posicoes.find((p) => p.corpo === corpo) as Posicao
 }
 
+/**
+ * As longitudes de todos os corpos num instante qualquer.
+ *
+ * Serve para comparar um instante com outro: é assim que se sabe se um ângulo
+ * está se fechando ou se abrindo, sem perguntar isso ao motor.
+ */
+export function corposEm(jd: number): Record<string, { lon: number; retrogrado: boolean }> {
+  const bruto = motor().chart(...partesUtc(jd), 0, 0, "whole_sign").bodies as unknown as Record<
+    string,
+    { lon: number; retrograde: boolean }
+  >
+  const saida: Record<string, { lon: number; retrogrado: boolean }> = {}
+  for (const corpo of CORPOS) saida[corpo] = { lon: bruto[corpo].lon, retrogrado: Boolean(bruto[corpo].retrograde) }
+  return saida
+}
+
 function situar(corpo: Corpo, lon: number, retrogrado: boolean): Posicao {
   return { corpo, lon, signo: indiceDoSigno(lon), grau: grauNoSigno(lon), retrogrado }
 }
