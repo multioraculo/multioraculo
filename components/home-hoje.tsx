@@ -170,8 +170,9 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       {/* A TIRAGEM COLETIVA: a leitura acontece aqui, sem link */}
       <div className="h-16 sm:h-20" />
 
-      <h2 className="text-white/95 instrument italic text-[21px] sm:text-2xl leading-snug">{t.drawQuestion}</h2>
-      <p className="text-white/25 text-[9.5px] uppercase tracking-[0.16em] font-light mt-2">{t.drawShared}</p>
+      {/* dois níveis, e o rótulo em cima diz qual é qual antes da pergunta */}
+      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.drawCollective}</p>
+      <h2 className="text-white/95 instrument italic text-[21px] sm:text-2xl leading-snug mt-2.5">{t.drawQuestion}</h2>
 
       <div className="flex items-end justify-center gap-5 mt-8">
         {tiragem ? (
@@ -204,8 +205,9 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
         <p className="text-white/35 text-[13px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
       ) : null}
 
-      {/* e a sua? a consulta começa por uma pergunta, e a pergunta já está ali */}
-      {tiragem && <ConviteDePergunta convite={t.andYours} />}
+      {/* o segundo nível: a mesma pergunta do dia, agora virada para dentro.
+          A consulta começa por uma pergunta, e a pergunta já está ali */}
+      {tiragem && <ConviteDePergunta rotulo={t.drawPersonal} convite={t.andYouToday} />}
 
       {/* O DIÁRIO, quase um rodapé */}
       <div className="h-16" />
@@ -331,7 +333,7 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
  * A que vale é a que está na tela: a troca espera o texto apagar antes de
  * mudar, então ninguém clica numa pergunta e leva outra.
  */
-function ConviteDePergunta({ convite }: { convite: string }) {
+function ConviteDePergunta({ rotulo, convite }: { rotulo: string; convite: string }) {
   const { pergunta } = usePerguntaSugerida(false)
   const [mostrada, setMostrada] = useState(pergunta)
   const [opacidade, setOpacidade] = useState(1)
@@ -349,15 +351,18 @@ function ConviteDePergunta({ convite }: { convite: string }) {
   if (!mostrada) return null
 
   return (
-    <div className="mt-11">
-      <p className="text-white/45 text-[13px] leading-relaxed font-light">{convite}</p>
+    <div className="mt-14">
+      {/* o mesmo par do bloco de cima, rótulo e pergunta, para a passagem de
+          um nível para o outro ser lida de relance */}
+      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{rotulo}</p>
+      <h2 className="text-white/95 instrument italic text-[21px] sm:text-2xl leading-snug mt-2.5">{convite}</h2>
       <Link
         href="/"
         onClick={() => guardarPerguntaEscolhida(mostrada)}
-        className="group block mt-3.5 min-h-[3.2em] sm:min-h-[2.4em]"
+        className="group block mt-6 min-h-[3.2em] sm:min-h-[2.4em]"
       >
         <span
-          className="instrument italic text-white/85 group-hover:text-white text-[19px] sm:text-[21px] leading-snug transition-opacity duration-[400ms] motion-reduce:transition-none"
+          className="text-white/60 group-hover:text-white/85 text-[15px] sm:text-base leading-relaxed font-light transition-opacity duration-[400ms] motion-reduce:transition-none"
           style={{ opacity: opacidade }}
         >
           {mostrada}
