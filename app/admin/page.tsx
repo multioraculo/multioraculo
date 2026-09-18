@@ -1,6 +1,6 @@
 import { getOverview } from "@/lib/admin/metrics"
 import { getFinanceReport } from "@/lib/admin/finance"
-import { Cards, Note, Panel, Section, Stat, fmtDate, fmtInt, fmtMoney, fmtUsd } from "@/components/admin/ui"
+import { Cards, Note, Panel, Section, Stat, fmtDate, fmtDec, fmtInt, fmtMoney, fmtUsd } from "@/components/admin/ui"
 
 export const dynamic = "force-dynamic"
 
@@ -38,7 +38,7 @@ export default async function AdminOverviewPage() {
       <Section title="Tiragens" hint={o.usage_since ? `contagem completa desde ${fmtDate(o.usage_since)}` : undefined}>
         <Cards>
           <Stat label="Hoje" value={fmtInt(o.readings_today)} />
-          <Stat label="Neste mês" value={fmtInt(o.readings_month)} sub={readingsPerUser !== null ? `${readingsPerUser.toFixed(1).replace(".", ",")} por usuário ativo` : undefined} />
+          <Stat label="Neste mês" value={fmtInt(o.readings_month)} sub={readingsPerUser !== null ? `${fmtDec(readingsPerUser)} por usuário ativo` : undefined} />
           <Stat label="Total histórico" value={fmtInt(o.readings_total)} sub={`${fmtInt(o.saved_readings_total)} leituras salvas`} />
           <Stat label="Previews (2ª tiragem)" value={fmtInt(o.previews_month)} sub={`${fmtInt(o.previews_unlocked)} desbloqueadas no total`} />
         </Cards>
@@ -47,7 +47,7 @@ export default async function AdminOverviewPage() {
       <Section title="Sonhos">
         <Cards>
           <Stat label="Hoje" value={fmtInt(o.dreams_today)} />
-          <Stat label="Neste mês" value={fmtInt(o.dreams_month)} sub={dreamsPerUser !== null ? `${dreamsPerUser.toFixed(1).replace(".", ",")} por pessoa` : undefined} />
+          <Stat label="Neste mês" value={fmtInt(o.dreams_month)} sub={dreamsPerUser !== null ? `${fmtDec(dreamsPerUser)} por pessoa` : undefined} />
           <Stat label="Total histórico" value={fmtInt(o.dreams_total)} sub={`${fmtInt(o.saved_dreams_total)} sonhos salvos`} />
           <Stat label="Jornadas no mês" value={fmtInt(o.journeys_month)} sub={`${fmtInt(o.journeys_total)} no total`} />
         </Cards>
@@ -58,7 +58,7 @@ export default async function AdminOverviewPage() {
           <Stat label="Assinaturas ativas" value={fmtInt(o.subs_active)} sub={`${fmtInt(o.subs_essential)} Essencial · ${fmtInt(o.subs_unlimited)} Ilimitado`} tone="accent" />
           <Stat label="MRR" value={fin.configured ? fmtMoney(fin.mrrCents, fin.currency) : "–"} sub="recorrente contratado" />
           <Stat label="Recebido no mês" value={fin.configured ? fmtMoney(fin.receivedMonthCents, fin.currency) : "–"} sub={fin.configured ? `líquido ${fmtMoney(fin.netMonthCents, fin.currency)}` : "Stripe não configurada"} />
-          <Stat label="Custo de IA no mês" value={fmtUsd(o.ai_cost_month)} sub={avgReadingCost !== null ? `≈ ${fmtUsd(avgReadingCost, 3)} por tiragem` : "estimativa"} tone="warn" />
+          <Stat label="Custo de IA no mês" value={fmtUsd(o.ai_cost_month)} sub={avgReadingCost !== null ? `≈ ${fmtUsd(avgReadingCost, 4)} por tiragem` : "estimativa"} tone="warn" />
         </Cards>
         <Note>
           {marginUsd !== null

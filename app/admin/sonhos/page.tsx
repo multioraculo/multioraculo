@@ -1,6 +1,6 @@
 import { getMonthly, getOverview } from "@/lib/admin/metrics"
 import { BarsChart } from "@/components/admin/charts"
-import { Cards, Note, Panel, Section, Stat, Table, fmtDate, fmtInt, fmtMonth } from "@/components/admin/ui"
+import { Cards, Note, Panel, Section, Stat, Table, fmtDate, fmtDec, fmtInt, fmtMonth } from "@/components/admin/ui"
 
 export const dynamic = "force-dynamic"
 
@@ -23,7 +23,7 @@ export default async function AdminDreamsPage() {
       <Section title="Pessoas">
         <Cards>
           <Stat label="Usaram Sonhos" value={fmtInt(o?.dream_users_total)} sub="contas ou visitantes distintos" />
-          <Stat label="Média por pessoa" value={perUser !== null ? perUser.toFixed(1).replace(".", ",") : "–"} sub="interpretações" />
+          <Stat label="Média por pessoa" value={perUser !== null ? fmtDec(perUser) : "–"} sub="interpretações" />
           <Stat label="Recorrentes" value={fmtInt(o?.dream_repeat_users)} sub="contas com mais de uma interpretação" />
           <Stat label="Jornadas oníricas" value={fmtInt(o?.journeys_total)} sub={`${fmtInt(o?.journeys_month)} neste mês`} />
         </Cards>

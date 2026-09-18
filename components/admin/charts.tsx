@@ -57,8 +57,30 @@ export function LinesChart({ data, series, height = 220, format }: { data: Point
   )
 }
 
+/**
+ * Rótulos dos eixos, na mesma pontuação do resto da tela: vírgula decimal e
+ * ponto de milhar. Estavam com ponto decimal americano, que ao lado dos cards
+ * fazia o mesmo número parecer mil vezes maior.
+ *
+ * Valor abaixo de dez dólares mostra centavos, porque é aí que a diferença
+ * aparece; acima disso o eixo fica em dólares redondos para caber.
+ */
 function formatter(format?: "int" | "usd" | "brl") {
-  if (format === "usd") return (v: number) => `$${v.toFixed(v < 10 ? 2 : 0)}`
-  if (format === "brl") return (v: number) => `R$${(v / 100).toFixed(0)}`
+  const moeda = (moedaCodigo: string, casas: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: moedaCodigo,
+      minimumFractionDigits: casas,
+      maximumFractionDigits: casas,
+    })
+  if (format === "usd") {
+    const curto = moeda("USD", 0)
+    const exato = moeda("USD", 2)
+    return (v: number) => (Math.abs(v) < 10 ? exato : curto).format(v)
+  }
+  if (format === "brl") {
+    const real = moeda("BRL", 0)
+    return (v: number) => real.format(v / 100)
+  }
   return (v: number) => new Intl.NumberFormat("pt-BR").format(v)
 }

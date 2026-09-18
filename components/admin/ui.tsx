@@ -9,9 +9,44 @@ export function fmtInt(n: number | null | undefined): string {
   return new Intl.NumberFormat("pt-BR").format(Math.round(Number(n ?? 0)))
 }
 
-export function fmtUsd(n: number | null | undefined, digits = 2): string {
+/**
+ * Dólar escrito em português, e não em inglês com símbolo trocado.
+ *
+ * Isto já foi en-US, e a confusão que causou vale o comentário: um gasto de
+ * um dólar e três centavos, com quatro casas permitidas, saía como "$1.028".
+ * Quem lê em português vê ponto de milhar e entende MIL e vinte e oito
+ * dólares. O número estava certo, a pontuação é que dizia outra coisa, e
+ * durante um tempo pareceu que o produto tinha torrado mil dólares.
+ *
+ * Agora a vírgula é decimal e o ponto é milhar, como no resto da tela:
+ * US$ 1,03 e US$ 1.234,50. Nunca os dois sistemas na mesma página.
+ *
+ * `casas` é o MÁXIMO, e o mínimo é sempre dois. Em card e total isso quer
+ * dizer centavos redondos, que é como se fala de dinheiro. Em custo unitário,
+ * onde a ordem de grandeza é o milésimo de dólar, quatro casas mostram
+ * US$ 0,0026 em vez de arredondar tudo para US$ 0,00.
+ *
+ * As casas extras valem SÓ ABAIXO DE UM DÓLAR. De um dólar para cima o
+ * milésimo é ruído, e "US$ 1,028" é exatamente a escrita que confunde: três
+ * decimais em dinheiro fazem o olho procurar um separador de milhar. Então o
+ * mesmo formatador dá US$ 0,0026 para o que é minúsculo e US$ 1,03 para o que
+ * não é, sem quem chama precisar decidir.
+ */
+export function fmtUsd(n: number | null | undefined, casas = 2): string {
   const v = Number(n ?? 0)
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 4) }).format(v)
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: Math.abs(v) >= 1 ? 2 : Math.max(2, casas),
+  }).format(v)
+}
+
+/** Decimal solto (média, porcentagem) com vírgula, para não conviver com ponto decimal. */
+export function fmtDec(n: number | null | undefined, casas = 1): string {
+  return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas }).format(
+    Number(n ?? 0),
+  )
 }
 
 export function fmtMoney(cents: number | null | undefined, currency = "brl"): string {
@@ -20,7 +55,7 @@ export function fmtMoney(cents: number | null | undefined, currency = "brl"): st
 
 export function fmtPct(part: number, whole: number): string {
   if (!whole) return "–"
-  return `${((part / whole) * 100).toFixed(1).replace(".", ",")}%`
+  return `${fmtDec((part / whole) * 100)}%`
 }
 
 /** "2026-09-01" ou "2026-09" → "set 2026" */
