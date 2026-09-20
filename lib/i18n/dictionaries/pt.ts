@@ -111,6 +111,7 @@ export const pt = {
     horoscopeVisitor: "Veja a leitura do seu signo",
     horoscopeVisitorHint: "Os doze signos, lidos pelo céu de hoje.",
     horoscopeWaiting: "A leitura de hoje ainda não está pronta.",
+    loadFailed: "Não foi possível carregar agora.",
     diaryQuestion: "O que ficou de hoje?",
     diaryCta: "Registrar no Diário",
     diaryToday: "Você já escreveu hoje.",

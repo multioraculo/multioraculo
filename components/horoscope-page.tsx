@@ -14,6 +14,7 @@
  * clicou é gerado, uma vez por dia, e daí em diante todo mundo lê o mesmo.
  */
 import { useCallback, useEffect, useState } from "react"
+import { buscar as buscarComEstado, CARREGANDO, type Carregamento } from "@/lib/carregamento"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
 import { GlifoPlaneta, GlifoSigno } from "@/components/astro-wheel"
@@ -438,14 +439,29 @@ function CeuDeHoje({
  * nome nenhum. Por baixo cada termo continua declarando de que fato saiu, e o
  * verificador do servidor confere isso antes de a frase existir.
  */
-function EvidenciaDoCeu({ sintese, t }: { sintese: string | null; t: Record<string, string> }) {
+function EvidenciaDoCeu({ sintese, t }: { sintese: Carregamento<string>; t: Record<string, string> }) {
   return (
     <div className="pt-2">
       <Rotulo>{t.evidence}</Rotulo>
-      {sintese ? (
-        <p className="text-white/85 text-[15px] sm:text-base leading-[1.75] font-light mt-3.5 max-w-xl">{sintese}</p>
-      ) : (
+      {sintese.estado === "carregando" && (
+        <div className="mt-4 space-y-2.5 max-w-xl" aria-hidden="true">
+          {["100%", "94%", "68%"].map((w) => (
+            <div
+              key={w}
+              className="h-[0.9em] rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none"
+              style={{ width: w }}
+            />
+          ))}
+        </div>
+      )}
+      {sintese.estado === "pronto" && (
+        <p className="text-white/85 text-[15px] sm:text-base leading-[1.75] font-light mt-3.5 max-w-xl">{sintese.dado}</p>
+      )}
+      {sintese.estado === "ausente" && (
         <p className="text-white/35 text-[13px] leading-relaxed font-light mt-3.5">{t.evidenceWaiting}</p>
+      )}
+      {sintese.estado === "erro" && (
+        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-3.5">{t.loadFailed}</p>
       )}
     </div>
   )
@@ -458,7 +474,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
 
   const [signo, setSigno] = useState<number | null>(null)
   // a tradução simbólica do céu: coletiva, uma por dia, e a mesma da Home
-  const [evidencia, setEvidencia] = useState<string | null>(null)
+  const [evidencia, setEvidencia] = useState<Carregamento<string>>(CARREGANDO)
   const [dados, setDados] = useState<Resposta | null>(null)
   const [carregando, setCarregando] = useState(false)
 
@@ -502,10 +518,13 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
   }
 
   useEffect(() => {
-    fetch("/api/ceu-dia")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setEvidencia(d?.sintese ?? null))
-      .catch(() => {})
+    let vivo = true
+    void buscarComEstado<string>("/api/ceu-dia", (c) => (c?.sintese as string | null) ?? null).then((r) => {
+      if (vivo) setEvidencia(r)
+    })
+    return () => {
+      vivo = false
+    }
   }, [])
 
   const leitura = dados?.leitura ?? null

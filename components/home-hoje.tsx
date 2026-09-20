@@ -39,6 +39,7 @@ import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
+import { buscar, CARREGANDO, type Carregamento } from "@/lib/carregamento"
 import MoonToday from "@/components/moon-today"
 import MarcosHome from "@/components/marcos-home"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
@@ -46,13 +47,11 @@ import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import { SIGNOS } from "@/lib/astro/nomes"
-import type { Leitura } from "@/lib/astro/prompt-horoscopo"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 
 export type RegistroDeHoje = { titulo: string; hoje: boolean } | null
 
 type RespostaTiragem = { dia: string; tiragem: TiragemDoDia; eixo: [string, string] | null; sintese: string | null }
-type RespostaHoroscopo = { nomeSigno: string; leitura: Leitura | null }
 
 const CHAVE_SIGNO = "multioraculo:signo"
 
@@ -81,6 +80,29 @@ function Pausa() {
       <div className="h-px bg-white/[0.07]" />
       <div className="h-7" />
     </>
+  )
+}
+
+/**
+ * Enquanto o texto não chegou: linhas na altura do que vai ocupar o lugar.
+ *
+ * Não é enfeite nem spinner: é o espaço reservado. Sem ele a página encolhe e
+ * cresce quando o dado chega, e foi isso que produziu o maior deslocamento de
+ * layout medido na Home. As larguras são desiguais de propósito, porque texto
+ * corrido não termina alinhado.
+ */
+function LinhasCarregando({ linhas = 3, className = "" }: { linhas?: number; className?: string }) {
+  const larguras = ["100%", "96%", "72%", "88%", "64%"]
+  return (
+    <div className={`space-y-2.5 ${className}`} aria-hidden="true">
+      {Array.from({ length: linhas }).map((_, i) => (
+        <div
+          key={i}
+          className="h-[0.85em] rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none"
+          style={{ width: larguras[i % larguras.length] }}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -136,15 +158,20 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
   const t = dict.home
   const ti = dict.interconexoes
   const [tiragem, setTiragem] = useState<RespostaTiragem | null>(null)
-  const [horoscopo, setHoroscopo] = useState<RespostaHoroscopo | null>(null)
-  const [signo, setSigno] = useState<number | null>(null)
+  const [horoscopo, setHoroscopo] = useState<Carregamento<string>>(CARREGANDO)
+  // `undefined` = ainda não lemos o navegador; `null` = lemos e não há signo
+  // escolhido. Sem essa diferença, quem tem signo guardado via por um instante
+  // o convite de escolher signo, e só depois a própria leitura
+  const [signo, setSigno] = useState<number | null | undefined>(undefined)
   const [hoje, setHoje] = useState("")
   // a leitura coletiva do céu: agora vale para todo mundo, e não só para quem
   // ainda não escolheu signo
-  const [ceuDoDia, setCeuDoDia] = useState<{ factual: string[]; sintese: string | null } | null>(null)
-  // null enquanto não se sabe: assim a chamada não pisca para quem já tem mapa
-  const [mapa, setMapa] = useState<{ temMapa: boolean; primeira: string | null } | null>(
-    initialUser ? null : { temMapa: false, primeira: null },
+  const [ceuDoDia, setCeuDoDia] = useState<Carregamento<string>>(CARREGANDO)
+  // quem não tem conta não tem mapa, e isso já se sabe sem perguntar; quem tem
+  // conta fica em `carregando` até a resposta, para a camada não piscar o
+  // estado errado antes de saber
+  const [mapa, setMapa] = useState<Carregamento<{ temMapa: boolean; primeira: string | null }>>(
+    initialUser ? CARREGANDO : { estado: "pronto", dado: { temMapa: false, primeira: null } },
   )
 
   useEffect(() => {
@@ -157,19 +184,27 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       .catch(() => {})
   }, [])
 
+  // o `.catch(() => {})` que estava aqui engolia a falha e deixava a seção em
+  // carregamento para sempre; agora falha vira `erro`, que é um estado visível
   useEffect(() => {
-    fetch("/api/ceu-dia")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setCeuDoDia({ factual: d.factual ?? [], sintese: d.sintese ?? null }))
-      .catch(() => {})
+    let vivo = true
+    void buscar<string>("/api/ceu-dia", (c) => (c?.sintese as string | null) ?? null).then((r) => {
+      if (vivo) setCeuDoDia(r)
+    })
+    return () => {
+      vivo = false
+    }
   }, [])
 
   useEffect(() => {
     if (!initialUser) return
-    fetch("/api/mapa")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setMapa({ temMapa: Boolean(d?.mapa), primeira: null }))
-      .catch(() => setMapa({ temMapa: false, primeira: null }))
+    let vivo = true
+    void buscar("/api/mapa", (c) => ({ temMapa: Boolean(c?.mapa), primeira: null as string | null })).then((r) => {
+      if (vivo) setMapa(r)
+    })
+    return () => {
+      vivo = false
+    }
   }, [initialUser])
 
   // o signo mora no navegador, escolhido na página do Horóscopo. É ele, e não
@@ -183,16 +218,23 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
       guardado = null
     }
     const indice = Number(guardado)
-    if (guardado === null || !Number.isInteger(indice) || indice < 0 || indice > 11) return
+    if (guardado === null || !Number.isInteger(indice) || indice < 0 || indice > 11) {
+      setSigno(null)
+      return
+    }
     setSigno(indice)
-    fetch(`/api/horoscopo?signo=${indice}`)
-      .then((r) => r.json())
-      .then((d) => setHoroscopo(d as RespostaHoroscopo))
-      .catch(() => {})
+    let vivo = true
+    void buscar<string>(`/api/horoscopo?signo=${indice}`, (c) => (c?.leitura?.foco as string | null) ?? null).then(
+      (r) => {
+        if (vivo) setHoroscopo(r)
+      },
+    )
+    return () => {
+      vivo = false
+    }
   }, [])
 
   const data = hoje ? formatDate(`${hoje}T12:00:00`) : ""
-  const foco = horoscopo?.leitura?.foco ?? null
 
   return (
     <div>
@@ -276,12 +318,12 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
           altura: o céu de todos à esquerda, o seu recorte à direita. A própria
           composição diz que uma é o contexto da outra. */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-14">
-        <CeuDeHoje ceu={ceuDoDia} t={t as unknown as Record<string, string>} />
+        <CeuDeHoje sintese={ceuDoDia} t={t as unknown as Record<string, string>} />
 
         <div className="mt-14 pt-14 border-t border-white/[0.07] lg:mt-0 lg:pt-0 lg:border-t-0">
           <ParaVoce
             signo={signo}
-            foco={foco}
+            foco={horoscopo}
             mapa={mapa}
             t={t as unknown as Record<string, string>}
             ti={ti as unknown as Record<string, string>}
@@ -482,17 +524,27 @@ function ConviteDePergunta({ rotulo, convite, destino }: { rotulo: string; convi
  * Antes este bloco só existia para quem NÃO tinha signo escolhido. Quem tinha
  * nunca via o céu do dia na Home, embora o dado já estivesse carregado. Agora
  * vale para todos, que é o que a camada promete.
+ *
+ * A frase de indisponível só aparece em `ausente`, que é quando o servidor
+ * RESPONDEU que ainda não há síntese. Enquanto a requisição corre, o lugar dela
+ * fica reservado; quando a requisição falha, a mensagem é de falha, e não de
+ * inexistência.
  */
-function CeuDeHoje({ ceu, t }: { ceu: { factual: string[]; sintese: string | null } | null; t: Record<string, string> }) {
+function CeuDeHoje({ sintese, t }: { sintese: Carregamento<string>; t: Record<string, string> }) {
   return (
     <div>
       <Rotulo>{t.skySection}</Rotulo>
       <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">{t.skySameForAll}</h2>
 
-      {ceu?.sintese ? (
-        <p className="text-white/80 text-[14px] leading-[1.75] font-light mt-4 max-w-xl">{ceu.sintese}</p>
-      ) : (
+      {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-5 max-w-xl" />}
+      {sintese.estado === "pronto" && (
+        <p className="text-white/80 text-[14px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
+      )}
+      {sintese.estado === "ausente" && (
         <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
+      )}
+      {sintese.estado === "erro" && (
+        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
       )}
 
       <div className="mt-6">
@@ -525,23 +577,38 @@ function ParaVoce({
   ti,
   locale,
 }: {
-  signo: number | null
-  foco: string | null
-  mapa: { temMapa: boolean; primeira: string | null } | null
+  signo: number | null | undefined
+  foco: Carregamento<string>
+  mapa: Carregamento<{ temMapa: boolean; primeira: string | null }>
   t: Record<string, string>
   ti: Record<string, string>
   locale: string
 }) {
   const signos = SIGNOS[locale as keyof typeof SIGNOS]
 
+  // ENQUANTO NÃO SE SABE, não se afirma nada. Antes esta camada decidia com
+  // `signo` nulo e `mapa` nulo, que na primeira renderização significavam
+  // apenas "ainda não perguntei": quem tinha signo guardado via o convite de
+  // escolher signo, e quem tinha mapa via a leitura do signo, cada um por um
+  // instante, antes de a tela se corrigir sozinha.
+  if (signo === undefined || mapa.estado === "carregando") {
+    return (
+      <div>
+        <Rotulo>{t.forYou}</Rotulo>
+        <div className="h-[1.6em] w-40 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none mt-3" />
+        <LinhasCarregando linhas={2} className="mt-5 max-w-xl" />
+      </div>
+    )
+  }
+
   // C. quem tem mapa: a leitura que é mesmo da pessoa, sem chamada comercial
-  if (mapa?.temMapa) {
+  if (mapa.estado === "pronto" && mapa.dado.temMapa) {
     return (
       <div>
         <Rotulo>{t.forYou}</Rotulo>
         <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">{ti.todayTitle}</h2>
-        {mapa.primeira && (
-          <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">{mapa.primeira}</p>
+        {mapa.dado.primeira && (
+          <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">{mapa.dado.primeira}</p>
         )}
         <Chamada href="/interconexoes">{t.seeFullReading}</Chamada>
       </div>
@@ -556,9 +623,16 @@ function ParaVoce({
         <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">
           {fmt(t.signToday, { signo: signos[signo] })}
         </h2>
-        <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">
-          {foco ?? t.horoscopeWaiting}
-        </p>
+        {foco.estado === "carregando" && <LinhasCarregando linhas={2} className="mt-5 max-w-xl" />}
+        {foco.estado === "pronto" && (
+          <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">{foco.dado}</p>
+        )}
+        {foco.estado === "ausente" && (
+          <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
+        )}
+        {foco.estado === "erro" && (
+          <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
+        )}
         <Chamada href="/horoscopo">{t.seeSignReading}</Chamada>
 
         <Filete />

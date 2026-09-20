@@ -109,6 +109,7 @@ export const en: Dictionary = {
     horoscopeVisitor: "See your sign's reading",
     horoscopeVisitorHint: "The twelve signs, read by today's sky.",
     horoscopeWaiting: "Today's reading is not ready yet.",
+    loadFailed: "Could not load right now.",
     diaryQuestion: "What stayed with you today?",
     diaryCta: "Write in the Journal",
     diaryToday: "You have written today.",
