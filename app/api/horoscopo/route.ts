@@ -30,6 +30,31 @@ export const maxDuration = 60
 const MODELO = "gpt-4o"
 const FORMATO_DIA = /^\d{4}-\d{2}-\d{2}$/
 
+/**
+ * O diagnóstico por tentativa NUNCA vai no corpo público em produção.
+ *
+ * Ele traz regra interna do verificador, contagem de tokens e custo estimado:
+ * é material de quem opera o sistema, não de quem lê o horóscopo. Expor as
+ * regras conta a qualquer visitante exatamente o que é conferido no texto, e
+ * expor custo conta quanto cada leitura sai. Nada disso ajuda quem veio ler o
+ * dia.
+ *
+ * O lugar dele são os registros do servidor, que a instrumentação já escreve
+ * sempre. No corpo da resposta ele só aparece em desenvolvimento, ou quando
+ * alguém liga HOROSCOPO_DIAGNOSTICO=1 de propósito para uma investigação
+ * pontual, e aí é uma decisão consciente de quem liga.
+ */
+function podeExporDiagnostico(): boolean {
+  return process.env.NODE_ENV !== "production" || process.env.HOROSCOPO_DIAGNOSTICO === "1"
+}
+
+/** Tira o diagnóstico do corpo quando ele não deve sair daqui. */
+function semDiagnostico<T extends { diagnostico?: unknown }>(r: T): T {
+  if (podeExporDiagnostico()) return r
+  const { diagnostico: _fora, ...resto } = r
+  return resto as T
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const signo = Number(url.searchParams.get("signo"))
@@ -74,10 +99,14 @@ export async function GET(request: Request) {
           usage: resposta.usage,
           seed: `${dia}:${signo}:${locale}`,
         })
-        return { conteudo: resposta.choices[0]?.message?.content ?? "{}", model: resposta.model ?? MODELO }
+        return {
+          conteudo: resposta.choices[0]?.message?.content ?? "{}",
+          model: resposta.model ?? MODELO,
+          usage: resposta.usage,
+        }
       },
     })
-    return NextResponse.json(resultado)
+    return NextResponse.json(semDiagnostico(resultado))
   } catch (erro) {
     console.error("[horoscopo]", erro)
     return NextResponse.json(semLeitura(dia, signo, locale))
