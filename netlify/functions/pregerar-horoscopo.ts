@@ -34,6 +34,25 @@
 export const config = { schedule: "5 3 * * *" }
 
 /**
+ * CHAVE GERAL, e ela está DESLIGADA por padrão.
+ *
+ * O agendamento continua registrado e a função continua sendo chamada todo dia,
+ * mas sem esta variável ela não gera nada e diz isso nos registros. Enquanto o
+ * produto está em teste, a geração volta a ser só sob demanda: o primeiro
+ * clique num signo naquele dia gera, e todo mundo depois lê a mesma linha.
+ *
+ * Para ligar no lançamento, basta a variável no Netlify, sem deploy:
+ *
+ *   HOROSCOPO_PREGERAR = 1
+ *
+ * Desligar é apagar a variável. A implementação fica intacta nos dois casos, e
+ * por isso a chave é uma variável e não um comentário no código: comentar
+ * exigiria deploy para voltar atrás, e deploy é o que não se quer no meio de
+ * um teste.
+ */
+const LIGADA = process.env.HOROSCOPO_PREGERAR === "1"
+
+/**
  * Os idiomas que valem a pré-geração. O céu é o mesmo para todos, mas o texto
  * é um por idioma, e cada um é uma chamada paga: doze signos em três idiomas
  * seriam trinta e seis gerações por dia para atender também quem talvez não
@@ -97,6 +116,14 @@ async function pedir(raiz: string, signo: number, locale: string): Promise<Resul
 }
 
 export default async function pregerar(): Promise<Response> {
+  if (!LIGADA) {
+    console.log("[pregerar-horoscopo] desligada (HOROSCOPO_PREGERAR != 1); geração segue sob demanda")
+    return new Response(JSON.stringify({ desligada: true }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    })
+  }
+
   const raiz = base()
   if (!raiz) {
     const erro = "sem NEXT_PUBLIC_SITE_URL nem URL: não há para onde pedir"
