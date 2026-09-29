@@ -53,12 +53,15 @@ import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import { buscar, CARREGANDO, type Carregamento } from "@/lib/carregamento"
 import MoonToday from "@/components/moon-today"
+import { RodaDoDia } from "@/components/astro-ilustracoes"
+import type { Ceu } from "@/lib/astro/ceu"
 import MarcosHome from "@/components/marcos-home"
 import FraseDePoder from "@/components/frase-de-poder"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
+import AmostraOraculos from "@/components/amostra-oraculos"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 
@@ -191,7 +194,16 @@ function Chamada({
 
 // ── a página ────────────────────────────────────────────────────────────────
 
-export default function HomeHoje({ initialUser, registro }: { initialUser: User | null; registro: RegistroDeHoje }) {
+export default function HomeHoje({
+  initialUser,
+  registro,
+  ceu,
+}: {
+  initialUser: User | null
+  registro: RegistroDeHoje
+  /** o céu calculado no servidor: função pura, sem requisição e sem custo */
+  ceu: Ceu
+}) {
   const { dict, locale, formatDate } = useI18n()
   const t = dict.home
   const ti = dict.interconexoes
@@ -400,7 +412,7 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
             dia, não a identidade dele. */}
         <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
           <Modulo className="p-6 sm:p-7 lg:col-span-7">
-            <CeuDeHoje sintese={ceuDoDia} t={t as unknown as Record<string, string>} />
+            <CeuDeHoje sintese={ceuDoDia} ceu={ceu} t={t as unknown as Record<string, string>} />
           </Modulo>
 
           <Modulo className="p-6 sm:p-7 lg:col-span-5">
@@ -583,6 +595,12 @@ function ConviteDePergunta({
       {/* o que acontece do outro lado do clique, dito uma vez só e aqui: era
           isto que estava repetido na placa da marca */}
       <span className="block text-white/55 text-[12.5px] leading-relaxed font-light mt-5">{explica}</span>
+
+      {/* e o que ele PARECE: as peças dos cinco oráculos girando. Ilustração,
+          não tiragem — sem nome, sem posição, sem significado */}
+      <span className="block mt-6">
+        <AmostraOraculos />
+      </span>
     </Modulo>
   )
 }
@@ -609,13 +627,22 @@ function ConviteDePergunta({
  * minguantes não faz sentido nenhum. Agora existe uma só, no módulo do dia, e
  * ela é a completa.
  */
-function CeuDeHoje({ sintese, t }: { sintese: Carregamento<string>; t: Record<string, string> }) {
+function CeuDeHoje({ sintese, ceu, t }: { sintese: Carregamento<string>; ceu: Ceu; t: Record<string, string> }) {
   return (
     <div>
       <Rotulo>{t.skySection}</Rotulo>
       <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">{t.skySameForAll}</h2>
 
-      {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-5 max-w-xl" />}
+      {/* A MANDALA é a mesma do Horóscopo, pelo mesmo componente, com os mesmos
+          dados. Ela vem calculada do servidor: `estadoDoCeu` é função pura, então
+          não há requisição nova nem espera — desenha no primeiro quadro, antes
+          mesmo de a síntese chegar. É o único conteúdo da Home que não depende de
+          rede. */}
+      <div className="flex justify-center mt-6 text-white/70">
+        <RodaDoDia ceu={ceu} tamanho={200} />
+      </div>
+
+      {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-6 max-w-xl" />}
       {sintese.estado === "pronto" && (
         <p className="text-white/80 text-[14px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
       )}

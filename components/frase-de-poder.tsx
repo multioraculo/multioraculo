@@ -69,6 +69,16 @@ export default function FraseDePoder() {
 
   const rotulo = <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.powerTitle}</p>
 
+  // Sugestões são PONTO DE PARTIDA, não catálogo: a frase é para ser dela, e
+  // encarar uma caixa vazia trava. Clicar numa sugestão abre o editor com o
+  // texto dentro, editável, em vez de salvar direto: quase ninguém quer a
+  // frase exatamente como veio.
+  const sugestoes = ((dict.home as unknown as { powerSuggestions?: string[] }).powerSuggestions ?? []).slice(0, 3)
+  const comecarCom = (frase: string) => {
+    setRascunho(frase)
+    setEditando(true)
+  }
+
   // enquanto não se sabe, não se afirma nada
   if (frase === undefined) {
     return (
@@ -116,6 +126,41 @@ export default function FraseDePoder() {
             {rascunho.length}/{LIMITE}
           </span>
         </div>
+      </div>
+    )
+  }
+
+  // sem frase ainda: convite mais sugestões, e cada uma abre o editor já com o
+  // texto. Não pode ser um <button> dentro de outro, então o vazio tem forma
+  // própria em vez de reaproveitar a placa clicável
+  if (!frase) {
+    return (
+      <div>
+        {rotulo}
+        <p className="text-white/55 text-[14px] leading-relaxed font-light mt-4">{t.powerEmpty}</p>
+        <button
+          onClick={abrir}
+          className="block text-white/85 hover:text-white text-[14px] font-light mt-4 transition-colors cursor-pointer"
+        >
+          {t.powerPlaceholder} +
+        </button>
+
+        {sugestoes.length > 0 && (
+          <>
+            <p className="text-white/25 text-[10.5px] font-light mt-5">{t.powerSuggest}</p>
+            <div className="mt-2.5 space-y-2">
+              {sugestoes.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => comecarCom(f)}
+                  className="block w-full text-left text-white/55 hover:text-white/85 instrument italic text-[14.5px] leading-snug transition-colors cursor-pointer"
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     )
   }

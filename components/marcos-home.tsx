@@ -87,6 +87,17 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
 
   const mostrar = marcos.slice(0, QUANTOS_NA_HOME)
 
+  // QUEM AINDA NÃO TEM NENHUM vê sugestões em vez de uma lista vazia. Começar
+  // uma contagem exige decidir o que contar, e é aí que se desiste; clicar numa
+  // sugestão abre o formulário com o nome dentro, ainda editável, porque o
+  // marco é da pessoa e não nosso.
+  const sugestoes = marcos.length === 0 ? ((t as unknown as { suggestions?: string[] }).suggestions ?? []).slice(0, 4) : []
+  const comecarCom = (nome: string) => {
+    setNome(nome)
+    setInicio(hojeCivil())
+    setCriando(true)
+  }
+
   return (
     // Marcos tem placa própria agora: sem filete, sem respiro de cima. Quem
     // separa dele o que vem ao lado é o vão da grade
@@ -108,6 +119,23 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
               </p>
             </Link>
           ))}
+        </div>
+      )}
+
+      {sugestoes.length > 0 && !criando && (
+        <div className="mt-4">
+          <p className="text-white/25 text-[10.5px] font-light">{(t as unknown as Record<string, string>).suggestTitle}</p>
+          <div className="flex flex-wrap gap-2 mt-2.5">
+            {sugestoes.map((nome) => (
+              <button
+                key={nome}
+                onClick={() => comecarCom(nome)}
+                className="rounded-full border border-white/15 hover:border-white/35 bg-white/[0.04] hover:bg-white/[0.07] px-3 py-1.5 text-white/65 hover:text-white/90 text-[12.5px] font-light transition-colors cursor-pointer"
+              >
+                {nome}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

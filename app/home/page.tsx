@@ -2,6 +2,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import HomeHoje, { type RegistroDeHoje } from "@/components/home-hoje"
 import { createClient } from "@/lib/supabase/server"
+import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
 
 /**
  * A Home: o dia de hoje reunido num lugar só.
@@ -51,7 +52,7 @@ export default async function HomePage() {
             texto corrido continua limitado lá dentro, e a largura extra é gasta
             em composição. No celular e no tablet nada muda. */}
         <div className="max-w-xl lg:max-w-6xl mx-auto px-5 sm:px-8">
-          <HomeHoje initialUser={user} registro={registro} />
+          <HomeHoje initialUser={user} registro={registro} ceu={estadoDoCeu(diaDeHoje())} />
         </div>
       </div>
     </ShaderBackground>
