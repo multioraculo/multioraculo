@@ -50,7 +50,7 @@ export default async function HomePage() {
         {/* A largura cresce no desktop, a medida de leitura não: cada bloco de
             texto corrido continua limitado lá dentro, e a largura extra é gasta
             em composição. No celular e no tablet nada muda. */}
-        <div className="max-w-xl lg:max-w-5xl mx-auto px-5 sm:px-8">
+        <div className="max-w-xl lg:max-w-6xl mx-auto px-5 sm:px-8">
           <HomeHoje initialUser={user} registro={registro} />
         </div>
       </div>

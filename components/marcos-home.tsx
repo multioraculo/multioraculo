@@ -42,7 +42,33 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
     void carregar()
   }, [logado, carregar])
 
-  if (!logado || marcos === null) return null
+  // SEM CONTA A PLACA CONTINUA EXISTINDO, com o que Marcos é. Antes ela sumia
+  // inteira, e a faixa ficava com um buraco onde deveria estar a coisa que a
+  // pessoa mais volta para ver. Não há botão aqui porque criar marco exige
+  // conta: quem não tem entra pelo login do cabeçalho, como em todo o resto.
+  if (!logado) {
+    return (
+      <div>
+        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>
+        <p className="text-white/55 text-[13.5px] leading-relaxed font-light mt-4">{t.intro}</p>
+      </div>
+    )
+  }
+
+  // placa própria não pode ficar vazia enquanto carrega: antes isto devolvia
+  // nulo e o módulo aparecia como um vidro sem nada dentro, que é a mesma
+  // mentira de carregamento que saímos consertando no resto da Home
+  if (marcos === null) {
+    return (
+      <div>
+        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>
+        <div className="mt-5 space-y-3" aria-hidden="true">
+          <div className="h-[1.4em] w-24 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none" />
+          <div className="h-[0.9em] w-40 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none" />
+        </div>
+      </div>
+    )
+  }
 
   const criar = async () => {
     if (!nome.trim()) return
@@ -62,9 +88,9 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
   const mostrar = marcos.slice(0, QUANTOS_NA_HOME)
 
   return (
-    // no celular Diário e Marcos se empilham, e o filete diz que continuam sendo
-    // a mesma camada; no desktop são duas colunas e o filete some
-    <div className="mt-7 pt-7 border-t border-white/[0.045] lg:mt-0 lg:pt-0 lg:border-t-0">
+    // Marcos tem placa própria agora: sem filete, sem respiro de cima. Quem
+    // separa dele o que vem ao lado é o vão da grade
+    <div>
       {/* sub-rótulo da camada SEU REGISTRO: quem dá o respiro em volta é a Home,
           para Diário e Marcos ficarem visivelmente no mesmo bloco */}
       <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>

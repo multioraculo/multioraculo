@@ -1,10 +1,18 @@
 "use client"
 
 /**
- * A Home: o dia, em voz baixa.
+ * A Home: um deck de placas de vidro.
  *
- * Sem caixas. A hierarquia vem de escala, espaço e filetes finos, e a ORDEM
- * das camadas é o argumento do produto:
+ * Antes a hierarquia vinha só de escala e espaço, e os assuntos flutuavam no
+ * mesmo fundo sem nada dizendo onde um acaba e outro começa. Agora cada
+ * assunto tem a sua placa, e o TAMANHO da placa é que informa o peso: dois
+ * módulos dominam, dois apoiam, o resto é microplaca.
+ *
+ * NÃO É UMA GRADE DE CARTÕES IGUAIS. As larguras são 4, 5 e 3 de doze na
+ * primeira faixa, 7 e 5 na segunda, 6 e quatro micros na terceira. A
+ * assimetria é o que faz o olho encontrar o protagonista sem ler nada.
+ *
+ * A ORDEM das camadas continua sendo o argumento do produto:
  *
  *   1. o cabeçalho do dia, com a Lua compacta: atmosfera e data, três linhas
  *   2. a TIRAGEM COLETIVA, que é a primeira grande experiência da página
@@ -18,17 +26,21 @@
  * que é a identidade daqui. A astrologia continua inteira, uma camada depois,
  * como contexto e personalização.
  *
- * TRÊS GRAMÁTICAS, e o olho só precisa aprender uma vez:
+ * AS GRAMÁTICAS, e o olho só precisa aprender uma vez:
  *
- *  - `Rotulo` abre toda camada, sempre igual;
+ *  - `Modulo` é a placa. Agrupar é a função dela, não enfeitar: um véu
+ *    translúcido, um fio de luz e uma sombra curta, com o fundo atravessando.
+ *  - `Rotulo` abre todo módulo, sempre igual;
  *  - `Chamada` é o único jeito de um link sair desta página. A seta significa
- *    exatamente isso, e ação que acontece aqui mesmo não recebe seta;
- *  - `Pausa` separa camadas; `Filete` separa blocos dentro de uma camada. São
- *    medidas diferentes, e é por elas que se percebe onde uma camada acaba.
+ *    exatamente isso, e ação que acontece aqui mesmo não recebe seta.
+ *
+ * O ESPAÇO ENTRE AS PLACAS substituiu os filetes. Quando cada assunto tem
+ * contorno próprio, um traço separando vira ruído: a distância já diz tudo, e
+ * é a mesma em toda a grade, o que dá o ritmo.
  *
  * NO DESKTOP a largura cresce a partir de `lg`, mas a medida de leitura não:
- * todo texto corrido continua limitado, e a largura extra é gasta em
- * composição, nunca em linha de cento e vinte caracteres.
+ * todo texto corrido continua limitado dentro da sua placa, e a largura extra
+ * é gasta em composição, nunca em linha de cento e vinte caracteres.
  *
  * Nada aqui recalcula o que já existe. A Lua é a MESMA do painel do usuário,
  * pelo mesmo componente. As cartas são as mesmas lâminas da consulta. O
@@ -42,6 +54,7 @@ import { fmt } from "@/lib/i18n"
 import { buscar, CARREGANDO, type Carregamento } from "@/lib/carregamento"
 import MoonToday from "@/components/moon-today"
 import MarcosHome from "@/components/marcos-home"
+import FraseDePoder from "@/components/frase-de-poder"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
@@ -69,18 +82,42 @@ function Rotulo({ children }: { children: ReactNode }) {
 }
 
 /**
- * A pausa entre camadas: respiro grande, filete, respiro. Sempre nesta medida.
- * É ela que diz "aqui começa outra coisa" sem precisar de caixa nem de título
- * maior.
+ * A placa de vidro. É o que agrupa, e é só isso que ela faz.
+ *
+ * `forte` é para os dois módulos de nível 1: mesma matéria com um pouco mais
+ * de presença. `micro` encolhe o canto, porque microplaca com raio de módulo
+ * grande parece módulo grande espremido.
+ *
+ * Vira `<Link>` quando recebe `href`, e aí a placa inteira é o alvo do clique:
+ * no hover a borda acende e ela sobe um pixel. Nada além disso — os módulos
+ * existem para organizar, não para chamar atenção uns dos outros.
  */
-function Pausa() {
-  return (
-    <>
-      <div className="h-16" />
-      <div className="h-px bg-white/[0.07]" />
-      <div className="h-7" />
-    </>
-  )
+function Modulo({
+  children,
+  className = "",
+  forte = false,
+  micro = false,
+  href,
+  onClick,
+  aria,
+}: {
+  children: ReactNode
+  className?: string
+  forte?: boolean
+  micro?: boolean
+  href?: string
+  onClick?: () => void
+  aria?: string
+}) {
+  const classe = `bento ${forte ? "bento-forte" : ""} ${micro ? "bento-micro" : ""} ${href ? "bento-link" : ""} ${className}`
+  if (href) {
+    return (
+      <Link href={href} onClick={onClick} aria-label={aria} className={classe}>
+        {children}
+      </Link>
+    )
+  }
+  return <div className={classe}>{children}</div>
 }
 
 /**
@@ -106,10 +143,11 @@ function LinhasCarregando({ linhas = 3, className = "" }: { linhas?: number; cla
   )
 }
 
-/** Filete interno: separa blocos que pertencem à MESMA camada. Mais fino e com menos respiro que a Pausa. */
+/** Filete interno: separa blocos DENTRO de uma mesma placa. Entre placas quem separa é o espaço. */
 function Filete() {
-  return <div className="h-px bg-white/[0.045] my-7" />
+  return <div className="h-px bg-white/[0.06] my-6" />
 }
+
 
 /**
  * A chamada editorial: o único jeito de sair da Home.
@@ -238,127 +276,144 @@ export default function HomeHoje({ initialUser, registro }: { initialUser: User 
 
   return (
     <div>
-      {/* ── 1 · CABEÇALHO DO DIA ──────────────────────────────────────────
-          No desktop a Lua sai da coluna e vira aposto do título: ocupa o canto
-          e some do caminho antes das cartas. */}
-      <div className="lg:flex lg:items-start lg:justify-between lg:gap-12">
-        <div>
-          <h1 className="text-white instrument italic text-[34px] sm:text-[40px] leading-none">Multioráculo</h1>
-          <p className="text-white/45 text-[13.5px] font-light mt-2.5">{t.brandSubtitle}</p>
-        </div>
+      {/* ── O CABEÇALHO DA PÁGINA, e ele não é uma placa ───────────────────
+          O aplicativo inteiro se chama Multioráculo, e a consulta de cinco
+          oráculos também. Enquanto a marca era um módulo do deck, ela competia
+          com os outros assuntos em vez de nomear a página, e a consulta
+          aparecia duas vezes: uma no card da marca e outra na tiragem pessoal.
 
-        <div className="mt-7 lg:mt-1 lg:shrink-0 lg:text-right">
-          <Rotulo>
-            {t.today}
-            {data && <span className="text-white/20"> · {data}</span>}
-          </Rotulo>
-          <div className="mt-3 lg:flex lg:flex-col lg:items-end">
-            <MoonToday variante="cabecalho" />
-          </div>
-        </div>
-      </div>
+          Aqui ela abre a página, sobre o fundo, sem moldura. Título, chamada e
+          data: onde você está e em que dia. A Lua vem depois, dentro do céu —
+          como primeira placa ela virava a prioridade da Home. */}
+      <h1 className="text-white instrument italic text-[34px] sm:text-[42px] lg:text-[46px] leading-none">Multioráculo</h1>
+      <p className="text-white/60 text-[14.5px] sm:text-[15.5px] font-light mt-3">{t.brandSubtitle}</p>
+      <p className="text-white/30 text-[9px] uppercase tracking-[0.22em] font-light mt-5">
+        {t.today}
+        {data && <span className="text-white/25"> · {data}</span>}
+      </p>
 
-      {/* ── 2 · TIRAGEM COLETIVA ──────────────────────────────────────────
-          A primeira grande experiência da página. O protagonismo não vem de
-          caixa: vem de ser o único título de 24px, o único corpo de 15px e o
-          maior respiro interno da Home. */}
-      <div className="h-12 sm:h-14" />
+      <div className="h-8 sm:h-10" />
 
-      <Rotulo>{t.drawCollective}</Rotulo>
-      <h2 className="text-white/95 instrument italic text-[24px] sm:text-[26px] leading-snug mt-2.5">{t.drawQuestion}</h2>
+      <div className="space-y-4 sm:space-y-5">
+        {/* ── FAIXA A · o dia pergunta ─────────────────────────────────────
+            A tiragem do dia é uma consulta reduzida: duas cartas, para todo
+            mundo, já pronta. A da direita é a inteira: a sua pergunta, cinco
+            oráculos, uma síntese. Lado a lado, uma explica a outra, e é por isso
+            que a chamada para consultar mora só aqui. */}
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+          <Modulo forte className="p-6 sm:p-7 lg:p-8 lg:col-span-7">
+            <Rotulo>{t.drawCollective}</Rotulo>
+            <h2 className="text-white/95 instrument italic text-[23px] sm:text-[25px] leading-snug mt-2.5">
+              {t.drawQuestion}
+            </h2>
 
-      <div className="mt-8 lg:mt-10 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-12 lg:items-center">
-        <div className="flex items-end justify-center gap-5 lg:gap-6">
+            <div className="flex items-end justify-center gap-5 mt-7">
+              {tiragem ? (
+                <CartasDoDia tiragem={tiragem} />
+              ) : (
+                <>
+                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_TAROT, height: 228 }} />
+                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_LENORMAND, height: 226 }} />
+                </>
+              )}
+            </div>
+
+            {tiragem && (
+              <p className="text-center instrument italic text-white/90 text-[17px] mt-6">
+                {tiragem.tiragem.tarot.nome}
+                <span className="not-italic text-white/25 text-sm px-1.5">×</span>
+                {semNumero(tiragem.tiragem.lenormand.nome)}
+              </p>
+            )}
+
+            {tiragem?.eixo && (
+              <p className="text-center text-white/30 text-[10px] tracking-[0.16em] font-light mt-2">
+                {tiragem.eixo[0]} · {tiragem.eixo[1]}
+              </p>
+            )}
+
+            {tiragem?.sintese ? (
+              <p className="text-white/85 text-[14.5px] leading-[1.75] font-light mt-6">{tiragem.sintese}</p>
+            ) : tiragem ? (
+              <p className="text-white/35 text-[13px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
+            ) : (
+              <LinhasCarregando linhas={3} className="mt-6" />
+            )}
+          </Modulo>
+
+          {/* NÍVEL 1 · A CONSULTA — a única chamada para o Multioráculo na
+              página inteira. A placa toda é o alvo, e a pergunta sugerida vai
+              junto para o campo. */}
           {tiragem ? (
-            <CartasDoDia tiragem={tiragem} />
+            <ConviteDePergunta
+              rotulo={t.drawPersonal}
+              convite={t.andYouToday}
+              destino={t.openInMultioraculo}
+              explica={dict.hero.tagline}
+              className="lg:col-span-5"
+            />
           ) : (
-            <>
-              <div className="rounded-[6px] bg-white/[0.04] animate-pulse" style={{ width: LARGURA_TAROT, height: 228 }} />
-              <div className="rounded-[6px] bg-white/[0.04] animate-pulse" style={{ width: LARGURA_LENORMAND, height: 226 }} />
-            </>
+            <Modulo forte className="p-6 sm:p-7 lg:col-span-5">
+              <Rotulo>{t.drawPersonal}</Rotulo>
+              <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-2.5">
+                {t.andYouToday}
+              </h2>
+              <LinhasCarregando linhas={2} className="mt-6" />
+            </Modulo>
           )}
         </div>
 
-        {/* no celular a combinação é legenda embaixo das cartas; no desktop ela
-            abre a coluna de texto, alinhada à esquerda */}
-        <div className="mt-7 lg:mt-0">
-          {tiragem && (
-            <p className="text-center lg:text-left instrument italic text-white/90 text-base lg:text-[19px]">
-              {tiragem.tiragem.tarot.nome}
-              <span className="not-italic text-white/25 text-sm px-1.5">×</span>
-              {semNumero(tiragem.tiragem.lenormand.nome)}
-            </p>
-          )}
+        {/* ── FAIXA B · o que é seu ────────────────────────────────────────
+            Metas, frase e diário: as três coisas da Home que a pessoa escreve,
+            e não recebe. É a faixa do acompanhamento, e por isso vem antes do
+            céu: a evolução é o que se volta para ver. */}
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+          <Modulo className="p-6 sm:p-7 lg:col-span-5">
+            <MarcosHome logado={Boolean(initialUser)} />
+          </Modulo>
 
-          {tiragem?.eixo && (
-            <p className="text-center lg:text-left text-white/30 text-[10px] tracking-[0.16em] font-light mt-2.5">
-              {tiragem.eixo[0]} · {tiragem.eixo[1]}
-            </p>
-          )}
+          <Modulo className="p-5 sm:p-6 lg:col-span-3">
+            <FraseDePoder />
+          </Modulo>
 
-          {tiragem?.sintese ? (
-            <p className="text-white/85 text-[15px] leading-[1.78] font-light mt-6 max-w-xl">{tiragem.sintese}</p>
-          ) : tiragem ? (
-            <p className="text-white/35 text-[13px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
-          ) : null}
-        </div>
-      </div>
-
-      {/* ── 3 · TIRAGEM PESSOAL ───────────────────────────────────────────
-          Colada na coletiva, sem filete: são o mesmo gesto em dois níveis, e a
-          pausa só vem depois das duas. */}
-      {tiragem && (
-        <ConviteDePergunta rotulo={t.drawPersonal} convite={t.andYouToday} destino={t.openInMultioraculo} />
-      )}
-
-      <Pausa />
-
-      {/* ── 4 e 5 · O CÉU DE HOJE e PARA VOCÊ ─────────────────────────────
-          No desktop as duas camadas astrológicas ficam lado a lado, na mesma
-          altura: o céu de todos à esquerda, o seu recorte à direita. A própria
-          composição diz que uma é o contexto da outra. */}
-      <div className="lg:grid lg:grid-cols-2 lg:gap-14">
-        <CeuDeHoje sintese={ceuDoDia} t={t as unknown as Record<string, string>} />
-
-        <div className="mt-14 pt-14 border-t border-white/[0.07] lg:mt-0 lg:pt-0 lg:border-t-0">
-          <ParaVoce
-            signo={signo}
-            foco={horoscopo}
-            mapa={mapa}
-            t={t as unknown as Record<string, string>}
-            ti={ti as unknown as Record<string, string>}
-            locale={locale}
-          />
-        </div>
-      </div>
-
-      <Pausa />
-
-      {/* ── 6 · SEU REGISTRO ──────────────────────────────────────────────
-          Diário e Marcos passam a ser uma camada só. Antes eram dois blocos
-          sem relação declarada, e o segundo parecia sobra de página. */}
-      <Rotulo>{t.yourRecord}</Rotulo>
-
-      <div className="mt-5 lg:grid lg:grid-cols-2 lg:gap-14">
-        <div>
-          {registro?.hoje ? (
-            <>
-              <p className="text-white/40 text-xs font-light">{t.diaryToday}</p>
-              <p className="text-white/75 text-[15px] leading-relaxed font-light mt-2 line-clamp-2">{registro.titulo}</p>
-              <Chamada href="/diario">{t.diaryContinue}</Chamada>
-            </>
-          ) : (
-            <>
-              <h2 className="text-white/90 instrument italic text-lg">{t.diaryQuestion}</h2>
-              <Chamada href="/diario">{t.diaryCta}</Chamada>
-            </>
-          )}
+          <Modulo className="p-6 sm:p-7 lg:col-span-4">
+            <Rotulo>{t.yourRecord}</Rotulo>
+            <div className="mt-4">
+              {registro?.hoje ? (
+                <>
+                  <p className="text-white/40 text-xs font-light">{t.diaryToday}</p>
+                  <p className="text-white/75 text-[15px] leading-relaxed font-light mt-2 line-clamp-2">{registro.titulo}</p>
+                  <Chamada href="/diario">{t.diaryContinue}</Chamada>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-white/90 instrument italic text-lg">{t.diaryQuestion}</h2>
+                  <Chamada href="/diario">{t.diaryCta}</Chamada>
+                </>
+              )}
+            </div>
+          </Modulo>
         </div>
 
-        {/* o filete que separa Diário de Marcos no celular mora DENTRO do
-            Marcos: quando não há nenhum, ele não renderiza nada, e uma moldura
-            aqui deixaria uma linha solta pendurada no fim da página */}
-        <MarcosHome logado={Boolean(initialUser)} />
+        {/* ── FAIXA C · o céu de hoje ──────────────────────────────────────
+            A camada astrológica inteira, e ela fecha a página: é contexto do
+            dia, não a identidade dele. */}
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+          <Modulo className="p-6 sm:p-7 lg:col-span-7">
+            <CeuDeHoje sintese={ceuDoDia} t={t as unknown as Record<string, string>} />
+          </Modulo>
+
+          <Modulo className="p-6 sm:p-7 lg:col-span-5">
+            <ParaVoce
+              signo={signo}
+              foco={horoscopo}
+              mapa={mapa}
+              t={t as unknown as Record<string, string>}
+              ti={ti as unknown as Record<string, string>}
+              locale={locale}
+            />
+          </Modulo>
+        </div>
       </div>
     </div>
   )
@@ -465,7 +520,19 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
  * mudar, então ninguém clica numa pergunta e leva outra. A cor do hover é
  * rápida e o apagar é lento, por isso são dois elementos e não um.
  */
-function ConviteDePergunta({ rotulo, convite, destino }: { rotulo: string; convite: string; destino: string }) {
+function ConviteDePergunta({
+  rotulo,
+  convite,
+  destino,
+  explica,
+  className = "",
+}: {
+  rotulo: string
+  convite: string
+  destino: string
+  explica: string
+  className?: string
+}) {
   const { pergunta } = usePerguntaSugerida(false)
   const [mostrada, setMostrada] = useState(pergunta)
   const [opacidade, setOpacidade] = useState(1)
@@ -483,19 +550,22 @@ function ConviteDePergunta({ rotulo, convite, destino }: { rotulo: string; convi
   if (!mostrada) return null
 
   return (
-    <div className="mt-11 lg:mt-14 lg:grid lg:grid-cols-[minmax(0,34fr)_minmax(0,66fr)] lg:gap-12 lg:items-center">
-      <div>
-        <Rotulo>{rotulo}</Rotulo>
-        <h2 className="text-white/95 instrument italic text-[21px] sm:text-2xl leading-snug mt-2.5">{convite}</h2>
-      </div>
+    <Modulo
+      href="/"
+      onClick={() => guardarPerguntaEscolhida(mostrada)}
+      aria={mostrada}
+      className={`group p-6 sm:p-7 flex flex-col justify-center ${className}`}
+    >
+      <Rotulo>{rotulo}</Rotulo>
+      <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-2.5">{convite}</h2>
 
-      <Link
-        href="/"
-        onClick={() => guardarPerguntaEscolhida(mostrada)}
-        className="group block mt-5 lg:mt-0 min-h-[56px] border-l border-white/15 hover:border-white/40 bg-white/[0.03] hover:bg-white/[0.055] rounded-r-[4px] pl-4 pr-4 py-4 transition-colors"
-      >
-        <span className="flex items-start justify-between gap-3">
-          <span className="text-white/60 group-hover:text-white/90 text-[15px] sm:text-base leading-relaxed font-light transition-colors">
+      {/* O CAMPO. A pergunta voltou a ter lugar próprio dentro da placa: barra
+          à esquerda, fundo mais fundo e altura de toque. Sem isso ela virava
+          mais um parágrafo, e o lugar onde as perguntas mudam deixava de
+          parecer um lugar. */}
+      <span className="block mt-6 rounded-xl border-l-2 border-white/20 group-hover:border-white/45 bg-black/[0.16] group-hover:bg-black/[0.22] pl-4 pr-4 py-4 min-h-[76px] transition-colors">
+        <span className="flex items-start justify-between gap-4">
+          <span className="text-white/70 group-hover:text-white text-[16px] sm:text-[17px] leading-relaxed font-light transition-colors">
             <span
               className="transition-opacity duration-[400ms] motion-reduce:transition-none"
               style={{ opacity: opacidade }}
@@ -503,13 +573,17 @@ function ConviteDePergunta({ rotulo, convite, destino }: { rotulo: string; convi
               {mostrada}
             </span>
           </span>
-          <span className="text-white/30 group-hover:text-white/70 text-[13px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
+          <span className="text-white/35 group-hover:text-white/80 text-[14px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
             ↗
           </span>
         </span>
-        <span className="block text-white/35 text-[11px] font-light mt-2.5">{destino}</span>
-      </Link>
-    </div>
+        <span className="block text-white/35 text-[11px] font-light mt-3">{destino}</span>
+      </span>
+
+      {/* o que acontece do outro lado do clique, dito uma vez só e aqui: era
+          isto que estava repetido na placa da marca */}
+      <span className="block text-white/55 text-[12.5px] leading-relaxed font-light mt-5">{explica}</span>
+    </Modulo>
   )
 }
 
@@ -529,6 +603,11 @@ function ConviteDePergunta({ rotulo, convite, destino }: { rotulo: string; convi
  * RESPONDEU que ainda não há síntese. Enquanto a requisição corre, o lugar dela
  * fica reservado; quando a requisição falha, a mensagem é de falha, e não de
  * inexistência.
+ *
+ * A LUA SAIU DAQUI. Ela era desenhada duas vezes na mesma página, uma no alto
+ * com fase e porcentagem e outra aqui com a frase simbólica, e ver duas gibosas
+ * minguantes não faz sentido nenhum. Agora existe uma só, no módulo do dia, e
+ * ela é a completa.
  */
 function CeuDeHoje({ sintese, t }: { sintese: Carregamento<string>; t: Record<string, string> }) {
   return (
@@ -547,8 +626,12 @@ function CeuDeHoje({ sintese, t }: { sintese: Carregamento<string>; t: Record<st
         <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
       )}
 
-      <div className="mt-6">
-        <MoonToday variante="leitura" />
+      {/* A LUA MORA AQUI, e em nenhum outro lugar. Ela já foi desenhada duas
+          vezes na mesma página, e depois virou a primeira placa do deck, o que
+          a transformou na prioridade da Home e apagou o Multioráculo. O lugar
+          dela é junto do céu: as duas coisas são o mesmo assunto. */}
+      <div className="mt-6 pt-6 border-t border-white/[0.06]">
+        <MoonToday variante="compacta" />
       </div>
 
       <Chamada href="/horoscopo">{t.seeFullSky}</Chamada>

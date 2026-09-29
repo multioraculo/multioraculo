@@ -763,3 +763,84 @@
     background-position: 50% 50%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BENTO: as placas de vidro que agrupam a Home.
+
+   Elas existem para ORGANIZAR, não para decorar, e por isso quase não têm
+   matéria própria: um véu translúcido, um fio de luz no topo e uma sombra
+   curta. O fundo continua atravessando tudo, que é o que impede a página de
+   virar um painel de cartões opacos sobre um gradiente bonito.
+
+   A borda é `inset box-shadow` e não `border`: não entra no cálculo da caixa,
+   não desloca nada, e a 5,5% de branco desaparece antes de virar contorno.
+   Quatro módulos com contorno visível já seriam uma grade de dashboard.
+
+   O ::before é o reflexo. Um radial curto no canto superior esquerdo, na
+   direção da luz do fundo, que é o que dá a leitura de vidro em vez de
+   retângulo cinza. Fica em 7% e some no meio da placa.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.bento {
+  position: relative;
+  border-radius: 20px;
+  /* DUAS CAMADAS, e a de baixo é a que faz o texto ser legível.
+     Só com o véu branco, a placa CLAREIA o que está atrás: sobre a faixa
+     luminosa do fundo o texto sumia, porque branco sobre branco não contrasta.
+     A base violeta escura a 20% rebaixa o fundo o suficiente para o texto se
+     sustentar em qualquer ponto da tela, e ainda deixa o gradiente aparecer
+     inteiro. É assim que vidro funciona sobre fundo variável: escurece por
+     baixo, brilha por cima. */
+  background:
+    linear-gradient(158deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.028) 46%, rgba(255,255,255,0.014) 100%),
+    rgba(24,9,56,0.20);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+  backdrop-filter: blur(14px) saturate(112%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    inset 0 0 0 1px rgba(255,255,255,0.055),
+    0 12px 32px rgba(18,5,58,0.16);
+}
+.bento::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(118% 78% at 6% 0%, rgba(255,255,255,0.07), transparent 56%);
+}
+/* o conteúdo precisa ficar acima do reflexo */
+.bento > * { position: relative; }
+
+/* placa que leva a algum lugar: acende a borda e sobe um fio de nada */
+.bento-link {
+  display: block;
+  cursor: pointer;
+  transition: box-shadow 220ms ease, background-color 220ms ease, transform 220ms ease;
+}
+.bento-link:hover {
+  background-blend-mode: normal;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 0 0 1px rgba(255,255,255,0.11),
+    0 16px 40px rgba(18,5,58,0.24);
+  transform: translateY(-1px);
+}
+.bento-link:active { transform: translateY(0); }
+.bento-link:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .bento-link, .bento-link:hover { transition: none; transform: none; }
+}
+
+/* o módulo protagonista: mesma matéria, um pouco mais de presença */
+.bento-forte {
+  background:
+    linear-gradient(158deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.038) 46%, rgba(255,255,255,0.019) 100%),
+    rgba(24,9,56,0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.13),
+    inset 0 0 0 1px rgba(255,255,255,0.07),
+    0 18px 46px rgba(18,5,58,0.22);
+}
+
+/* microplaca: canto menor, para não parecer um módulo grande encolhido */
+.bento-micro { border-radius: 16px; }
