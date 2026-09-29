@@ -395,10 +395,91 @@ async function parteC() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * D. A RECUPERAÇÃO GRANULAR, com o caso Virgem que falhou de verdade em
+ * produção: relações 1 e 2 boas, relação 3 com expressão proibida e conteúdo
+ * genérico. O fluxo antigo jogava as três fora quatro vezes e terminava sem
+ * leitura nenhuma. Este teste exige que as boas sobrevivam e que o dia termine
+ * com leitura.
+ */
+async function parteD() {
+  const { relacaoDeterministica } = await import("../lib/astro/fallback-relacao")
+  const { horoscopoDoSigno } = await import("../lib/astro/horoscopo")
+
+  const boa = (i: number) => relacaoDeterministica(cards[i], i, SIGNO, LOCALE)
+  const ruim = {
+    n: 3,
+    termos: [] as Array<{ texto: string; origem: string }>,
+    explicacao: "Este movimento pede uma análise cuidadosa das interações sociais. Para Virgem, isso reforça a atenção.",
+  }
+
+  let chamadas = 0
+  const gerar = async () => {
+    chamadas += 1
+    if (chamadas === 1) {
+      return {
+        conteudo: JSON.stringify({ foco: "Medida e retorno no mesmo dia.", relacoes: [boa(0), boa(1), ruim] }),
+        model: "gpt-4o",
+        usage: { prompt_tokens: 3500, completion_tokens: 600 },
+      }
+    }
+    // todo reparo devolve o mesmo defeito: força o caminho até o molde
+    return {
+      conteudo: JSON.stringify({ termos: [], explicacao: ruim.explicacao, evidencias: [] }),
+      model: "gpt-4o",
+      usage: { prompt_tokens: 900, completion_tokens: 150 },
+    }
+  }
+
+  const r = await horoscopoDoSigno({ dia: DIA, signo: SIGNO, locale: LOCALE, gerar: gerar as never })
+  const d = r.diagnostico
+
+  confere("recuperação: o dia termina COM leitura", r.leitura !== null, "terminou sem leitura, como no fluxo antigo")
+  confere("recuperação: modo declarado como fallback", d?.modo === "fallback", `veio "${d?.modo}"`)
+  confere("recuperação: a relação 3 foi a reparada", JSON.stringify(d?.reparadas) === "[3]", JSON.stringify(d?.reparadas))
+  confere("recuperação: a relação 3 caiu no molde", JSON.stringify(d?.emFallback) === "[3]", JSON.stringify(d?.emFallback))
+  confere(
+    "recuperação: 3 chamadas, e não 4 gerações inteiras",
+    chamadas === 3,
+    `foram ${chamadas}; o fluxo antigo gastava 4 leituras completas`,
+  )
+  confere(
+    "recuperação: a relação 1 aprovada NUNCA foi reescrita",
+    r.leitura?.relacoes[0].explicacao === boa(0).explicacao,
+    "a relação boa foi descartada junto com a ruim",
+  )
+  confere(
+    "recuperação: a relação 2 aprovada NUNCA foi reescrita",
+    r.leitura?.relacoes[1].explicacao === boa(1).explicacao,
+    "a relação boa foi descartada junto com a ruim",
+  )
+  confere(
+    "recuperação: o texto proibido não sobreviveu",
+    !(r.leitura?.relacoes[2].explicacao ?? "").includes("Este movimento pede"),
+    "a expressão proibida chegou até a leitura final",
+  )
+
+  // e o molde precisa passar sozinho, em qualquer signo
+  const { prepararDia: preparar } = await import("../lib/astro/horoscopo")
+  let passaram = 0
+  for (let s = 0; s < 12; s++) {
+    const { cards: c } = preparar(DIA, s, LOCALE)
+    const v = verificarLeitura({
+      bruto: { foco: "Medida e retorno no mesmo dia.", relacoes: c.map((x, i) => relacaoDeterministica(x, i, s, LOCALE)) },
+      cards: c,
+      signo: s,
+      locale: LOCALE,
+    })
+    if (v.ok) passaram += 1
+  }
+  confere("recuperação: o molde passa no verificador nos 12 signos", passaram === 12, `passou em ${passaram} de 12`)
+}
+
 async function main() {
   parteA()
   const estouraram = parteB()
   await parteC()
+  await parteD()
 
   if (falhas.length) {
     console.error(`\nO cache do horóscopo falhou em ${falhas.length} ponto(s):\n`)
