@@ -61,7 +61,7 @@ import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perg
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
-import AmostraOraculos from "@/components/amostra-oraculos"
+import LequeOraculos from "@/components/leque-oraculos"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 
@@ -596,10 +596,10 @@ function ConviteDePergunta({
           isto que estava repetido na placa da marca */}
       <span className="block text-white/55 text-[12.5px] leading-relaxed font-light mt-5">{explica}</span>
 
-      {/* e o que ele PARECE: as peças dos cinco oráculos girando. Ilustração,
+      {/* e o que ele PARECE: as cinco placas num leque que gira. Ilustração,
           não tiragem — sem nome, sem posição, sem significado */}
       <span className="block mt-6">
-        <AmostraOraculos />
+        <LequeOraculos />
       </span>
     </Modulo>
   )
