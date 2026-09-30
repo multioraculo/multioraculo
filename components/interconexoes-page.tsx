@@ -13,15 +13,26 @@
  * das coordenadas que sai o fuso: ninguém precisa saber o próprio fuso de
  * 1988, e ninguém deveria precisar declarar isso.
  *
+ * DEPOIS DO MAPA, A PÁGINA É UM BENTO, e o tamanho de cada placa é o que diz
+ * o que importa. A síntese do dia é o módulo dominante porque é a única coisa
+ * aqui que alguém não conseguiria em outro lugar. A roda vem ao lado dela
+ * porque é a base fixa da leitura. Sol, Lua, Ascendente e Meio-do-Céu ficam em
+ * microplacas, que é o tamanho de um dado que se confere de relance; as demais
+ * posições ficam recolhidas, porque são referência e não leitura. E as três
+ * interconexões aparecem em placas de tamanhos diferentes, na ordem de
+ * relevância que o motor JÁ CALCULOU — a hierarquia visual não é escolha de
+ * layout, é a `nota` de cada relação virando largura.
+ *
  * Os fatos desta tela são cálculo, então são de graça e ficam. O que é pago é
- * a leitura escrita deles, que ainda não existe.
+ * a leitura escrita deles, e ela só é escrita quando alguém pede.
  */
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
+import SinteseInterconexoes from "@/components/sintese-interconexoes"
 import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
 import type { MapaNatal } from "@/lib/astro/mapa"
 import type { Interconexao } from "@/lib/astro/interconexoes"
@@ -48,7 +59,43 @@ function grauMinuto(lon: number): string {
   return minuto === 60 ? `${grau + 1}°00` : `${grau}°${String(minuto).padStart(2, "0")}`
 }
 
-export default function InterconexoesPage({ initialUser }: { initialUser: User | null }) {
+// ── as placas ───────────────────────────────────────────────────────────────
+
+/** O rótulo que abre uma camada. Sempre o mesmo, para o padrão ser aprendido. */
+function Rotulo({ children }: { children: ReactNode }) {
+  return <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{children}</p>
+}
+
+/**
+ * A placa de vidro: agrupa, e é só isso que ela faz.
+ *
+ * `forte` é o módulo protagonista — aqui existe um só, a síntese. `micro`
+ * encolhe o canto, porque microplaca com raio de módulo grande parece módulo
+ * grande espremido.
+ */
+function Modulo({
+  children,
+  className = "",
+  forte = false,
+  micro = false,
+}: {
+  children: ReactNode
+  className?: string
+  forte?: boolean
+  micro?: boolean
+}) {
+  return (
+    <div className={`bento ${forte ? "bento-forte" : ""} ${micro ? "bento-micro" : ""} ${className}`}>{children}</div>
+  )
+}
+
+export default function InterconexoesPage({
+  initialUser,
+  temPlano,
+}: {
+  initialUser: User | null
+  temPlano: boolean
+}) {
   const { dict, locale, formatDate } = useI18n()
   const t = dict.interconexoes as unknown as Record<string, string>
   const [estado, setEstado] = useState<Resposta | null>(null)
@@ -88,22 +135,21 @@ export default function InterconexoesPage({ initialUser }: { initialUser: User |
       )}
 
       {temMapa && estado?.mapa && (
-        <>
-          <Mapa mapa={estado.mapa} nascimento={estado.nascimento as Nascimento} tzStatus={estado.tzStatus} t={t} locale={locale} formatDate={formatDate} />
-          <Hoje interconexoes={estado.interconexoes ?? []} dia={estado.dia ?? ""} t={t} locale={locale} formatDate={formatDate} />
-          <button
-            onClick={() => setEditando(true)}
-            className="mt-12 text-white/25 hover:text-white/50 text-[11px] font-light transition-colors"
-          >
-            {t.edit}
-          </button>
-        </>
+        <Deck
+          mapa={estado.mapa}
+          nascimento={estado.nascimento as Nascimento}
+          tzStatus={estado.tzStatus}
+          interconexoes={estado.interconexoes ?? []}
+          temPlano={temPlano}
+          t={t}
+          locale={locale}
+          formatDate={formatDate}
+          aoCorrigir={() => setEditando(true)}
+        />
       )}
     </div>
   )
 }
-
-// ---------------------------------------------------------------------------
 
 /**
  * A abertura das Interconexões: o que isto é, antes de qualquer campo.
@@ -330,117 +376,300 @@ function CampoCidade({ t, cidade, aoEscolher }: { t: Record<string, string>; cid
 
 // ---------------------------------------------------------------------------
 
-function Mapa({
+/**
+ * O deck: a página depois que o mapa existe.
+ *
+ * Três faixas, e cada uma responde a uma pergunta diferente. A primeira: o que
+ * este céu está fazendo com você hoje — a síntese, que é o motivo de a página
+ * existir, ao lado da roda, que é a base fixa. A segunda: quem você é nesse
+ * mapa, em quatro dados que se conferem de relance. A terceira: quais relações
+ * o motor mediu hoje, com a mais forte ocupando a linha inteira.
+ *
+ * O TAMANHO É INFORMAÇÃO. As três interconexões vêm ordenadas por `nota`, que
+ * é a relevância calculada a partir de exatidão do orbe, papel do ponto natal,
+ * peso do trânsito e fase. A primeira ocupa doze colunas, as outras seis. Se
+ * um dia a ordem do motor mudar, a ordem da tela muda com ela sozinha.
+ */
+function Deck({
   mapa,
   nascimento,
   tzStatus,
+  interconexoes,
+  temPlano,
   t,
   locale,
   formatDate,
+  aoCorrigir,
 }: {
   mapa: MapaNatal
   nascimento: Nascimento
   tzStatus?: string
+  interconexoes: Interconexao[]
+  temPlano: boolean
   t: Record<string, string>
   locale: string
   formatDate: (iso: string, estilo?: any) => string
+  aoCorrigir: () => void
 }) {
   const signos = SIGNOS[locale as keyof typeof SIGNOS]
   const nomes = CORPOS[locale as keyof typeof CORPOS]
 
+  const sol = mapa.corpos.find((c) => c.corpo === "sun")
+  const lua = mapa.corpos.find((c) => c.corpo === "moon")
+  const comAngulos = mapa.horaConhecida && mapa.asc !== null && mapa.mc !== null
+
+  // ordem da tela = ordem do motor. Nada aqui decide relevância.
+  const ordenadas = [...interconexoes].sort((a, b) => b.nota - a.nota)
+  const LARGURA = ["lg:col-span-12", "lg:col-span-6", "lg:col-span-6"]
+
   return (
-    <div>
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.mapTitle}</p>
-      <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.mapSubtitle}</p>
-      <h2 className="text-white instrument italic text-[24px] sm:text-[28px] leading-snug mt-3">{nascimento.place_label}</h2>
-      <p className="text-white/35 text-[12.5px] font-light mt-1.5 tabular-nums">
-        {formatDate(`${nascimento.born_on}T12:00:00`)}
-        {nascimento.born_at ? ` · ${nascimento.born_at}` : ""}
-        {mapa.tz ? ` · ${mapa.tz}` : ""}
-      </p>
+    <div className="space-y-4 sm:space-y-5">
+      {/* ── faixa A · o que hoje faz com este mapa ───────────────────────── */}
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+        <Modulo forte className="p-6 sm:p-7 lg:p-8 lg:col-span-7 min-h-[15rem] flex flex-col">
+          <SinteseInterconexoes t={t} temPlano={temPlano} />
+        </Modulo>
 
-      {tzStatus === "ambiguous" && <p className="text-white/45 text-[12.5px] leading-relaxed font-light mt-3 max-w-lg">{t.ambiguous}</p>}
-      {tzStatus === "nonexistent" && <p className="text-white/45 text-[12.5px] leading-relaxed font-light mt-3 max-w-lg">{t.nonexistent}</p>}
+        <Modulo className="p-5 sm:p-6 lg:col-span-5">
+          <Rotulo>{t.natalTitle}</Rotulo>
+          <h2 className="text-white instrument italic text-[20px] sm:text-[22px] leading-snug mt-2.5">
+            {nascimento.place_label}
+          </h2>
+          <p className="text-white/35 text-[12px] font-light mt-1.5 tabular-nums">
+            {formatDate(`${nascimento.born_on}T12:00:00`)}
+            {nascimento.born_at ? ` · ${nascimento.born_at}` : ""}
+            {mapa.tz ? ` · ${mapa.tz}` : ""}
+          </p>
 
-      {mapa.horaConhecida && mapa.cuspides && mapa.asc !== null && mapa.mc !== null && (
-        <div className="flex justify-center mt-8 text-white/70">
-          <AstroWheel
-            corpos={mapa.corpos.map((c) => ({ id: c.corpo, lon: c.lon, retrogrado: c.retrogrado }))}
-            cuspides={mapa.cuspides}
-            asc={mapa.asc}
-            mc={mapa.mc}
-            aspectos={mapa.aspectos}
-            signos={signos}
-            tamanho={330}
+          {tzStatus === "ambiguous" && (
+            <p className="text-white/45 text-[12px] leading-relaxed font-light mt-3">{t.ambiguous}</p>
+          )}
+          {tzStatus === "nonexistent" && (
+            <p className="text-white/45 text-[12px] leading-relaxed font-light mt-3">{t.nonexistent}</p>
+          )}
+
+          {comAngulos && mapa.cuspides && (
+            <div className="flex justify-center mt-5 text-white/70">
+              <AstroWheel
+                corpos={mapa.corpos.map((c) => ({ id: c.corpo, lon: c.lon, retrogrado: c.retrogrado }))}
+                cuspides={mapa.cuspides}
+                asc={mapa.asc as number}
+                mc={mapa.mc as number}
+                aspectos={mapa.aspectos}
+                signos={signos}
+                tamanho={320}
+                className="max-w-full h-auto"
+              />
+            </div>
+          )}
+
+          {/* sem hora não há roda, e o lugar de explicar isso é aqui, ao lado
+              do mapa, e não numa nota de pé de página */}
+          {!mapa.horaConhecida && (
+            <>
+              <div className="h-px bg-white/[0.06] my-5" />
+              <Rotulo>{t.noTimeTitle}</Rotulo>
+              <p className="text-white/50 text-[13px] leading-relaxed font-light mt-2.5">{t.noTimeBody}</p>
+            </>
+          )}
+
+          <p className="text-white/25 text-[11.5px] leading-relaxed font-light mt-5">{t.mapNote}</p>
+        </Modulo>
+      </div>
+
+      {/* ── faixa B · quem você é nesse mapa, de relance ──────────────────── */}
+      <div className="grid gap-4 sm:gap-5 grid-cols-2 lg:grid-cols-12">
+        {sol && (
+          <Ponto
+            className={comAngulos ? "lg:col-span-3" : "lg:col-span-6"}
+            glifo={<GlifoPlaneta id="sun" tamanho={14} />}
+            nome={nomes.sun}
+            valor={posicaoDe(sol.lon, sol.signoDefinido ? sol.signo : null, signos)}
+            casa={sol.casa !== null ? fmt(t.house, { n: sol.casa }) : null}
           />
-        </div>
-      )}
-
-      <div className="mt-9 space-y-2.5">
-        {mapa.corpos.map((c) => (
-          <div key={c.corpo} className="flex items-baseline gap-3 text-[13.5px]">
-            <span className="text-white/40 w-4 shrink-0">
-              <GlifoPlaneta id={c.corpo} tamanho={13} />
-            </span>
-            <span className="text-white/75 font-light w-[5.5rem] shrink-0">{nomes[c.corpo]}</span>
-            <span className="text-white/90 tabular-nums">
-              {c.signoDefinido ? `${grauMinuto(c.lon)} ${signos[c.signo]}` : signos[indiceDoSigno(c.lon)]}
-            </span>
-            {c.retrogrado && <span className="text-white/30 text-[11px]">℞</span>}
-            {c.casa !== null && <span className="text-white/30 text-[11.5px]">{fmt(t.house, { n: c.casa })}</span>}
-            {!c.signoDefinido && (
-              <span className="text-white/30 text-[11px]">
-                {fmt(t.uncertain, {
-                  a: signos[indiceDoSigno(c.lon - c.incerteza / 2)],
-                  b: signos[indiceDoSigno(c.lon + c.incerteza / 2)],
-                })}
-              </span>
-            )}
-          </div>
-        ))}
-
-        {mapa.asc !== null && (
-          <div className="flex items-baseline gap-3 text-[13.5px] pt-1">
-            <span className="w-4 shrink-0" />
-            <span className="text-white/75 font-light w-[5.5rem] shrink-0">{t.asc}</span>
-            <span className="text-white/90 tabular-nums">{`${grauMinuto(mapa.asc)} ${signos[indiceDoSigno(mapa.asc)]}`}</span>
-          </div>
         )}
-        {mapa.mc !== null && (
-          <div className="flex items-baseline gap-3 text-[13.5px]">
-            <span className="w-4 shrink-0" />
-            <span className="text-white/75 font-light w-[5.5rem] shrink-0">{t.mc}</span>
-            <span className="text-white/90 tabular-nums">{`${grauMinuto(mapa.mc)} ${signos[indiceDoSigno(mapa.mc)]}`}</span>
-          </div>
+        {lua && (
+          <Ponto
+            className={comAngulos ? "lg:col-span-3" : "lg:col-span-6"}
+            glifo={<GlifoPlaneta id="moon" tamanho={14} />}
+            nome={nomes.moon}
+            valor={posicaoDe(lua.lon, lua.signoDefinido ? lua.signo : null, signos)}
+            casa={lua.casa !== null ? fmt(t.house, { n: lua.casa }) : null}
+            incerto={!lua.signoDefinido}
+          />
+        )}
+        {comAngulos && (
+          <>
+            <Ponto className="lg:col-span-3" nome={t.asc} valor={posicaoDe(mapa.asc as number, null, signos)} />
+            <Ponto className="lg:col-span-3" nome={t.mc} valor={posicaoDe(mapa.mc as number, null, signos)} />
+          </>
         )}
       </div>
 
-      {!mapa.horaConhecida && (
-        <div className="mt-8 max-w-lg">
-          <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.noTimeTitle}</p>
-          <p className="text-white/50 text-[13px] leading-relaxed font-light mt-2.5">{t.noTimeBody}</p>
+      {/* as demais posições são referência, não leitura: ficam recolhidas */}
+      <DemaisPosicoes mapa={mapa} t={t} signos={signos} nomes={nomes} />
+
+      {/* ── faixa C · as relações que o motor mediu hoje ──────────────────── */}
+      <div className="pt-4">
+        <Rotulo>{t.todayTitle}</Rotulo>
+        <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
+      </div>
+
+      {ordenadas.length === 0 ? (
+        <Modulo className="p-6 sm:p-7">
+          <p className="text-white/55 text-[14px] leading-relaxed font-light max-w-lg">{t.none}</p>
+        </Modulo>
+      ) : (
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+          {ordenadas.map((c, i) => (
+            <Relacao
+              key={`${c.transito}-${c.ponto.id}-${c.aspecto}`}
+              c={c}
+              principal={i === 0}
+              className={LARGURA[i] ?? "lg:col-span-6"}
+              t={t}
+              locale={locale}
+            />
+          ))}
         </div>
       )}
 
-      <p className="text-white/30 text-[12.5px] font-light mt-7">{t.mapNote}</p>
+      <div className="pt-2">
+        <button
+          onClick={aoCorrigir}
+          className="text-white/25 hover:text-white/50 text-[11px] font-light cursor-pointer transition-colors"
+        >
+          {t.edit}
+        </button>
+      </div>
     </div>
   )
 }
 
-// ---------------------------------------------------------------------------
+/** Grau, minuto e signo. `signo` vem do motor quando ele tem certeza dele. */
+function posicaoDe(lon: number, signo: number | null, signos: readonly string[]): string {
+  return `${grauMinuto(lon)} ${signos[signo ?? indiceDoSigno(lon)]}`
+}
 
-function Hoje({
-  interconexoes,
-  dia,
+/**
+ * Microplaca de um ponto do mapa.
+ *
+ * Quatro dados que a pessoa confere de relance, e é por isso que são pequenos:
+ * tamanho de placa aqui significaria que Sol e Lua competem com a síntese.
+ */
+function Ponto({
+  glifo,
+  nome,
+  valor,
+  casa,
+  incerto = false,
+  className = "",
+}: {
+  glifo?: ReactNode
+  nome: string
+  valor: string
+  casa?: string | null
+  incerto?: boolean
+  className?: string
+}) {
+  return (
+    <Modulo micro className={`p-4 sm:p-5 ${className}`}>
+      <div className="flex items-center gap-2 text-white/35">
+        {glifo}
+        <span className="text-[9px] uppercase tracking-[0.18em] font-light">{nome}</span>
+      </div>
+      <p className={`text-[15px] sm:text-[16px] tabular-nums mt-2 ${incerto ? "text-white/55" : "text-white/90"}`}>
+        {valor}
+      </p>
+      {casa && <p className="text-white/30 text-[11px] font-light mt-1">{casa}</p>}
+    </Modulo>
+  )
+}
+
+/**
+ * As demais posições, recolhidas.
+ *
+ * Elas continuam inteiras e continuam sendo da pessoa; o que muda é que não
+ * disputam a tela com a leitura do dia. Quem quiser conferir Mercúrio abre.
+ */
+function DemaisPosicoes({
+  mapa,
+  t,
+  signos,
+  nomes,
+}: {
+  mapa: MapaNatal
+  t: Record<string, string>
+  signos: readonly string[]
+  nomes: Record<string, string>
+}) {
+  const resto = mapa.corpos.filter((c) => c.corpo !== "sun" && c.corpo !== "moon")
+  if (resto.length === 0) return null
+
+  return (
+    <Modulo className="px-6 sm:px-7">
+      <details className="group">
+        <summary className="flex items-center gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <span className="shrink-0 text-white/25 group-hover:text-white/45 text-[9px] uppercase tracking-[0.22em] font-light transition-colors">
+            {t.morePositions}
+          </span>
+          {/* fechada, a barra ainda diz o que tem dentro: recolher não é esconder */}
+          <span className="hidden sm:block flex-1 truncate text-white/25 text-[12px] font-light group-open:invisible">
+            {resto.map((c) => nomes[c.corpo]).join(" · ")}
+          </span>
+          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[11px] transition-transform duration-200 group-open:rotate-180">
+            ▾
+          </span>
+        </summary>
+
+        <div className="pb-6 space-y-2.5">
+          {resto.map((c) => (
+            <div key={c.corpo} className="flex items-baseline gap-3 text-[13.5px]">
+              <span className="text-white/40 w-4 shrink-0">
+                <GlifoPlaneta id={c.corpo} tamanho={13} />
+              </span>
+              <span className="text-white/75 font-light w-[5.5rem] shrink-0">{nomes[c.corpo]}</span>
+              <span className="text-white/90 tabular-nums">
+                {c.signoDefinido ? `${grauMinuto(c.lon)} ${signos[c.signo]}` : signos[indiceDoSigno(c.lon)]}
+              </span>
+              {c.retrogrado && <span className="text-white/30 text-[11px]">℞</span>}
+              {c.casa !== null && <span className="text-white/30 text-[11.5px]">{fmt(t.house, { n: c.casa })}</span>}
+              {!c.signoDefinido && (
+                <span className="text-white/30 text-[11px]">
+                  {fmt(t.uncertain, {
+                    a: signos[indiceDoSigno(c.lon - c.incerteza / 2)],
+                    b: signos[indiceDoSigno(c.lon + c.incerteza / 2)],
+                  })}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </details>
+    </Modulo>
+  )
+}
+
+/**
+ * Uma relação medida: o título em linguagem, os números embaixo.
+ *
+ * A camada factual fica inteira à vista — trânsito, ponto natal, ângulo real,
+ * orbe e direção — porque é ela que sustenta qualquer frase escrita sobre o
+ * dia. A `principal` é maior porque o motor disse que ela é, e não porque
+ * ficou bonito assim.
+ */
+function Relacao({
+  c,
+  principal,
+  className,
   t,
   locale,
-  formatDate,
 }: {
-  interconexoes: Interconexao[]
-  dia: string
+  c: Interconexao
+  principal: boolean
+  className: string
   t: Record<string, string>
   locale: string
-  formatDate: (iso: string, estilo?: any) => string
 }) {
   const signos = SIGNOS[locale as keyof typeof SIGNOS]
   const nomes = CORPOS[locale as keyof typeof CORPOS]
@@ -454,65 +683,47 @@ function Hoje({
     return nomes[id]
   }
 
+  const corpoNatal = c.ponto.tipo === "corpo"
+  const titulo =
+    c.tipo === "posicao"
+      ? fmt(t.crossing, { transito: nomes[c.transito], casa: nomeDoPonto(c.ponto.id) })
+      : fmt(t.aspectWith, {
+          transito: nomes[c.transito],
+          aspecto: aspectos[c.aspecto],
+          artigo: c.ponto.id === "moon" ? "sua" : "seu",
+          ponto: `${nomeDoPonto(c.ponto.id)}${corpoNatal ? ` ${t.natal}` : ""}`,
+        })
+
+  const fatos =
+    c.tipo === "posicao"
+      ? [
+          `${nomes[c.transito]} ${posicao(c.lonTransito)}`,
+          fmt(t.cuspAt, { casa: nomeDoPonto(c.ponto.id), posicao: posicao(c.ponto.lon) }),
+        ]
+      : [
+          `${nomes[c.transito]} ${posicao(c.lonTransito)}${c.retroTransito ? " ℞" : ""}`,
+          `${nomeDoPonto(c.ponto.id)}${corpoNatal ? ` ${t.natal}` : ""} ${posicao(c.ponto.lon)}${c.ponto.retrogrado ? " ℞" : ""}`,
+          fmt(t.realAngle, { angulo: numero(c.separacao) }),
+          fmt(t.orb, { orbe: numero(c.orbe) }),
+          c.aplicativo ? t.applying : t.separating,
+        ]
+
   return (
-    <div className="mt-16">
-      <div className="h-px bg-white/[0.055]" />
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light mt-8">
-        {t.todayTitle}
-        {dia && <span className="text-white/20"> · {formatDate(`${dia}T12:00:00`)}</span>}
+    <Modulo className={`p-6 sm:p-7 ${className}`}>
+      <h3
+        className={`text-white/95 instrument italic leading-snug ${
+          principal ? "text-[21px] sm:text-[25px]" : "text-[18px] sm:text-[19px]"
+        }`}
+      >
+        {titulo}
+      </h3>
+      <p
+        className={`text-white/40 text-[12px] leading-relaxed font-light mt-3 tabular-nums ${
+          principal ? "" : "max-w-sm"
+        }`}
+      >
+        {fatos.join(" · ")}
       </p>
-      <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
-
-      {interconexoes.length === 0 ? (
-        <p className="text-white/50 text-[14px] leading-relaxed font-light mt-5 max-w-lg">{t.none}</p>
-      ) : (
-        <div className="mt-7 space-y-9">
-          {interconexoes.map((c, i) => {
-            const corpoNatal = c.ponto.tipo === "corpo"
-            const titulo =
-              c.tipo === "posicao"
-                ? fmt(t.crossing, { transito: nomes[c.transito], casa: nomeDoPonto(c.ponto.id) })
-                : fmt(t.aspectWith, {
-                    transito: nomes[c.transito],
-                    aspecto: aspectos[c.aspecto],
-                    artigo: c.ponto.id === "moon" ? "sua" : "seu",
-                    ponto: `${nomeDoPonto(c.ponto.id)}${corpoNatal ? ` ${t.natal}` : ""}`,
-                  })
-
-            const fatos =
-              c.tipo === "posicao"
-                ? [
-                    `${nomes[c.transito]} ${posicao(c.lonTransito)}`,
-                    fmt(t.cuspAt, { casa: nomeDoPonto(c.ponto.id), posicao: posicao(c.ponto.lon) }),
-                  ]
-                : [
-                    `${nomes[c.transito]} ${posicao(c.lonTransito)}${c.retroTransito ? " ℞" : ""}`,
-                    `${nomeDoPonto(c.ponto.id)}${corpoNatal ? ` ${t.natal}` : ""} ${posicao(c.ponto.lon)}${c.ponto.retrogrado ? " ℞" : ""}`,
-                    fmt(t.realAngle, { angulo: numero(c.separacao) }),
-                    fmt(t.orb, { orbe: numero(c.orbe) }),
-                    c.aplicativo ? t.applying : t.separating,
-                  ]
-
-            return (
-              <div key={`${c.transito}-${c.ponto.id}-${c.aspecto}`}>
-                <h3 className="text-white/95 instrument italic text-[19px] sm:text-xl leading-snug">{titulo}</h3>
-                <p className="text-white/40 text-[12px] leading-relaxed font-light mt-2 tabular-nums">{fatos.join(" · ")}</p>
-                {/* a leitura escrita destes fatos é a camada paga, e ainda não existe */}
-                <div className="mt-3.5 space-y-2" aria-hidden="true">
-                  {[96, 88].slice(0, i === 0 ? 2 : 1).map((largura, k) => (
-                    <div key={k} className="h-[7px] rounded-full bg-white/[0.045]" style={{ width: `${largura}%` }} />
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <div className="mt-10 max-w-lg">
-        <p className="text-white/45 text-[12.5px] leading-relaxed font-light">{t.readingPaid}</p>
-        <p className="text-white/30 text-[12.5px] leading-relaxed font-light mt-1">{t.factsYours}</p>
-      </div>
-    </div>
+    </Modulo>
   )
 }

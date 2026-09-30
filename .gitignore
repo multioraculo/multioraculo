@@ -6,3 +6,8 @@ node_modules/
 data/pdfs/
 data/pdfs_index/
 *.tsbuildinfo
+
+# inspeção local: páginas de preview e provas que gastam chamada paga.
+# Já foram commitadas por engano uma vez; daqui não saem.
+app/preview-*/
+scripts/prova-*.ts
