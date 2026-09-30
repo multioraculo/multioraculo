@@ -32,7 +32,7 @@
  */
 import type { Locale } from "@/lib/i18n/config"
 import { languageRule } from "@/lib/oracles/language"
-import { EXPRESSOES_EVITAR } from "./editorial"
+import { EXPRESSOES_EVITAR, MARCAS_HIPOTESE } from "./editorial"
 import type { FatoPessoal } from "./fatos-interconexoes"
 
 export type AfirmacaoEscrita = { texto: string; fato: string; manifestacoes?: string[] }
@@ -48,36 +48,13 @@ export const PALAVRAS_MAX = 210
 export const MANIFESTACOES_MAX = 2
 
 /**
- * As marcas de hipótese, e são só estas.
- *
- * O verificador exige uma delas em toda manifestação, então a lista é a mesma
- * dos dois lados: se o prompt oferecesse uma forma que o verificador não
- * conhece, o modelo seria reprovado por obedecer.
+ * As marcas de hipótese. A lista mora em `editorial`, porque agora ela vale
+ * para os dois textos que descem do mecanismo para a vida: a síntese pessoal
+ * das Interconexões e a do foco do horóscopo. Duas listas divergiriam no dia em
+ * que alguém acrescentasse uma forma só de um lado, e o modelo seria reprovado
+ * por obedecer ao prompt do outro.
  */
-export const MARCAS_MANIFESTACAO: Record<Locale, string[]> = {
-  pt: [
-    "pode aparecer",
-    "pode se manifestar",
-    "pode surgir",
-    "pode ser percebido",
-    "pode ser sentido",
-    "uma forma possível de perceber",
-  ],
-  en: [
-    "may appear as",
-    "may show up as",
-    "may surface as",
-    "may be felt as",
-    "one possible way to notice",
-  ],
-  es: [
-    "puede aparecer",
-    "puede manifestarse",
-    "puede surgir",
-    "puede percibirse",
-    "una forma posible de percibir",
-  ],
-}
+export const MARCAS_MANIFESTACAO = MARCAS_HIPOTESE
 
 /**
  * A lógica editorial das casas: o domínio da vida de cada uma.

@@ -133,8 +133,20 @@ export function lerLinhaGravada(bruto: { leitura: unknown; cards: unknown }): Li
   if (relacoes.length !== cards.length) return null
   if (!relacoes.every((r, i) => ehRelacao(r, cards[i], i))) return null
 
+  // A síntese do foco é OPCIONAL, e é a única coisa aqui que pode faltar sem
+  // invalidar a linha. Toda leitura gravada antes de ela existir seria recusada
+  // se fosse obrigatória, e o deploy cobraria uma geração por signo e por
+  // idioma para entregar a mesma leitura com um parágrafo a mais. Ausente, a
+  // tela mostra o foco sozinho; presente com o tipo errado, a linha cai, porque
+  // aí é formato quebrado e não formato antigo.
+  if (leitura.sintese !== undefined && !ehTexto(leitura.sintese)) return null
+
   return {
-    leitura: { foco: leitura.foco, relacoes: relacoes as RelacaoEscrita[] },
+    leitura: {
+      foco: leitura.foco,
+      relacoes: relacoes as RelacaoEscrita[],
+      ...(ehTexto(leitura.sintese) && leitura.sintese.trim() ? { sintese: leitura.sintese } : {}),
+    },
     cards: cards as CardMovimento[],
   }
 }

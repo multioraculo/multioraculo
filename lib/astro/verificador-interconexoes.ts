@@ -40,7 +40,7 @@
  * fingir que é seria pior do que não tentar.
  */
 import type { Locale } from "@/lib/i18n/config"
-import { EXPRESSOES_EVITAR, PROIBIDAS, TRACOS } from "./editorial"
+import { CONSELHO, EXPRESSOES_EVITAR, FALSA_PRECISAO, PREVISAO, PROIBIDAS, TRACOS } from "./editorial"
 import { ASPECTOS, CORPOS, SIGNOS } from "./nomes"
 import type { FatoPessoal } from "./fatos-interconexoes"
 import {
@@ -90,50 +90,6 @@ function chegouNaSintese(trecho: string, sintese: string): boolean {
 
 const palavras = (t: string) => t.trim().split(/\s+/).filter(Boolean).length
 const frases = (t: string) => t.split(/(?<=[.!?])\s+/).map((f) => f.trim()).filter(Boolean).length
-
-/** Futuro afirmado. Os fatos são um céu medido, não um acontecimento anunciado. */
-const PREVISAO: Record<Locale, RegExp[]> = {
-  pt: [/\bvai (acontecer|surgir|chegar|trazer|mudar)\b/i, /\bvoc[êe] (vai|ir[áa])\b/i, /\bacontecer[áa]\b/i, /\bser[áa] um (dia|momento|per[íi]odo)\b/i],
-  en: [/\bwill (happen|bring|change|arrive)\b/i, /\byou will\b/i, /\bis going to\b/i],
-  es: [/\bva a (pasar|llegar|traer|cambiar)\b/i, /\bvas a\b/i, /\bocurrir[áa]\b/i],
-}
-
-/** Prescrição. O produto não aconselha em lugar nenhum, e aqui menos ainda. */
-const CONSELHO: Record<Locale, RegExp[]> = {
-  pt: [/\b(procure|evite|tente|busque|aproveite|cuidado com|permita-se|lembre-se de|e importante que voce)\b/i, /\b(voce deve|voce precisa|e hora de)\b/i],
-  en: [/\b(try to|avoid|seek|allow yourself|remember to|you should|you need to|it is time to)\b/i],
-  es: [/\b(procura|evita|intenta|busca|permitete|recuerda|debes|necesitas|es hora de)\b/i],
-}
-
-/**
- * Precisão que o motor não calculou. O céu de hoje não diz a que horas nem em
- * que dia da semana nada acontece, então um exemplo que diz isso inventou.
- */
-const FALSA_PRECISAO: Record<Locale, RegExp[]> = {
-  pt: [
-    /\b\d{1,2}\s*(h|horas)\b/i,
-    /\b\d{1,2}:\d{2}\b/,
-    /\b(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(-feira)?\b/i,
-    /\b(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i,
-    // sem \b no começo: em JavaScript ele é ASCII, e entre um espaço e "à" não
-    // existe fronteira de palavra nenhuma, então "à noite" passava batido
-    /(^|[^\p{L}])(de manh[ãa]|[àa] tarde|[àa] noite|de madrugada)/iu,
-  ],
-  en: [
-    /\b\d{1,2}\s*(am|pm|o'clock)\b/i,
-    /\b\d{1,2}:\d{2}\b/,
-    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
-    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
-    /\b(in the morning|in the afternoon|at night)\b/i,
-  ],
-  es: [
-    /\b\d{1,2}\s*(h|horas)\b/i,
-    /\b\d{1,2}:\d{2}\b/,
-    /\b(lunes|martes|mi[ée]rcoles|jueves|viernes|s[áa]bado|domingo)\b/i,
-    /\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i,
-    /\b(por la ma[ñn]ana|por la tarde|por la noche)\b/i,
-  ],
-}
 
 export function verificarSintesePessoal(params: {
   bruto: unknown

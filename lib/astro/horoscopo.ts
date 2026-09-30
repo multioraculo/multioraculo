@@ -25,6 +25,7 @@ import { apresentar, type CardMovimento } from "./apresentar"
 import { estadoDoCeu, type Ceu } from "./ceu"
 import { estimateCostUsd } from "@/lib/ai/pricing"
 import { lerLinhaGravada } from "./linha-gravada"
+import { sinteseFocoDeterministica, verificarSinteseFoco } from "./sintese-foco"
 import { promptHoroscopo, type Leitura, type RelacaoEscrita, type Origem } from "./prompt-horoscopo"
 import { promptReparo, type RespostaReparo } from "./prompt-reparo"
 import { fatosDoCard } from "./fatos-do-card"
@@ -458,11 +459,21 @@ export async function horoscopoDoSigno(params: {
 
   const modo: ModoDeGeracao = emFallback.length ? "fallback" : reparadas.length ? "repaired" : "generated"
 
+  // ── 5 · a síntese do foco ─────────────────────────────────────────────────
+  //
+  // Camada a mais, nunca risco a mais. Ela é conferida DEPOIS que a leitura já
+  // passou, contra as relações FINAIS: se alguma foi reparada ou caiu no molde,
+  // os termos mudaram, e uma síntese escrita sobre os termos antigos não
+  // descreve mais esta leitura. Reprovando, cai para o molde; reprovando o
+  // molde também, some. Em nenhum desses caminhos a leitura se perde — a tela
+  // mostra a frase do foco sozinha, que é exatamente o produto de antes.
+  const leitura = comSinteseDoFoco(v.leitura, entrada?.sintese, locale, dia, signo)
+
   const gravou = await gravar({
     dia,
     signo,
     locale,
-    leitura: v.leitura,
+    leitura,
     cards,
     model,
     tentativas: tentativas.length,
@@ -470,7 +481,39 @@ export async function horoscopoDoSigno(params: {
   })
   if (!gravou) tentativas.push({ n: tentativas.length + 1, desfecho: "erro_banco", msIa: 0, msVerificador: 0, regras: [] })
 
-  return fechar({ leitura: v.leitura, model, tentativas: tentativas.length }, modo, reparadas, emFallback)
+  return fechar({ leitura, model, tentativas: tentativas.length }, modo, reparadas, emFallback)
+}
+
+/**
+ * A leitura com a síntese do foco, quando existe uma que se sustente.
+ *
+ * Três degraus, e o último é o silêncio: o que o modelo escreveu, se passar; o
+ * molde determinístico feito dos termos finais, se passar; e nada, se nem ele
+ * passar. O que NÃO existe é um quarto degrau em que a leitura inteira cai por
+ * causa deste parágrafo.
+ */
+function comSinteseDoFoco(
+  leitura: Leitura,
+  escrita: unknown,
+  locale: Locale,
+  dia: string,
+  signo: number,
+): Leitura {
+  const candidatas: Array<[string, string | null]> = [
+    ["gerada", typeof escrita === "string" ? escrita.trim() : ""],
+    ["molde", sinteseFocoDeterministica(leitura.relacoes, locale)],
+  ]
+
+  for (const [origem, texto] of candidatas) {
+    if (!texto) continue
+    const v = verificarSinteseFoco({ texto, relacoes: leitura.relacoes, locale })
+    if (v.ok) return { ...leitura, sintese: texto }
+    console.warn(
+      `[horoscopo] síntese do foco (${origem}) reprovada: dia=${dia} signo=${signo} locale=${locale} ${v.violacoes.join(" | ")}`,
+    )
+  }
+
+  return leitura
 }
 
 /**

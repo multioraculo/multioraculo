@@ -31,6 +31,7 @@ import type { AddressInfo } from "net"
 import { prepararDia } from "../lib/astro/horoscopo"
 import { lerLinhaGravada } from "../lib/astro/linha-gravada"
 import { verificarLeitura } from "../lib/astro/verificador"
+import { sinteseFocoDeterministica, verificarSinteseFoco } from "../lib/astro/sintese-foco"
 
 const DIA = "2026-09-16"
 const SIGNO = 5
@@ -475,8 +476,89 @@ async function parteD() {
   confere("recuperação: o molde passa no verificador nos 12 signos", passaram === 12, `passou em ${passaram} de 12`)
 }
 
+// ── E. a síntese do foco ────────────────────────────────────────────────────
+
+/**
+ * A camada que desce da frase do foco para o dia de quem lê.
+ *
+ * A conferência mais importante aqui não é nenhuma regra de estilo: é que uma
+ * linha gravada ANTES desta camada continue valendo. Se ela passasse a ser
+ * obrigatória, todo signo com leitura em cache seria recusado no dia do deploy
+ * e o produto pagaria uma geração por signo e por idioma para entregar a mesma
+ * leitura com um parágrafo a mais.
+ */
+function parteE() {
+  const relacoes = LEITURA_DE_HOJE.relacoes as never
+
+  // 1 · o molde determinístico passa pelo próprio verificador
+  const molde = sinteseFocoDeterministica(relacoes, LOCALE)
+  confere("a síntese tem molde determinístico", Boolean(molde), "voltou nula com termos disponíveis")
+  if (molde) {
+    const v = verificarSinteseFoco({ texto: molde, relacoes, locale: LOCALE })
+    confere("o molde da síntese passa no verificador", v.ok, v.ok ? "" : v.violacoes.join(" | "))
+  }
+
+  // 2 · uma síntese boa, que retoma os termos sem nomear a técnica
+  const boa =
+    "Isso pode aparecer como um vínculo que se firma e volta à mesa no mesmo dia. " +
+    "A revisão profunda pode surgir junto, pedindo que o combinado seja dito outra vez."
+  const vb = verificarSinteseFoco({ texto: boa, relacoes, locale: LOCALE })
+  confere("síntese ancorada nos termos passa", vb.ok, vb.ok ? "" : vb.violacoes.join(" | "))
+
+  const recusas: Array<[string, string]> = [
+    [
+      "afirmada, sem marca de hipótese",
+      "Um vínculo que se firma volta à mesa hoje. A revisão profunda acompanha o dia inteiro.",
+    ],
+    [
+      "nomeia a técnica, que já está nos cards",
+      "Isso pode aparecer como Vênus firmando um vínculo. A revisão profunda pode surgir em seguida.",
+    ],
+    [
+      "não retoma termo nenhum: serviria para qualquer dia",
+      "Isso pode aparecer como um dia de movimento. Algo pode surgir por dentro sem aviso.",
+    ],
+    [
+      "afirma futuro",
+      "Você vai firmar um vínculo hoje. A revisão profunda pode aparecer depois.",
+    ],
+    [
+      "dá conselho",
+      "Procure firmar o vínculo que importa. A revisão profunda pode surgir junto.",
+    ],
+    [
+      "inventa hora",
+      "Isso pode aparecer como um vínculo que se firma às 15h. A revisão profunda pode surgir junto.",
+    ],
+    [
+      "inventa dia da semana",
+      "Isso pode aparecer como um vínculo que se firma na quinta-feira. A revisão profunda pode surgir junto.",
+    ],
+    ["uma frase só", "Isso pode aparecer como um vínculo que se firma com revisão profunda."],
+  ]
+
+  for (const [nome, texto] of recusas) {
+    const v = verificarSinteseFoco({ texto, relacoes, locale: LOCALE })
+    confere(`recusa: síntese ${nome}`, !v.ok, "foi aceita")
+  }
+
+  // 3 · A LINHA ANTIGA CONTINUA VALENDO. Esta é a conferência que impede o
+  //     deploy de cobrar uma geração por signo só para acrescentar um parágrafo
+  const semSintese = lerLinhaGravada({ leitura: LEITURA_DE_HOJE, cards })
+  confere("linha gravada SEM síntese continua aceita", semSintese !== null, "o deploy invalidaria o cache inteiro")
+  confere("e chega sem o campo", semSintese?.leitura.sintese === undefined)
+
+  const comSintese = lerLinhaGravada({ leitura: { ...LEITURA_DE_HOJE, sintese: boa }, cards })
+  confere("linha gravada COM síntese é aceita", comSintese !== null)
+  confere("e a síntese chega inteira", comSintese?.leitura.sintese === boa)
+
+  const tipoErrado = lerLinhaGravada({ leitura: { ...LEITURA_DE_HOJE, sintese: 42 }, cards })
+  confere("linha com síntese de tipo errado é recusada", tipoErrado === null, "formato quebrado passou")
+}
+
 async function main() {
   parteA()
+  parteE()
   const estouraram = parteB()
   await parteC()
   await parteD()

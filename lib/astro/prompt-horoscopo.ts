@@ -21,6 +21,7 @@ import { anguloNominal, type CardMovimento } from "./apresentar"
 import { EXPRESSOES_EVITAR, REGRAS_COMUNS } from "./editorial"
 import { CORPOS, RETROGRADO, SIGNOS } from "./nomes"
 import { LINHA_SIGNO, REGENTE } from "./simbolos"
+import { instrucaoSinteseFoco } from "./sintese-foco"
 
 /** De qual elemento calculado aquele termo saiu. O verificador confere. */
 export const ORIGENS = ["planetaA", "signoA", "movimentoA", "planetaB", "signoB", "movimentoB", "regencia"] as const
@@ -38,6 +39,14 @@ export type RelacaoEscrita = {
 export type Leitura = {
   foco: string
   relacoes: RelacaoEscrita[]
+  /**
+   * O degrau entre a frase do foco e a explicação técnica dos cards: como
+   * aquilo poderia aparecer num dia comum. OPCIONAL de propósito — linha de
+   * cache anterior a ela não tem, geração que reprova nela perde só ela, e a
+   * tela mostra o foco sozinho, que é o produto de antes. Camada nova não pode
+   * custar a leitura de ninguém. As regras estão em `sintese-foco`.
+   */
+  sintese?: string
 }
 
 const SISTEMA_BASE: Record<Locale, string> = {
@@ -171,8 +180,10 @@ ${languageRule(locale)}
 
 2. "foco": escrito POR ÚLTIMO, depois das ${cards.length} relações, condensando o que elas têm em comum. De três a dez palavras, imediatamente compreensível, sem nome de planeta, de signo ou de aspecto. Não é resumo abstrato: se a frase continuar valendo com outros planetas em outro dia, está errada. Pode ser afirmação ou pergunta, como você preferir.
 
-Devolva JSON exatamente nesta ordem, com "relacoes" ANTES de "foco", porque o foco só existe depois delas:
-{"relacoes": [{"n": 1, "termos": [{"texto": "...", "origem": "signoA"}, {"texto": "...", "origem": "movimentoB"}], "explicacao": "..."}], "foco": "..."}
+${instrucaoSinteseFoco(locale)}
+
+Devolva JSON exatamente nesta ordem, com "relacoes" ANTES de "foco" e "sintese" DEPOIS dele, porque cada um só existe depois do anterior:
+{"relacoes": [{"n": 1, "termos": [{"texto": "...", "origem": "signoA"}, {"texto": "...", "origem": "movimentoB"}], "explicacao": "..."}], "foco": "...", "sintese": "..."}
 
 LEMBRETE FINAL: nenhum travessão, nenhuma forma da palavra "arquétipo", e nenhuma das expressões proibidas da regra 11.`
 

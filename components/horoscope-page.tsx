@@ -591,6 +591,15 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
               <div className="mt-5 pt-4 border-t border-white/10">
                 <Rotulo>{t.focus}</Rotulo>
                 <p className="text-white text-2xl instrument italic leading-snug mt-2">{leitura.foco}</p>
+                {/* o degrau entre a frase e os cards: como aquilo poderia
+                    aparecer num dia comum. Nem toda leitura tem — as gravadas
+                    antes desta camada não têm, e uma síntese que reprova some
+                    sozinha. Sem ela, o bloco é o de antes. */}
+                {leitura.sintese && (
+                  <p className="text-white/70 text-[14.5px] leading-[1.75] font-light mt-3.5 max-w-xl">
+                    {leitura.sintese}
+                  </p>
+                )}
               </div>
             ) : (
               <p className="text-white/55 text-sm leading-relaxed mt-5 pt-4 border-t border-white/10">{t.unavailable}</p>
