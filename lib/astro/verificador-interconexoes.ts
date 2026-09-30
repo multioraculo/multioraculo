@@ -27,6 +27,14 @@
  *     dos fatos.
  *  7. TAMANHO E REGISTRO. Frases, palavras, travessão e as expressões vetadas
  *     que já valem para o resto do produto.
+ *  8. MANIFESTAÇÃO SEM LASTRO. O exemplo concreto é a parte mais perigosa do
+ *     texto: é ele que faz a leitura parecer sobre a vida de alguém, e é ele
+ *     que, solto, vira adivinhação. Quatro exigências, e nenhuma delas julga o
+ *     conteúdo do exemplo, só a sua ancoragem: ele pendura numa afirmação que
+ *     declara uma INTERCONEXÃO (fato de contexto não sustenta exemplo); é
+ *     HIPOTÉTICO, com uma das marcas da lista fechada; APARECE na síntese, ou
+ *     é decoração que o leitor nunca vê; e não traz falsa precisão, que é
+ *     hora, data ou dia da semana que nenhum cálculo produziu.
  *
  * O que ele NÃO faz: julgar se a interpretação é boa. Isso não é verificável, e
  * fingir que é seria pior do que não tentar.
@@ -35,7 +43,14 @@ import type { Locale } from "@/lib/i18n/config"
 import { EXPRESSOES_EVITAR, PROIBIDAS, TRACOS } from "./editorial"
 import { ASPECTOS, CORPOS, SIGNOS } from "./nomes"
 import type { FatoPessoal } from "./fatos-interconexoes"
-import { AFIRMACOES, FRASES, PALAVRAS_MAX, type SintesePessoal } from "./prompt-interconexoes"
+import {
+  AFIRMACOES,
+  FRASES,
+  MANIFESTACOES_MAX,
+  MARCAS_MANIFESTACAO,
+  PALAVRAS_MAX,
+  type SintesePessoal,
+} from "./prompt-interconexoes"
 
 export type VereditoPessoal = { ok: true; sintese: SintesePessoal } | { ok: false; violacoes: string[] }
 
@@ -45,6 +60,32 @@ function contem(texto: string, termo: string): boolean {
   const t = semAcento(termo)
   if (!t) return false
   return new RegExp(`(^|[^\\p{L}])${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}])`, "u").test(semAcento(texto))
+}
+
+/**
+ * A ideia chegou ao texto que o leitor lê?
+ *
+ * A pergunta que importa é essa, e não se o modelo repetiu a mesma cadeia de
+ * caracteres. Medir por prefixo exato reprovava texto CORRETO: a afirmação
+ * dizia "Urano toca seu Ascendente" e a síntese escrevia "Urano, retrógrado,
+ * chega ao seu Ascendente", que é o que prosa faz. Três mapas de teste caíram
+ * inteiros no molde por isso, com o texto certo na mão.
+ *
+ * Então mede-se sobreposição de conteúdo: quanto das palavras da afirmação
+ * reaparece na síntese. Palavras de até três letras ficam de fora porque "de",
+ * "com" e "que" estão em qualquer frase e só inflariam a conta. Continua sendo
+ * uma exigência de presença, e não de forma: uma afirmação ausente não chega
+ * nem perto do piso.
+ */
+const PISO_DE_PRESENCA = 0.6
+
+function chegouNaSintese(trecho: string, sintese: string): boolean {
+  const alvo = semAcento(sintese)
+  const palavras = semAcento(trecho)
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((p) => p.length >= 4)
+  if (palavras.length === 0) return true
+  return palavras.filter((p) => alvo.includes(p)).length / palavras.length >= PISO_DE_PRESENCA
 }
 
 const palavras = (t: string) => t.trim().split(/\s+/).filter(Boolean).length
@@ -64,6 +105,36 @@ const CONSELHO: Record<Locale, RegExp[]> = {
   es: [/\b(procura|evita|intenta|busca|permitete|recuerda|debes|necesitas|es hora de)\b/i],
 }
 
+/**
+ * Precisão que o motor não calculou. O céu de hoje não diz a que horas nem em
+ * que dia da semana nada acontece, então um exemplo que diz isso inventou.
+ */
+const FALSA_PRECISAO: Record<Locale, RegExp[]> = {
+  pt: [
+    /\b\d{1,2}\s*(h|horas)\b/i,
+    /\b\d{1,2}:\d{2}\b/,
+    /\b(segunda|ter[çc]a|quarta|quinta|sexta|s[áa]bado|domingo)(-feira)?\b/i,
+    /\b(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b/i,
+    // sem \b no começo: em JavaScript ele é ASCII, e entre um espaço e "à" não
+    // existe fronteira de palavra nenhuma, então "à noite" passava batido
+    /(^|[^\p{L}])(de manh[ãa]|[àa] tarde|[àa] noite|de madrugada)/iu,
+  ],
+  en: [
+    /\b\d{1,2}\s*(am|pm|o'clock)\b/i,
+    /\b\d{1,2}:\d{2}\b/,
+    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+    /\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/i,
+    /\b(in the morning|in the afternoon|at night)\b/i,
+  ],
+  es: [
+    /\b\d{1,2}\s*(h|horas)\b/i,
+    /\b\d{1,2}:\d{2}\b/,
+    /\b(lunes|martes|mi[ée]rcoles|jueves|viernes|s[áa]bado|domingo)\b/i,
+    /\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/i,
+    /\b(por la ma[ñn]ana|por la tarde|por la noche)\b/i,
+  ],
+}
+
 export function verificarSintesePessoal(params: {
   bruto: unknown
   fatos: FatoPessoal[]
@@ -74,17 +145,24 @@ export function verificarSintesePessoal(params: {
 
   const entrada = bruto as Partial<SintesePessoal>
   const sintese = typeof entrada?.sintese === "string" ? entrada.sintese.trim() : ""
-  const afirmacoes = (Array.isArray(entrada?.afirmacoes) ? entrada.afirmacoes : []).map((a) => ({
-    texto: String((a as { texto?: unknown })?.texto ?? "").trim(),
-    fato: String((a as { fato?: unknown })?.fato ?? "").trim(),
-  }))
+  const afirmacoes = (Array.isArray(entrada?.afirmacoes) ? entrada.afirmacoes : []).map((a) => {
+    const bruta = (a as { manifestacoes?: unknown })?.manifestacoes
+    return {
+      texto: String((a as { texto?: unknown })?.texto ?? "").trim(),
+      fato: String((a as { fato?: unknown })?.fato ?? "").trim(),
+      manifestacoes: (Array.isArray(bruta) ? bruta : []).map((m) => String(m ?? "").trim()).filter(Boolean),
+    }
+  })
+  const todasManifestacoes = afirmacoes.flatMap((a) => a.manifestacoes)
 
   if (!sintese) violacoes.push("síntese vazia")
 
   // ── 1 · vocabulário fechado ───────────────────────────────────────────────
   const tudoDosFatos = semAcento(fatos.map((f) => f.texto).join(" "))
   const citaNosFatos = (nome: string) => tudoDosFatos.includes(semAcento(nome))
-  const todoTexto = [sintese, ...afirmacoes.map((a) => a.texto)].join(" ")
+  // os exemplos entram aqui: vocabulário fechado, previsão, conselho, travessão
+  // e expressões vetadas valem para eles exatamente como para o resto
+  const todoTexto = [sintese, ...afirmacoes.map((a) => a.texto), ...todasManifestacoes].join(" ")
 
   for (const nome of Object.values(CORPOS[locale])) {
     if (contem(todoTexto, nome) && !citaNosFatos(nome)) {
@@ -102,6 +180,14 @@ export function verificarSintesePessoal(params: {
     }
   }
 
+  // os nomes que ESTES fatos contêm: é a única lista de coisas que o texto pode
+  // nomear, e serve tanto para a regra do genérico quanto para ancorar exemplos
+  const nomesDosFatos = [
+    ...Object.values(CORPOS[locale]),
+    ...SIGNOS[locale],
+    ...Object.values(ASPECTOS[locale]),
+  ].filter((n) => citaNosFatos(n))
+
   // ── 2 · toda afirmação declara um fato que existe ─────────────────────────
   if (afirmacoes.length < AFIRMACOES.min || afirmacoes.length > AFIRMACOES.max) {
     violacoes.push(`${afirmacoes.length} afirmação(ões), fora de ${AFIRMACOES.min} a ${AFIRMACOES.max}`)
@@ -110,12 +196,9 @@ export function verificarSintesePessoal(params: {
   for (const [i, a] of afirmacoes.entries()) {
     if (!a.texto) violacoes.push(`afirmação ${i + 1}: vazia`)
     if (!ids.has(a.fato)) violacoes.push(`afirmação ${i + 1}: declara o fato "${a.fato}", que não existe`)
-    if (a.texto && !contem(sintese, a.texto.split(/\s+/).slice(0, 3).join(" "))) {
-      // a afirmação precisa aparecer na síntese, senão ela é decoração
-      const inicio = a.texto.split(/\s+/).slice(0, 3).join(" ")
-      if (!semAcento(sintese).includes(semAcento(inicio))) {
-        violacoes.push(`afirmação ${i + 1}: não aparece na síntese`)
-      }
+    // a afirmação precisa aparecer na síntese, senão ela é decoração
+    if (a.texto && !chegouNaSintese(a.texto, sintese)) {
+      violacoes.push(`afirmação ${i + 1}: não aparece na síntese`)
     }
   }
 
@@ -139,13 +222,54 @@ export function verificarSintesePessoal(params: {
   }
 
   // ── 6 · genérico: a síntese precisa nomear algo dos fatos ─────────────────
-  const nomesDosFatos = [
-    ...Object.values(CORPOS[locale]),
-    ...SIGNOS[locale],
-    ...Object.values(ASPECTOS[locale]),
-  ].filter((n) => citaNosFatos(n))
   if (sintese && !nomesDosFatos.some((n) => contem(sintese, n))) {
     violacoes.push("a síntese não nomeia nada dos seus fatos: serviria para qualquer pessoa")
+  }
+
+  // ── 8 · a manifestação concreta, medida onde o leitor a lê ────────────────
+  //
+  // A primeira versão desta regra exigia o exemplo em DOIS lugares: num campo
+  // declarado e dentro da síntese, batendo nos dois. Custou três mapas de
+  // teste caindo inteiros no molde com o texto certo na mão, porque prosa
+  // reescreve e a comparação nunca fechava. A duplicação era minha, não do
+  // modelo.
+  //
+  // Agora há um texto só. Toda passagem hipotética da síntese é um exemplo, e
+  // dela se exige o que de fato protege quem lê: que a frase (ou a que vem
+  // logo antes dela, quando o exemplo segue a interpretação) NOMEIE algo dos
+  // fatos, senão o exemplo não é de ninguém; e que não haja precisão que
+  // nenhum cálculo produziu. O resto já é conferido no texto inteiro:
+  // vocabulário fechado, previsão, conselho e expressões vetadas.
+  const marcas = MARCAS_MANIFESTACAO[locale]
+  const sentencas = sintese.split(/(?<=[.!?])\s+/).map((f) => f.trim()).filter(Boolean)
+  let exemplos = 0
+
+  for (const [i, frase] of sentencas.entries()) {
+    const marca = marcas.find((m) => semAcento(frase).includes(semAcento(m)))
+    if (!marca) continue
+    exemplos += 1
+
+    // a frase do exemplo, ou a anterior, precisa dizer de qual relação ele sai
+    const ancorada = [frase, sentencas[i - 1] ?? ""].some((f) => nomesDosFatos.some((n) => contem(f, n)))
+    if (!ancorada) {
+      violacoes.push(`exemplo ${exemplos}: não se liga a nenhum fato seu, então serviria para qualquer pessoa`)
+    }
+
+    const trecho = frase.slice(semAcento(frase).indexOf(semAcento(marca)))
+    for (const r of FALSA_PRECISAO[locale]) {
+      const achou = trecho.match(r)
+      if (achou) violacoes.push(`exemplo ${exemplos}: "${achou[0].trim()}" é uma precisão que nenhum cálculo produziu`)
+    }
+  }
+
+  const teto = MANIFESTACOES_MAX * Math.max(1, principais.length)
+  if (exemplos > teto) violacoes.push(`${exemplos} exemplos concretos, acima de ${teto}`)
+
+  // e nenhuma hora, data ou dia da semana em lugar nenhum do texto: o motor
+  // calcula um céu, e céu não marca hora para a vida de ninguém
+  for (const r of FALSA_PRECISAO[locale]) {
+    const achou = sintese.match(r)
+    if (achou) violacoes.push(`a síntese diz "${achou[0].trim()}", que nenhum cálculo produziu`)
   }
 
   // ── 7 · tamanho e registro ────────────────────────────────────────────────

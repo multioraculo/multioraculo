@@ -69,6 +69,8 @@ const LIGACOES: Record<Locale, {
   aproximando: string
   afastando: string
   casa: (n: number) => string
+  /** a casa DO PONTO NATAL, que é o domínio da vida onde a relação toca */
+  naCasa: (n: number) => string
   estaEm: string
   nasceuEm: (corpo: string, signo: string) => string
   semHora: string
@@ -83,6 +85,7 @@ const LIGACOES: Record<Locale, {
     aproximando: "ainda se aproximando",
     afastando: "já se afastando",
     casa: (n) => `na sua casa ${n}`,
+    naCasa: (n) => `na casa ${n}`,
     estaEm: "está em",
     nasceuEm: (corpo, signo) => `${corpo} do seu nascimento está em ${signo}`,
     semHora: "a hora do nascimento não é conhecida, então não há Ascendente, Meio do Céu nem casas",
@@ -97,6 +100,7 @@ const LIGACOES: Record<Locale, {
     aproximando: "still approaching",
     afastando: "already separating",
     casa: (n) => `in your house ${n}`,
+    naCasa: (n) => `in house ${n}`,
     estaEm: "is in",
     nasceuEm: (corpo, signo) => `the ${corpo} of your birth is in ${signo}`,
     semHora: "the time of birth is not known, so there is no Ascendant, Midheaven or houses",
@@ -111,6 +115,7 @@ const LIGACOES: Record<Locale, {
     aproximando: "aún acercándose",
     afastando: "ya alejándose",
     casa: (n) => `en tu casa ${n}`,
+    naCasa: (n) => `en la casa ${n}`,
     estaEm: "está en",
     nasceuEm: (corpo, signo) => `${corpo} de tu nacimiento está en ${signo}`,
     semHora: "la hora de nacimiento no se conoce, así que no hay Ascendente, Medio Cielo ni casas",
@@ -135,7 +140,15 @@ export function frasearInterconexao(c: Interconexao, locale: Locale): string {
   if (c.tipo === "posicao") {
     return `${transito}${retro} ${L.estaEm} ${signo}, ${L.a} ${grau}°${casa}`
   }
-  return `${transito}${retro} ${L.em} ${signo} ${L.a} ${grau}°, ${L.faz} ${aspecto} ${L.com} ${ponto}, ${L.orbe(num(c.orbe, locale), num(c.orbeMax, locale))}, ${ritmo}${casa}`
+
+  // A CASA DO PONTO NATAL É O DOMÍNIO DA VIDA em que a relação toca, e é o
+  // único fato aqui que permite descer do mecanismo para a experiência sem
+  // inventar nada: uma Lua natal na casa 7 não é a mesma coisa que uma Lua
+  // natal na casa 4. O motor já calculou essa casa; faltava dizê-la.
+  // Ângulo não leva casa: o Ascendente estar na casa 1 não informa ninguém.
+  const casaNatal = c.ponto.tipo === "corpo" && c.ponto.casa !== null ? ` ${L.naCasa(c.ponto.casa)}` : ""
+
+  return `${transito}${retro} ${L.em} ${signo} ${L.a} ${grau}°, ${L.faz} ${aspecto} ${L.com} ${ponto}${casaNatal}, ${L.orbe(num(c.orbe, locale), num(c.orbeMax, locale))}, ${ritmo}${casa}`
 }
 
 export function fatosPessoais(params: {

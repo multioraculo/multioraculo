@@ -97,16 +97,117 @@ function parteB() {
 
   // as duas coisas que a primeira geração real entregou erradas ao leitor
   confere("o molde não tem vírgula dobrada", !/,\s*,/.test(molde.sintese), molde.sintese.slice(0, 90))
-  confere("o molde concorda em gênero", !/seu (Lua|Vênus)/.test(molde.sintese), molde.sintese.slice(0, 90))
+  confere("o molde concorda em gênero", !/\bseu (Lua|Vênus)\b/.test(molde.sintese), molde.sintese.slice(0, 90))
 
   // o molde é lido pelo leitor: em inglês e espanhol ele não pode sair meio em
   // português, que foi como este arquivo nasceu
-  for (const [loc, intruso] of [["en", /(faz|com orbe de|está em|se aproximando|se afastando)/i], ["es", /(faz|está em|se aproximando|se afastando)/i]] as const) {
+  for (const [loc, intruso] of [["en", /\b(faz|com orbe de|está em|se aproximando|se afastando)\b/i], ["es", /\b(faz|está em|se aproximando|se afastando)\b/i]] as const) {
     const f = fatosPessoais({ mapa, escolhidas, locale: loc })
     const m = sinteseDeterministica(f, loc)
     confere(`o molde em ${loc} não tem português dentro`, !intruso.test(m.sintese), m.sintese.slice(0, 110))
     confere(`o molde em ${loc} passa no verificador`, verificarSintesePessoal({ bruto: m, fatos: f, locale: loc }).ok)
   }
+}
+
+/**
+ * F. A CAMADA CONCRETA.
+ *
+ * O exemplo concreto é o que faz a leitura parecer sobre a vida de alguém, e é
+ * também o lugar mais fácil de inventar. Estas conferências não julgam se o
+ * exemplo é bom: exigem que ele esteja preso em alguma coisa.
+ *
+ * O QUE ELAS NÃO PEGAM, e é bom estar escrito: conteúdo concreto afirmado SEM
+ * marca de hipótese. "pode aparecer como dúvidas sobre investimentos" é visto;
+ * "dúvidas sobre investimentos", solto no meio da frase, não é, porque não
+ * existe sinal que separe isso de interpretação comum sem um analisador de
+ * língua. Contra esse caso valem o prompt e o veto de previsão, não esta lista.
+ */
+function parteF() {
+  const principal = fatos.find((f) => f.tipo === "interconexao")!
+  const nomeReal = principal.texto.split(" ")[0]
+
+  // uma síntese onde a frase do exemplo vem logo depois de nomear o fato, que
+  // é a forma que o produto pede
+  const monta = (exemplo: string) => ({
+    afirmacoes: [
+      { texto: `${nomeReal} toca um ponto seu`, fato: principal.id },
+      { texto: "e o segundo ponto responde", fato: fatos[1]?.id ?? principal.id },
+    ],
+    // o exemplo vem LOGO DEPOIS da frase que nomeia o fato: é essa vizinhança
+    // que o liga a uma relação medida
+    sintese: `${nomeReal} toca um ponto seu hoje. ${exemplo} E o segundo ponto responde.`,
+  })
+
+  const bom = "Isso pode aparecer como vontade de reorganizar o espaço de casa."
+  const v = verificarSintesePessoal({ bruto: monta(bom), fatos, locale: "pt" })
+  confere("exemplo na frase seguinte à do fato passa", v.ok, v.ok ? "" : v.violacoes.join(" | "))
+
+  // e o caso mais comum na prosa: interpretação e exemplo na MESMA frase
+  const juntos = {
+    afirmacoes: [
+      { texto: `${nomeReal} toca um ponto seu`, fato: principal.id },
+      { texto: "e o segundo ponto responde", fato: fatos[1]?.id ?? principal.id },
+    ],
+    sintese: `${nomeReal} toca um ponto seu hoje, o que pode aparecer como vontade de reorganizar a casa. E o segundo ponto responde.`,
+  }
+  const vj = verificarSintesePessoal({ bruto: juntos, fatos, locale: "pt" })
+  confere("exemplo na mesma frase do fato passa", vj.ok, vj.ok ? "" : vj.violacoes.join(" | "))
+
+  const recusas: Array<[string, unknown]> = [
+    [
+      "exemplo solto, sem fato nenhum por perto",
+      {
+        afirmacoes: [
+          { texto: `${nomeReal} toca um ponto seu`, fato: principal.id },
+          { texto: "e o segundo responde", fato: fatos[1]?.id ?? principal.id },
+        ],
+        // o exemplo fica longe de qualquer nome de fato: a frase dele e a
+        // anterior não nomeiam nada
+        sintese: `${nomeReal} toca um ponto seu hoje. E o segundo responde. O dia segue assim. Isso pode aparecer como vontade de mudar a rotina.`,
+      },
+    ],
+    ["exemplo com hora que ninguém calculou", monta("Isso pode aparecer como uma conversa às 15h.")],
+    ["exemplo com dia da semana", monta("Isso pode surgir como um assunto que volta na quinta-feira.")],
+    ["exemplo com mês", monta("Isso pode se manifestar como um plano guardado desde janeiro.")],
+    ["exemplo com período do dia", monta("Isso pode ser sentido como um cansaço à noite.")],
+    [
+      "exemplo que desobedece ao veto de expressões",
+      monta("Isso pode aparecer como uma mudança de energias em casa."),
+    ],
+  ]
+
+  for (const [nome, bruto] of recusas) {
+    const r = verificarSintesePessoal({ bruto, fatos, locale: "pt" })
+    confere(`recusa: ${nome}`, !r.ok, "foi aceita")
+  }
+
+  // teto: dois exemplos por relação medida
+  const muitos = {
+    afirmacoes: [
+      { texto: `${nomeReal} toca um ponto seu`, fato: principal.id },
+      { texto: "e o segundo responde", fato: fatos[1]?.id ?? principal.id },
+    ],
+    sintese:
+      `${nomeReal} toca um ponto seu hoje. E o segundo responde. ` +
+      Array.from({ length: 9 }, (_, i) => `${nomeReal} pode aparecer como coisa ${"a".repeat(i + 1)}.`).join(" "),
+  }
+  confere("recusa: exemplos demais", !verificarSintesePessoal({ bruto: muitos, fatos, locale: "pt" }).ok, "foi aceita")
+
+  // a casa natal é o que permite escolher o terreno da vida sem chutar
+  const comCasa = fatos.filter((f) => f.tipo === "interconexao" && /casa \d/.test(f.texto))
+  confere(
+    "os fatos trazem a casa do ponto natal",
+    comCasa.length > 0 || escolhidas.every((c) => c.ponto.tipo === "angulo" || c.ponto.casa === null),
+    "nenhuma interconexão de corpo natal diz em que casa ela cai",
+  )
+
+  // o molde não inventa exemplo nenhum, e continua passando
+  const molde = sinteseDeterministica(fatos, "pt")
+  confere(
+    "o molde não traz exemplo concreto",
+    !/pode (aparecer|surgir|se manifestar|ser percebido|ser sentido)/i.test(molde.sintese),
+    molde.sintese.slice(0, 90),
+  )
 }
 
 /**
@@ -242,6 +343,7 @@ async function main() {
   parteA()
   parteB()
   parteE()
+  parteF()
   await parteC()
   await parteD()
 
