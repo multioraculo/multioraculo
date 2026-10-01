@@ -1,5 +1,16 @@
 /** A marca: o M do Multioráculo, em fundo transparente e borda limpa. */
-const LOGO_SRC = "/brand/multioraculo-m.png"
+/**
+ * O NOME CARREGA A MEDIDA, e isso não é estilo: é o que torna seguro guardar
+ * este arquivo por um ano na borda. Asset de nome fixo que pode ser trocado por
+ * outra arte não pode ficar preso em cache longo, porque quem já o baixou
+ * continuaria vendo o antigo. Com a medida no nome, trocar a arte é publicar
+ * outro nome, e a invalidação acontece sozinha.
+ *
+ * 240 px para uma marca exibida em 80: cobre telas de 3x, que é o mais denso
+ * que existe em telefone. O arquivo anterior tinha 320 px (166 KB) para a mesma
+ * exibição; este tem 58 KB e é pixel a pixel suficiente.
+ */
+const LOGO_SRC = "/brand/fixo/multioraculo-m-240.png"
 
 type Props = {
   /** lado da caixa, em px */

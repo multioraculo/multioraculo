@@ -55,7 +55,10 @@ export default async function LeituraDetailPage({
 
   const { data: consultation, error } = await supabase
     .from("consultations")
-    .select("*")
+    // o detalhe precisa da linha inteira, e aqui ela é UMA linha: o asterisco
+    // vira a lista explícita só para uma coluna nova no banco não passar a
+    // trafegar sozinha
+    .select("id, user_id, question, selected_oracles, synthesis, oracle_outputs, is_saved, user_notes, created_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single()

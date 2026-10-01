@@ -226,7 +226,8 @@ export async function loadPreview(seed: string): Promise<PreviewRecord | null> {
     .eq("preview", true)
     .maybeSingle()
   if (!usage || usage.expired_at || usage.status !== "completed") return null
-  const { data } = await admin.from("reading_results").select("*").eq("seed", seed).maybeSingle()
+  const { data } = await admin.from("reading_results")
+    .select("seed, user_id, visitor_id, question, locale, oracles, synthesis, created_at, unlocked_at").eq("seed", seed).maybeSingle()
   return (data as PreviewRecord | null) ?? null
 }
 

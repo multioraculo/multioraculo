@@ -74,7 +74,7 @@ export default function SavedDreamsList({
       try {
         const { data } = await supabase
           .from("journey_analyses")
-          .select("*")
+          .select("id, user_id, analysis_text, dreams_analyzed, created_at")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
           .limit(1)

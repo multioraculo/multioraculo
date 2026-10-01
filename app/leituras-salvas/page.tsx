@@ -4,7 +4,7 @@ import ShaderBackground from "@/components/shader-background"
 import ConsultationsList from "@/components/consultations-list"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
-import type { Consultation } from "@/lib/types"
+import type { ConsultationNaLista } from "@/lib/types"
 
 export default async function LeiturasSalvasPage() {
   const supabase = await createClient()
@@ -21,7 +21,11 @@ export default async function LeiturasSalvasPage() {
 
   const { data, error } = await supabase
     .from("consultations")
-    .select("*")
+    // SÓ O QUE A LISTA MOSTRA. `oracle_outputs` e `selected_oracles` são jsonb
+    // com a saída inteira dos cinco oráculos, e vinham em toda linha sem nunca
+    // serem lidos aqui: a lista usa id, pergunta, síntese e data, e o detalhe
+    // busca o resto quando alguém abre uma leitura.
+    .select("id, question, synthesis, created_at")
     .eq("user_id", user.id)
     .eq("is_saved", true)
     .order("created_at", { ascending: false })
@@ -30,7 +34,7 @@ export default async function LeiturasSalvasPage() {
     console.error("Erro ao carregar leituras salvas:", error)
   }
 
-  const consultations = (data ?? []) as Consultation[]
+  const consultations = (data ?? []) as ConsultationNaLista[]
 
   return (
     <ShaderBackground>

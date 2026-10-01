@@ -31,7 +31,7 @@ export default async function DiarioPage({
   if (user) {
     const { data } = await supabase
       .from("journal_entries")
-      .select("*")
+      .select("id, user_id, title, content, consultation_id, created_at, updated_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
     entries = (data ?? []) as JournalEntry[]

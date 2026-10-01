@@ -707,8 +707,8 @@
   inset: 0;
   pointer-events: none;
   mix-blend-mode: screen;
-  -webkit-mask-image: url("/brand/multioraculo-m.png");
-  mask-image: url("/brand/multioraculo-m.png");
+  -webkit-mask-image: url("/brand/fixo/multioraculo-m-240.png");
+  mask-image: url("/brand/fixo/multioraculo-m-240.png");
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;

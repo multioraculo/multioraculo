@@ -217,16 +217,29 @@ export default function HomeHoje({
   initialUser,
   registro,
   ceu,
+  tiragemInicial = null,
+  ceuDoDiaInicial = null,
 }: {
   initialUser: User | null
   registro: RegistroDeHoje
   /** o céu calculado no servidor: função pura, sem requisição e sem custo */
   ceu: Ceu
+  /**
+   * Tiragem e síntese do céu que o servidor JÁ TINHA gravadas.
+   *
+   * Quando vêm preenchidas, a tela nasce com elas e o navegador não pede nada:
+   * era aqui que a Home perdia 2,4 s esperando a hidratação para só então
+   * começar a buscar. Quando vêm nulas, significa que o texto do dia ainda não
+   * existe, e aí o cliente busca como sempre fez — é esse pedido que dispara a
+   * geração, e o servidor não pode esperar por ela sem segurar o HTML.
+   */
+  tiragemInicial?: RespostaTiragem | null
+  ceuDoDiaInicial?: string | null
 }) {
   const { dict, locale, formatDate } = useI18n()
   const t = dict.home
   const ti = dict.interconexoes
-  const [tiragem, setTiragem] = useState<RespostaTiragem | null>(null)
+  const [tiragem, setTiragem] = useState<RespostaTiragem | null>(tiragemInicial)
   const [horoscopo, setHoroscopo] = useState<Carregamento<string>>(CARREGANDO)
   // `undefined` = ainda não lemos o navegador; `null` = lemos e não há signo
   // escolhido. Sem essa diferença, quem tem signo guardado via por um instante
@@ -235,7 +248,9 @@ export default function HomeHoje({
   const [hoje, setHoje] = useState("")
   // a leitura coletiva do céu: agora vale para todo mundo, e não só para quem
   // ainda não escolheu signo
-  const [ceuDoDia, setCeuDoDia] = useState<Carregamento<string>>(CARREGANDO)
+  const [ceuDoDia, setCeuDoDia] = useState<Carregamento<string>>(
+    ceuDoDiaInicial ? { estado: "pronto", dado: ceuDoDiaInicial } : CARREGANDO,
+  )
   // quem não tem conta não tem mapa, e isso já se sabe sem perguntar; quem tem
   // conta fica em `carregando` até a resposta, para a camada não piscar o
   // estado errado antes de saber
@@ -247,23 +262,26 @@ export default function HomeHoje({
     setHoje(
       new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()),
     )
-    fetch("/api/tiragem-dia")
+    // o servidor já mandou? então não há o que pedir
+    if (tiragemInicial) return
+    fetch(`/api/tiragem-dia?locale=${locale}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setTiragem(d as RespostaTiragem))
       .catch(() => {})
-  }, [])
+  }, [tiragemInicial, locale])
 
   // o `.catch(() => {})` que estava aqui engolia a falha e deixava a seção em
   // carregamento para sempre; agora falha vira `erro`, que é um estado visível
   useEffect(() => {
+    if (ceuDoDiaInicial) return
     let vivo = true
-    void buscar<string>("/api/ceu-dia", (c) => (c?.sintese as string | null) ?? null).then((r) => {
+    void buscar<string>(`/api/ceu-dia?locale=${locale}`, (c) => (c?.sintese as string | null) ?? null).then((r) => {
       if (vivo) setCeuDoDia(r)
     })
     return () => {
       vivo = false
     }
-  }, [])
+  }, [ceuDoDiaInicial, locale])
 
   useEffect(() => {
     if (!initialUser) return

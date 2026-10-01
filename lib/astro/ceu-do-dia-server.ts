@@ -129,6 +129,19 @@ async function ler(dia: string, locale: Locale) {
   }
 }
 
+/**
+ * O que está GRAVADO para aquele dia, sem gerar nada.
+ *
+ * A Home usa isto no servidor: se o texto do dia já existe, ela o entrega
+ * junto com o HTML e o navegador não precisa pedir nada. Se não existe, devolve
+ * nulo e a página segue exatamente como antes, com o cliente buscando — porque
+ * esperar uma geração no servidor atrasaria o HTML inteiro, que é o oposto do
+ * que esta mudança quer.
+ */
+export async function lerCeuGravado(dia: string, locale: Locale) {
+  return ler(dia, locale)
+}
+
 async function gravar(linha: {
   dia: string
   locale: Locale

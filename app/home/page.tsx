@@ -3,6 +3,9 @@ import ShaderBackground from "@/components/shader-background"
 import HomeHoje, { type RegistroDeHoje } from "@/components/home-hoje"
 import { createClient } from "@/lib/supabase/server"
 import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
+import { payloadDoCeuDoDiaSeGravado } from "@/lib/astro/ceu-do-dia-payload"
+import { payloadDaTiragemDoDiaSeGravada } from "@/lib/oracles/tiragem-dia-payload"
+import { getLocale } from "@/lib/i18n/server"
 
 /**
  * A Home: o dia de hoje reunido num lugar só.
@@ -21,6 +24,23 @@ export const dynamic = "force-dynamic"
 export default async function HomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const locale = await getLocale()
+
+  // EM PARALELO, E SÓ O QUE JÁ ESTÁ GRAVADO.
+  //
+  // Antes, a tiragem e o céu só começavam a ser buscados depois da hidratação:
+  // medido em produção, os dois pedidos partiam aos 2 404 ms, e o céu levava
+  // mais 5,4 s. Era dependência artificial — o servidor já sabia o dia no
+  // instante em que montou o HTML.
+  //
+  // As duas são independentes entre si, então vão juntas num Promise.all. E
+  // são as variantes SÓ-CACHE: se o texto do dia ainda não existe, elas voltam
+  // nulas em vez de esperar uma geração, e a página se comporta exatamente como
+  // antes, com o cliente buscando. Nenhum HTML fica preso atrás da OpenAI.
+  const [tiragemInicial, ceuInicial] = await Promise.all([
+    payloadDaTiragemDoDiaSeGravada(locale),
+    payloadDoCeuDoDiaSeGravado(locale),
+  ])
 
   let registro: RegistroDeHoje = null
   if (user) {
@@ -52,7 +72,13 @@ export default async function HomePage() {
             texto corrido continua limitado lá dentro, e a largura extra é gasta
             em composição. No celular e no tablet nada muda. */}
         <div className="max-w-xl lg:max-w-6xl mx-auto px-5 sm:px-8">
-          <HomeHoje initialUser={user} registro={registro} ceu={estadoDoCeu(diaDeHoje())} />
+          <HomeHoje
+            initialUser={user}
+            registro={registro}
+            ceu={estadoDoCeu(diaDeHoje())}
+            tiragemInicial={tiragemInicial}
+            ceuDoDiaInicial={ceuInicial?.sintese ?? null}
+          />
         </div>
       </div>
     </ShaderBackground>

@@ -39,8 +39,6 @@ import { useEffect, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { RuneObject } from "@/components/runes-spread"
 import { BuzioOpen, BuzioClosed } from "@/components/buzios-board"
-import { tarotArtSrc } from "@/lib/oracles/tarot-assets"
-import { lenormandArtSrc } from "@/lib/oracles/lenormand-assets"
 
 /** A placa. Uma medida só, para os cinco. */
 const SLOT = { largura: 62, altura: 92 }
@@ -177,18 +175,22 @@ function Buzios() {
  * estão. Mexer aqui é mexer em quanto cada oráculo pesa na composição.
  */
 const PECAS = [
-  // a lâmina do tarô é escolhida por PESO e por LEITURA, não por significado:
-  // "O Mago" tem 1,3 MB e é uma gravura cheia de detalhe que vira borrão em
-  // 41 px; "A Estrela" tem 293 KB e abre com estrelas de oito pontas, que se
-  // reconhecem de longe. Um bloco decorativo não justifica um megabyte.
-  { chave: "tarot", escala: 1, conteudo: <Arte src={tarotArtSrc("major-17")} /> },
+  // A LÂMINA É A MESMA ARTE, no tamanho em que ela aparece. "A Estrela" original
+  // tem 293 KB e 600 px de largura para ser exibida com 50: aqui entra a versão
+  // de 222 px de altura, com 63 KB, que é exatamente o que uma tela de 3x usa.
+  // Pixel a pixel é a mesma gravura; o que some é o que nunca foi desenhado.
+  //
+  // Elas moram em /brand/fixo porque são identidade, e não a arte do oráculo: o
+  // leque sempre mostra estas duas, não dependem do sorteio, e com o tamanho no
+  // nome podem ficar um ano na borda sem risco de servir arte velha.
+  { chave: "tarot", escala: 1, conteudo: <Arte src="/brand/fixo/leque-tarot-222.png" /> },
   { chave: "iching", escala: 1, conteudo: <Hexagrama /> },
   { chave: "runas", escala: 1.25, conteudo: <RuneObject name="Fehu" glyph="ᚠ" reversed={false} index={0} width={38} height={50} /> },
   { chave: "buzios", escala: 1.18, conteudo: <Buzios /> },
   // a carta do lenormand é escolhida pelo DESENHO, não pelo significado: num
   // slot de 62 px a 44 % de opacidade, a gravura de "Estrelas" é pontinhos
   // esparsos e some. "Chave" tem silhueta cheia e lê de relance
-  { chave: "lenormand", escala: 1, conteudo: <Arte src={lenormandArtSrc("key")} /> },
+  { chave: "lenormand", escala: 1, conteudo: <Arte src="/brand/fixo/leque-lenormand-222.png" /> },
 ] as const
 
 export default function LequeOraculos({ className = "" }: { className?: string }) {

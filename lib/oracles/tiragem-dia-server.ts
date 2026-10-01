@@ -105,6 +105,14 @@ async function ler(dia: string, locale: Locale) {
   }
 }
 
+/**
+ * O que está GRAVADO para aquele dia, sem gerar nada. Mesmo papel do céu:
+ * entregar à Home o que já existe, e nunca fazê-la esperar por uma geração.
+ */
+export async function lerTiragemGravada(dia: string, locale: Locale) {
+  return ler(dia, locale)
+}
+
 async function gravar(linha: {
   dia: string
   locale: Locale

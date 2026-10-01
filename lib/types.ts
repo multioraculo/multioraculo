@@ -19,6 +19,16 @@ export type Consultation = {
   created_at: string
 }
 
+/**
+ * A consulta como a LISTA precisa dela.
+ *
+ * A lista de leituras salvas mostra pergunta, síntese e data, e nada mais. O
+ * tipo largo arrastava `oracle_outputs` e `selected_oracles`, dois jsonb com a
+ * saída inteira dos cinco oráculos, em toda linha de toda listagem. Quem abre
+ * uma leitura continua recebendo tudo, pela página de detalhe.
+ */
+export type ConsultationNaLista = Pick<Consultation, "id" | "question" | "synthesis" | "created_at">
+
 export type JournalEntry = {
   id: string            // uuid
   user_id: string       // FK → auth.users(id)

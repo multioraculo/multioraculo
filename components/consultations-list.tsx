@@ -3,16 +3,16 @@
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
-import type { Consultation } from "@/lib/types"
+import type { ConsultationNaLista } from "@/lib/types"
 
 interface ConsultationsListProps {
-  consultations: Consultation[]
+  consultations: ConsultationNaLista[]
 }
 
 export default function ConsultationsList({ consultations: initial }: ConsultationsListProps) {
   const { dict, formatDate } = useI18n()
   const t = dict.savedReadings
-  const [items, setItems] = useState<Consultation[]>(initial)
+  const [items, setItems] = useState<ConsultationNaLista[]>(initial)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)

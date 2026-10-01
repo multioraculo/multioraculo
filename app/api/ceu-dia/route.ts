@@ -1,5 +1,5 @@
 /**
- * GET /api/ceu-dia
+ * GET /api/ceu-dia[?locale=pt|en|es]
  *
  * O que o céu de hoje coloca em evidência: os fatos escolhidos do dia e a
  * tradução simbólica deles, a mesma para todas as pessoas.
@@ -11,77 +11,34 @@
  * Os fatos saem do cálculo e voltam sempre, mesmo sem chave nem cache; o que
  * depende de geração é só o texto. É por isso que a tela nunca fica vazia: na
  * pior hipótese ela mostra a camada factual, que é o que o produto promete.
+ *
+ * O CORPO DA RESPOSTA NÃO MUDOU. O que mudou foi de onde ele vem — a montagem
+ * está em `payloadDoCeuDoDia`, que a Home também usa no servidor — e o
+ * cabeçalho de cache, explicado em `lib/http/cache-do-dia`.
+ *
+ * `?locale` é opcional e existe para o cache: com ele, a chave da borda é a
+ * própria URL e não há como uma resposta em português ser servida a quem pediu
+ * em espanhol. Sem ele, o idioma continua vindo do cookie, como sempre, e a
+ * resposta não é compartilhada.
  */
 import { NextResponse } from "next/server"
-import OpenAI from "openai"
 import { getLocale } from "@/lib/i18n/server"
-import { recordAiUsage } from "@/lib/ai/usage"
-import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
-import { camadaFactual, fatosDoCeu } from "@/lib/astro/ceu-do-dia"
-import { leituraDoCeu } from "@/lib/astro/ceu-do-dia-server"
+import { isLocale } from "@/lib/i18n/config"
+import { payloadDoCeuDoDia } from "@/lib/astro/ceu-do-dia-payload"
+import { cacheDoDia } from "@/lib/http/cache-do-dia"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 
-const MODELO = "gpt-4o"
+export async function GET(request: Request) {
+  const pedido = new URL(request.url).searchParams.get("locale")
+  const explicito = isLocale(pedido)
+  const locale = explicito ? pedido : await getLocale()
 
-/** Só os campos que a tela usa: o resto do fato é para o prompt e o verificador. */
-function paraTela(fatos: ReturnType<typeof fatosDoCeu>["escolhidos"]) {
-  return fatos.map((f) => ({ id: f.id, factual: f.factual, texto: f.texto }))
-}
+  const corpo = await payloadDoCeuDoDia(locale)
 
-export async function GET() {
-  const locale = await getLocale()
-  const dia = diaDeHoje()
-
-  const semTexto = () => {
-    const ceu = estadoDoCeu(dia)
-    const { escolhidos } = fatosDoCeu(ceu, locale)
-    return NextResponse.json({
-      dia,
-      factual: camadaFactual(ceu, escolhidos, locale),
-      fatos: paraTela(escolhidos),
-      sintese: null,
-      cache: false,
-    })
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return semTexto()
-  const openai = new OpenAI({ apiKey })
-
-  try {
-    const resultado = await leituraDoCeu({
-      dia,
-      locale,
-      gerar: async ({ system, user }) => {
-        const resposta = await openai.chat.completions.create({
-          model: MODELO,
-          temperature: 0.7,
-          response_format: { type: "json_object" },
-          messages: [
-            { role: "system", content: system },
-            { role: "user", content: user },
-          ],
-        })
-        await recordAiUsage({
-          operation: "sky_daily",
-          model: resposta.model ?? MODELO,
-          usage: resposta.usage,
-          seed: `${dia}:${locale}`,
-        })
-        return { conteudo: resposta.choices[0]?.message?.content ?? "{}", model: resposta.model ?? MODELO }
-      },
-    })
-    return NextResponse.json({
-      dia: resultado.dia,
-      factual: resultado.factual,
-      fatos: paraTela(resultado.fatos),
-      sintese: resultado.sintese,
-      cache: resultado.cache,
-    })
-  } catch (erro) {
-    console.error("[ceu-dia]", erro)
-    return semTexto()
-  }
+  // guardar na borda só quando o idioma veio na URL e o texto já existe: uma
+  // resposta sem síntese congelaria o "ainda não ficou pronto" até a virada
+  const publicavel = explicito && corpo.sintese !== null
+  return NextResponse.json(corpo, { headers: { "Cache-Control": cacheDoDia(publicavel) } })
 }

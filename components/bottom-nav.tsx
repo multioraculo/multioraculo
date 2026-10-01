@@ -48,6 +48,19 @@ export default function BottomNav() {
       <Link
         href={href}
         onClick={opts?.onClick}
+        // SEM PREFETCH AUTOMÁTICO AQUI, e o motivo é medido.
+        //
+        // A barra fica sempre visível, então abrir a Home disparava prefetch de
+        // três rotas de uma vez: /sonhos, / e /horoscopo. As três são páginas
+        // dinâmicas, e o prefetch de rota dinâmica guarda o limite de
+        // carregamento mais próximo — que neste projeto não existe, porque não
+        // há nenhum `loading.tsx`. Resultado: três renders completos no
+        // servidor por visita (medidos em 3,9 s, 4,0 s e 4,5 s) para guardar
+        // nada no cliente. Era custo sem contrapartida.
+        //
+        // Links de dentro do conteúdo continuam com prefetch: ali ele guarda o
+        // que deve, e são poucos e abaixo da dobra.
+        prefetch={false}
         aria-current={active ? "page" : undefined}
         className={`bnav-item ${active ? "is-active" : ""} ${opts?.center ? "is-center" : ""}`}
       >

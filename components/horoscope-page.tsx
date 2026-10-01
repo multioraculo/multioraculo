@@ -519,13 +519,13 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
 
   useEffect(() => {
     let vivo = true
-    void buscarComEstado<string>("/api/ceu-dia", (c) => (c?.sintese as string | null) ?? null).then((r) => {
+    void buscarComEstado<string>(`/api/ceu-dia?locale=${locale}`, (c) => (c?.sintese as string | null) ?? null).then((r) => {
       if (vivo) setEvidencia(r)
     })
     return () => {
       vivo = false
     }
-  }, [])
+  }, [locale])
 
   const leitura = dados?.leitura ?? null
   const rotuloEm = dados ? fmt(t.inSign, { signo: dados.nomeSigno }) : ""

@@ -59,3 +59,30 @@
 # teto de 60 s, não configurável. Por isso a consulta é feita em duas rotas:
 #   POST /consultas          → sorteio + interpretação dos 5 oráculos
 #   POST /consultas/sintese  → síntese final em streaming
+
+# ----------------------------------------------------------------------------
+# Cache de assets estáticos.
+#
+# O adaptador do Next já serve `_next/static/*` como `immutable, 1 ano`, porque
+# aqueles nomes carregam o hash do conteúdo. O que está em `public/` ele serve
+# como `max-age=0, must-revalidate`: medido em produção, isso faz a Home
+# revalidar 700 KB de imagem a cada visita.
+#
+# A REGRA AQUI É UMA SÓ: cache longo só para arquivo cujo NOME muda quando o
+# conteúdo muda. Com nome fixo, cache longo significa que quem já baixou a arte
+# antiga continua vendo a antiga, e a correção nunca chega.
+#
+#   /brand/fixo/*   tudo nessa pasta carrega a medida no nome, e trocar a arte é
+#                   publicar outro nome. Seguro travar por um ano. Hoje moram
+#                   ali a marca e as duas lâminas do leque dos cinco oráculos.
+#
+# O QUE NÃO ENTROU, de propósito: `/tarot/art/*` e `/lenormand/*`. São 300 KB
+# cada e seria tentador, mas essas artes JÁ FORAM substituídas mantendo o mesmo
+# nome mais de uma vez neste projeto. Travá-las por um ano deixaria quem visitou
+# antes com a versão velha, sem jeito de corrigir. A política segura para elas é
+# versionar o nome na ingestão; enquanto isso não existe, elas continuam como
+# estão.
+[[headers]]
+  for = "/brand/fixo/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
