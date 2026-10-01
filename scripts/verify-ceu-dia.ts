@@ -27,8 +27,8 @@
  */
 import { readFileSync } from "node:fs"
 import { estadoDoCeu } from "../lib/astro/ceu"
-import { fatosDoCeu, verificarCeu, sistemaDoCeu } from "../lib/astro/ceu-do-dia"
-import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente } from "../lib/astro/editorial"
+import { fatosDoCeu, verificarCeu, sistemaDoCeu, nomesTecnicos } from "../lib/astro/ceu-do-dia"
+import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente, nomesExpostos } from "../lib/astro/editorial"
 import { LOCALES, type Locale } from "../lib/i18n/config"
 
 const falhas: string[] = []
@@ -129,10 +129,23 @@ function parteC() {
     const pedido = vs.filter((v) => v.startsWith("fala como conselho"))
     const esfera = vs.filter((v) => v.startsWith("inventa esfera de vida"))
     const idioma = vs.filter((v) => v.startsWith("a síntese está em"))
+    // O PONTO CEGO QUE ESTAVA AQUI: a parte C declarava um texto "correto" sem
+    // nunca passá-lo pela regra de nomear. O texto inglês desta lista contém
+    // "new", e produção o recusava enquanto o teste o aprovava. Agora ele é
+    // cobrado, e é por isso que ele prova a correção em vez de esconder.
+    const nomeia = vs.filter((v) => v.startsWith("a síntese nomeia"))
     confere(`C · ${locale}: texto correto não é acusado de pedido`, pedido.length === 0, pedido.join(" / "))
     confere(`C · ${locale}: texto correto não é acusado de esfera de vida`, esfera.length === 0, esfera.join(" / "))
     confere(`C · ${locale}: texto correto não é acusado de idioma errado`, idioma.length === 0, idioma.join(" / "))
+    confere(`C · ${locale}: texto correto não é acusado de nomear astrologia`, nomeia.length === 0, nomeia.join(" / "))
   }
+  // o caso exato que reprovou em produção: "new" em uso comum
+  const comNew = "Originality under review sustains the movement toward new perspectives."
+  confere(
+    'C · "movement toward new perspectives" passa, com "new" em uso comum',
+    !violacoesDe(comNew, "en").some((v) => v.startsWith("a síntese nomeia")),
+    violacoesDe(comNew, "en").filter((v) => v.startsWith("a síntese nomeia")).join(" / "),
+  )
 }
 
 // ── D · o detector de idioma ───────────────────────────────────────────────
@@ -234,6 +247,92 @@ function parteF() {
   }
 }
 
+// ── G · nome técnico exposto, contra palavra corrente ──────────────────────
+// A regra cobra nomenclatura astrológica na superfície. Antes ela comparava a
+// string, e por isso proibia a palavra do idioma que por acaso também é termo
+// técnico. Em inglês isso significava banir "new" e "full", que são nomes de
+// fase da Lua e duas das palavras mais frequentes da língua, e foi o que
+// reprovou a geração em inglês nas quatro tentativas em produção.
+//
+// Cada caso abaixo diz o termo em jogo e se o uso é comum ou técnico. O uso
+// comum passa; o técnico continua reprovando. A regra antiga é recalculada
+// aqui ao lado para que o teste prove o que mudou, e o que não mudou.
+type Caso = { texto: string; termo: string; tipo: "comum" | "tecnico" }
+
+const CASOS_NOME: Record<Locale, Caso[]> = {
+  en: [
+    { texto: "The movement toward new perspectives sustains what returns.", termo: "new", tipo: "comum" },
+    { texto: "A full picture of the crossing emerges while originality returns.", termo: "full", tipo: "comum" },
+    { texto: "The town square fills with voices as the crossing holds.", termo: "square", tipo: "comum" },
+    { texto: "Two forces in opposition hold each other without giving way.", termo: "opposition", tipo: "comum" },
+    { texto: "A conjunction of impulses crosses what returns for review.", termo: "conjunction", tipo: "comum" },
+    { texto: "The new moon marks what returns for review.", termo: "new", tipo: "tecnico" },
+    { texto: "A full moon exposes the crossing of wills.", termo: "full", tipo: "tecnico" },
+    { texto: "The square aspect crosses an advance that asserts itself.", termo: "square", tipo: "tecnico" },
+    { texto: "What returns sits in square with an advance that asserts.", termo: "square", tipo: "tecnico" },
+    { texto: "The opposition aspect holds two forces apart.", termo: "opposition", tipo: "tecnico" },
+    { texto: "A conjunction aspect gathers what was separate.", termo: "conjunction", tipo: "tecnico" },
+  ],
+  pt: [
+    { texto: "Uma transformação cheia de revisão atravessa o movimento.", termo: "cheia", tipo: "comum" },
+    { texto: "A oposição entre duas forças se mantém sem recuo.", termo: "oposição", tipo: "comum" },
+    { texto: "Uma conjunção de impulsos atravessa o que retorna.", termo: "conjunção", tipo: "comum" },
+    { texto: "A fase cheia expõe o movimento que retorna.", termo: "cheia", tipo: "tecnico" },
+    { texto: "O aspecto de oposição mantém duas forças afastadas.", termo: "oposição", tipo: "tecnico" },
+    { texto: "O aspecto de conjunção reúne o que estava separado.", termo: "conjunção", tipo: "tecnico" },
+  ],
+  es: [
+    { texto: "Una revisión llena de movimiento sostiene lo que vuelve.", termo: "llena", tipo: "comum" },
+    { texto: "La oposición entre dos fuerzas se mantiene sin retroceso.", termo: "oposición", tipo: "comum" },
+    { texto: "Una conjunción de impulsos atraviesa lo que vuelve.", termo: "conjunción", tipo: "comum" },
+    { texto: "La fase llena expone el movimiento que vuelve.", termo: "llena", tipo: "tecnico" },
+    { texto: "El aspecto de oposición mantiene dos fuerzas apartadas.", termo: "oposición", tipo: "tecnico" },
+    { texto: "El aspecto de conjunción reúne lo que estaba separado.", termo: "conjunción", tipo: "tecnico" },
+  ],
+}
+
+/** A regra como era: a string proibida, sem olhar contexto. */
+function regraAntiga(sintese: string, nomes: string[]): string[] {
+  return nomes.filter((n) => new RegExp(`(^|[^\\p{L}])${n}([^\\p{L}]|$)`, "iu").test(sintese))
+}
+
+function parteG() {
+  const mudou: string[] = []
+  for (const locale of LOCALES) {
+    const nomes = nomesTecnicos(locale)
+    for (const c of CASOS_NOME[locale]) {
+      const agora = nomesExpostos(c.texto, locale, nomes)
+      const antes = regraAntiga(c.texto, nomes)
+      const pegaAgora = agora.some((n) => n.toLowerCase() === c.termo.toLowerCase())
+      const pegavaAntes = antes.some((n) => n.toLowerCase() === c.termo.toLowerCase())
+
+      if (c.tipo === "comum") {
+        confere(`G · ${locale}: "${c.termo}" em uso comum passa — ${c.texto.slice(0, 40)}`, !pegaAgora, `pegou: ${agora.join(", ")}`)
+      } else {
+        confere(`G · ${locale}: "${c.termo}" em uso técnico reprova — ${c.texto.slice(0, 40)}`, pegaAgora, "passou sem violação")
+        // o que já era protegido continua protegido: esta é a prova de que a
+        // qualificação por contexto não afrouxou nenhuma recusa técnica
+        confere(`G · ${locale}: "${c.termo}" técnico já reprovava antes, e continua`, pegavaAntes === pegaAgora, `antes=${pegavaAntes} agora=${pegaAgora}`)
+      }
+      if (pegavaAntes !== pegaAgora) mudou.push(`${locale}/${c.termo}/${c.tipo}`)
+    }
+  }
+
+  // o delta precisa ser SÓ de uso comum. Se uma recusa técnica tiver virado
+  // passagem em qualquer idioma, a correção foi longe demais.
+  const deltaTecnico = mudou.filter((m) => m.endsWith("/tecnico"))
+  confere("G · nenhuma recusa de uso TÉCNICO foi afrouxada em idioma nenhum", deltaTecnico.length === 0, deltaTecnico.join(" | "))
+
+  // e o inverso: o verificador e o prompt leem a MESMA lista. Se divergirem, o
+  // modelo volta a ser julgado por um critério que não vê.
+  for (const locale of LOCALES) {
+    const lista = nomesTecnicos(locale)
+    const sys = sistemaDoCeu(locale)
+    const fora = lista.filter((n) => !sys.includes(n))
+    confere(`G · ${locale}: o prompt enuncia todos os ${lista.length} termos que o verificador cobra`, fora.length === 0, `faltam: ${fora.join(", ")}`)
+  }
+}
+
 function main() {
   parteA()
   parteB()
@@ -241,6 +340,7 @@ function main() {
   parteD()
   parteE()
   parteF()
+  parteG()
 
   if (falhas.length) {
     console.error(`\nA leitura do céu falhou em ${falhas.length} ponto(s):\n`)

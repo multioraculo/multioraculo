@@ -305,6 +305,145 @@ export const ESFERA_DE_VIDA: Record<Locale, RegExp[]> = {
 }
 
 // ---------------------------------------------------------------------------
+// nome técnico exposto, contra palavra corrente
+// ---------------------------------------------------------------------------
+
+/**
+ * NOMES QUE TAMBÉM SÃO PALAVRA CORRENTE DO IDIOMA.
+ *
+ * A regra de não nomear astrologia comparava a síntese contra a lista de nomes
+ * de corpos, signos, aspectos e fases, exigindo que nenhum aparecesse. A
+ * intenção é que o texto não exponha nomenclatura técnica. O efeito, em
+ * inglês, era proibir palavras comuníssimas da língua.
+ *
+ * Medido em produção em 2026-10-01: a geração em inglês reprovou nas quatro
+ * tentativas e devolveu `sintese: null`. "new" e "full" são nomes de fase da
+ * Lua em inglês, e são também duas das palavras mais frequentes do idioma;
+ * "square" e "opposition" são nomes de aspecto e prosa comum.
+ *
+ * PORTUGUÊS E ESPANHOL ESCAPAVAM POR ACIDENTE, de dois jeitos:
+ *
+ *  - por flexão: a comparação é de palavra exata, e "nova" não alcança
+ *    "novas", nem "nueva" alcança "nuevas". A prosa flexiona e passa. O inglês
+ *    não flexiona, então "new" é a própria forma usada no texto;
+ *  - por jargão: "quadratura" e "cuadratura" não são palavra de uso corrente,
+ *    enquanto "square" é.
+ *
+ * Por isso as listas abaixo não são traduções uma da outra, e isso é o certo:
+ * em cada idioma entra o que de fato é palavra corrente naquele idioma. O
+ * resultado é o mesmo grau de exigência nos três, que é o objetivo.
+ *
+ * FICAM DE FORA, de propósito:
+ *
+ *  - os corpos ("Sol", "Lua", "Sun", "Moon"). Numa leitura do céu, escrever
+ *    "a lua" É nomear o corpo, e é exatamente o que a separação de camadas
+ *    recusa. Seguem proibidos sem condição, nos três idiomas;
+ *  - os signos, mesmo os que são palavra comum, e há vários: "Touro",
+ *    "Gêmeos", "Leão", "Virgem", "Peixes", "Aquário" e "Câncer" em português,
+ *    "Cancer" e "Leo" em inglês, "Tauro", "Acuario" e "Piscis" em espanhol.
+ *    Uma síntese de 45 palavras sobre movimentos abstratos não usa nenhum
+ *    deles no sentido comum, e afrouxar a proteção dos signos custaria mais do
+ *    que resolve;
+ *  - as fases de duas palavras e os aspectos de jargão ("quarto crescente",
+ *    "waning gibbous", "trígono", "quincunx"), que não são ambíguos em idioma
+ *    nenhum.
+ */
+const NOMES_AMBIGUOS: Record<Locale, string[]> = {
+  pt: ["nova", "cheia", "oposição", "conjunção"],
+  en: ["new", "full", "square", "opposition", "conjunction"],
+  es: ["nueva", "llena", "oposición", "conjunción"],
+}
+
+/**
+ * Palavras que marcam discurso astrológico em volta do termo. Quando uma
+ * dessas está perto, o termo ambíguo está sendo usado como nomenclatura.
+ */
+const MARCA_TECNICA: Record<Locale, RegExp> = {
+  pt: /(^|[^\p{L}])(aspectos?|fases?|signos?|graus?|orbes?|retrógrad\p{L}*|trânsitos?|zodíaco|lunar|lua|sol|planetas?|mapa)([^\p{L}]|$)/iu,
+  en: /(^|[^\p{L}])(aspects?|phases?|signs?|degrees?|orbs?|retrograde|transits?|zodiac|lunar|moon|sun|planets?|chart)([^\p{L}]|$)/iu,
+  es: /(^|[^\p{L}])(aspectos?|fases?|signos?|grados?|orbes?|retrógrad\p{L}*|tránsitos?|zodíaco|lunar|luna|sol|planetas?|carta)([^\p{L}]|$)/iu,
+}
+
+/**
+ * Formas em que o termo ambíguo é nomenclatura sem precisar de contexto: "lua
+ * nova", "new moon", "square aspect", "in square with". Em inglês entram
+ * "square" e "conjunction" no uso relacional, que só existe em astrologia;
+ * "opposition" não entra, porque "in opposition to" é inglês comum.
+ */
+const FRASE_TECNICA: Record<Locale, RegExp[]> = {
+  pt: [/\blua\s+(nova|cheia)\b/giu, /\b(nova|cheia)\s+lua\b/giu, /\b(aspecto|fase)\s+de\s+(oposição|conjunção)\b/giu],
+  en: [
+    /\b(new|full)\s+moon\b/giu,
+    /\bmoon\s+is\s+(new|full)\b/giu,
+    /\b(square|opposition|conjunction)\s+(aspect|phase)\b/giu,
+    /\b(aspect|phase)\s+of\s+(square|opposition|conjunction)\b/giu,
+    /\bin\s+(square|conjunction)\s+(with|to)\b/giu,
+  ],
+  es: [/\bluna\s+(nueva|llena)\b/giu, /\b(nueva|llena)\s+luna\b/giu, /\b(aspecto|fase)\s+de\s+(oposición|conjunción)\b/giu],
+}
+
+/** Quantos caracteres de cada lado contam como "perto" do termo. */
+const JANELA = 40
+
+const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+/**
+ * Os nomes técnicos que a síntese expõe, já descontado o uso corrente.
+ *
+ * Nome não ambíguo é proibido sem condição, como sempre foi. Nome ambíguo só
+ * conta como exposição quando aparece em forma inequivocamente técnica ou perto
+ * de uma marca de discurso astrológico. "new perspectives" passa, "new moon"
+ * não; "the town square" passa, "square aspect" não.
+ */
+export function nomesExpostos(sintese: string, locale: Locale, proibidos: string[]): string[] {
+  const ambiguos = new Set(NOMES_AMBIGUOS[locale].map((n) => n.toLowerCase()))
+  const expostos: string[] = []
+
+  for (const nome of proibidos) {
+    const ocorrencias = [...sintese.matchAll(new RegExp(`(^|[^\\p{L}])(${escaparRegex(nome)})([^\\p{L}]|$)`, "giu"))]
+    if (!ocorrencias.length) continue
+
+    if (!ambiguos.has(nome.toLowerCase())) {
+      expostos.push(nome)
+      continue
+    }
+
+    // o termo ambíguo precisa de contexto técnico para contar
+    const tecnico = ocorrencias.some((m) => {
+      const inicio = (m.index ?? 0) + m[1].length
+      const fim = inicio + m[2].length
+
+      // forma técnica que contenha esta própria ocorrência
+      for (const frase of FRASE_TECNICA[locale]) {
+        for (const f of sintese.matchAll(frase)) {
+          const fi = f.index ?? 0
+          if (fi <= inicio && fi + f[0].length >= fim) return true
+        }
+      }
+
+      const janela = sintese.slice(Math.max(0, inicio - JANELA), fim + JANELA)
+      return MARCA_TECNICA[locale].test(janela)
+    })
+    if (tecnico) expostos.push(nome)
+  }
+
+  return expostos
+}
+
+/**
+ * Os nomes técnicos daquele idioma que o modelo precisa evitar, em texto para
+ * entrar no prompt.
+ *
+ * Existe porque o prompt pedia em abstrato ("não repita nome de planeta, de
+ * signo, de aspecto nem de fase") e o modelo era julgado por uma lista que não
+ * via. Escrevendo em inglês ele não tinha como adivinhar que "new" e "full"
+ * estavam nela. Isto não acrescenta exigência nenhuma: enuncia a que já existe.
+ */
+export function vocabularioTecnico(nomes: string[]): string {
+  return [...new Set(nomes.filter(Boolean))].join(", ")
+}
+
+// ---------------------------------------------------------------------------
 // idioma da saída
 // ---------------------------------------------------------------------------
 

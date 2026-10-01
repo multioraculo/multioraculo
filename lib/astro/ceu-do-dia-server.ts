@@ -72,34 +72,85 @@ export async function leituraDoCeu(params: { dia: string; locale: Locale; gerar:
     violacoes: [],
   }
 
-  if (!(await cacheDisponivel())) return { ...base, violacoes: ["cache indisponível"] }
+  if (!(await cacheDisponivel())) {
+    registrar(dia, locale, "cache indisponível")
+    return { ...base, violacoes: ["cache indisponível"] }
+  }
 
   const guardada = await ler(dia, locale)
-  if (guardada) return { ...base, sintese: guardada.sintese, termos: guardada.termos, model: guardada.model, cache: true }
+  if (guardada) {
+    registrar(dia, locale, "cache=hit")
+    return { ...base, sintese: guardada.sintese, termos: guardada.termos, model: guardada.model, cache: true }
+  }
 
   const prompt = promptCeuDoDia(ceu, escolhidos, locale)
   const minimoTermos = minimoDeTermos(escolhidos)
   let violacoes: string[] = []
 
   for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+    const tIa = Date.now()
     const { conteudo, model } = await gerar(comCorrecao(prompt, violacoes))
+    const msIa = Date.now() - tIa
+
     let bruto: unknown
     try {
       bruto = JSON.parse(conteudo)
     } catch {
       violacoes = ["a resposta não era JSON válido"]
+      registrar(dia, locale, "cache=miss", { tentativa, desfecho: "erro_parse", msIa, msVerificador: 0, regras: violacoes })
       continue
     }
+
+    const tV = Date.now()
     const veredito = verificarCeu({ bruto, escolhidos, locale, minimoTermos })
+    const msVerificador = Date.now() - tV
+
     if (!veredito.ok) {
       violacoes = veredito.violacoes
+      registrar(dia, locale, "cache=miss", { tentativa, desfecho: "reprovado", msIa, msVerificador, regras: violacoes })
       continue
     }
+    registrar(dia, locale, "cache=miss", { tentativa, desfecho: "sucesso", msIa, msVerificador, regras: [] })
     await gravar({ dia, locale, ...veredito.sintese, model, tentativas: tentativa })
     return { ...base, sintese: veredito.sintese.sintese, termos: veredito.sintese.termos, model }
   }
 
+  // o caminho que devolve `sintese: null`. Ele existia sem deixar rastro, e
+  // diagnosticar uma reprovação em produção virava dedução a partir do nada.
+  registrar(dia, locale, "cache=miss", { tentativa: TENTATIVAS, desfecho: "esgotado", msIa: 0, msVerificador: 0, regras: violacoes })
   return { ...base, violacoes }
+}
+
+type Tentativa = {
+  tentativa: number
+  desfecho: "sucesso" | "reprovado" | "erro_parse" | "esgotado"
+  msIa: number
+  msVerificador: number
+  regras: string[]
+}
+
+/**
+ * Uma linha por tentativa, nos registros do servidor, no mesmo formato que o
+ * horóscopo já usa.
+ *
+ * NÃO SAI CONTEÚDO DAQUI, e não sai prompt. Só dia, idioma, estado do cache,
+ * tempos, a categoria do desfecho e as mensagens de regra do verificador, que
+ * descrevem estrutura. A leitura do céu é coletiva por definição: não há
+ * pergunta, dado de nascimento nem nada de conta nesta rota. As mensagens de
+ * regra citam no máximo o trecho que as disparou, cortado em 120 caracteres,
+ * como no horóscopo.
+ *
+ * Nada disto aparece para quem usa o produto: a tela continua mostrando a
+ * camada factual quando o texto não vem.
+ */
+function registrar(dia: string, locale: Locale, estado: string, t?: Tentativa): void {
+  const cabeca = `[ceu-dia] dia=${dia} locale=${locale} ${estado}`
+  if (!t) {
+    console.log(cabeca)
+    return
+  }
+  const regras = t.regras.length ? ` regras=${JSON.stringify(t.regras.map((r) => r.slice(0, 120)))}` : ""
+  console.log(`${cabeca} tentativa=${t.tentativa} desfecho=${t.desfecho} msIa=${t.msIa} msVerificador=${t.msVerificador}${regras}`)
 }
 
 function comCorrecao(prompt: { system: string; user: string }, violacoes: string[]): { system: string; user: string } {

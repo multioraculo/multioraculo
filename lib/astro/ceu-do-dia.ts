@@ -27,7 +27,16 @@ import {
   LENTOS,
   LINHA_SIGNO,
 } from "./simbolos"
-import { ESFERA_DE_VIDA, PEDIDO, PROIBIDAS, REGRAS_COMUNS, TRACOS, idiomaDivergente } from "./editorial"
+import {
+  ESFERA_DE_VIDA,
+  PEDIDO,
+  PROIBIDAS,
+  REGRAS_COMUNS,
+  TRACOS,
+  idiomaDivergente,
+  nomesExpostos,
+  vocabularioTecnico,
+} from "./editorial"
 
 export type TermoDoCeu = { texto: string; origem: string }
 export type SinteseDoCeu = { termos: TermoDoCeu[]; sintese: string }
@@ -236,6 +245,44 @@ const IDIOMA_FECHO: Record<Locale, string> = {
 const PALAVRAS_MAX = 45
 const TERMOS = { min: 3, max: 5 }
 
+/**
+ * Todo nome técnico daquele idioma: corpos, signos, aspectos e fases.
+ *
+ * UMA LISTA SÓ, lida pelo prompt e pelo verificador. Antes a lista existia
+ * apenas dentro de `verificarCeu`, e o prompt pedia em abstrato que o texto não
+ * nomeasse nada. O modelo era julgado por um critério que não via, e em inglês
+ * isso foi fatal: "new" e "full" são nomes de fase, e ele não tinha como
+ * adivinhar. Vindo da mesma função, o que se pede é o que se cobra.
+ */
+export function nomesTecnicos(locale: Locale): string[] {
+  return [
+    ...Object.values(CORPOS[locale]).filter(Boolean),
+    ...SIGNOS[locale],
+    ...Object.values(ASPECTOS[locale]),
+    ...FASES[locale],
+  ]
+}
+
+/**
+ * A lista de termos técnicos dita ao modelo, no idioma dele, com a licença que
+ * o verificador de fato concede: palavra comum que também é termo técnico pode
+ * ser usada no sentido comum.
+ */
+const VOCABULARIO: Record<Locale, (lista: string) => string> = {
+  pt: (lista) =>
+    `ESTES SÃO OS TERMOS TÉCNICOS, e nenhum deles aparece nomeado na sua síntese:
+${lista}.
+Alguns também são palavra comum do português. No sentido comum pode: o que não pode é nomear a fase, o aspecto, o signo ou o corpo.`,
+  en: (lista) =>
+    `THESE ARE THE TECHNICAL TERMS, and none of them appears as a name in your synthesis:
+${lista}.
+Several are also ordinary English words. Using one in its ordinary sense is fine: what is not allowed is naming the phase, the aspect, the sign or the body.`,
+  es: (lista) =>
+    `ESTOS SON LOS TÉRMINOS TÉCNICOS, y ninguno aparece nombrado en tu síntesis:
+${lista}.
+Algunos son también palabra común del español. En el sentido común sí: lo que no se puede es nombrar la fase, el aspecto, el signo o el cuerpo.`,
+}
+
 export function sistemaDoCeu(locale: Locale): string {
   return `${IDIOMA[locale]}
 
@@ -247,6 +294,8 @@ DUAS CAMADAS, E VOCÊ ESCREVE SÓ A SEGUNDA
 A tela já mostra a configuração com todos os nomes, logo acima do seu texto: os planetas, os signos, os graus, os aspectos e os orbes. A prova já está dada ali.
 
 Por isso a sua síntese NÃO REPETE NOME NENHUM: nem de planeta, nem de signo, nem de aspecto, nem de fase. Quem lê não deveria precisar decodificar astrologia para entender a mensagem.
+
+${VOCABULARIO[locale](vocabularioTecnico(nomesTecnicos(locale)))}
 
 Em vez de "Mercúrio em Libra em oposição a Saturno retrógrado em Áries marca um confronto entre comunicação e estrutura", escreva algo como "Pensamento e limite ficam frente a frente, e comparação e definição entram no mesmo movimento".
 
@@ -360,17 +409,13 @@ export function verificarCeu(params: {
     violacoes.push(`a síntese está em ${LOCALE_META[outroIdioma].promptName} e precisa estar em ${LOCALE_META[locale].promptName}`)
   }
 
-  // 1. a superfície não nomeia astrologia
-  const proibidoNomear = [
-    ...Object.values(CORPOS[locale]).filter(Boolean),
-    ...SIGNOS[locale],
-    ...Object.values(ASPECTOS[locale]),
-    ...FASES[locale],
-  ]
-  for (const nome of proibidoNomear) {
-    if (new RegExp(`(^|[^\\p{L}])${nome}([^\\p{L}]|$)`, "iu").test(sintese)) {
-      violacoes.push(`a síntese nomeia "${nome}"`)
-    }
+  // 1. a superfície não nomeia astrologia.
+  //
+  // `nomesExpostos` qualifica o nome ambíguo pelo contexto, em vez de proibir a
+  // string. A regra cobra nomenclatura exposta, e não a palavra do idioma que
+  // por acaso também é termo técnico: "new perspectives" passa, "new moon" não.
+  for (const nome of nomesExpostos(sintese, locale, nomesTecnicos(locale))) {
+    violacoes.push(`a síntese nomeia "${nome}"`)
   }
 
   // 2. cada termo declara uma origem que existe, e aparece na síntese
