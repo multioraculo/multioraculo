@@ -27,7 +27,7 @@ import {
   LENTOS,
   LINHA_SIGNO,
 } from "./simbolos"
-import { PROIBIDAS, REGRAS_COMUNS, TRACOS, idiomaDivergente } from "./editorial"
+import { ESFERA_DE_VIDA, PEDIDO, PROIBIDAS, REGRAS_COMUNS, TRACOS, idiomaDivergente } from "./editorial"
 
 export type TermoDoCeu = { texto: string; origem: string }
 export type SinteseDoCeu = { termos: TermoDoCeu[]; sintese: string }
@@ -424,10 +424,17 @@ export function verificarCeu(params: {
   if (TRACOS.test(sintese)) violacoes.push("usa travessão")
   if (/arquetíp|arquétip/i.test(sintese)) violacoes.push('usa a palavra "arquétipo"')
 
-  const CONSELHO = /(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\w*/gi
-  for (const achou of sintese.matchAll(CONSELHO)) violacoes.push(`fala como conselho: "${achou[0]}"`)
-  const VIDA = /(afetiv|afeto|amoros|relaç|relacionament|vínculo|trabalh|carreir|financ|dinheiro|saúde|família)\w*/gi
-  for (const achou of sintese.matchAll(VIDA)) violacoes.push(`inventa esfera de vida: "${achou[0]}"`)
+  // As duas regras abaixo moraram aqui como regex em português só, e por isso
+  // valiam apenas para PT: as listas de EN e ES simplesmente não existiam.
+  // Enquanto toda saída vinha em português isso não aparecia. Agora que a
+  // síntese sai no idioma pedido, elas estão em `editorial.ts` com as três
+  // versões, e o PT é a mesma lista de antes, sem um verbo a mais nem a menos.
+  for (const re of PEDIDO[locale]) {
+    for (const achou of sintese.matchAll(re)) violacoes.push(`fala como conselho: "${achou[0]}"`)
+  }
+  for (const re of ESFERA_DE_VIDA[locale]) {
+    for (const achou of sintese.matchAll(re)) violacoes.push(`inventa esfera de vida: "${achou[0]}"`)
+  }
 
   const frases = sintese.split(/(?<=[.!?])\s+/).filter(Boolean)
   if (frases.length !== 2) violacoes.push(`${frases.length} frases (queremos 2)`)

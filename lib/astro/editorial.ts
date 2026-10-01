@@ -238,6 +238,47 @@ export const CONSELHO: Record<Locale, RegExp[]> = {
   es: [/\b(procura|evita|intenta|busca|permitete|recuerda|debes|necesitas|es hora de)\b/i],
 }
 
+/**
+ * O CÉU COMO AGENTE QUE PEDE. Regra diferente de `CONSELHO`, e as duas existem.
+ *
+ * `CONSELHO` pega o imperativo dirigido ao leitor: "procure", "evite", "você
+ * deve". Esta pega a outra metade da mesma recusa, com o céu no lugar do
+ * sujeito: ele não exige, não pede, não demanda, não convida, não favorece, não
+ * sugere e não desafia ninguém. É a cobrança da regra que o prompt do céu
+ * enuncia, e por isso tem nome próprio em vez de virar mais uma entrada em
+ * `CONSELHO`, onde mudaria o sentido das duas.
+ *
+ * O PT é exatamente a lista que vivia dentro de `verificarCeu`, movida para cá
+ * sem alteração. EN e ES são os equivalentes dela, um a um: exigir/require e
+ * demand, pedir/ask, demandar/demand, convidar/invite, favorecer/favor,
+ * desafiar/challenge, propor/propose, sugerir/suggest, aconselhar/advise.
+ * Nenhum verbo novo entrou em nenhum dos três.
+ */
+export const PEDIDO: Record<Locale, RegExp[]> = {
+  pt: [/(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\w*/gi],
+  en: [/(requir|demand|ask|invit|favou?r|challeng|propos|suggest|advis)\w*/gi],
+  es: [/(exig|pid(e|iendo)|demand|invit|favorec|desafi|propon|sugier|aconsej)\w*/gi],
+}
+
+/**
+ * ESFERA DA VIDA QUE O TEXTO NÃO PODE SABER.
+ *
+ * A leitura do céu vale para todas as pessoas, e quem a escreve não sabe nada
+ * sobre quem lê: nomear relações, trabalho, dinheiro ou saúde é inventar um
+ * destinatário. Não existia versão multilíngue desta regra em lugar nenhum do
+ * projeto; o PT é a lista que vivia dentro de `verificarCeu`, intacta, e EN e
+ * ES são a tradução dos mesmos domínios.
+ *
+ * "affectio" e "affectiv", e não "affect": em inglês "affects" é verbo neutro e
+ * comum, e pegá-lo tornaria o verificador mais restritivo em EN do que é em PT,
+ * onde "afetiv" e "afeto" nomeiam o domínio afetivo e não a ação de afetar.
+ */
+export const ESFERA_DE_VIDA: Record<Locale, RegExp[]> = {
+  pt: [/(afetiv|afeto|amoros|relaç|relacionament|vínculo|trabalh|carreir|financ|dinheiro|saúde|família)\w*/gi],
+  en: [/(affectio|affectiv|romanc|romantic|love|relationship|bond|work|career|financ|money|health|famil)\w*/gi],
+  es: [/(afectiv|afecto|amoros|relaci|vincul|trabaj|carrer|financ|dinero|salud|famili)\w*/gi],
+}
+
 // ---------------------------------------------------------------------------
 // idioma da saída
 // ---------------------------------------------------------------------------
