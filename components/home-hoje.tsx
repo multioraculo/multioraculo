@@ -62,6 +62,7 @@ import FocusCard, { useFocusCard } from "@/components/focus-card"
 import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import LequeOraculos from "@/components/leque-oraculos"
+import ImagemDoInconsciente from "@/components/imagem-do-inconsciente"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 
@@ -78,6 +79,24 @@ const LARGURA_LENORMAND = 140
 const semNumero = (nome: string) => nome.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 
 // ── as três gramáticas ──────────────────────────────────────────────────────
+
+/**
+ * A abertura do Diário daquele dia.
+ *
+ * Determinística pela data, como o símbolo do inconsciente: a mesma para todo
+ * mundo, sem sorteio por pessoa e sem trocar a cada renderização. Uma frase que
+ * mudasse ao piscar transformaria o convite em ruído.
+ */
+function indiceDaAbertura(dia: string, quantas: number): number {
+  if (quantas <= 0) return 0
+  let n = 0
+  for (let i = 0; i < dia.length; i++) n = (n * 31 + dia.charCodeAt(i)) % 100000
+  return n % quantas
+}
+
+function aberturaDoDia(dia: string, aberturas: readonly string[]): string {
+  return aberturas[indiceDaAbertura(dia, aberturas.length)] ?? ""
+}
 
 /** O rótulo que abre uma camada. Sempre o mesmo, para o padrão ser aprendido. */
 function Rotulo({ children }: { children: ReactNode }) {
@@ -399,8 +418,18 @@ export default function HomeHoje({
                 </>
               ) : (
                 <>
-                  <h2 className="text-white/90 instrument italic text-lg">{t.diaryQuestion}</h2>
-                  <Chamada href="/diario">{t.diaryCta}</Chamada>
+                  {/* Uma abertura, não uma pergunta. "O que ficou de hoje?"
+                      devolve à pessoa o trabalho de começar, e começar é a
+                      parte difícil de escrever. A frase abaixo é só um convite
+                      editorial: NADA é gravado por vê-la, e ela chega ao Diário
+                      como rascunho, para ser apagada em uma tecla se não
+                      servir. Muda com o dia, igual para todos. */}
+                  <p className="text-white/70 instrument italic text-[17px] sm:text-[18px] leading-snug">
+                    {aberturaDoDia(ceu.dia, dict.home.journalOpenings)}
+                  </p>
+                  <Chamada href={`/diario?abertura=${indiceDaAbertura(ceu.dia, dict.home.journalOpenings.length)}`}>
+                    {t.journalContinue}
+                  </Chamada>
                 </>
               )}
             </div>
@@ -412,18 +441,21 @@ export default function HomeHoje({
             dia, não a identidade dele. */}
         <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
           <Modulo className="p-6 sm:p-7 lg:col-span-7">
-            <CeuDeHoje sintese={ceuDoDia} ceu={ceu} t={t as unknown as Record<string, string>} />
-          </Modulo>
-
-          <Modulo className="p-6 sm:p-7 lg:col-span-5">
-            <ParaVoce
-              signo={signo}
-              foco={horoscopo}
-              mapa={mapa}
+            <CeuDeHoje
+              sintese={ceuDoDia}
+              ceu={ceu}
               t={t as unknown as Record<string, string>}
               ti={ti as unknown as Record<string, string>}
-              locale={locale}
             />
+          </Modulo>
+
+          {/* Era "Para você", e repetia o horóscopo que já está logo ao lado.
+              Agora é a porta dos Sonhos: uma imagem simbólica por dia, a mesma
+              para todos, com a fonte à vista. As duas chamadas que moravam aqui
+              (horóscopo e Interconexões) foram para "O céu de hoje", que é a
+              camada a que elas pertencem. */}
+          <Modulo className="p-6 sm:p-7 lg:col-span-5">
+            <ImagemDoInconsciente dia={ceu.dia} />
           </Modulo>
         </div>
       </div>
@@ -627,7 +659,17 @@ function ConviteDePergunta({
  * minguantes não faz sentido nenhum. Agora existe uma só, no módulo do dia, e
  * ela é a completa.
  */
-function CeuDeHoje({ sintese, ceu, t }: { sintese: Carregamento<string>; ceu: Ceu; t: Record<string, string> }) {
+function CeuDeHoje({
+  sintese,
+  ceu,
+  t,
+  ti,
+}: {
+  sintese: Carregamento<string>
+  ceu: Ceu
+  t: Record<string, string>
+  ti: Record<string, string>
+}) {
   return (
     <div>
       <Rotulo>{t.skySection}</Rotulo>
@@ -662,110 +704,15 @@ function CeuDeHoje({ sintese, ceu, t }: { sintese: Carregamento<string>; ceu: Ce
       </div>
 
       <Chamada href="/horoscopo">{t.seeFullSky}</Chamada>
+
+      {/* As duas saídas da camada astrológica moram aqui, e não num card
+          separado: o horóscopo é este mesmo céu lido por signo, e as
+          Interconexões são este mesmo céu lido pelo mapa de quem abre. Estavam
+          num terceiro módulo que repetia o assunto com outro título. */}
+      <Chamada href="/interconexoes" destino={ti.callFields}>
+        {ti.callCta}
+      </Chamada>
     </div>
   )
 }
 
-/**
- * PARA VOCÊ: o recorte pessoal daquele mesmo céu, em três estados.
- *
- * Sem signo, é um convite. Com signo, é a leitura do signo, que continua sendo
- * compartilhada, e é isso que a frase precisa dizer com todas as letras. Com
- * mapa, é a única que é de fato pessoal.
- *
- * SEM GLIFO ZODIACAL. O ♍ estava aqui e parecia peça de app genérico de
- * astrologia: um símbolo que não pertence ao desenho do Multioráculo e que não
- * informa nada a quem não o reconhece. Quem carrega o signo agora é a
- * tipografia, no mesmo corpo e no mesmo itálico das perguntas das outras
- * camadas.
- */
-function ParaVoce({
-  signo,
-  foco,
-  mapa,
-  t,
-  ti,
-  locale,
-}: {
-  signo: number | null | undefined
-  foco: Carregamento<string>
-  mapa: Carregamento<{ temMapa: boolean; primeira: string | null }>
-  t: Record<string, string>
-  ti: Record<string, string>
-  locale: string
-}) {
-  const signos = SIGNOS[locale as keyof typeof SIGNOS]
-
-  // ENQUANTO NÃO SE SABE, não se afirma nada. Antes esta camada decidia com
-  // `signo` nulo e `mapa` nulo, que na primeira renderização significavam
-  // apenas "ainda não perguntei": quem tinha signo guardado via o convite de
-  // escolher signo, e quem tinha mapa via a leitura do signo, cada um por um
-  // instante, antes de a tela se corrigir sozinha.
-  if (signo === undefined || mapa.estado === "carregando") {
-    return (
-      <div>
-        <Rotulo>{t.forYou}</Rotulo>
-        <div className="h-[1.6em] w-40 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none mt-3" />
-        <LinhasCarregando linhas={2} className="mt-5 max-w-xl" />
-      </div>
-    )
-  }
-
-  // C. quem tem mapa: a leitura que é mesmo da pessoa, sem chamada comercial
-  if (mapa.estado === "pronto" && mapa.dado.temMapa) {
-    return (
-      <div>
-        <Rotulo>{t.forYou}</Rotulo>
-        <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">{ti.todayTitle}</h2>
-        {mapa.dado.primeira && (
-          <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">{mapa.dado.primeira}</p>
-        )}
-        <Chamada href="/interconexoes">{t.seeFullReading}</Chamada>
-      </div>
-    )
-  }
-
-  // B. quem tem signo e não tem mapa: a leitura do signo, dita como o que ela é
-  if (signo !== null) {
-    return (
-      <div>
-        <Rotulo>{t.forYou}</Rotulo>
-        <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">
-          {fmt(t.signToday, { signo: signos[signo] })}
-        </h2>
-        {foco.estado === "carregando" && <LinhasCarregando linhas={2} className="mt-5 max-w-xl" />}
-        {foco.estado === "pronto" && (
-          <p className="text-white/80 text-[14px] leading-relaxed font-light mt-4 max-w-xl">{foco.dado}</p>
-        )}
-        {foco.estado === "ausente" && (
-          <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
-        )}
-        {foco.estado === "erro" && (
-          <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
-        )}
-        <Chamada href="/horoscopo">{t.seeSignReading}</Chamada>
-
-        <Filete />
-
-        {/* a distinção, explícita: o de cima é de todo mundo do signo, o do
-            mapa é o único que é só seu */}
-        <p className="text-white/50 text-[13px] leading-relaxed font-light max-w-xl">
-          {fmt(t.sharedWithSign, { signo: signos[signo] })} {t.yourChartDiffers}
-        </p>
-        <Chamada href="/interconexoes" destino={ti.callFields}>
-          {ti.callCta}
-        </Chamada>
-      </div>
-    )
-  }
-
-  // A. sem signo: o convite, e nada mais. O céu já foi dito na camada de cima
-  return (
-    <div>
-      <Rotulo>{t.forYou}</Rotulo>
-      <h2 className="text-white/90 instrument italic text-[21px] leading-snug mt-2.5">{t.horoscopeVisitor}</h2>
-      <p className="text-white/50 text-[13px] leading-relaxed font-light mt-3 max-w-xl">{t.horoscopeVisitorHint}</p>
-      <Chamada href="/horoscopo">{t.pickMySign}</Chamada>
-    </div>
-  )
-}

@@ -81,6 +81,21 @@ export const en: Dictionary = {
 
   home: {
     brandSubtitle: "Different paths to read the present.",
+    symbolTitle: "Image from the unconscious",
+    symbolAsk: "Did this image show up in your dream?",
+    symbolCta: "Interpret my dream",
+    symbolNote: "The same image for everyone today. Something to explore, not a reading of yours.",
+    symbolEditorial: "our editorial reading",
+    powerEdit: "Edit",
+    journalContinue: "Continue in the Journal",
+    journalOpenings: [
+      "Dear diary, early this morning…",
+      "There is one thing about today I do not want to forget:",
+      "The first image that stayed with me today was",
+      "There was a small moment today that kept going with me:",
+      "I am not sure why, but today I kept thinking about",
+      "If I had to keep one sentence from today, it would be",
+    ],
     today: "Today",
     forYou: "For you",
     yourRecord: "Your record",
@@ -123,6 +138,12 @@ export const en: Dictionary = {
 
   marcos: {
     title: "Milestones",
+    ofTarget: "of {n} days",
+    targetLabel: "Target in days, if you want one",
+    targetHint: "leave empty for a count with no end",
+    exampleLabel: "example",
+    exampleName: "paying attention to my dreams",
+    makeMine: "Start this one",
     days: "{n} days",
     oneDay: "1 day",
     zeroDays: "starts today",

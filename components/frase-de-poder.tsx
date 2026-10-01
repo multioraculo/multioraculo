@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
+import Lapis from "@/components/lapis"
 
 /**
  * A frase que a pessoa escolhe repetir todos os dias.
@@ -173,8 +174,12 @@ export default function FraseDePoder() {
           <p className="text-white/90 group-hover:text-white instrument italic text-[20px] sm:text-[22px] leading-snug mt-4 transition-colors">
             {frase}
           </p>
-          <span className="block text-white/25 group-hover:text-white/50 text-[11px] font-light mt-4 transition-colors">
-            {c.edit}
+          {/* a marca de edição precisa ser VISTA sem hover: a frase é da pessoa,
+              e depender de descobrir que o texto é clicável faz muita gente
+              nunca trocar a frase que escreveu no primeiro dia */}
+          <span className="inline-flex items-center gap-1.5 text-white/45 group-hover:text-white/85 text-[12px] font-light mt-4 transition-colors">
+            <Lapis />
+            {t.powerEdit}
           </span>
         </>
       ) : (

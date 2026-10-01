@@ -11,3 +11,8 @@ data/pdfs_index/
 # Já foram commitadas por engano uma vez; daqui não saem.
 app/preview-*/
 scripts/prova-*.ts
+
+# Fontes de pesquisa editorial. Ficam FORA de data/pdfs/ de proposito: aquela
+# pasta e o corpus aprovado da sintese C-base-min, e um PDF a mais la dentro
+# muda o indice, que e conferido por SHA-256 e derruba a sintese em producao.
+data/fontes/

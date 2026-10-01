@@ -14,9 +14,9 @@ import { fmt } from "@/lib/i18n"
 import { ContagemDeDias } from "@/components/marcos-home"
 import { diasDesde, hojeCivil, type Marco } from "@/lib/marcos"
 
-type Rascunho = { name: string; started_on: string; note: string }
+type Rascunho = { name: string; started_on: string; note: string; target: string }
 
-const vazio = (): Rascunho => ({ name: "", started_on: hojeCivil(), note: "" })
+const vazio = (): Rascunho => ({ name: "", started_on: hojeCivil(), note: "", target: "" })
 
 export default function MarcosLista() {
   const { dict, formatDate } = useI18n()
@@ -44,7 +44,12 @@ export default function MarcosLista() {
     await fetch("/api/marcos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: novo.name, started_on: novo.started_on, note: novo.note || null }),
+      body: JSON.stringify({
+        name: novo.name,
+        started_on: novo.started_on,
+        note: novo.note || null,
+        target: novo.target.trim() === "" ? null : Number(novo.target),
+      }),
     })
     setNovo(null)
     setSalvando(false)
@@ -95,6 +100,20 @@ export default function MarcosLista() {
           max={hojeCivil()}
           onChange={(e) => mudar({ ...valor, started_on: e.target.value })}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none focus:border-white/25 transition-colors [color-scheme:dark]"
+        />
+      </div>
+      <div>
+        {/* meta opcional: vazio é contagem sem fim, que é o que a maioria dos
+            marcos é. Por isso ela vem depois da data, e não antes */}
+        <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-1.5">{t.targetLabel}</label>
+        <input
+          type="number"
+          min={1}
+          max={3650}
+          value={valor.target}
+          placeholder={t.targetHint}
+          onChange={(e) => mudar({ ...valor, target: e.target.value })}
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white/85 text-sm placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
         />
       </div>
       <div>
@@ -149,7 +168,14 @@ export default function MarcosLista() {
                 {campos(rascunho, setRascunho)}
                 <div className="flex gap-4 mt-4">
                   <button
-                    onClick={() => alterar(marco.id, { name: rascunho.name, started_on: rascunho.started_on, note: rascunho.note || null })}
+                    onClick={() =>
+                      alterar(marco.id, {
+                        name: rascunho.name,
+                        started_on: rascunho.started_on,
+                        note: rascunho.note || null,
+                        target: rascunho.target.trim() === "" ? null : Number(rascunho.target),
+                      })
+                    }
                     disabled={salvando}
                     className="text-white/80 hover:text-white text-sm disabled:opacity-40 transition-colors"
                   >
@@ -162,7 +188,7 @@ export default function MarcosLista() {
               </>
             ) : (
               <>
-                <ContagemDeDias dias={diasDesde(marco.started_on)} t={t} />
+                <ContagemDeDias dias={diasDesde(marco.started_on)} t={t} meta={marco.target} />
                 <p className="text-white/80 text-[15px] font-light mt-1">{marco.name}</p>
                 <p className="text-white/25 text-[11px] font-light mt-1">
                   {fmt(t.since, { data: formatDate(`${marco.started_on}T12:00:00`) })}
@@ -173,7 +199,12 @@ export default function MarcosLista() {
                   <button
                     onClick={() => {
                       setEditando(marco.id)
-                      setRascunho({ name: marco.name, started_on: marco.started_on, note: marco.note ?? "" })
+                      setRascunho({
+                        name: marco.name,
+                        started_on: marco.started_on,
+                        note: marco.note ?? "",
+                        target: marco.target ? String(marco.target) : "",
+                      })
                     }}
                     className="text-white/35 hover:text-white/70 transition-colors"
                   >

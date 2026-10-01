@@ -83,6 +83,21 @@ export const pt = {
 
   home: {
     brandSubtitle: "Diferentes caminhos para ler o presente.",
+    symbolTitle: "Imagem do inconsciente",
+    symbolAsk: "Essa imagem apareceu no seu sonho?",
+    symbolCta: "Interpretar meu sonho",
+    symbolNote: "A mesma imagem para todos hoje. É algo para explorar, e não uma leitura sua.",
+    symbolEditorial: "leitura editorial nossa",
+    powerEdit: "Editar",
+    journalContinue: "Continuar no Diário",
+    journalOpenings: [
+      "Querido diário, hoje bem cedinho…",
+      "Tem uma coisa de hoje que eu não quero esquecer:",
+      "A primeira imagem que ficou comigo hoje foi",
+      "Hoje teve um momento pequeno que continuou comigo:",
+      "Não sei exatamente por quê, mas hoje fiquei pensando em",
+      "Se eu tivesse que guardar uma frase de hoje, seria",
+    ],
     today: "Hoje",
     forYou: "Para você",
     yourRecord: "Seu registro",
@@ -125,6 +140,12 @@ export const pt = {
 
   marcos: {
     title: "Marcos",
+    ofTarget: "de {n} dias",
+    targetLabel: "Meta em dias, se quiser",
+    targetHint: "deixe vazio para uma contagem sem fim",
+    exampleLabel: "exemplo",
+    exampleName: "prestando atenção nos meus sonhos",
+    makeMine: "Começar este",
     days: "{n} dias",
     oneDay: "1 dia",
     zeroDays: "começa hoje",

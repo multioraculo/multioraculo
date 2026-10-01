@@ -81,6 +81,21 @@ export const es: Dictionary = {
 
   home: {
     brandSubtitle: "Diferentes caminos para leer el presente.",
+    symbolTitle: "Imagen del inconsciente",
+    symbolAsk: "¿Esta imagen apareció en tu sueño?",
+    symbolCta: "Interpretar mi sueño",
+    symbolNote: "La misma imagen para todos hoy. Es algo para explorar, no una lectura tuya.",
+    symbolEditorial: "lectura editorial nuestra",
+    powerEdit: "Editar",
+    journalContinue: "Continuar en el Diario",
+    journalOpenings: [
+      "Querido diario, hoy bien temprano…",
+      "Hay una cosa de hoy que no quiero olvidar:",
+      "La primera imagen que se quedó conmigo hoy fue",
+      "Hoy hubo un momento pequeño que siguió conmigo:",
+      "No sé exactamente por qué, pero hoy estuve pensando en",
+      "Si tuviera que guardar una frase de hoy, sería",
+    ],
     today: "Hoy",
     forYou: "Para ti",
     yourRecord: "Tu registro",
@@ -123,6 +138,12 @@ export const es: Dictionary = {
 
   marcos: {
     title: "Hitos",
+    ofTarget: "de {n} días",
+    targetLabel: "Meta en días, si quieres",
+    targetHint: "déjalo vacío para una cuenta sin fin",
+    exampleLabel: "ejemplo",
+    exampleName: "prestando atención a mis sueños",
+    makeMine: "Empezar este",
     days: "{n} días",
     oneDay: "1 día",
     zeroDays: "empieza hoy",

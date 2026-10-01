@@ -7,7 +7,7 @@
  */
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { FORMATO_DATA, hojeCivil } from "@/lib/marcos"
+import { FORMATO_DATA, META_MAXIMA, hojeCivil } from "@/lib/marcos"
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -30,6 +30,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     mudancas.started_on = started_on
   }
   if (corpo?.note !== undefined) mudancas.note = corpo.note ? String(corpo.note).trim().slice(0, 280) : null
+  if (corpo?.target !== undefined) {
+    const bruta = corpo.target
+    const target = bruta === null || bruta === "" ? null : Number(bruta)
+    if (target !== null && (!Number.isInteger(target) || target < 1 || target > META_MAXIMA)) {
+      return NextResponse.json({ error: "Meta inválida." }, { status: 400 })
+    }
+    mudancas.target = target
+  }
   if (corpo?.archived !== undefined) mudancas.archived = Boolean(corpo.archived)
 
   const { data, error } = await supabase
@@ -37,7 +45,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     .update(mudancas)
     .eq("id", id)
     .eq("user_id", user.id)
-    .select("id, name, started_on, note, archived")
+    .select("id, name, started_on, note, archived, target")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

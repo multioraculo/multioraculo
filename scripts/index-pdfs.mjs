@@ -1,5 +1,6 @@
 // scripts/index-pdfs.mjs
 import fs from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
@@ -11,6 +12,8 @@ const __dirname = path.dirname(__filename);
 const PDF_DIR = path.join(process.cwd(), "data", "pdfs");
 const OUT_DIR = path.join(process.cwd(), "data", "pdfs_index");
 const OUT_FILE = path.join(OUT_DIR, "pdfs.index.json");
+// âncoras de página, num arquivo separado para o índice aprovado não mudar
+const OUT_PAGES = path.join(OUT_DIR, "pdfs.pages.json");
 
 // Assets do pdfjs para fontes/cmaps (evita warnings)
 const STANDARD_FONTS_DIR = path.join(
@@ -23,6 +26,61 @@ const CMAPS_DIR = path.join(process.cwd(), "node_modules", "pdfjs-dist", "cmaps"
 
 const standardFontDataUrl = pathToFileURL(STANDARD_FONTS_DIR + path.sep).href;
 const cMapUrl = pathToFileURL(CMAPS_DIR + path.sep).href;
+
+/**
+ * Os mesmos trechos de sempre, agora sabendo de que página cada um saiu.
+ *
+ * O índice guardava só o texto, e por isso uma citação extraída dele não tinha
+ * como dizer onde estava no livro. Para um repertório que promete fonte
+ * verificável, "está em algum lugar destas 557 páginas" não é fonte.
+ *
+ * O CORTE NÃO MUDA. As fronteiras dos trechos são exatamente as de antes, e
+ * isso importa: o verificador do C-base-min referencia trechos por índice, e
+ * recortar diferente deslocaria todos eles. Aqui as páginas chegam separadas em
+ * vez de já coladas, as mesmas limpezas são aplicadas, e a única coisa nova é
+ * uma lista paralela dizendo de qual página veio a primeira linha de cada
+ * trecho. Quem lê `chunks` como antes não percebe diferença nenhuma.
+ */
+function chunkPorPagina(paginas, maxChars = 900) {
+  const linhas = []
+  paginas.forEach((texto, i) => {
+    const limpo = (texto || "")
+      .replace(/\u0000/g, "")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim()
+    if (!limpo) return
+    for (const l of limpo.split(/\r?\n/).map((x) => x.trim()).filter((x) => x.length >= 10)) {
+      linhas.push({ texto: l, pagina: i + 1 })
+    }
+  })
+
+  const chunks = []
+  const deQualPagina = []
+  let buf = ""
+  let paginaDoBuf = 0
+
+  for (const { texto, pagina } of linhas) {
+    const proximo = buf ? `${buf} ${texto}` : texto
+    if (proximo.length > maxChars) {
+      if (buf.trim()) {
+        chunks.push(buf.trim())
+        deQualPagina.push(paginaDoBuf)
+      }
+      buf = texto
+      paginaDoBuf = pagina
+    } else {
+      if (!buf) paginaDoBuf = pagina
+      buf = proximo
+    }
+  }
+  if (buf.trim()) {
+    chunks.push(buf.trim())
+    deQualPagina.push(paginaDoBuf)
+  }
+
+  return { chunks, paginas: deQualPagina }
+}
 
 function chunkText(text, maxChars = 900) {
   const cleaned = (text || "")
@@ -93,6 +151,8 @@ async function extractTextWithPdfjs(buf) {
   const doc = await loadingTask.promise;
 
   let fullText = "";
+  // as páginas também saem separadas, para cada trecho saber de onde veio
+  const porPagina = [];
   for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
     const page = await doc.getPage(pageNum);
     const content = await page.getTextContent();
@@ -103,10 +163,11 @@ async function extractTextWithPdfjs(buf) {
       .replace(/[ \t]+/g, " ")
       .trim();
 
+    porPagina.push(pageText);
     if (pageText) fullText += (fullText ? "\n\n" : "") + pageText;
   }
 
-  return { text: fullText, pages: doc.numPages };
+  return { text: fullText, pages: doc.numPages, porPagina };
 }
 
 async function main() {
@@ -123,13 +184,14 @@ async function main() {
   }
 
   const index = [];
+  const ancoras = [];
 
   for (const file of pdfFiles) {
     const fullPath = path.join(PDF_DIR, file);
     const buffer = await fs.readFile(fullPath);
 
-    const { text, pages } = await extractTextWithPdfjs(buffer);
-    const chunks = chunkText(text, 900);
+    const { text, pages, porPagina } = await extractTextWithPdfjs(buffer);
+    const { chunks, paginas } = chunkPorPagina(porPagina, 900);
 
     index.push({
       file,
@@ -139,6 +201,14 @@ async function main() {
       chars: text.length,
       chunks,
     });
+
+    // As páginas vão num arquivo À PARTE, e isso não é organização: é
+    // segurança. `pdfs.index.json` é conferido por SHA-256 em dois lugares — o
+    // portão verify:synthesis e o próprio `references.ts`, que se RECUSA a
+    // montar a síntese C-base-min quando o arquivo não é o aprovado. Um campo
+    // novo dentro dele mudaria o hash e derrubaria a síntese em produção por
+    // causa de um metadado. Aqui o índice sai byte a byte igual ao de sempre.
+    ancoras.push({ file, paginas });
 
     console.log(
       `OK: ${file} | pages=${pages} | chunks=${chunks.length} | chars=${text.length}`
@@ -152,6 +222,33 @@ async function main() {
     count: index.length,
     index,
   };
+
+  // ── a trava ───────────────────────────────────────────────────────────────
+  //
+  // `pdfs.index.json` NÃO é um cache: é um artefato aprovado. O golden do
+  // C-base-min fixa o SHA-256 dele, e `references.ts` se recusa a montar a
+  // síntese quando o hash não bate. Como o arquivo grava um `createdAt`, ele
+  // não pode ser reproduzido: rodar este script por cima do índice aprovado o
+  // destrói PARA SEMPRE, e ele é ignorado pelo git, então não há de onde
+  // restaurar. Já aconteceu uma vez, e só não virou prejuízo porque havia
+  // backup.
+  //
+  // Daqui em diante é preciso dizer `--forcar` em voz alta.
+  const golden = JSON.parse(await fs.readFile(path.join(process.cwd(), "scripts", "cbase-min.golden.json"), "utf8"));
+  let existente = null;
+  try {
+    existente = createHash("sha256").update(await fs.readFile(OUT_FILE)).digest("hex");
+  } catch {}
+
+  if (existente && existente === golden.pdfsIndexSha256 && !process.argv.includes("--forcar")) {
+    console.error(
+      `\nPARADO: ${OUT_FILE} é o índice APROVADO da síntese C-base-min.\n` +
+        `Ele grava um createdAt, então não dá para reproduzi-lo: sobrescrever é perder.\n` +
+        `Faça uma cópia antes e rode de novo com --forcar se for mesmo isso que você quer.\n`
+    );
+    process.exitCode = 1;
+    return;
+  }
 
   await fs.writeFile(OUT_FILE, JSON.stringify(payload, null, 2), "utf8");
   console.log(`\nGerado: ${OUT_FILE}`);

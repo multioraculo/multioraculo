@@ -17,7 +17,19 @@ export type Marco = {
   started_on: string
   note: string | null
   archived: boolean
+  /**
+   * Meta em dias, ou nula.
+   *
+   * Nula é o padrão e significa "esta contagem não tem fim": "42 dias sem
+   * fumar" não termina, e pôr um alvo nela transformaria uma coisa que a pessoa
+   * está vivendo numa tarefa a cumprir. Com meta, o marco vira outra coisa,
+   * também legítima: "21 dias meditando" é uma experiência com horizonte, e ver
+   * 12 de 21 diz algo que 12 sozinho não diz.
+   */
+  target: number | null
 }
+
+export const META_MAXIMA = 3650
 
 export const FORMATO_DATA = /^\d{4}-\d{2}-\d{2}$/
 
@@ -35,4 +47,16 @@ export function diasDesde(inicio: string, hoje: string = hojeCivil()): number {
   const b = Date.parse(`${hoje}T00:00:00Z`)
   if (!Number.isFinite(a) || !Number.isFinite(b)) return 0
   return Math.round((b - a) / 86_400_000)
+}
+
+/**
+ * Quanto da meta já foi andado, de 0 a 1. Nulo quando não há meta.
+ *
+ * Passa de 1 quando a pessoa continua depois de chegar, e isso é de propósito:
+ * quem fez 30 dias de uma meta de 21 não voltou a zero nem "terminou". Quem
+ * desenha decide o que fazer com o excedente; aqui não se mente sobre ele.
+ */
+export function progressoDaMeta(dias: number, meta: number | null): number | null {
+  if (!meta || meta <= 0) return null
+  return Math.max(0, dias) / meta
 }

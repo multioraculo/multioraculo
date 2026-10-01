@@ -52,19 +52,22 @@ function SaveButton({
 
 interface DiaryListProps {
   initialEntries: JournalEntry[]
+  /** abertura trazida da Home: entra como texto do editor, e nada mais */
+  rascunho?: string | null
 }
 
 type FormState = { title: string; content: string }
 const emptyForm: FormState = { title: "", content: "" }
 
-export default function DiaryList({ initialEntries }: DiaryListProps) {
+export default function DiaryList({ initialEntries, rascunho = null }: DiaryListProps) {
   const { dict, formatDate } = useI18n()
   const t = dict.grimoire
   const [entries, setEntries] = useState<JournalEntry[]>(initialEntries)
-  const [creating, setCreating] = useState(false)
+  // com abertura vinda da Home, o editor já nasce aberto e com o texto dentro
+  const [creating, setCreating] = useState(Boolean(rascunho))
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [form, setForm] = useState<FormState>(emptyForm)
+  const [form, setForm] = useState<FormState>(rascunho ? { title: "", content: rascunho } : emptyForm)
   const [saving, setSaving] = useState(false)
 
   const startCreate = () => {
