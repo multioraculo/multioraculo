@@ -178,7 +178,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
           const rot = e.card.reversed ? 180 : 0
           return (
             <div key={i} role="listitem" aria-label={e.label} className={`flex flex-col items-center text-center ${focus.focusedIndex === i ? "fc-away" : ""}`}>
-              <span className="text-white/40 text-[10px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-end mb-2">
+              <span className="text-white/40 text-[12px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-end mb-2">
                 {e.position}
               </span>
               <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
@@ -199,7 +199,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
               </div>
               </button>
               <span className="text-white/90 text-xs font-medium leading-tight mt-2">{e.name}</span>
-              <span className={`text-[10px] mt-0.5 leading-tight ${e.card.reversed ? "text-amber-200/80" : "text-white/35"}`}>{e.orientation}</span>
+              <span className={`text-[12px] mt-0.5 leading-tight ${e.card.reversed ? "text-amber-200/80" : "text-white/35"}`}>{e.orientation}</span>
             </div>
           )
         })}

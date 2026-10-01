@@ -126,9 +126,9 @@ export default function IChingHexagram({ items, hexagram, animate = false }: Pro
 
   const caption = (title: string, n: number, tri: { upper: string; lower: string }) => (
     <div className={`mt-3 text-center ${fade}`} style={animate ? { animationDelay: "1250ms" } : undefined}>
-      <p className="text-white/40 text-[10px] uppercase tracking-widest">{title}</p>
-      <p className="text-white/90 text-[13px] mt-0.5">{n} · {name(n)}</p>
-      <p className="text-white/45 text-[11px] mt-1 leading-relaxed">
+      <p className="text-white/40 text-[12px] uppercase tracking-widest">{title}</p>
+      <p className="text-white/90 text-[15px] mt-0.5">{n} · {name(n)}</p>
+      <p className="text-white/45 text-[13px] mt-1 leading-relaxed">
         {t.upper} · {tri.upper}
         <br />
         {t.lower} · {tri.lower}
@@ -151,7 +151,7 @@ export default function IChingHexagram({ items, hexagram, animate = false }: Pro
             <div className={`flex flex-col items-center gap-0.5 text-white/35 ${fade}`} style={animate ? { animationDelay: "1400ms" } : undefined} aria-hidden="true">
               <span className="text-xl leading-none hidden sm:inline">→</span>
               <span className="text-xl leading-none sm:hidden">↓</span>
-              <span className="text-[10px] uppercase tracking-widest">{t.transformation}</span>
+              <span className="text-[12px] uppercase tracking-widest">{t.transformation}</span>
             </div>
             <div className={`flex flex-col items-center ${fade}`} style={animate ? { animationDelay: "1500ms" } : undefined}>
               <Hexagram
@@ -167,7 +167,7 @@ export default function IChingHexagram({ items, hexagram, animate = false }: Pro
           </>
         )}
       </div>
-      <p className={`text-white/50 text-[11px] text-center mt-3 ${fade}`} style={animate ? { animationDelay: "1250ms" } : undefined}>
+      <p className={`text-white/50 text-[13px] text-center mt-3 ${fade}`} style={animate ? { animationDelay: "1250ms" } : undefined}>
         {data.moving.length > 0 ? (
           <>
             {t.movingLines} <span className="text-violet-200/95 font-medium">{movingText}</span>

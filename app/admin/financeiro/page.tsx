@@ -108,7 +108,7 @@ export default async function AdminFinancePage() {
             administração) informa o que JÁ FOI GASTO. Nenhum deles diz quanto sobra. Os endpoints antigos de billing
             do painel exigem chave de sessão de navegador e não respondem a partir do servidor.
           </p>
-          <p className="text-white/50 text-[13px] leading-relaxed mt-3">
+          <p className="text-white/50 text-[15px] leading-relaxed mt-3">
             O saldo verdadeiro está em{" "}
             <a
               href="https://platform.openai.com/settings/organization/billing/overview"
@@ -124,7 +124,7 @@ export default async function AdminFinancePage() {
 
         {saldo.disponivel ? (
           <div className="mt-6">
-            <p className="text-white/45 text-[11px] uppercase tracking-widest mb-3">Controle manual</p>
+            <p className="text-white/45 text-[13px] uppercase tracking-widest mb-3">Controle manual</p>
             <Cards>
               <Stat
                 label="Recargas registradas"

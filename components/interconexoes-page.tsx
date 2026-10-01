@@ -27,7 +27,6 @@
  * a leitura escrita deles, e ela só é escrita quando alguém pede.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
-import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
@@ -63,7 +62,7 @@ function grauMinuto(lon: number): string {
 
 /** O rótulo que abre uma camada. Sempre o mesmo, para o padrão ser aprendido. */
 function Rotulo({ children }: { children: ReactNode }) {
-  return <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{children}</p>
+  return <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{children}</p>
 }
 
 /**
@@ -172,12 +171,12 @@ function Abertura({ t, exemplos }: { t: Record<string, string>; exemplos: readon
 
       <div className="h-px bg-white/[0.07] mt-9" />
 
-      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-8">{t.natalIs}</p>
-      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-5">{t.skyMoves}</p>
+      <p className="text-white/60 text-[16px] leading-relaxed font-light mt-8">{t.natalIs}</p>
+      <p className="text-white/60 text-[16px] leading-relaxed font-light mt-5">{t.skyMoves}</p>
 
       <ul className="mt-6 space-y-2">
         {exemplos.map((linha) => (
-          <li key={linha} className="flex gap-3 text-white/50 text-[13.5px] leading-relaxed font-light">
+          <li key={linha} className="flex gap-3 text-white/50 text-[15px] leading-relaxed font-light">
             <span className="text-white/25 shrink-0">·</span>
             {linha}
           </li>
@@ -186,9 +185,9 @@ function Abertura({ t, exemplos }: { t: Record<string, string>; exemplos: readon
 
       {/* a frase que a pessoa precisa levar embora */}
       <p className="text-white/85 instrument italic text-[19px] sm:text-xl leading-snug mt-9">{t.mapStays}</p>
-      <p className="text-white/50 text-[14px] leading-relaxed font-light mt-2">{t.mapStaysBody}</p>
+      <p className="text-white/50 text-[16px] leading-relaxed font-light mt-2">{t.mapStaysBody}</p>
 
-      <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-8">{t.vsHoroscope}</p>
+      <p className="text-white/60 text-[16px] leading-relaxed font-light mt-8">{t.vsHoroscope}</p>
     </div>
   )
 }
@@ -244,11 +243,11 @@ function Formulario({
   return (
     <div className="mt-12 max-w-md">
       <h3 className="text-white/90 instrument italic text-xl">{t.formTitle}</h3>
-      <p className="text-white/45 text-[13px] leading-relaxed font-light mt-2">{t.formBody}</p>
+      <p className="text-white/45 text-[15px] leading-relaxed font-light mt-2">{t.formBody}</p>
 
       <div className="mt-7 space-y-5">
         <div>
-          <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-2">{t.fieldDate}</label>
+          <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-2">{t.fieldDate}</label>
           <input
             type="date"
             value={data}
@@ -258,7 +257,7 @@ function Formulario({
         </div>
 
         <div>
-          <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-2">{t.fieldTime}</label>
+          <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-2">{t.fieldTime}</label>
           <div className="flex items-center gap-4">
             <input
               type="time"
@@ -267,7 +266,7 @@ function Formulario({
               onChange={(e) => setHora(e.target.value)}
               className="bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none focus:border-white/25 transition-colors disabled:opacity-30 [color-scheme:dark]"
             />
-            <label className="flex items-center gap-2 text-white/45 hover:text-white/70 text-[12px] font-light cursor-pointer transition-colors">
+            <label className="flex items-center gap-2 text-white/45 hover:text-white/70 text-[14px] font-light cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={semHora}
@@ -282,8 +281,12 @@ function Formulario({
         <CampoCidade t={t} cidade={cidade} aoEscolher={setCidade} />
       </div>
 
-      {erro && <p className="text-white/70 text-[12.5px] leading-relaxed mt-5">{erro}</p>}
+      {erro && <p className="text-white/70 text-[14px] leading-relaxed mt-5">{erro}</p>}
 
+      {/* NÃO EXISTE ROTA /login NESTE SITE: o login é um modal, pedido por
+          evento, como em Sonhos e na assinatura. Aqui havia um <Link href="/login">
+          que levava a um 404 de verdade: alguém preenchia data, hora e cidade,
+          clicava em Entrar e perdia tudo numa página de erro. */}
       <div className="flex items-center gap-4 mt-8">
         {logado ? (
           <button
@@ -294,18 +297,22 @@ function Formulario({
             {salvando ? `${t.saving}...` : t.save}
           </button>
         ) : (
-          <Link href="/login" className="text-white/80 hover:text-white text-sm transition-colors">
-            {t.signIn} ↗
-          </Link>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-login"))}
+            className="text-white/80 hover:text-white text-sm cursor-pointer transition-colors"
+          >
+            {t.signIn}
+          </button>
         )}
         {aoCancelar && (
-          <button onClick={aoCancelar} className="text-white/25 hover:text-white/50 text-[12px] transition-colors">
+          <button onClick={aoCancelar} className="text-white/25 hover:text-white/50 text-[14px] transition-colors">
             {t.cancel}
           </button>
         )}
       </div>
 
-      {!logado && <p className="text-white/30 text-[11.5px] font-light mt-3">{t.needAccount}</p>}
+      {!logado && <p className="text-white/30 text-[13px] font-light mt-3">{t.needAccount}</p>}
     </div>
   )
 }
@@ -340,7 +347,7 @@ function CampoCidade({ t, cidade, aoEscolher }: { t: Record<string, string>; cid
 
   return (
     <div>
-      <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-2">{t.fieldCity}</label>
+      <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-2">{t.fieldCity}</label>
       <input
         value={texto}
         onChange={(e) => {
@@ -354,7 +361,7 @@ function CampoCidade({ t, cidade, aoEscolher }: { t: Record<string, string>; cid
 
       {!cidade && achadas !== null && (
         <div className="mt-2 space-y-0.5">
-          {achadas.length === 0 && !procurando && <p className="text-white/30 text-[12px] font-light px-1 py-1">{t.cityNone}</p>}
+          {achadas.length === 0 && !procurando && <p className="text-white/30 text-[14px] font-light px-1 py-1">{t.cityNone}</p>}
           {achadas.map((c) => (
             <button
               key={`${c.rotulo}-${c.lat}-${c.lon}`}
@@ -363,7 +370,7 @@ function CampoCidade({ t, cidade, aoEscolher }: { t: Record<string, string>; cid
                 setTexto(c.rotulo)
                 setAchadas(null)
               }}
-              className="block w-full text-left px-2.5 py-2 rounded text-white/60 hover:text-white hover:bg-white/[0.06] text-[13px] font-light transition-colors"
+              className="block w-full text-left px-2.5 py-2 rounded text-white/60 hover:text-white hover:bg-white/[0.06] text-[15px] font-light transition-colors"
             >
               {c.rotulo}
             </button>
@@ -435,17 +442,17 @@ function Deck({
           <h2 className="text-white instrument italic text-[20px] sm:text-[22px] leading-snug mt-2.5">
             {nascimento.place_label}
           </h2>
-          <p className="text-white/35 text-[12px] font-light mt-1.5 tabular-nums">
+          <p className="text-white/35 text-[14px] font-light mt-1.5 tabular-nums">
             {formatDate(`${nascimento.born_on}T12:00:00`)}
             {nascimento.born_at ? ` · ${nascimento.born_at}` : ""}
             {mapa.tz ? ` · ${mapa.tz}` : ""}
           </p>
 
           {tzStatus === "ambiguous" && (
-            <p className="text-white/45 text-[12px] leading-relaxed font-light mt-3">{t.ambiguous}</p>
+            <p className="text-white/45 text-[14px] leading-relaxed font-light mt-3">{t.ambiguous}</p>
           )}
           {tzStatus === "nonexistent" && (
-            <p className="text-white/45 text-[12px] leading-relaxed font-light mt-3">{t.nonexistent}</p>
+            <p className="text-white/45 text-[14px] leading-relaxed font-light mt-3">{t.nonexistent}</p>
           )}
 
           {comAngulos && mapa.cuspides && (
@@ -469,11 +476,11 @@ function Deck({
             <>
               <div className="h-px bg-white/[0.06] my-5" />
               <Rotulo>{t.noTimeTitle}</Rotulo>
-              <p className="text-white/50 text-[13px] leading-relaxed font-light mt-2.5">{t.noTimeBody}</p>
+              <p className="text-white/50 text-[15px] leading-relaxed font-light mt-2.5">{t.noTimeBody}</p>
             </>
           )}
 
-          <p className="text-white/25 text-[11.5px] leading-relaxed font-light mt-5">{t.mapNote}</p>
+          <p className="text-white/25 text-[13px] leading-relaxed font-light mt-5">{t.mapNote}</p>
         </Modulo>
       </div>
 
@@ -512,12 +519,12 @@ function Deck({
       {/* ── faixa C · as relações que o motor mediu hoje ──────────────────── */}
       <div className="pt-4">
         <Rotulo>{t.todayTitle}</Rotulo>
-        <p className="text-white/40 text-[12.5px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
+        <p className="text-white/40 text-[14px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
       </div>
 
       {ordenadas.length === 0 ? (
         <Modulo className="p-6 sm:p-7">
-          <p className="text-white/55 text-[14px] leading-relaxed font-light max-w-lg">{t.none}</p>
+          <p className="text-white/55 text-[16px] leading-relaxed font-light max-w-lg">{t.none}</p>
         </Modulo>
       ) : (
         <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
@@ -537,7 +544,7 @@ function Deck({
       <div className="pt-2">
         <button
           onClick={aoCorrigir}
-          className="text-white/25 hover:text-white/50 text-[11px] font-light cursor-pointer transition-colors"
+          className="text-white/25 hover:text-white/50 text-[13px] font-light cursor-pointer transition-colors"
         >
           {t.edit}
         </button>
@@ -576,12 +583,12 @@ function Ponto({
     <Modulo micro className={`p-4 sm:p-5 ${className}`}>
       <div className="flex items-center gap-2 text-white/35">
         {glifo}
-        <span className="text-[9px] uppercase tracking-[0.18em] font-light">{nome}</span>
+        <span className="text-[12px] uppercase tracking-[0.18em] font-light">{nome}</span>
       </div>
       <p className={`text-[15px] sm:text-[16px] tabular-nums mt-2 ${incerto ? "text-white/55" : "text-white/90"}`}>
         {valor}
       </p>
-      {casa && <p className="text-white/30 text-[11px] font-light mt-1">{casa}</p>}
+      {casa && <p className="text-white/30 text-[13px] font-light mt-1">{casa}</p>}
     </Modulo>
   )
 }
@@ -610,21 +617,21 @@ function DemaisPosicoes({
     <Modulo className="px-6 sm:px-7">
       <details className="group">
         <summary className="flex items-center gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-          <span className="shrink-0 text-white/25 group-hover:text-white/45 text-[9px] uppercase tracking-[0.22em] font-light transition-colors">
+          <span className="shrink-0 text-white/25 group-hover:text-white/45 text-[12px] uppercase tracking-[0.22em] font-light transition-colors">
             {t.morePositions}
           </span>
           {/* fechada, a barra ainda diz o que tem dentro: recolher não é esconder */}
-          <span className="hidden sm:block flex-1 truncate text-white/25 text-[12px] font-light group-open:invisible">
+          <span className="hidden sm:block flex-1 truncate text-white/25 text-[14px] font-light group-open:invisible">
             {resto.map((c) => nomes[c.corpo]).join(" · ")}
           </span>
-          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[11px] transition-transform duration-200 group-open:rotate-180">
+          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[13px] transition-transform duration-200 group-open:rotate-180">
             ▾
           </span>
         </summary>
 
         <div className="pb-6 space-y-2.5">
           {resto.map((c) => (
-            <div key={c.corpo} className="flex items-baseline gap-3 text-[13.5px]">
+            <div key={c.corpo} className="flex items-baseline gap-3 text-[15px]">
               <span className="text-white/40 w-4 shrink-0">
                 <GlifoPlaneta id={c.corpo} tamanho={13} />
               </span>
@@ -632,10 +639,10 @@ function DemaisPosicoes({
               <span className="text-white/90 tabular-nums">
                 {c.signoDefinido ? `${grauMinuto(c.lon)} ${signos[c.signo]}` : signos[indiceDoSigno(c.lon)]}
               </span>
-              {c.retrogrado && <span className="text-white/30 text-[11px]">℞</span>}
-              {c.casa !== null && <span className="text-white/30 text-[11.5px]">{fmt(t.house, { n: c.casa })}</span>}
+              {c.retrogrado && <span className="text-white/30 text-[13px]">℞</span>}
+              {c.casa !== null && <span className="text-white/30 text-[13px]">{fmt(t.house, { n: c.casa })}</span>}
               {!c.signoDefinido && (
-                <span className="text-white/30 text-[11px]">
+                <span className="text-white/30 text-[13px]">
                   {fmt(t.uncertain, {
                     a: signos[indiceDoSigno(c.lon - c.incerteza / 2)],
                     b: signos[indiceDoSigno(c.lon + c.incerteza / 2)],
@@ -718,7 +725,7 @@ function Relacao({
         {titulo}
       </h3>
       <p
-        className={`text-white/40 text-[12px] leading-relaxed font-light mt-3 tabular-nums ${
+        className={`text-white/40 text-[14px] leading-relaxed font-light mt-3 tabular-nums ${
           principal ? "" : "max-w-sm"
         }`}
       >

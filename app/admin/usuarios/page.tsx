@@ -46,7 +46,7 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
               access.plan,
               <span key="a">
                 <Badge tone={access.tone}>{access.label}</Badge>
-                {access.sub && <span className="block text-white/40 text-[11px] mt-0.5">{access.sub}</span>}
+                {access.sub && <span className="block text-white/40 text-[13px] mt-0.5">{access.sub}</span>}
               </span>,
               fmtInt(u.readings_month),
               fmtInt(u.dreams_month),
@@ -83,9 +83,9 @@ export default async function AdminUsersPage({ searchParams }: { searchParams: S
  * moram e onde dá para ver expiração e histórico.
  */
 function Acao({ u }: { u: { email: string; role: string; override_plan: string | null; override_reason: string | null } }) {
-  if (u.role === "admin") return <span className="text-white/25 text-[11px]">—</span>
+  if (u.role === "admin") return <span className="text-white/25 text-[13px]">—</span>
   if (u.override_plan) {
-    return <span className="text-white/35 text-[11px] whitespace-nowrap">{u.override_reason ?? "acesso especial"}</span>
+    return <span className="text-white/35 text-[13px] whitespace-nowrap">{u.override_reason ?? "acesso especial"}</span>
   }
   return <PromoteButton email={u.email} />
 }

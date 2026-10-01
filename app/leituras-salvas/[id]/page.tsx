@@ -144,7 +144,7 @@ export default async function LeituraDetailPage({
                         {/* Tiragem — o que saiu */}
                         {items.length > 0 && (
                           <div>
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{t.drawLabel}</p>
+                            <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">{t.drawLabel}</p>
                             {key === "buzios" && (
                               <div className="mb-5 pb-5 border-b border-white/10">
                                 {/* leitura salva: mesmo seed da tiragem → mesmas posições; sem animação */}
@@ -182,7 +182,7 @@ export default async function LeituraDetailPage({
                               {items.map((item, i) => (
                                 <div key={i} className="flex gap-3">
                                   {item.position && (
-                                    <span className="text-white/30 text-[11px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
+                                    <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
                                       {item.position}
                                     </span>
                                   )}
@@ -204,7 +204,7 @@ export default async function LeituraDetailPage({
                         {reading && (
                           <div className={items.length > 0 ? "border-t border-white/10 pt-5" : ""}>
                             {items.length > 0 && (
-                              <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">
+                              <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">
                                 {t.traditionalReading}
                               </p>
                             )}

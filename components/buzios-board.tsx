@@ -185,7 +185,7 @@ export default function BuziosCasts({ seed, items, shells, animate = false }: Ca
     <div className="space-y-6">
       {casts.map((c) => (
         <div key={c.key} className="space-y-2">
-          <p className="text-white/45 text-[11px] uppercase tracking-widest">{c.title}</p>
+          <p className="text-white/45 text-[13px] uppercase tracking-widest">{c.title}</p>
           <BuziosBoard
             seed={`${seed}:buzios:${c.key}`}
             openCount={c.open}

@@ -63,7 +63,7 @@ export default function LocaleSwitcher() {
                 }`}
               >
                 <span>{LOCALE_META[code].nativeName}</span>
-                <span className="text-[10px] text-white/40 tracking-widest">{LOCALE_META[code].short}</span>
+                <span className="text-[12px] text-white/40 tracking-widest">{LOCALE_META[code].short}</span>
               </button>
             )
           })}

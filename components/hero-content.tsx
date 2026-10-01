@@ -549,15 +549,15 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
               {dict.hero.tagline}
             </p>
 
-            <p className="text-[13px] sm:text-[15px] font-light text-white/75 mb-1 sm:mb-1.5 leading-snug">
+            <p className="text-[15px] sm:text-[15px] font-light text-white/75 mb-1 sm:mb-1.5 leading-snug">
               {dict.hero.subtitle}
             </p>
 
-            <p className="text-[13px] sm:text-[15px] font-light text-white/75 mb-2 sm:mb-2.5 leading-snug">
+            <p className="text-[15px] sm:text-[15px] font-light text-white/75 mb-2 sm:mb-2.5 leading-snug">
               {dict.hero.lineup}
             </p>
 
-            <p className="text-[11px] sm:text-xs font-light text-white/65 mb-3 sm:mb-4 leading-snug max-w-md">
+            <p className="text-[13px] sm:text-xs font-light text-white/65 mb-3 sm:mb-4 leading-snug max-w-md">
               {dict.hero.alsoIndividual}
             </p>
 
@@ -722,7 +722,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     {/* Tiragem — o que saiu */}
                     {items.length > 0 && (
                       <div>
-                        <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
+                        <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
                         {key === "buzios" && (
                           <div className="mb-5 pb-5 border-b border-white/10">
                             <BuziosCasts
@@ -757,7 +757,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                           {items.map((item, i) => (
                             <div key={i} className="flex gap-3">
                               {item.position && (
-                                <span className="text-white/30 text-[11px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
+                                <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
                                   {item.position}
                                 </span>
                               )}
@@ -777,7 +777,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                     {reading && (
                       <div className={items.length > 0 ? "border-t border-white/10 pt-5" : ""}>
                         {items.length > 0 && (
-                          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.traditionalReading}</p>
+                          <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">{dict.results.traditionalReading}</p>
                         )}
                         <div className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap">{reading}</div>
                       </div>

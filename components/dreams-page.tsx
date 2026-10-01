@@ -198,7 +198,7 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
 
             <p className="text-base sm:text-lg font-light text-white/75 mb-2 sm:mb-3 leading-relaxed">{t.subtitle}</p>
 
-            <p className="text-[11px] sm:text-xs font-light text-white/45 mb-3 sm:mb-4 leading-snug max-w-md">{t.approach}</p>
+            <p className="text-[13px] sm:text-xs font-light text-white/45 mb-3 sm:mb-4 leading-snug max-w-md">{t.approach}</p>
 
             <div className="mb-3 sm:mb-4">
               <p className="text-xs font-light text-white/60 mb-1.5 sm:mb-2">{t.prompt}</p>
@@ -293,7 +293,7 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
                     <ReactMarkdown
                       components={{
                         h2: ({ children }) => (
-                          <h2 className="text-white/25 text-[10px] uppercase tracking-widest mt-8 mb-3 first:mt-0 border-t border-white/10 pt-6 [&:first-child]:border-t-0 [&:first-child]:pt-0">
+                          <h2 className="text-white/25 text-[12px] uppercase tracking-widest mt-8 mb-3 first:mt-0 border-t border-white/10 pt-6 [&:first-child]:border-t-0 [&:first-child]:pt-0">
                             {children}
                           </h2>
                         ),
@@ -333,7 +333,7 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
 
                   {/* Personal notes */}
                   <div className="mt-6">
-                    <p className="text-white/25 text-[10px] uppercase tracking-widest mb-2">
+                    <p className="text-white/25 text-[12px] uppercase tracking-widest mb-2">
                       {t.personalNotes}
                     </p>
                     <textarea

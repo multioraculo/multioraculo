@@ -253,7 +253,7 @@ export default function SavedDreamsList({
 
                 {/* Card 1: Linha de Evolução */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
+                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
                     {t.timeline}
                   </p>
                   <div className="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
@@ -262,7 +262,7 @@ export default function SavedDreamsList({
                         <p className="text-sm font-medium text-white/85 leading-snug">
                           {item.number}. {item.title}
                         </p>
-                        <p className="text-[11px] text-white/35 mt-0.5">{item.archetypes}</p>
+                        <p className="text-[13px] text-white/35 mt-0.5">{item.archetypes}</p>
                         <p className="text-xs text-white/55 mt-1 leading-relaxed">{item.summary}</p>
                       </div>
                     ))}
@@ -271,7 +271,7 @@ export default function SavedDreamsList({
 
                 {/* Card 2: Padrões Recorrentes */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
+                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
                     {t.patterns}
                   </p>
                   <ul className="space-y-3">
@@ -286,7 +286,7 @@ export default function SavedDreamsList({
 
                 {/* Card 3: Ponto de Virada */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
+                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
                     {t.turningPoint}
                   </p>
                   <p className="text-sm text-white/70 leading-relaxed">{journeyData.turningPoint}</p>
@@ -294,7 +294,7 @@ export default function SavedDreamsList({
 
                 {/* Card 4: Essência da Fase Atual */}
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[10px] uppercase tracking-widest mb-4">
+                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
                     {t.essence}
                   </p>
                   <p className="text-sm text-white/70 leading-relaxed">{journeyData.essence}</p>
@@ -468,7 +468,7 @@ export default function SavedDreamsList({
                             <ReactMarkdown
                               components={{
                                 h2: ({ children }) => (
-                                  <h2 className="text-white/25 text-[10px] uppercase tracking-widest mt-6 mb-2 first:mt-0 border-t border-white/10 pt-4 [&:first-child]:border-t-0 [&:first-child]:pt-0">
+                                  <h2 className="text-white/25 text-[12px] uppercase tracking-widest mt-6 mb-2 first:mt-0 border-t border-white/10 pt-4 [&:first-child]:border-t-0 [&:first-child]:pt-0">
                                     {children}
                                   </h2>
                                 ),
@@ -510,7 +510,7 @@ export default function SavedDreamsList({
                         {/* Notes editing */}
                         {editingNotesId === dream.id ? (
                           <div className="space-y-3">
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest">{t.personalNotes}</p>
+                            <p className="text-white/25 text-[12px] uppercase tracking-widest">{t.personalNotes}</p>
                             <textarea
                               value={editNotes}
                               onChange={(e) => setEditNotes(e.target.value)}
@@ -541,7 +541,7 @@ export default function SavedDreamsList({
                           </div>
                         ) : dream.personal_notes ? (
                           <div className="space-y-2">
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest">{t.personalNotes}</p>
+                            <p className="text-white/25 text-[12px] uppercase tracking-widest">{t.personalNotes}</p>
                             <p className="text-white/55 text-sm leading-relaxed">{dream.personal_notes}</p>
                           </div>
                         ) : null}

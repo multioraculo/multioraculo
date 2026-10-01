@@ -25,6 +25,7 @@ const QUANTOS_NA_HOME = 2
 export default function MarcosHome({ logado }: { logado: boolean }) {
   const { dict, formatDate } = useI18n()
   const t = dict.marcos as unknown as Record<string, string>
+  const c = dict.login as unknown as Record<string, string>
   const [marcos, setMarcos] = useState<Marco[] | null>(null)
   const [criando, setCriando] = useState(false)
   const [nome, setNome] = useState("")
@@ -51,13 +52,28 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
   if (!logado) {
     return (
       <div>
-        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>
-        <p className="text-white/55 text-[13.5px] leading-relaxed font-light mt-4">{t.intro}</p>
+        <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.title}</p>
+        <p className="text-white/55 text-[15px] leading-relaxed font-light mt-4">{t.intro}</p>
         {/* o exemplo também aparece para quem não entrou: era aqui que a placa
             ficava mais vazia, e é a primeira visita de todo mundo. Sem botão,
             porque criar marco exige conta — o que se ganha é entender, de
             relance, o que vai aparecer neste lugar */}
         <ExemploDeMarco t={t} />
+        {/* faltava a saída: a placa explicava o recurso e não dizia como
+            começar. Criar marco exige conta, e o login aqui é o mesmo modal do
+            resto do site — não existe rota /login para onde mandar ninguém */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("open-login"))}
+          className="group flex items-center gap-2 mt-4 py-3 cursor-pointer"
+        >
+          <span className="text-white/85 group-hover:text-white text-[15px] font-light transition-colors">
+            {c.signIn}
+          </span>
+          <span className="text-white/45 group-hover:text-white/85 text-[16px] transition-transform duration-200 group-hover:translate-x-0.5">
+            →
+          </span>
+        </button>
       </div>
     )
   }
@@ -68,7 +84,7 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
   if (marcos === null) {
     return (
       <div>
-        <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>
+        <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.title}</p>
         <div className="mt-5 space-y-3" aria-hidden="true">
           <div className="h-[1.4em] w-24 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none" />
           <div className="h-[0.9em] w-40 rounded-[3px] bg-white/[0.055] animate-pulse motion-reduce:animate-none" />
@@ -113,17 +129,17 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
     <div>
       {/* sub-rótulo da camada SEU REGISTRO: quem dá o respiro em volta é a Home,
           para Diário e Marcos ficarem visivelmente no mesmo bloco */}
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.title}</p>
+      <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.title}</p>
 
       {mostrar.length > 0 && (
         <div className="mt-4 space-y-5">
           {mostrar.map((marco) => (
             <Link key={marco.id} href="/marcos" className="group block">
               <ContagemDeDias dias={diasDesde(marco.started_on)} t={t} meta={marco.target} />
-              <p className="text-white/70 group-hover:text-white/90 text-[14px] font-light transition-colors mt-0.5">
+              <p className="text-white/70 group-hover:text-white/90 text-[16px] font-light transition-colors mt-0.5">
                 {marco.name}
               </p>
-              <p className="text-white/25 text-[11px] font-light mt-0.5">
+              <p className="text-white/25 text-[13px] font-light mt-0.5">
                 {fmt(t.since, { data: formatDate(`${marco.started_on}T12:00:00`) })}
               </p>
             </Link>
@@ -145,13 +161,13 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
         <div className="mt-4">
           <ExemploDeMarco t={t} aoEditar={() => comecarCom(t.exampleName, META_DO_EXEMPLO)} />
 
-          <p className="text-white/25 text-[10.5px] font-light mt-4">{(t as unknown as Record<string, string>).suggestTitle}</p>
+          <p className="text-white/25 text-[12px] font-light mt-4">{(t as unknown as Record<string, string>).suggestTitle}</p>
           <div className="flex flex-wrap gap-2 mt-2.5">
             {sugestoes.map((nome) => (
               <button
                 key={nome}
                 onClick={() => comecarCom(nome)}
-                className="rounded-full border border-white/15 hover:border-white/35 bg-white/[0.04] hover:bg-white/[0.07] px-3 py-1.5 text-white/65 hover:text-white/90 text-[12.5px] font-light transition-colors cursor-pointer"
+                className="rounded-full border border-white/15 hover:border-white/35 bg-white/[0.04] hover:bg-white/[0.07] px-3 py-1.5 text-white/65 hover:text-white/90 text-[14px] font-light transition-colors cursor-pointer"
               >
                 {nome}
               </button>
@@ -177,7 +193,7 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
               value={inicio}
               max={hojeCivil()}
               onChange={(e) => setInicio(e.target.value)}
-              className="bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-white/75 text-[13px] focus:outline-none focus:border-white/25 transition-colors [color-scheme:dark]"
+              className="bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-white/75 text-[15px] focus:outline-none focus:border-white/25 transition-colors [color-scheme:dark]"
             />
             {/* a meta é OPCIONAL, e o campo diz isso: vazio significa contagem
                 sem fim, que é o que a maioria dos marcos é */}
@@ -189,16 +205,16 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
               onChange={(e) => setMeta(e.target.value)}
               placeholder={t.targetLabel}
               title={t.targetHint}
-              className="w-[92px] bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-white/75 text-[13px] placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
+              className="w-[92px] bg-white/[0.06] border border-white/10 rounded-lg px-3 py-2 text-white/75 text-[15px] placeholder-white/25 focus:outline-none focus:border-white/25 transition-colors"
             />
             <button
               onClick={criar}
               disabled={salvando || !nome.trim()}
-              className="text-white/70 hover:text-white text-[12px] disabled:opacity-40 transition-colors"
+              className="text-white/70 hover:text-white text-[14px] disabled:opacity-40 transition-colors"
             >
               {t.save}
             </button>
-            <button onClick={() => setCriando(false)} className="text-white/25 hover:text-white/50 text-[12px] transition-colors">
+            <button onClick={() => setCriando(false)} className="text-white/25 hover:text-white/50 text-[14px] transition-colors">
               {t.cancel}
             </button>
           </div>
@@ -209,14 +225,14 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
               página. O "+" ocupa o lugar dela como sinal de que algo aparece */}
           <button
             onClick={() => setCriando(true)}
-            className="group py-3 text-white/85 hover:text-white text-[14.5px] font-light transition-colors cursor-pointer"
+            className="group py-3 text-white/85 hover:text-white text-[16px] font-light transition-colors cursor-pointer"
           >
             <span className="text-white/40 group-hover:text-white/70 transition-colors">+</span> {t.add}
           </button>
           {marcos.length > QUANTOS_NA_HOME && (
             <Link href="/marcos" className="group py-3 flex items-center gap-2">
-              <span className="text-white/85 group-hover:text-white text-[14.5px] font-light transition-colors">{t.all}</span>
-              <span className="text-white/45 group-hover:text-white/85 text-[13px] transition-all duration-200 group-hover:translate-x-0.5">
+              <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">{t.all}</span>
+              <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-all duration-200 group-hover:translate-x-0.5">
                 ↗
               </span>
             </Link>
@@ -240,15 +256,15 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
 function ExemploDeMarco({ t, aoEditar }: { t: Record<string, string>; aoEditar?: () => void }) {
   return (
     <div className="rounded-xl border border-dashed border-white/12 px-4 py-4 mt-4">
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.2em] font-light">{t.exampleLabel}</p>
+      <p className="text-white/25 text-[12px] uppercase tracking-[0.2em] font-light">{t.exampleLabel}</p>
       <div className="mt-2.5">
         <ContagemDeDias dias={0} t={t} meta={META_DO_EXEMPLO} />
       </div>
-      <p className="text-white/55 text-[14px] font-light mt-1">{t.exampleName}</p>
+      <p className="text-white/55 text-[16px] font-light mt-1">{t.exampleName}</p>
       {aoEditar && (
         <button
           onClick={aoEditar}
-          className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-[12.5px] font-light mt-3.5 py-1 cursor-pointer transition-colors"
+          className="inline-flex items-center gap-1.5 text-white/60 hover:text-white text-[14px] font-light mt-3.5 py-1 cursor-pointer transition-colors"
         >
           <Lapis />
           {t.makeMine}
@@ -346,7 +362,7 @@ export function ContagemDeDias({
             style={{ width: `${Math.round(fracao * 100)}%` }}
           />
         </span>
-        <span className="text-white/30 text-[11px] font-light tabular-nums">
+        <span className="text-white/30 text-[13px] font-light tabular-nums">
           {fmt(t.ofTarget, { n: meta })}
         </span>
       </div>

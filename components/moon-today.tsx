@@ -53,7 +53,7 @@ export default function MoonToday({ variante = "compacta" }: { variante?: "compa
       {!leitura && <p className="text-white/50 tracking-wide text-xs mt-2">{phase.keywords}</p>}
 
       {!cabecalho && (
-        <p className={`text-white/70 leading-relaxed font-light ${leitura ? "text-[13.5px] mt-2.5 max-w-xl" : "text-[13px] mt-1.5"}`}>
+        <p className={`text-white/70 leading-relaxed font-light ${leitura ? "text-[15px] mt-2.5 max-w-xl" : "text-[15px] mt-1.5"}`}>
           {phase.text}
         </p>
       )}

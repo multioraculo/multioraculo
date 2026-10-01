@@ -105,7 +105,7 @@ export default function PreviewPaywall({ teaser, ready }: { teaser: string; read
                 >
                   {t.cta}
                 </Link>
-                <p className="text-white/40 text-[11px] mt-2">{t.secondary}</p>
+                <p className="text-white/40 text-[13px] mt-2">{t.secondary}</p>
               </>
             ) : (
               // estado intermediário discreto: a leitura completa ainda está sendo escrita

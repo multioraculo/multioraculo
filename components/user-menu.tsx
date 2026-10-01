@@ -34,7 +34,7 @@ type Status = {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-white/40 text-[10px] uppercase tracking-widest mb-1.5">{children}</p>
+  return <p className="text-white/40 text-[12px] uppercase tracking-widest mb-1.5">{children}</p>
 }
 
 function Divider() {

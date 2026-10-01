@@ -95,7 +95,7 @@ export function Stat({ label, value, sub, tone = "default" }: { label: string; v
   const ring = tone === "accent" ? "border-violet-300/30" : tone === "warn" ? "border-amber-300/30" : "border-white/10"
   return (
     <div className={`backdrop-blur-md bg-white/5 border ${ring} rounded-2xl p-4`}>
-      <p className="text-white/50 text-[11px] uppercase tracking-widest leading-tight">{label}</p>
+      <p className="text-white/50 text-[13px] uppercase tracking-widest leading-tight">{label}</p>
       <p className="text-white text-2xl font-light mt-1.5 leading-none">{value}</p>
       {sub && <p className="text-white/45 text-xs mt-2 leading-snug">{sub}</p>}
     </div>
@@ -115,7 +115,7 @@ export function Table({ head, rows, empty = "Sem dados ainda." }: { head: ReactN
     <div className="overflow-x-auto backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl">
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left text-white/45 text-[11px] uppercase tracking-widest">
+          <tr className="text-left text-white/45 text-[13px] uppercase tracking-widest">
             {head.map((h, i) => (
               <th key={i} className={`px-4 py-3 font-normal whitespace-nowrap ${i > 0 ? "text-right" : ""}`}>{h}</th>
             ))}
@@ -146,5 +146,5 @@ export function Badge({ children, tone = "default" }: { children: ReactNode; ton
     tone === "warn" ? "border-amber-300/30 text-amber-100 bg-amber-400/10" :
     tone === "muted" ? "border-white/10 text-white/45" :
     "border-violet-300/30 text-violet-100 bg-violet-400/10"
-  return <span className={`inline-block rounded-full border px-2 py-0.5 text-[11px] leading-tight ${cls}`}>{children}</span>
+  return <span className={`inline-block rounded-full border px-2 py-0.5 text-[13px] leading-tight ${cls}`}>{children}</span>
 }

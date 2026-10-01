@@ -83,7 +83,7 @@ export default function MarcosLista() {
   const campos = (valor: Rascunho, mudar: (r: Rascunho) => void) => (
     <div className="space-y-3">
       <div>
-        <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-1.5">{t.name}</label>
+        <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-1.5">{t.name}</label>
         <input
           value={valor.name}
           onChange={(e) => mudar({ ...valor, name: e.target.value })}
@@ -93,7 +93,7 @@ export default function MarcosLista() {
         />
       </div>
       <div>
-        <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-1.5">{t.start}</label>
+        <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-1.5">{t.start}</label>
         <input
           type="date"
           value={valor.started_on}
@@ -105,7 +105,7 @@ export default function MarcosLista() {
       <div>
         {/* meta opcional: vazio é contagem sem fim, que é o que a maioria dos
             marcos é. Por isso ela vem depois da data, e não antes */}
-        <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-1.5">{t.targetLabel}</label>
+        <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-1.5">{t.targetLabel}</label>
         <input
           type="number"
           min={1}
@@ -117,7 +117,7 @@ export default function MarcosLista() {
         />
       </div>
       <div>
-        <label className="block text-white/35 text-[10px] uppercase tracking-widest mb-1.5">{t.note}</label>
+        <label className="block text-white/35 text-[12px] uppercase tracking-widest mb-1.5">{t.note}</label>
         <input
           value={valor.note}
           onChange={(e) => mudar({ ...valor, note: e.target.value })}
@@ -190,12 +190,12 @@ export default function MarcosLista() {
               <>
                 <ContagemDeDias dias={diasDesde(marco.started_on)} t={t} meta={marco.target} />
                 <p className="text-white/80 text-[15px] font-light mt-1">{marco.name}</p>
-                <p className="text-white/25 text-[11px] font-light mt-1">
+                <p className="text-white/25 text-[13px] font-light mt-1">
                   {fmt(t.since, { data: formatDate(`${marco.started_on}T12:00:00`) })}
                 </p>
-                {marco.note && <p className="text-white/45 text-[13px] font-light mt-2 leading-relaxed">{marco.note}</p>}
+                {marco.note && <p className="text-white/45 text-[15px] font-light mt-2 leading-relaxed">{marco.note}</p>}
 
-                <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-[12px]">
+                <div className="flex flex-wrap gap-x-5 gap-y-2 mt-4 text-[14px]">
                   <button
                     onClick={() => {
                       setEditando(marco.id)
@@ -233,17 +233,17 @@ export default function MarcosLista() {
       {/* arquivados */}
       {arquivados.length > 0 && (
         <div className="mt-14">
-          <p className="text-white/20 text-[9px] uppercase tracking-[0.22em] font-light">{t.archivedTitle}</p>
+          <p className="text-white/20 text-[12px] uppercase tracking-[0.22em] font-light">{t.archivedTitle}</p>
           <div className="mt-4 space-y-4">
             {arquivados.map((marco) => (
               <div key={marco.id} className="flex items-baseline gap-3">
                 <span className="text-white/40 text-sm font-light">{marco.name}</span>
-                <span className="text-white/20 text-[11px]">
+                <span className="text-white/20 text-[13px]">
                   {fmt(t.since, { data: formatDate(`${marco.started_on}T12:00:00`) })}
                 </span>
                 <button
                   onClick={() => alterar(marco.id, { archived: false })}
-                  className="ml-auto text-white/25 hover:text-white/60 text-[12px] transition-colors"
+                  className="ml-auto text-white/25 hover:text-white/60 text-[14px] transition-colors"
                 >
                   {t.unarchive}
                 </button>

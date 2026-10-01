@@ -185,14 +185,14 @@ export default function RunesSpread({ items, runes, animate = false }: Props) {
             tabIndex={0}
             title={dict.focus.open}
           >
-            <span className="text-white/40 text-[9px] sm:text-[10px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-center">
+            <span className="text-white/40 text-[12px] sm:text-[12px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-center">
               {c.position}
             </span>
             <div className="my-1.5 sm:my-2 flex items-center justify-center">
               <RuneObject name={c.name} glyph={c.glyph} reversed={c.reversed} index={i} />
             </div>
             <span className="text-white/90 text-xs sm:text-sm font-medium leading-tight">{c.name}</span>
-            <span className={`text-[10px] mt-1 leading-tight ${c.reversed ? "text-amber-200/80" : "text-white/35"}`}>
+            <span className={`text-[12px] mt-1 leading-tight ${c.reversed ? "text-amber-200/80" : "text-white/35"}`}>
               {c.reversed ? t.reversed : t.upright}
             </span>
           </div>

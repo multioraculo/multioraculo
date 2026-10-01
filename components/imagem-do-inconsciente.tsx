@@ -245,7 +245,7 @@ export default function ImagemDoInconsciente({ dia }: { dia: string }) {
 
   return (
     <div>
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.symbolTitle}</p>
+      <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.symbolTitle}</p>
 
       <div className="flex items-start gap-5 mt-4 sm:gap-6">
         <span className="shrink-0 text-white/55">
@@ -253,11 +253,11 @@ export default function ImagemDoInconsciente({ dia }: { dia: string }) {
         </span>
         <div className="min-w-0">
           <h2 className="text-white instrument italic text-[25px] sm:text-[29px] leading-snug">{texto.nome}</h2>
-          <p className="text-white/40 text-[12px] font-light mt-2">{texto.ancoras.join(" · ")}</p>
+          <p className="text-white/40 text-[14px] font-light mt-2">{texto.ancoras.join(" · ")}</p>
         </div>
       </div>
 
-      <p className="text-white/75 text-[14px] leading-[1.75] font-light mt-5 max-w-xl">{texto.leitura}</p>
+      <p className="text-white/75 text-[16px] leading-[1.75] font-light mt-5 max-w-xl">{texto.leitura}</p>
 
       {/* A citação só existe no idioma da edição que temos. Traduzi-la aqui
           seria pôr na boca de alguém uma frase que aquela pessoa não escreveu
@@ -267,38 +267,38 @@ export default function ImagemDoInconsciente({ dia }: { dia: string }) {
           <blockquote className="text-white/60 instrument italic text-[15px] leading-relaxed border-l border-white/15 pl-4">
             {simbolo.fonte.trecho}
           </blockquote>
-          <figcaption className="text-white/30 text-[11px] font-light mt-2.5 pl-4">
+          <figcaption className="text-white/30 text-[13px] font-light mt-2.5 pl-4">
             {simbolo.fonte.autor} · {simbolo.fonte.obra} · p. {simbolo.fonte.pagina}
           </figcaption>
         </figure>
       )}
 
       {simbolo.fonte && locale !== "pt" && (
-        <p className="text-white/30 text-[11px] font-light mt-4">
+        <p className="text-white/30 text-[13px] font-light mt-4">
           {simbolo.fonte.autor} · {simbolo.fonte.obra} · p. {simbolo.fonte.pagina}
         </p>
       )}
 
-      {!simbolo.fonte && <p className="text-white/30 text-[11px] font-light mt-4">{t.symbolEditorial}</p>}
+      {!simbolo.fonte && <p className="text-white/30 text-[13px] font-light mt-4">{t.symbolEditorial}</p>}
 
       <div className="h-px bg-white/[0.06] my-6" />
 
-      <p className="text-white/55 text-[13.5px] leading-relaxed font-light">{t.symbolAsk}</p>
+      <p className="text-white/55 text-[15px] leading-relaxed font-light">{t.symbolAsk}</p>
 
       {/* o símbolo viaja como CONTEXTO de navegação, e não como parte do relato:
           quem decide o que sonhou é quem sonhou */}
       <Link href={`/sonhos?imagem=${simbolo.id}`} className="group block mt-3 py-3">
         <span className="flex items-center gap-2">
-          <span className="text-white/85 group-hover:text-white text-[14.5px] font-light transition-colors">
+          <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">
             {t.symbolCta}
           </span>
-          <span className="text-white/45 group-hover:text-white/85 text-[13px] transition-transform duration-200 group-hover:translate-x-0.5">
+          <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-transform duration-200 group-hover:translate-x-0.5">
             ↗
           </span>
         </span>
       </Link>
 
-      <p className="text-white/25 text-[11px] leading-relaxed font-light mt-3">{t.symbolNote}</p>
+      <p className="text-white/25 text-[13px] leading-relaxed font-light mt-3">{t.symbolNote}</p>
     </div>
   )
 }

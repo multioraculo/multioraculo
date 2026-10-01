@@ -46,22 +46,22 @@ export function OverrideForm() {
   return (
     <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-[1.6fr_1fr_1fr_1fr_auto] gap-2 items-end">
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">E-mail</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">E-mail</span>
         <input className={input} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="pessoa@exemplo.com" />
       </label>
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Plano</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Plano</span>
         <select className={input} value={plan} onChange={(e) => setPlan(e.target.value as "unlimited" | "essential")}>
           <option value="unlimited" className="text-black">Ilimitado</option>
           <option value="essential" className="text-black">Essencial</option>
         </select>
       </label>
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Motivo</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Motivo</span>
         <input className={input} value={reason} onChange={(e) => setReason(e.target.value)} maxLength={80} placeholder="beta_tester" />
       </label>
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Expira em (opcional)</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Expira em (opcional)</span>
         <input className={input} type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} />
       </label>
       <button

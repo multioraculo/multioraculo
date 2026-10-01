@@ -68,7 +68,7 @@ export default function FraseDePoder() {
     }
   }
 
-  const rotulo = <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.powerTitle}</p>
+  const rotulo = <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.powerTitle}</p>
 
   // Sugestões são PONTO DE PARTIDA, não catálogo: a frase é para ser dela, e
   // encarar uma caixa vazia trava. Clicar numa sugestão abre o editor com o
@@ -111,19 +111,19 @@ export default function FraseDePoder() {
             if (e.key === "Escape") setEditando(false)
           }}
           placeholder={t.powerPlaceholder}
-          className="w-full mt-4 bg-white/[0.06] border border-white/15 focus:border-white/35 rounded-xl px-4 py-3 text-white/90 instrument italic text-[19px] leading-snug placeholder:not-italic placeholder:text-white/25 placeholder:text-[14px] focus:outline-none transition-colors resize-none"
+          className="w-full mt-4 bg-white/[0.06] border border-white/15 focus:border-white/35 rounded-xl px-4 py-3 text-white/90 instrument italic text-[19px] leading-snug placeholder:not-italic placeholder:text-white/25 placeholder:text-[16px] focus:outline-none transition-colors resize-none"
         />
         <div className="flex items-center gap-5 mt-3">
-          <button onClick={guardar} className="text-white/85 hover:text-white text-[13.5px] font-light transition-colors cursor-pointer">
+          <button onClick={guardar} className="text-white/85 hover:text-white text-[15px] font-light transition-colors cursor-pointer">
             {c.save}
           </button>
           <button
             onClick={() => setEditando(false)}
-            className="text-white/35 hover:text-white/60 text-[12.5px] font-light transition-colors cursor-pointer"
+            className="text-white/35 hover:text-white/60 text-[14px] font-light transition-colors cursor-pointer"
           >
             {c.cancel}
           </button>
-          <span className="ml-auto text-white/25 text-[11px] tabular-nums">
+          <span className="ml-auto text-white/25 text-[13px] tabular-nums">
             {rascunho.length}/{LIMITE}
           </span>
         </div>
@@ -138,23 +138,23 @@ export default function FraseDePoder() {
     return (
       <div>
         {rotulo}
-        <p className="text-white/55 text-[14px] leading-relaxed font-light mt-4">{t.powerEmpty}</p>
+        <p className="text-white/55 text-[16px] leading-relaxed font-light mt-4">{t.powerEmpty}</p>
         <button
           onClick={abrir}
-          className="block text-white/85 hover:text-white text-[14px] font-light mt-4 transition-colors cursor-pointer"
+          className="block text-white/85 hover:text-white text-[16px] font-light mt-4 transition-colors cursor-pointer"
         >
           {t.powerPlaceholder} +
         </button>
 
         {sugestoes.length > 0 && (
           <>
-            <p className="text-white/25 text-[10.5px] font-light mt-5">{t.powerSuggest}</p>
+            <p className="text-white/25 text-[12px] font-light mt-5">{t.powerSuggest}</p>
             <div className="mt-2.5 space-y-2">
               {sugestoes.map((f) => (
                 <button
                   key={f}
                   onClick={() => comecarCom(f)}
-                  className="block w-full text-left text-white/55 hover:text-white/85 instrument italic text-[14.5px] leading-snug transition-colors cursor-pointer"
+                  className="block w-full text-left text-white/55 hover:text-white/85 instrument italic text-[16px] leading-snug transition-colors cursor-pointer"
                 >
                   {f}
                 </button>
@@ -177,15 +177,15 @@ export default function FraseDePoder() {
           {/* a marca de edição precisa ser VISTA sem hover: a frase é da pessoa,
               e depender de descobrir que o texto é clicável faz muita gente
               nunca trocar a frase que escreveu no primeiro dia */}
-          <span className="inline-flex items-center gap-1.5 text-white/45 group-hover:text-white/85 text-[12px] font-light mt-4 transition-colors">
+          <span className="inline-flex items-center gap-1.5 text-white/45 group-hover:text-white/85 text-[14px] font-light mt-4 transition-colors">
             <Lapis />
             {t.powerEdit}
           </span>
         </>
       ) : (
         <>
-          <p className="text-white/55 text-[14px] leading-relaxed font-light mt-4">{t.powerEmpty}</p>
-          <span className="block text-white/85 group-hover:text-white text-[14px] font-light mt-4 transition-colors">
+          <p className="text-white/55 text-[16px] leading-relaxed font-light mt-4">{t.powerEmpty}</p>
+          <span className="block text-white/85 group-hover:text-white text-[16px] font-light mt-4 transition-colors">
             {t.powerPlaceholder} +
           </span>
         </>

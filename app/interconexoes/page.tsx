@@ -45,10 +45,10 @@ export default async function Interconexoes() {
         <div className="max-w-xl lg:max-w-6xl mx-auto px-5 sm:px-8">
           <header className="mb-7 sm:mb-9">
             <h1 className="text-white/95 instrument italic text-3xl sm:text-4xl">{dict.interconexoes.title}</h1>
-            <p className="text-white/45 text-[13.5px] leading-relaxed font-light mt-2.5 max-w-lg">
+            <p className="text-white/45 text-[15px] leading-relaxed font-light mt-2.5 max-w-lg">
               {dict.interconexoes.homeBody}
             </p>
-            <p className="text-white/30 text-[11.5px] font-light mt-3 tabular-nums">
+            <p className="text-white/30 text-[13px] font-light mt-3 tabular-nums">
               {formatDate(`${diaDeHoje()}T12:00:00`, locale, "long")}
             </p>
           </header>

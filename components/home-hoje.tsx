@@ -100,7 +100,7 @@ function aberturaDoDia(dia: string, aberturas: readonly string[]): string {
 
 /** O rótulo que abre uma camada. Sempre o mesmo, para o padrão ser aprendido. */
 function Rotulo({ children }: { children: ReactNode }) {
-  return <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{children}</p>
+  return <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{children}</p>
 }
 
 /**
@@ -201,12 +201,12 @@ function Chamada({
   return (
     <Link href={href} onClick={onClick} className="group block mt-3.5 py-3">
       <span className="flex items-center gap-2">
-        <span className="text-white/85 group-hover:text-white text-[14.5px] font-light transition-colors">{children}</span>
-        <span className="text-white/45 group-hover:text-white/85 text-[13px] transition-all duration-200 group-hover:translate-x-0.5">
+        <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">{children}</span>
+        <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-all duration-200 group-hover:translate-x-0.5">
           ↗
         </span>
       </span>
-      {destino && <span className="block text-white/35 text-[11px] font-light mt-1.5">{destino}</span>}
+      {destino && <span className="block text-white/35 text-[13px] font-light mt-1.5">{destino}</span>}
     </Link>
   )
 }
@@ -317,8 +317,8 @@ export default function HomeHoje({
           data: onde você está e em que dia. A Lua vem depois, dentro do céu —
           como primeira placa ela virava a prioridade da Home. */}
       <h1 className="text-white instrument italic text-[34px] sm:text-[42px] lg:text-[46px] leading-none">Multioráculo</h1>
-      <p className="text-white/60 text-[14.5px] sm:text-[15.5px] font-light mt-3">{t.brandSubtitle}</p>
-      <p className="text-white/30 text-[9px] uppercase tracking-[0.22em] font-light mt-5">
+      <p className="text-white/60 text-[16px] sm:text-[15.5px] font-light mt-3">{t.brandSubtitle}</p>
+      <p className="text-white/30 text-[12px] uppercase tracking-[0.22em] font-light mt-5">
         {t.today}
         {data && <span className="text-white/25"> · {data}</span>}
       </p>
@@ -358,15 +358,15 @@ export default function HomeHoje({
             )}
 
             {tiragem?.eixo && (
-              <p className="text-center text-white/30 text-[10px] tracking-[0.16em] font-light mt-2">
+              <p className="text-center text-white/30 text-[12px] tracking-[0.16em] font-light mt-2">
                 {tiragem.eixo[0]} · {tiragem.eixo[1]}
               </p>
             )}
 
             {tiragem?.sintese ? (
-              <p className="text-white/85 text-[14.5px] leading-[1.75] font-light mt-6">{tiragem.sintese}</p>
+              <p className="text-white/85 text-[16px] leading-[1.75] font-light mt-6">{tiragem.sintese}</p>
             ) : tiragem ? (
-              <p className="text-white/35 text-[13px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
+              <p className="text-white/35 text-[15px] leading-relaxed font-light mt-6">{t.drawWaiting}</p>
             ) : (
               <LinhasCarregando linhas={3} className="mt-6" />
             )}
@@ -617,16 +617,16 @@ function ConviteDePergunta({
               {mostrada}
             </span>
           </span>
-          <span className="text-white/35 group-hover:text-white/80 text-[14px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
+          <span className="text-white/35 group-hover:text-white/80 text-[16px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
             ↗
           </span>
         </span>
-        <span className="block text-white/35 text-[11px] font-light mt-3">{destino}</span>
+        <span className="block text-white/35 text-[13px] font-light mt-3">{destino}</span>
       </span>
 
       {/* o que acontece do outro lado do clique, dito uma vez só e aqui: era
           isto que estava repetido na placa da marca */}
-      <span className="block text-white/55 text-[12.5px] leading-relaxed font-light mt-5">{explica}</span>
+      <span className="block text-white/55 text-[14px] leading-relaxed font-light mt-5">{explica}</span>
 
       {/* e o que ele PARECE: as cinco placas num leque que gira. Ilustração,
           não tiragem — sem nome, sem posição, sem significado */}
@@ -686,13 +686,13 @@ function CeuDeHoje({
 
       {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-6 max-w-xl" />}
       {sintese.estado === "pronto" && (
-        <p className="text-white/80 text-[14px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
+        <p className="text-white/80 text-[16px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
       )}
       {sintese.estado === "ausente" && (
-        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
+        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
       )}
       {sintese.estado === "erro" && (
-        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
+        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
       )}
 
       {/* A LUA MORA AQUI, e em nenhum outro lugar. Ela já foi desenhada duas

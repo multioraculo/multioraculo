@@ -46,7 +46,7 @@ export default async function AdminPlansPage() {
           rows={steps.map((s, i) => [
             <span key="l">
               {s.label}
-              <span className="block text-white/40 text-[11px]">{s.note}</span>
+              <span className="block text-white/40 text-[13px]">{s.note}</span>
             </span>,
             fmtInt(s.value),
             i === 0 ? "–" : fmtPct(s.value, steps[i - 1].value),

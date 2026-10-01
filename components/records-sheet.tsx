@@ -86,7 +86,7 @@ export default function RecordsSheet({ open, onClose }: { open: boolean; onClose
       <button className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" aria-label={dict.common.close} onClick={onClose} />
       <div className="absolute left-0 right-0 bottom-0 rounded-t-3xl border-t border-white/12 bg-[rgba(24,12,56,0.82)] backdrop-blur-xl px-5 pt-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] explore-sheet-enter">
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25" aria-hidden="true" />
-        <p className="text-white/45 text-[10px] uppercase tracking-widest mb-2">{t.title}</p>
+        <p className="text-white/45 text-[12px] uppercase tracking-widest mb-2">{t.title}</p>
         {loggedIn === false ? (
           <RecordsLoginPrompt onLogin={login} />
         ) : (

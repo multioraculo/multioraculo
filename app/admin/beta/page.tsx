@@ -17,7 +17,7 @@ export default async function AdminBetaPage() {
       return [
         <span key="e">
           {r.email}
-          {!r.user_id && <span className="block text-white/40 text-[11px]">conta ainda não criada</span>}
+          {!r.user_id && <span className="block text-white/40 text-[13px]">conta ainda não criada</span>}
         </span>,
         PLAN[r.plan_override] ?? r.plan_override,
         <Badge key="r" tone={r.reason === "admin" ? "default" : "muted"}>{r.reason}</Badge>,

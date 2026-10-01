@@ -51,7 +51,7 @@ export function CreditoForm() {
   return (
     <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_2fr_auto] gap-2 items-end">
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Valor (US$)</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Valor (US$)</span>
         <input
           className={input}
           required
@@ -62,11 +62,11 @@ export function CreditoForm() {
         />
       </label>
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Data da recarga</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Data da recarga</span>
         <input className={input} type="date" value={occurredOn} onChange={(e) => setOccurredOn(e.target.value)} />
       </label>
       <label className="block">
-        <span className="block text-white/50 text-[11px] uppercase tracking-widest mb-1">Nota (opcional)</span>
+        <span className="block text-white/50 text-[13px] uppercase tracking-widest mb-1">Nota (opcional)</span>
         <input
           className={input}
           value={note}

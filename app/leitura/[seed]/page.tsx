@@ -93,7 +93,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                       </div>
                       {items.length > 0 && (
                         <div>
-                          <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
+                          <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">{dict.results.drawLabel}</p>
                           {key === "buzios" && (
                             <div className="mb-5 pb-5 border-b border-white/10">
                               <BuziosCasts seed={oracle.seed || seed} items={items} shells={oracle.draw?.shells ?? null} />
@@ -126,7 +126,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                             {items.map((item, i) => (
                               <div key={i} className="flex gap-3">
                                 {item.position && (
-                                  <span className="text-white/30 text-[11px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">{item.position}</span>
+                                  <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">{item.position}</span>
                                 )}
                                 <div className="min-w-0">
                                   <span className="text-white/85 text-xs font-medium">{item.name}</span>
@@ -140,7 +140,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                       {oracle.reading && (
                         <div className={items.length > 0 ? "border-t border-white/10 pt-5" : ""}>
                           {items.length > 0 && (
-                            <p className="text-white/25 text-[10px] uppercase tracking-widest mb-3">{dict.results.traditionalReading}</p>
+                            <p className="text-white/25 text-[12px] uppercase tracking-widest mb-3">{dict.results.traditionalReading}</p>
                           )}
                           <div className="text-white/75 text-sm leading-relaxed whitespace-pre-wrap">{oracle.reading}</div>
                         </div>

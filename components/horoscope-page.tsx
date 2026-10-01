@@ -49,7 +49,7 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
 }
 
 function Rotulo({ children }: { children: React.ReactNode }) {
-  return <p className="text-white/25 text-[10px] uppercase tracking-widest">{children}</p>
+  return <p className="text-white/25 text-[12px] uppercase tracking-widest">{children}</p>
 }
 
 /**
@@ -67,17 +67,17 @@ function CorpoDaRelacao({ lado, espelhado = false }: { lado: CardMovimento["a"];
           <span className="text-white/70 shrink-0 self-center">
             <GlifoPlaneta id={lado.corpo} tamanho={17} />
           </span>
-          <span className="text-white text-[13px] tracking-[0.1em] uppercase truncate">{lado.nome}</span>
+          <span className="text-white text-[15px] tracking-[0.1em] uppercase truncate">{lado.nome}</span>
         </span>
-        <span className="text-white/45 text-[11.5px] tabular-nums shrink-0">
+        <span className="text-white/45 text-[13px] tabular-nums shrink-0">
           {lado.nomeSigno} {lado.grauTexto}
           {lado.retrogrado && <span className="text-white/35"> ℞</span>}
         </span>
       </div>
       {lado.regente && lado.rotuloRegente && (
-        <p className="text-white/35 text-[9px] uppercase tracking-[0.12em] mt-1.5">{lado.rotuloRegente}</p>
+        <p className="text-white/35 text-[12px] uppercase tracking-[0.12em] mt-1.5">{lado.rotuloRegente}</p>
       )}
-      <p className="text-white/65 text-[12.5px] leading-relaxed mt-1.5">{lado.verbos.join(" · ")}</p>
+      <p className="text-white/65 text-[14px] leading-relaxed mt-1.5">{lado.verbos.join(" · ")}</p>
     </div>
   )
 }
@@ -94,7 +94,7 @@ function Conector({ card, fase, t }: { card: CardMovimento; fase: number; t: Rec
   // um evento da Lua com o Sol nao tem simbolo de aspecto, e nao precisa: a
   // relacao entre os dois E a fase, entao o circulo mostra a Lua como ela esta
   const glifo = (
-    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.07] border border-white/15 text-white/80 text-[13px] leading-none shrink-0">
+    <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.07] border border-white/15 text-white/80 text-[15px] leading-none shrink-0">
       {card.simbolo ?? <FaseLua fase={fase} tamanho={15} />}
     </span>
   )
@@ -123,7 +123,7 @@ function Conector({ card, fase, t }: { card: CardMovimento; fase: number; t: Rec
     return (
       <div className="flex items-center gap-2.5 my-3">
         {glifo}
-        <span className="text-white/30 text-[10px] uppercase tracking-[0.14em]">{t.convergence}</span>
+        <span className="text-white/30 text-[12px] uppercase tracking-[0.14em]">{t.convergence}</span>
       </div>
     )
   }
@@ -154,7 +154,7 @@ function Termos({
   return (
     <div className="mt-5 pt-4 border-t border-white/10">
       <Rotulo>{rotulo}</Rotulo>
-      <p className="text-white text-[13.5px] tracking-[0.05em] leading-relaxed mt-1.5 uppercase">
+      <p className="text-white text-[15px] tracking-[0.05em] leading-relaxed mt-1.5 uppercase">
         {relacao.termos[0]?.texto} <span className="text-white/40">{sinal}</span> {relacao.termos[1]?.texto}
       </p>
     </div>
@@ -228,10 +228,10 @@ function CardRelacao({
 
   const conteudo = (
     <>
-      <h3 className="text-white text-[12.5px] sm:text-[13px] tracking-[0.12em] uppercase leading-[1.55]">
+      <h3 className="text-white text-[14px] sm:text-[15px] tracking-[0.12em] uppercase leading-[1.55]">
         {tituloDaRelacao(card, t, locale)}
       </h3>
-      <p className="text-white/40 text-[11.5px] tabular-nums mt-1.5">{linhaTecnica(card, t, locale)}</p>
+      <p className="text-white/40 text-[13px] tabular-nums mt-1.5">{linhaTecnica(card, t, locale)}</p>
 
       <div className="mt-5">
         <CorpoDaRelacao lado={card.a} />
@@ -242,8 +242,8 @@ function CardRelacao({
           </>
         ) : (
           <div className="mt-4 pt-3.5 border-t border-white/10">
-            <p className="text-white text-[13px] tracking-[0.1em] uppercase">{card.a.nomeSigno}</p>
-            <p className="text-white/50 text-[12px] leading-relaxed mt-1.5">{card.a.campo}</p>
+            <p className="text-white text-[15px] tracking-[0.1em] uppercase">{card.a.nomeSigno}</p>
+            <p className="text-white/50 text-[14px] leading-relaxed mt-1.5">{card.a.campo}</p>
           </div>
         )}
       </div>
@@ -252,9 +252,9 @@ function CardRelacao({
         {diagrama && <span className="text-white/60 shrink-0">{diagrama}</span>}
         <div className="min-w-0">
           {card.tipo === "aspecto" && (
-            <p className="text-white/85 text-[10.5px] uppercase tracking-[0.14em]">{card.titulo}</p>
+            <p className="text-white/85 text-[12px] uppercase tracking-[0.14em]">{card.titulo}</p>
           )}
-          <p className="text-white/60 text-[12.5px] leading-relaxed mt-1">{card.glosa}</p>
+          <p className="text-white/60 text-[14px] leading-relaxed mt-1">{card.glosa}</p>
         </div>
       </div>
 
@@ -267,7 +267,7 @@ function CardRelacao({
       <Rotulo>{t.alsoToday}</Rotulo>
       <div className="mt-1.5 space-y-1">
         {card.contexto.map((linha) => (
-          <p key={linha} className="text-white/35 text-[11.5px] leading-relaxed">
+          <p key={linha} className="text-white/35 text-[13px] leading-relaxed">
             {linha}
           </p>
         ))}
@@ -290,7 +290,7 @@ function CardRelacao({
       className="bg-white/5 backdrop-blur-sm rounded-lg p-5 border border-white/10 [&[open]]:bg-white/[0.07]"
     >
       <summary className="list-none cursor-pointer marker:hidden [&::-webkit-details-marker]:hidden">{conteudo}</summary>
-      <p className="text-white/75 text-[13px] leading-relaxed mt-4">{relacao.explicacao}</p>
+      <p className="text-white/75 text-[15px] leading-relaxed mt-4">{relacao.explicacao}</p>
       {tambemHoje}
     </details>
   )
@@ -309,9 +309,9 @@ function Gaveta({ titulo, nota, children }: { titulo: string; nota?: string; chi
       <summary className="px-6 py-4 flex items-center gap-3 cursor-pointer list-none marker:hidden [&::-webkit-details-marker]:hidden">
         <span className="flex-1">
           <Rotulo>{titulo}</Rotulo>
-          {nota && <span className="block text-white/30 text-[11px] leading-relaxed mt-1">{nota}</span>}
+          {nota && <span className="block text-white/30 text-[13px] leading-relaxed mt-1">{nota}</span>}
         </span>
-        <span className="text-white/30 group-hover:text-white/55 text-[10px] transition-transform duration-200 group-open:rotate-180">
+        <span className="text-white/30 group-hover:text-white/55 text-[12px] transition-transform duration-200 group-open:rotate-180">
           ▾
         </span>
       </summary>
@@ -353,7 +353,7 @@ function CeuDeHoje({
   const coletivos = ceu.aspectos.filter((a) => LENTOS.has(a.a) && LENTOS.has(a.b))
 
   const Aspecto = ({ a, comRitmo }: { a: Ceu["aspectos"][number]; comRitmo: boolean }) => (
-    <div className="flex gap-3 text-[12.5px]">
+    <div className="flex gap-3 text-[14px]">
       <span className="flex items-center gap-1 text-white/45 shrink-0 pt-0.5">
         <GlifoPlaneta id={a.a} tamanho={14} />
         <span className="text-white/70">{SIMBOLO_ASPECTO[a.aspecto]}</span>
@@ -386,7 +386,7 @@ function CeuDeHoje({
       <Gaveta titulo={t.planetsInSky}>
         <div className="space-y-2">
           {ceu.posicoes.map((p) => (
-            <div key={p.corpo} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px]">
+            <div key={p.corpo} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[15px]">
               <span className="text-white/45 w-4 shrink-0 self-center">
                 <GlifoPlaneta id={p.corpo} tamanho={14} />
               </span>
@@ -394,9 +394,9 @@ function CeuDeHoje({
               <span className="text-white/90 tabular-nums">
                 {signos[p.signo]} {numero(p.grau)}°
               </span>
-              {p.retrogrado && <span className="text-white/40 text-[11px]">℞</span>}
+              {p.retrogrado && <span className="text-white/40 text-[13px]">℞</span>}
               {p.corpo === "moon" && (
-                <span className="flex items-center gap-1.5 text-white/40 text-[11.5px]">
+                <span className="flex items-center gap-1.5 text-white/40 text-[13px]">
                   <FaseLua fase={ceu.faseLua} tamanho={13} />
                   {FASES[locale][ceu.faseLua]}
                 </span>
@@ -458,10 +458,10 @@ function EvidenciaDoCeu({ sintese, t }: { sintese: Carregamento<string>; t: Reco
         <p className="text-white/85 text-[15px] sm:text-base leading-[1.75] font-light mt-3.5 max-w-xl">{sintese.dado}</p>
       )}
       {sintese.estado === "ausente" && (
-        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-3.5">{t.evidenceWaiting}</p>
+        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-3.5">{t.evidenceWaiting}</p>
       )}
       {sintese.estado === "erro" && (
-        <p className="text-white/35 text-[13px] leading-relaxed font-light mt-3.5">{t.loadFailed}</p>
+        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-3.5">{t.loadFailed}</p>
       )}
     </div>
   )
@@ -565,7 +565,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
                   <GlifoSigno indice={i} tamanho={17} className={ativo ? "text-white/85" : "text-white/45"} />
                   <span className="block text-sm instrument italic">{nome}</span>
                 </span>
-                <span className="block text-[10px] text-white/35 tabular-nums mt-0.5">{t.dates[i]}</span>
+                <span className="block text-[12px] text-white/35 tabular-nums mt-0.5">{t.dates[i]}</span>
               </button>
             )
           })}
@@ -585,7 +585,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
         <div className="space-y-4">
           <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10">
             <h2 className="text-white text-3xl instrument italic">{dados.nomeSigno}</h2>
-            <p className="text-white/55 text-[13px] mt-2">{dados.linhaSigno}</p>
+            <p className="text-white/55 text-[15px] mt-2">{dados.linhaSigno}</p>
 
             {leitura ? (
               <div className="mt-5 pt-4 border-t border-white/10">
@@ -596,7 +596,7 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
                     antes desta camada não têm, e uma síntese que reprova some
                     sozinha. Sem ela, o bloco é o de antes. */}
                 {leitura.sintese && (
-                  <p className="text-white/70 text-[14.5px] leading-[1.75] font-light mt-3.5 max-w-xl">
+                  <p className="text-white/70 text-[16px] leading-[1.75] font-light mt-3.5 max-w-xl">
                     {leitura.sintese}
                   </p>
                 )}
@@ -649,19 +649,19 @@ function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno:
         <h2 className="text-white instrument italic text-[23px] sm:text-[26px] leading-snug">{t.callTitle}</h2>
         {/* com signo escolhido a frase nomeia o signo, porque é dele que a
             pessoa precisa entender que a leitura é compartilhada */}
-        <p className="text-white/65 text-[14px] leading-relaxed font-light mt-3.5">
+        <p className="text-white/65 text-[16px] leading-relaxed font-light mt-3.5">
           {nomeSigno ? fmt(t.callLead, { signo: nomeSigno }) : t.callLeadNoSign}
         </p>
-        <p className="text-white/65 text-[14px] leading-relaxed font-light">{t.callBody}</p>
+        <p className="text-white/65 text-[16px] leading-relaxed font-light">{t.callBody}</p>
         <Link
           href="/interconexoes"
           className="group inline-flex items-center gap-2 mt-7 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-light text-sm transition-all duration-300"
         >
           {t.callCta}
-          <span className="text-white/45 group-hover:text-white/70 text-[11px] transition-colors">↗</span>
+          <span className="text-white/45 group-hover:text-white/70 text-[13px] transition-colors">↗</span>
         </Link>
         {/* o tamanho do pedido fica à vista antes do clique */}
-        <p className="text-white/25 text-[11px] font-light mt-2.5">{t.callFields}</p>
+        <p className="text-white/25 text-[13px] font-light mt-2.5">{t.callFields}</p>
       </div>
     </div>
   )

@@ -358,7 +358,7 @@
 }
 @media (min-width: 640px) { .ln-table { --ln-cw: 92px; --ln-gap: 10px; } }
 .ln-pos {
-  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.32);
+  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.32);
   text-align: center; margin-bottom: 6px; line-height: 1.2; min-height: 2.4em;
   display: flex; align-items: flex-end; justify-content: center;
 }
@@ -443,7 +443,12 @@
   .bnav { display: none; }
 }
 .bnav-item {
-  flex: 1 1 0; min-width: 0; min-height: 52px;
+  /* `flex: 1 1 0` dava a mesma largura aos cinco, e com o rótulo em 12px
+     "Multioráculo" não cabia na sua quinta parte e virava "Multiorácu…".
+     Com base automática cada item pede a largura do seu próprio texto e o
+     que sobra é repartido: ninguém é cortado, e o preço é a grade ficar um
+     pouco desigual, o que importa menos do que um nome truncado. */
+  flex: 1 1 auto; min-width: 0; min-height: 52px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   color: rgba(255,255,255,0.5); text-decoration: none; background: none; border: 0; padding: 4px 2px;
   -webkit-tap-highlight-color: transparent; transition: color 160ms ease; cursor: pointer;
@@ -452,7 +457,7 @@
 .bnav-item.is-active { color: #ffffff; }
 .bnav-icon { display: flex; align-items: center; justify-content: center; height: 28px; transition: transform 160ms ease; }
 .bnav-item.is-active .bnav-icon { transform: translateY(-1px); }
-.bnav-label { font-size: 10px; line-height: 1; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bnav-label { font-size: 12px; line-height: 1; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 /* item central: um pouco mais de presença, sem virar botão flutuante */
 .bnav-item.is-center .bnav-icon {
   height: 40px; width: 40px; border-radius: 999px;

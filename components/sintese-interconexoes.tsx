@@ -74,7 +74,7 @@ export default function SinteseInterconexoes({
 
   return (
     <>
-      <p className="text-white/25 text-[9px] uppercase tracking-[0.22em] font-light">{t.sinteseTitle}</p>
+      <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{t.sinteseTitle}</p>
 
       {/* o corpo ocupa o vão que sobra e fica centrado nele: a placa estica até
           a altura da roda ao lado, e conteúdo encostado no topo de uma placa
@@ -86,7 +86,7 @@ export default function SinteseInterconexoes({
             {estado.texto}
           </p>
           {estado.jaEraDeHoje && (
-            <p className="text-white/25 text-[11px] font-light mt-4">{t.sinteseAlready}</p>
+            <p className="text-white/25 text-[13px] font-light mt-4">{t.sinteseAlready}</p>
           )}
         </>
       ) : (
@@ -100,10 +100,10 @@ export default function SinteseInterconexoes({
               onClick={pedir}
               className="group flex items-center gap-2 mt-5 py-3 cursor-pointer"
             >
-              <span className="text-white/85 group-hover:text-white text-[14.5px] font-light transition-colors">
+              <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">
                 {t.sinteseCta}
               </span>
-              <span className="text-white/45 group-hover:text-white/85 text-[13px] transition-transform duration-200 group-hover:translate-x-0.5">
+              <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-transform duration-200 group-hover:translate-x-0.5">
                 →
               </span>
             </button>
@@ -112,7 +112,7 @@ export default function SinteseInterconexoes({
           {estado.fase === "gerando" && (
             <div className="mt-6 max-w-xl">
               <ReadingProgress progresso={progresso} />
-              <p className="text-white/45 text-[12.5px] font-light mt-3">{t.sinteseWriting}</p>
+              <p className="text-white/45 text-[14px] font-light mt-3">{t.sinteseWriting}</p>
               <div className="space-y-2.5 mt-5" aria-hidden="true">
                 {["100%", "94%", "76%"].map((largura) => (
                   <div
@@ -127,10 +127,10 @@ export default function SinteseInterconexoes({
 
           {estado.fase === "falha" && (
             <div className="mt-5">
-              <p className="text-white/55 text-[13px] leading-relaxed font-light">{t.sinteseFailed}</p>
+              <p className="text-white/55 text-[15px] leading-relaxed font-light">{t.sinteseFailed}</p>
               <button
                 onClick={pedir}
-                className="text-white/80 hover:text-white text-[13.5px] font-light mt-3 py-2 cursor-pointer transition-colors"
+                className="text-white/80 hover:text-white text-[15px] font-light mt-3 py-2 cursor-pointer transition-colors"
               >
                 {t.sinteseRetry}
               </button>
@@ -139,14 +139,14 @@ export default function SinteseInterconexoes({
 
           {estado.fase === "bloqueada" && (
             <div className="mt-5">
-              <p className="text-white/50 text-[13px] leading-relaxed font-light max-w-lg">{t.readingPaid}</p>
-              <p className="text-white/30 text-[12.5px] leading-relaxed font-light mt-1.5 max-w-lg">{t.factsYours}</p>
+              <p className="text-white/50 text-[15px] leading-relaxed font-light max-w-lg">{t.readingPaid}</p>
+              <p className="text-white/30 text-[14px] leading-relaxed font-light mt-1.5 max-w-lg">{t.factsYours}</p>
               <Link
                 href="/assinatura"
-                className="group inline-flex items-center gap-2 mt-4 py-2 text-white/80 hover:text-white text-[13.5px] font-light transition-colors"
+                className="group inline-flex items-center gap-2 mt-4 py-2 text-white/80 hover:text-white text-[15px] font-light transition-colors"
               >
                 {t.sinteseLocked}
-                <span className="text-[12px] text-white/45 group-hover:text-white/80 transition-transform duration-200 group-hover:translate-x-0.5">
+                <span className="text-[14px] text-white/45 group-hover:text-white/80 transition-transform duration-200 group-hover:translate-x-0.5">
                   ↗
                 </span>
               </Link>

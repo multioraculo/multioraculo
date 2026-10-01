@@ -40,10 +40,10 @@ export default function AnimatedLogo({
         </div>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
-          <div className="text-[10px] leading-none text-white/90 tracking-wide">
+          <div className="text-[12px] leading-none text-white/90 tracking-wide">
             {labelTop}
           </div>
-          <div className="text-[12px] leading-none text-white font-semibold tracking-wide">
+          <div className="text-[14px] leading-none text-white font-semibold tracking-wide">
             {labelCenter}
           </div>
         </div>
