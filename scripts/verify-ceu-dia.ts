@@ -209,12 +209,38 @@ function parteE() {
   }
 }
 
+// ── F · alcance: nenhum idioma pega palavra inocente que os outros deixam ──
+// Paridade tem dois lados, e este é o que a primeira tradução errou. As listas
+// de EN e ES nasceram como radicais soltos e ficaram MAIS restritivas que o
+// PT: "ask" casava dentro de "task", "famil" pegava "familiar", "work" pegava
+// "network", "favou?r" pegava "favorable". Nenhum equivalente desses é pego em
+// português, então cada um era uma proibição nova inventada na tradução. Em
+// produção isso reprovou a geração em inglês nas quatro tentativas.
+//
+// As palavras abaixo precisam atravessar as duas regras em todos os idiomas. O
+// verbo conjugado continua sendo pego, e isso é a parte A e a parte B.
+function parteF() {
+  const INOCENTES: Record<Locale, string[]> = {
+    pt: ["familiar", "rede", "relativo", "vincular", "proposta", "sugestão", "favorável"],
+    en: ["familiar", "network", "framework", "worksheet", "task", "mask", "lovely", "bonding", "invitation", "proposition", "suggestion", "favorable", "requirement"],
+    es: ["familiar", "vincular", "relacionar", "propuesta", "sugerencia", "favorable", "tarea"],
+  }
+  for (const locale of LOCALES) {
+    for (const palavra of INOCENTES[locale]) {
+      const pedido = PEDIDO[locale].some((r) => new RegExp(r.source, "i").test(palavra))
+      const esfera = ESFERA_DE_VIDA[locale].some((r) => new RegExp(r.source, "i").test(palavra))
+      confere(`F · ${locale}: "${palavra}" atravessa as duas regras`, !pedido && !esfera, `${pedido ? "PEDIDO " : ""}${esfera ? "ESFERA_DE_VIDA" : ""}`)
+    }
+  }
+}
+
 function main() {
   parteA()
   parteB()
   parteC()
   parteD()
   parteE()
+  parteF()
 
   if (falhas.length) {
     console.error(`\nA leitura do céu falhou em ${falhas.length} ponto(s):\n`)

@@ -253,11 +253,23 @@ export const CONSELHO: Record<Locale, RegExp[]> = {
  * demand, pedir/ask, demandar/demand, convidar/invite, favorecer/favor,
  * desafiar/challenge, propor/propose, sugerir/suggest, aconselhar/advise.
  * Nenhum verbo novo entrou em nenhum dos três.
+ *
+ * EN E ES LISTAM FORMAS VERBAIS, E COM FRONTEIRA DE PALAVRA, porque é isso que
+ * o PT faz. A primeira tradução usou radicais soltos e ficou mais restritiva
+ * que o original: "ask" casava dentro de "task" e "mask", "propos" pegava
+ * "proposition", "suggest" pegava "suggestion" e "favou?r" pegava "favorable".
+ * O PT não pega nenhum equivalente desses: "propõe" não alcança "proposta",
+ * "sugere" não alcança "sugestão" e "favorec" não alcança "favorável". Ele mira
+ * o verbo conjugado, e agora os outros dois também.
  */
 export const PEDIDO: Record<Locale, RegExp[]> = {
   pt: [/(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\w*/gi],
-  en: [/(requir|demand|ask|invit|favou?r|challeng|propos|suggest|advis)\w*/gi],
-  es: [/(exig|pid(e|iendo)|demand|invit|favorec|desafi|propon|sugier|aconsej)\w*/gi],
+  en: [
+    /\b(requires?|requiring|demands?|demanding|asks?|asking|invites?|inviting|favou?rs?|favou?ring|challenges?|challenging|proposes?|proposing|suggests?|suggesting|advises?|advising)\b/gi,
+  ],
+  es: [
+    /\b(exige[n]?|exigiendo|pide[n]?|pidiendo|demanda[n]?|demandando|invita[n]?|invitando|favorece[n]?|favoreciendo|desafía[n]?|desafia[n]?|desafiando|propone[n]?|proponiendo|sugiere[n]?|sugiriendo|aconseja[n]?|aconsejando)\b/gi,
+  ],
 }
 
 /**
@@ -269,14 +281,27 @@ export const PEDIDO: Record<Locale, RegExp[]> = {
  * projeto; o PT é a lista que vivia dentro de `verificarCeu`, intacta, e EN e
  * ES são a tradução dos mesmos domínios.
  *
- * "affectio" e "affectiv", e não "affect": em inglês "affects" é verbo neutro e
- * comum, e pegá-lo tornaria o verificador mais restritivo em EN do que é em PT,
- * onde "afetiv" e "afeto" nomeiam o domínio afetivo e não a ação de afetar.
+ * "affection" e "affective", e não "affect": em inglês "affects" é verbo neutro
+ * e comum, e pegá-lo tornaria o verificador mais restritivo em EN do que é em
+ * PT, onde "afetiv" e "afeto" nomeiam o domínio afetivo e não a ação de afetar.
+ *
+ * O MESMO CUIDADO VALE PARA O ALCANCE DE CADA RADICAL. Em português os termos
+ * deste domínio são acentuados ou longos, e por isso não se esconderam dentro
+ * de palavra nenhuma: "família" não alcança "familiar", "vínculo" não alcança
+ * "vincular", "trabalh" não existe dentro de outra palavra. A primeira tradução
+ * perdeu isso e ficou mais restritiva que o original: "famil" pegava
+ * "familiar", "work" pegava "network" e "framework", "love" pegava "lovely",
+ * "bond" pegava "bonding". Agora EN e ES listam as palavras do domínio com
+ * fronteira, que é o alcance que o PT tem de fato.
  */
 export const ESFERA_DE_VIDA: Record<Locale, RegExp[]> = {
   pt: [/(afetiv|afeto|amoros|relaç|relacionament|vínculo|trabalh|carreir|financ|dinheiro|saúde|família)\w*/gi],
-  en: [/(affectio|affectiv|romanc|romantic|love|relationship|bond|work|career|financ|money|health|famil)\w*/gi],
-  es: [/(afectiv|afecto|amoros|relaci|vincul|trabaj|carrer|financ|dinero|salud|famili)\w*/gi],
+  en: [
+    /\b(affection|affections|affective|romance|romantic|loves?|relationships?|bonds?|works?|working|jobs?|careers?|financial|finances|money|health|family|families)\b/gi,
+  ],
+  es: [
+    /\b(afectivo|afectiva|afectivos|afectivas|afectos?|amoroso|amorosa|romance|relación|relaciones|vínculos?|trabajos?|carreras?|financiero|financiera|finanzas|dinero|salud|familias?)\b/gi,
+  ],
 }
 
 // ---------------------------------------------------------------------------
