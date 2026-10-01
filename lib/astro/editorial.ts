@@ -237,3 +237,79 @@ export const CONSELHO: Record<Locale, RegExp[]> = {
   en: [/\b(try to|avoid|seek|allow yourself|remember to|you should|you need to|it is time to)\b/i],
   es: [/\b(procura|evita|intenta|busca|permitete|recuerda|debes|necesitas|es hora de)\b/i],
 }
+
+// ---------------------------------------------------------------------------
+// idioma da saída
+// ---------------------------------------------------------------------------
+
+/**
+ * PALAVRAS DE FUNÇÃO, e não de assunto.
+ *
+ * Artigos, preposições, conjunções e pronomes são classe fechada: aparecem em
+ * qualquer texto, não dependem do tema e não mudam com o dia. É o oposto de
+ * procurar uma palavra específica, que falharia no primeiro texto que não a
+ * usasse.
+ *
+ * SÓ ENTRA O QUE NÃO COLIDE entre os três idiomas, e aqui isso exigiu cuidado,
+ * porque português e espanhol compartilham muito. Ficaram os pares que de fato
+ * separam: "com" contra "con", "uma" contra "una", "e" contra "y", "do" e "da"
+ * contra "del" e "al", "mais" contra "más", "não" contra "no". Saíram os que os
+ * dois idiomas escrevem igual, como "que", "entre" e "está", e as de uma letra
+ * que o inglês também usa, como "a" e "o".
+ */
+const GRAMATICAIS: Record<Locale, string[]> = {
+  pt: ["não", "uma", "um", "com", "do", "da", "dos", "das", "é", "são", "também", "já", "mais", "e", "os", "ao", "essa", "esse", "isso", "enquanto", "seu", "sua", "pelo", "pela", "em", "muito"],
+  en: ["the", "and", "of", "to", "in", "is", "with", "that", "this", "these", "for", "an", "their", "they", "where", "while", "into", "from", "by", "are", "its", "her", "his"],
+  es: ["y", "el", "la", "los", "las", "un", "una", "con", "más", "del", "al", "pero", "su", "sus", "lo", "este", "esta", "mientras", "hacia", "muy", "en"],
+}
+
+/**
+ * Marcas de ortografia, que não dependem de vocabulário nenhum: "ção" e "lh"
+ * não existem em espanhol, "ñ" e "ción" não existem em português, e o inglês
+ * não usa acento. Valem 2 pontos porque uma só já decide, enquanto uma palavra
+ * de função isolada pode ser coincidência.
+ */
+const ORTOGRAFIA: Record<Locale, RegExp[]> = {
+  pt: [/ção|ções|ão|ões|nh|lh|ç/i],
+  en: [],
+  es: [/ñ|ción|ciones|ll[aeiou]|¿|¡/i],
+}
+
+/**
+ * A folga exigida para reprovar. Com 2, um texto curto e pobre em palavras de
+ * função empata e PASSA, em vez de queimar uma tentativa paga por engano. A
+ * assimetria é de propósito: reprovar à toa custa dinheiro, e o caso que esta
+ * regra existe para pegar não é o texto ambíguo, é o parágrafo inteiro no
+ * idioma errado, que aparece com 6 a 23 pontos contra 0.
+ */
+const MARGEM_DE_IDIOMA = 2
+
+function pontosDeIdioma(texto: string, locale: Locale): number {
+  const palavras = texto.toLowerCase().split(/[^\p{L}]+/u).filter(Boolean)
+  const alvo = new Set(GRAMATICAIS[locale])
+  let pontos = palavras.filter((p) => alvo.has(p)).length
+  for (const re of ORTOGRAFIA[locale]) if (re.test(texto)) pontos += 2
+  return pontos
+}
+
+/**
+ * O idioma em que o texto está, quando NÃO é o pedido. Devolve nulo quando
+ * confere, e também quando não há evidência suficiente para afirmar o
+ * contrário.
+ *
+ * Existe porque o sistema conseguiu gravar uma síntese em português dentro de
+ * `locale=en` e `locale=es`: o prompt pedia o idioma numa linha e demonstrava a
+ * forma desejada com um exemplo em português, e nada conferia a língua da
+ * saída. Não é detector de idioma de uso geral: é o bastante para barrar o caso
+ * óbvio antes de ele ser gravado.
+ */
+export function idiomaDivergente(texto: string, esperado: Locale): Locale | null {
+  const placar: Record<Locale, number> = {
+    pt: pontosDeIdioma(texto, "pt"),
+    en: pontosDeIdioma(texto, "en"),
+    es: pontosDeIdioma(texto, "es"),
+  }
+  const melhor = (Object.keys(placar) as Locale[]).reduce((a, b) => (placar[b] > placar[a] ? b : a))
+  if (melhor === esperado) return null
+  return placar[melhor] >= placar[esperado] + MARGEM_DE_IDIOMA ? melhor : null
+}

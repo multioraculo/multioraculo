@@ -16,7 +16,7 @@
  * A seleção derruba aspecto entre dois lentos mesmo com orbe pequeno: Netuno a
  * zero grau de Plutão é o fundo de uma geração, não a notícia de hoje.
  */
-import type { Locale } from "@/lib/i18n/config"
+import { LOCALE_META, type Locale } from "@/lib/i18n/config"
 import { ORBE_MAX, ORBE_MAX_LUA, type Ceu, type Corpo } from "./ceu"
 import { ASPECTOS, CORPOS, FASES, LUNACOES, SIGNOS } from "./nomes"
 import {
@@ -27,7 +27,7 @@ import {
   LENTOS,
   LINHA_SIGNO,
 } from "./simbolos"
-import { PROIBIDAS, REGRAS_COMUNS, TRACOS } from "./editorial"
+import { PROIBIDAS, REGRAS_COMUNS, TRACOS, idiomaDivergente } from "./editorial"
 
 export type TermoDoCeu = { texto: string; origem: string }
 export type SinteseDoCeu = { termos: TermoDoCeu[]; sintese: string }
@@ -208,6 +208,31 @@ const IDIOMA: Record<Locale, string> = {
   es: "Responde solo con JSON válido, sin Markdown. El texto dirigido al lector se escribe en español.",
 }
 
+/**
+ * A MESMA EXIGÊNCIA DE IDIOMA, REPETIDA NO FIM, e por um motivo medido.
+ *
+ * `IDIOMA` abre o prompt com uma linha pedindo o idioma. Depois dela vêm umas
+ * quatrocentas palavras de regras em português, incluindo um exemplo que mostra
+ * a FORMA desejada da saída com um texto em português. Em produção o modelo
+ * seguiu o exemplo e não a linha: as linhas `en` e `es` de `sky_daily` foram
+ * gravadas com síntese em português, enquanto a camada factual, que é cálculo e
+ * não geração, saiu corretamente traduzida.
+ *
+ * Então o fecho faz duas coisas que a abertura não fazia: nomeia as instruções
+ * em português COMO instruções, e não como amostra da língua a imitar, e fica
+ * na última posição, que é a que o modelo lê por último. Está escrito no
+ * próprio idioma pedido, porque uma instrução em inglês é ela mesma um sinal de
+ * que a resposta vai em inglês.
+ *
+ * Isto não muda regra editorial, nem quantidade de fatos, nem tamanho da
+ * síntese: só o idioma em que ela sai.
+ */
+const IDIOMA_FECHO: Record<Locale, string> = {
+  pt: 'IDIOMA: as regras acima estão em português porque são instruções para você. O que você devolve, cada "texto" e a "sintese", é escrito em português do Brasil.',
+  en: 'LANGUAGE: the rules above are written in Portuguese because they are instructions for you, not a sample of the language to write in. What you return, every "texto" and the "sintese", is written in English, with no Portuguese words.',
+  es: 'IDIOMA: las reglas anteriores están en portugués porque son instrucciones para ti, no un ejemplo del idioma en que debes escribir. Lo que devuelves, cada "texto" y la "sintese", se escribe en español, sin palabras en portugués.',
+}
+
 const PALAVRAS_MAX = 45
 const TERMOS = { min: 3, max: 5 }
 
@@ -243,7 +268,9 @@ O QUE DEVOLVER
 - termos: de ${TERMOS.min} a ${TERMOS.max} entradas com texto e origem. A origem é exatamente uma das ORIGENS listadas no fato.
 - sintese: DUAS frases, no máximo ${PALAVRAS_MAX} palavras somadas, contendo todos os termos.
 
-Devolva JSON: {"termos": [{"texto": "...", "origem": "..."}], "sintese": "..."}`
+Devolva JSON: {"termos": [{"texto": "...", "origem": "..."}], "sintese": "..."}
+
+${IDIOMA_FECHO[locale]}`
 }
 
 export function promptCeuDoDia(ceu: Ceu, escolhidos: FatoDoCeu[], locale: Locale): { system: string; user: string } {
@@ -322,6 +349,16 @@ export function verificarCeu(params: {
     : []
   const sintese = typeof (bruto as { sintese?: unknown })?.sintese === "string" ? (bruto as { sintese: string }).sintese.trim() : ""
   if (!sintese) return { ok: false, violacoes: ["síntese ausente"] }
+
+  // 0. o idioma pedido, e esta vem antes das outras porque sustenta todas.
+  // Com a língua errada o resto confere o texto errado: as listas de nomes e de
+  // expressões proibidas são as do locale pedido, e nenhuma delas casa com um
+  // parágrafo em outro idioma. Foi assim que uma síntese em português entrou
+  // numa linha `en` e numa linha `es` sem nenhuma violação.
+  const outroIdioma = idiomaDivergente(sintese, locale)
+  if (outroIdioma) {
+    violacoes.push(`a síntese está em ${LOCALE_META[outroIdioma].promptName} e precisa estar em ${LOCALE_META[locale].promptName}`)
+  }
 
   // 1. a superfície não nomeia astrologia
   const proibidoNomear = [
