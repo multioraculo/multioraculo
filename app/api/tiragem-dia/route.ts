@@ -8,20 +8,22 @@
  * consome cota, não escreve em reading_usage e não encosta no paywall. Dia
  * diferente de hoje só é servido do que já está gravado.
  *
- * O CORPO DA RESPOSTA NÃO MUDOU. O que mudou foi de onde ele vem — a montagem
- * está em `payloadDaTiragemDoDia`, que a Home também usa no servidor — e o
- * cabeçalho de cache, explicado em `lib/http/cache-do-dia`.
+ * A montagem do corpo está em `payloadDaTiragemDoDia`, que a Home também usa
+ * no servidor — assim a página não precisa chamar a própria API por HTTP.
  *
- * `?locale` é opcional e existe para o cache: com ele, a chave da borda é a
- * própria URL e não há como uma resposta em português ser servida a quem pediu
- * em espanhol. Sem ele, o idioma continua vindo do cookie e a resposta não é
- * compartilhada.
+ * SEM CACHE COMPARTILHADO NA BORDA, pelo mesmo motivo medido em
+ * `/api/ceu-dia`: a Netlify monta a chave de cache com `query=__nextDataReq|_rsc`
+ * e descarta todo o resto da query string, `locale` incluído. As três URLs por
+ * idioma colapsavam numa entrada só, e a primeira a chegar era servida a todos
+ * até a virada do dia. A resposta volta a ser privada.
+ *
+ * Idioma na URL continua: ele não existe mais para o cache, mas mantém o
+ * pedido do cliente explícito em vez de depender do cookie viajar no fetch.
  */
 import { NextResponse } from "next/server"
 import { getLocale } from "@/lib/i18n/server"
 import { isLocale } from "@/lib/i18n/config"
 import { payloadDaTiragemDoDia } from "@/lib/oracles/tiragem-dia-payload"
-import { cacheDoDia } from "@/lib/http/cache-do-dia"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -29,11 +31,9 @@ export const maxDuration = 60
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams
   const pedido = params.get("locale")
-  const explicito = isLocale(pedido)
-  const locale = explicito ? pedido : await getLocale()
+  const locale = isLocale(pedido) ? pedido : await getLocale()
 
   const corpo = await payloadDaTiragemDoDia(locale, params.get("dia"))
 
-  const publicavel = explicito && corpo.sintese !== null
-  return NextResponse.json(corpo, { headers: { "Cache-Control": cacheDoDia(publicavel) } })
+  return NextResponse.json(corpo, { headers: { "Cache-Control": "private, no-cache" } })
 }
