@@ -38,6 +38,7 @@ import {
   promptCeuDoDia,
   carregaRetrogradacao,
   EXEMPLOS_RETROGRADACAO,
+  type TermoDoCeu,
 } from "../lib/astro/ceu-do-dia"
 import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente, nomesExpostos, pedidoDoCeu } from "../lib/astro/editorial"
 import { LOCALES, type Locale } from "../lib/i18n/config"
@@ -205,14 +206,16 @@ function parteE() {
   // porque o radical curto alcançava o substantivo "desafios". Esta asserção
   // guarda as duas coisas ao mesmo tempo: a lista é a esperada, e a diferença
   // em relação à original é exatamente essa troca e nada mais.
-  const PT_PEDIDO_ORIGINAL = "(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\\w*"
-  const PT_PEDIDO_AGORA = "(exig|ped(e|indo)|demand|convid|favorec|desafia|propõe|sugere|aconselha)\\w*"
+  // O PT de PEDIDO mudou em um ponto, e só nele: `desafi` saiu da alternação
+  // compartilhada, porque o `\w*` dela alcançava "desafiadora". Os outros oito
+  // radicais seguem intactos, na mesma ordem, e as formas verbais de desafiar
+  // viraram uma regex própria com fronteira.
+  const PT_PEDIDO_SEM_DESAFIAR = "(exig|ped(e|indo)|demand|convid|favorec|propõe|sugere|aconselha)\\w*"
   const PT_ESFERA_ORIGINAL = "(afetiv|afeto|amoros|relaç|relacionament|vínculo|trabalh|carreir|financ|dinheiro|saúde|família)\\w*"
-  confere("E · o PT de PEDIDO é o esperado", PEDIDO.pt.length === 1 && PEDIDO.pt[0].source === PT_PEDIDO_AGORA, PEDIDO.pt.map((r) => r.source).join(" "))
-  confere(
-    "E · a única diferença do PT original é `desafi` -> `desafia`",
-    PT_PEDIDO_ORIGINAL.replace("favorec|desafi|", "favorec|desafia|") === PT_PEDIDO_AGORA,
-  )
+  confere("E · o PT de PEDIDO tem duas entradas", PEDIDO.pt.length === 2, String(PEDIDO.pt.length))
+  confere("E · a primeira é a lista original sem o ramo de desafiar", PEDIDO.pt[0]?.source === PT_PEDIDO_SEM_DESAFIAR, PEDIDO.pt[0]?.source)
+  confere("E · e os oito radicais originais seguem lá", ["exig", "ped(e|indo)", "demand", "convid", "favorec", "propõe", "sugere", "aconselha"].every((r) => PEDIDO.pt[0].source.includes(r)))
+  confere("E · a segunda é de formas verbais com fronteira", /^\\b\(desafia\|/.test(PEDIDO.pt[1]?.source ?? ""), PEDIDO.pt[1]?.source)
   confere("E · o PT de ESFERA_DE_VIDA é a lista original, intacta", ESFERA_DE_VIDA.pt.length === 1 && ESFERA_DE_VIDA.pt[0].source === PT_ESFERA_ORIGINAL, ESFERA_DE_VIDA.pt.map((r) => r.source).join(" "))
 
   for (const locale of LOCALES) {
@@ -365,43 +368,49 @@ function parteG() {
 //
 // Estes casos provam que a regra aceita paráfrase legítima dos FATOS e recusa
 // paráfrase entre os termos e a própria síntese, igual nos três idiomas.
-type Caso = { termos: Array<{ texto: string; origem: string }>; sintese: string }
+type Termo = { texto: string; origem: string; fato_id: string }
+type Caso = { termos: Termo[]; sintese: string }
+
+/** os três fatos de DIA, pelo id estável */
+const F1 = "aspecto:mercury~mars:square"
+const F2 = "aspecto:mars~pluto:opposition"
+const F3 = "aspecto:sun~uranus:trine"
 
 const VALIDO: Record<Locale, Caso> = {
   en: {
     termos: [
-      { texto: "examining precision", origem: "Mercury" },
-      { texto: "crossed insistence", origem: "square" },
-      { texto: "depth under review", origem: "retrogradation of Pluto" },
-      { texto: "frictionless accord", origem: "trine" },
+      { texto: "examining precision", origem: "Mercury", fato_id: F1 },
+      { texto: "crossed insistence", origem: "square", fato_id: F1 },
+      { texto: "depth under review", origem: "retrogradation of Pluto", fato_id: F2 },
+      { texto: "frictionless accord", origem: "trine", fato_id: F3 },
     ],
     sintese: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord. What orients itself holds steady.",
   },
   pt: {
     termos: [
-      { texto: "precisão que examina", origem: "Mercúrio" },
-      { texto: "insistência atravessada", origem: "quadratura" },
-      { texto: "profundidade em revisão", origem: "retrogradação de Plutão" },
-      { texto: "acordo sem atrito", origem: "trígono" },
+      { texto: "precisão que examina", origem: "Mercúrio", fato_id: F1 },
+      { texto: "insistência atravessada", origem: "quadratura", fato_id: F1 },
+      { texto: "profundidade em revisão", origem: "retrogradação de Plutão", fato_id: F2 },
+      { texto: "acordo sem atrito", origem: "trígono", fato_id: F3 },
     ],
     sintese: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito. O que orienta se mantém firme.",
   },
   es: {
     termos: [
-      { texto: "precisión que examina", origem: "Mercurio" },
-      { texto: "insistencia cruzada", origem: "cuadratura" },
-      { texto: "profundidad en revisión", origem: "retrogradación de Plutón" },
-      { texto: "fuerzas enfrentadas", origem: "oposición" },
+      { texto: "precisión que examina", origem: "Mercurio", fato_id: F1 },
+      { texto: "insistencia cruzada", origem: "cuadratura", fato_id: F1 },
+      { texto: "profundidad en revisión", origem: "retrogradación de Plutón", fato_id: F2 },
+      { texto: "fuerzas enfrentadas", origem: "oposición", fato_id: F2 },
     ],
     sintese: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas. Lo que orienta se mantiene firme.",
   },
 }
 
 /** um quinto termo, para provar que 5 também passa */
-const QUINTO: Record<Locale, { texto: string; origem: string }> = {
-  en: { texto: "what orients itself", origem: "Sun" },
-  pt: { texto: "o que orienta", origem: "Sol" },
-  es: { texto: "lo que orienta", origem: "Sol" },
+const QUINTO: Record<Locale, Termo> = {
+  en: { texto: "what orients itself", origem: "Sun", fato_id: F3 },
+  pt: { texto: "o que orienta", origem: "Sol", fato_id: F3 },
+  es: { texto: "lo que orienta", origem: "Sol", fato_id: F3 },
 }
 
 /** paráfrase do próprio termo: mesmo sentido, outras palavras */
@@ -454,7 +463,7 @@ function parteH() {
     const origemFalsa = { ...base, termos: base.termos.map((t, i) => (i === 0 ? { ...t, origem: "Saturno Saturn" } : t)) }
     confere(
       `H · ${locale}: origem inexistente reprova`,
-      violacoesDoCaso(locale, origemFalsa).some((v) => v.includes("que não existe nos fatos")),
+      violacoesDoCaso(locale, origemFalsa).some((v) => v.includes("não é uma das origens de")),
       violacoesDoCaso(locale, origemFalsa).join(" / "),
     )
 
@@ -772,6 +781,169 @@ function parteL() {
   }
 }
 
+// ── M · identidade composta da origem ──────────────────────────────────────
+// A string da origem não identifica o fato. Medido em 2026-10-02: 17 origens
+// expostas, 14 strings distintas. "Marte" e "Leão" estão no quadrado e na
+// oposição de Plutão, e "oposição" está em DOIS fatos (Sol~Saturno e
+// Marte~Plutão).
+//
+// Antes, o verificador resolvia origem -> fato pelo primeiro fato que a
+// continha, e errava nos dois sentidos. Agora o termo declara `fato_id` e tudo
+// é resolvido dentro dele.
+//
+// SEGUNDA DATA FIXA, de propósito: 2026-10-01 tem uma oposição só, e o caso A
+// precisa de duas para existir. 2026-10-02 tem.
+const DIA_COLISAO = "2026-10-02"
+const C1 = "aspecto:mercury~mars:square"
+const C2 = "aspecto:sun~saturn:opposition"
+const C3 = "aspecto:mars~pluto:opposition"
+
+function violacoesEm(dia: string, locale: Locale, caso: Caso): string[] {
+  const ceu = estadoDoCeu(dia)
+  const { escolhidos } = fatosDoCeu(ceu, locale)
+  const v = verificarCeu({ bruto: caso, escolhidos, locale, minimoTermos: minimoDeTermos(escolhidos) })
+  return v.ok ? [] : v.violacoes
+}
+
+function parteM() {
+  // a colisão existe mesmo, nos três idiomas, e a identidade composta a resolve
+  for (const locale of LOCALES) {
+    const { escolhidos } = fatosDoCeu(estadoDoCeu(DIA_COLISAO), locale)
+    const slots = escolhidos.flatMap((f) => f.origens)
+    const porString = new Set(slots)
+    const porPar = new Set(escolhidos.flatMap((f) => f.origens.map((o) => `${f.id}\u0000${o}`)))
+    confere(`M · ${locale}: a colisão de string existe de verdade`, porString.size < slots.length, `${porString.size} de ${slots.length}`)
+    confere(`M · ${locale}: e a identidade composta não colide`, porPar.size === slots.length, `${porPar.size} de ${slots.length}`)
+  }
+
+  // ── A · duas oposições distintas, uma origem cada: deve PASSAR ───────────
+  const A: Caso = {
+    termos: [
+      { texto: "exame que distingue", origem: "Mercúrio", fato_id: C1 },
+      { texto: "limite iluminado", origem: "oposição", fato_id: C2 },
+      { texto: "faces que se medem", origem: "oposição", fato_id: C3 },
+      { texto: "profundidade em revisão", origem: "retrogradação de Plutão", fato_id: C3 },
+    ],
+    sintese: "Exame que distingue encontra limite iluminado, enquanto faces que se medem sustentam profundidade em revisão. O dia segue firme.",
+  }
+  const vA = violacoesEm(DIA_COLISAO, "pt", A)
+  confere("M · A. duas oposições diferentes não são origem duplicada", !vA.some((v) => v.includes("usada por mais de um termo")), vA.join(" / "))
+  confere("M · A. e o conjunto inteiro passa", vA.length === 0, vA.join(" / "))
+
+  // ── B · `Marte` e `Leão` em dois fatos: duas coberturas, não uma ─────────
+  // TODAS as quatro origens caem no fato 1 pela resolução por primeiro match,
+  // mas "Marte" e "Leão" foram declarados vindo do fato 3. Nenhum termo de
+  // retrogradação aqui, de propósito: ele só existe no fato 3 e puxaria o
+  // segundo fato sozinho, escondendo o defeito que este caso mede.
+  const B: Caso = {
+    termos: [
+      { texto: "exame que distingue", origem: "Mercúrio", fato_id: C1 },
+      { texto: "travessia sem passagem", origem: "quadratura", fato_id: C1 },
+      { texto: "impulso que afirma", origem: "Marte", fato_id: C3 },
+      { texto: "presença que se expõe", origem: "Leão", fato_id: C3 },
+    ],
+    sintese: "Exame que distingue encontra travessia sem passagem, enquanto impulso que afirma sustenta presença que se expõe. O dia segue firme.",
+  }
+  const vB = violacoesEm(DIA_COLISAO, "pt", B)
+  confere("M · B. dois fato_id distintos contam como dois fatos", !vB.some((v) => v.includes("mesmo fato")), vB.join(" / "))
+  confere("M · B. e o conjunto inteiro passa", vB.length === 0, vB.join(" / "))
+
+  // ── C · quatro termos do MESMO fato: antes passava, agora reprova ────────
+  const C: Caso = {
+    termos: [
+      { texto: "impulso que afirma", origem: "Marte", fato_id: C3 },
+      { texto: "fundo que se expõe", origem: "Plutão", fato_id: C3 },
+      { texto: "faces que se medem", origem: "oposição", fato_id: C3 },
+      { texto: "profundidade em revisão", origem: "retrogradação de Plutão", fato_id: C3 },
+    ],
+    sintese: "Impulso que afirma encontra fundo que se expõe, enquanto faces que se medem sustentam profundidade em revisão. O dia segue firme.",
+  }
+  const vC = violacoesEm(DIA_COLISAO, "pt", C)
+  confere("M · C. quatro termos de um fato só reprovam a abrangência", vC.some((v) => v.includes("mesmo fato")), vC.join(" / ") || "(APROVADO, falsamente)")
+
+  // ── os casos restantes do contrato ───────────────────────────────────────
+  const semFato: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "" } : t)) }
+  confere(
+    "M · fato_id vazio reprova com nome",
+    violacoesEm(DIA_COLISAO, "pt", semFato).some((v) => v.includes('fato_id "(vazio)"')),
+    violacoesEm(DIA_COLISAO, "pt", semFato).join(" / "),
+  )
+
+  const fatoInventado: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "aspecto:nao~existe:conjunction" } : t)) }
+  confere(
+    "M · fato_id inexistente reprova",
+    violacoesEm(DIA_COLISAO, "pt", fatoInventado).some((v) => v.includes("não está entre os fatos de hoje")),
+    violacoesEm(DIA_COLISAO, "pt", fatoInventado).join(" / "),
+  )
+
+  // "Sol" existe nos fatos de hoje, mas não nas origens do fato declarado
+  const origemDeOutroFato: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, origem: "Sol" } : t)) }
+  const vOutro = violacoesEm(DIA_COLISAO, "pt", origemDeOutroFato)
+  confere("M · origem que existe, mas não naquele fato, reprova", vOutro.some((v) => v.includes("não é uma das origens de")), vOutro.join(" / "))
+
+  // o mesmo par (fato_id, origem) duas vezes continua sendo duplicação real
+  const parRepetido: Caso = {
+    ...A,
+    termos: A.termos.map((t, i) => (i === 2 ? { ...t, origem: "oposição", fato_id: C2 } : t)),
+  }
+  confere(
+    "M · o mesmo par usado duas vezes reprova",
+    violacoesEm(DIA_COLISAO, "pt", parRepetido).some((v) => v.includes("usada por mais de um termo")),
+    violacoesEm(DIA_COLISAO, "pt", parRepetido).join(" / "),
+  )
+
+  // ── `desafiadora`: adjetivo passa, verbo reprova ─────────────────────────
+  const DESAFIAR: Record<Locale, { passa: string[]; reprova: string[] }> = {
+    pt: {
+      passa: ["o período é desafiador", "uma dinâmica desafiadora", "os desafios seguem visíveis"],
+      reprova: ["este movimento desafia você a agir", "os movimentos desafiam você a agir", "o céu está desafiando você"],
+    },
+    en: { passa: ["the challenges remain visible", "a challenging shape holds"], reprova: ["this movement challenges you to act"] },
+    es: {
+      passa: ["el período es desafiador", "una dinámica desafiadora", "los desafíos siguen visibles"],
+      reprova: ["este movimiento te desafía a actuar", "los movimientos desafían lo establecido"],
+    },
+  }
+  for (const locale of LOCALES) {
+    for (const t of DESAFIAR[locale].passa) {
+      confere(`M · ${locale}: "${t.slice(0, 34)}" passa`, pedidoDoCeu(t, locale).length === 0, `pegou: ${pedidoDoCeu(t, locale).join(", ")}`)
+    }
+    for (const t of DESAFIAR[locale].reprova) {
+      confere(`M · ${locale}: "${t.slice(0, 34)}" reprova`, pedidoDoCeu(t, locale).length > 0, "passou sem violação")
+    }
+  }
+
+  // ── a regra do ângulo, agora no idioma pedido ───────────────────────────
+  const MARCA_ANGULO: Record<Locale, RegExp> = {
+    pt: /PELO MENOS UM TERMO VEM DE UM ÂNGULO/,
+    en: /AT LEAST ONE TERM COMES FROM AN ANGLE/,
+    es: /AL MENOS UN TÉRMINO VIENE DE UN ÁNGULO/,
+  }
+  for (const locale of LOCALES) {
+    const sys = sistemaDoCeu(locale, 4)
+    confere(`M · ${locale}: a regra do ângulo está no idioma pedido`, MARCA_ANGULO[locale].test(sys))
+    confere(`M · ${locale}: o contrato exige fato_id`, /fato_id/.test(sys))
+    const { escolhidos } = fatosDoCeu(estadoDoCeu(DIA_COLISAO), locale)
+    const { user } = promptCeuDoDia(estadoDoCeu(DIA_COLISAO), escolhidos, locale)
+    for (const f of escolhidos) confere(`M · ${locale}: o pedido expõe o fato_id ${f.id}`, user.includes(`fato_id: ${f.id}`))
+  }
+
+  // ── cache antigo, sem fato_id, continua legível ─────────────────────────
+  // A leitura do cache não revalida `termos`: devolve o que está gravado e
+  // nunca chama `verificarCeu`. Linha gravada antes desta mudança não tem
+  // `fato_id`, e precisa seguir servindo sem conversão.
+  const antigo = [{ texto: "comunicação intensa", origem: "Mercúrio" }] as TermoDoCeu[]
+  confere("M · termo antigo sem fato_id é tipo válido", antigo[0].fato_id === undefined && antigo[0].texto.length > 0)
+
+  const fonteServer = readFileSync(new URL("../lib/astro/ceu-do-dia-server.ts", import.meta.url), "utf8")
+  confere("M · a leitura do cache não revalida termos", !/verificarCeu/.test(fonteServer.slice(fonteServer.indexOf("async function ler("), fonteServer.indexOf("async function ler(") + 600)))
+  const fonteCeu = readFileSync(new URL("../lib/astro/ceu-do-dia.ts", import.meta.url), "utf8")
+  // procura DECLARAÇÃO e USO, não a palavra: ela aparece no comentário que
+  // explica por que a resolução por primeiro match foi embora
+  confere("M · `fatoDaOrigem` não é declarada nem usada", !/const\s+fatoDaOrigem|fatoDaOrigem\s*\.\s*(get|set|has)/.test(fonteCeu), "a resolução por primeiro match voltou")
+  confere("M · `origensValidas` global não é declarada nem usada", !/const\s+origensValidas|origensValidas\s*\.\s*has/.test(fonteCeu), "a validação global de origem voltou")
+}
+
 async function main() {
   parteA()
   parteB()
@@ -784,6 +956,7 @@ async function main() {
   parteI()
   parteJ()
   parteL()
+  parteM()
   await parteK()
 
   if (falhas.length) {

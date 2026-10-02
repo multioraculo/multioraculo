@@ -268,7 +268,20 @@ export const PEDIDO: Record<Locale, RegExp[]> = {
   // desafia, desafiam, desafiando, desafiar e desafiaria, e deixa o
   // substantivo passar. Medido: `Comunicação encontra desafios assertivos`
   // era reprovado, e não devia. O resto da lista está intacto.
-  pt: [/(exig|ped(e|indo)|demand|convid|favorec|desafia|propõe|sugere|aconselha)\w*/gi],
+  pt: [
+    /(exig|ped(e|indo)|demand|convid|favorec|propõe|sugere|aconselha)\w*/gi,
+    // DESAFIAR SAIU DA ALTERNAÇÃO ACIMA, e o motivo é que o `\w*` dela vale
+    // para todos os ramos. Com `desafia` ali dentro, "desafiadora" casava, e
+    // em 2026-10-02 uma tentativa foi reprovada por `fala como conselho:
+    // "desafiadora"` — que é adjetivo, não o céu pedindo nada. Trocar `desafi`
+    // por `desafia` fechou o substantivo "desafios" e deixou o adjetivo
+    // aberto: correção incompleta.
+    //
+    // Aqui as formas verbais são explícitas e com fronteira, como o espanhol
+    // já fazia. Passam "desafiador", "desafiadora" e "desafios"; continuam
+    // reprovando "desafia", "desafiam", "desafiando", "desafiar" e "desafiará".
+    /\b(desafia|desafiam|desafiar|desafiando|desafiará|desafiarão|desafiaria|desafiariam)\b/gi,
+  ],
   // `challenges?` saiu daqui e foi para HOMOGRAFOS: em inglês a grafia do
   // verbo na 3ª pessoa e a do substantivo plural são a MESMA, e nenhuma regra
   // de forma separa as duas. Precisa de contexto.

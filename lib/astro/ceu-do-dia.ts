@@ -38,7 +38,18 @@ import {
   vocabularioTecnico,
 } from "./editorial"
 
-export type TermoDoCeu = { texto: string; origem: string }
+/**
+ * Como o termo é gravado.
+ *
+ * `fato_id` diz QUAL fato sustenta o termo, e é obrigatório em toda geração
+ * nova. Fica opcional no tipo por um motivo só: as linhas gravadas antes desta
+ * mudança não o têm, e precisam continuar legíveis. A leitura do cache não
+ * revalida `termos` — devolve o que está gravado e nunca chama `verificarCeu`
+ * — então linha antiga segue servindo sem conversão e sem migration.
+ *
+ * É metadata interna: `termos` não entra no payload e nunca chega à tela.
+ */
+export type TermoDoCeu = { texto: string; origem: string; fato_id?: string }
 export type SinteseDoCeu = { termos: TermoDoCeu[]; sintese: string }
 export type VereditoDoCeu = { ok: true; sintese: SinteseDoCeu } | { ok: false; violacoes: string[] }
 
@@ -312,11 +323,13 @@ const CONTRATO_TERMOS: Record<Locale, (min: number, max: number) => string> = {
 6. Todo \`termos[].texto\` precisa ser encontrado, letra por letra, dentro da \`sintese\`.
 7. Cada termo mantém a \`origem\` que o sustenta.
 8. A \`sintese\` tem EXATAMENTE duas frases completas, cada uma terminada em ponto. Não uma, não três.
+9. Cada termo declara \`fato_id\`, copiado exatamente como aparece no fato de onde ele saiu.
+10. A \`origem\` precisa ser uma das ORIGENS DAQUELE fato, e não de outro. Dois fatos podem oferecer a mesma palavra, e aí são origens diferentes: declare o \`fato_id\` certo e pode usar as duas.
 
 Exemplo da FORMA, não do conteúdo de hoje:
   sintese: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito."
   termos:  "precisão que examina" | "insistência atravessada" | "profundidade em revisão" | "acordo sem atrito"
-Os quatro aparecem na frase acima, palavra por palavra.`,
+Os quatro aparecem na frase acima, palavra por palavra, e cada um declara o \`fato_id\` do fato de onde saiu.`,
   en: (min, max) => `HOW TO BUILD \`termos\`, and the order matters:
 1. Write the \`sintese\` first.
 2. Then pick ${min} or ${max} SHORT stretches that already exist inside it.
@@ -326,11 +339,13 @@ Os quatro aparecem na frase acima, palavra por palavra.`,
 6. Every \`termos[].texto\` must be findable, letter for letter, inside the \`sintese\`.
 7. Each term keeps the \`origem\` that sustains it.
 8. The \`sintese\` has EXACTLY two complete sentences, each ending with a period. Not one, not three.
+9. Each term declares \`fato_id\`, copied exactly as it appears in the fact it came from.
+10. The \`origem\` must be one of THAT fact's ORIGENS, not another fact's. Two facts can offer the same word, and then they are different origins: declare the right \`fato_id\` and you may use both.
 
 Example of the SHAPE, not of today's content:
   sintese: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord."
   termos:  "examining precision" | "crossed insistence" | "depth under review" | "frictionless accord"
-All four appear in the sentence above, word for word.`,
+All four appear in the sentence above, word for word, and each one declares the \`fato_id\` of the fact it came from.`,
   es: (min, max) => `CÓMO ARMAR \`termos\`, y el orden importa:
 1. Escribe la \`sintese\` primero.
 2. Después elige ${min} o ${max} fragmentos CORTOS que ya existan dentro de ella.
@@ -340,11 +355,13 @@ All four appear in the sentence above, word for word.`,
 6. Todo \`termos[].texto\` tiene que encontrarse, letra por letra, dentro de la \`sintese\`.
 7. Cada término mantiene la \`origem\` que lo sostiene.
 8. La \`sintese\` tiene EXACTAMENTE dos frases completas, cada una terminada en punto. No una, no tres.
+9. Cada término declara \`fato_id\`, copiado exactamente como aparece en el hecho del que salió.
+10. La \`origem\` tiene que ser una de las ORIGENS DE ESE hecho, no de otro. Dos hechos pueden ofrecer la misma palabra, y entonces son orígenes distintos: declara el \`fato_id\` correcto y puedes usar las dos.
 
 Ejemplo de la FORMA, no del contenido de hoy:
   sintese: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas."
   termos:  "precisión que examina" | "insistencia cruzada" | "profundidad en revisión" | "fuerzas enfrentadas"
-Los cuatro aparecen en la frase de arriba, palabra por palabra.`,
+Los cuatro aparecen en la frase de arriba, palabra por palabra, y cada uno declara el \`fato_id\` del hecho del que salió.`,
 }
 
 /**
@@ -363,6 +380,18 @@ Works: "depth under review". Does not work: "deep transformation", which names t
   es: (palavras) => `CUANDO EL ORIGEN SEA UNA RETROGRADACIÓN, el término tiene que traer el movimiento de vuelta: algo en revisión, retomada, retorno, algo que todavía se está revisando. Nombrar el tema que se revisa no basta.
 Palabras que sirven: ${palavras}.
 Sirve: "profundidad en revisión". No sirve: "transformación profunda", que nombra el tema y pierde la vuelta.`,
+}
+
+/**
+ * A regra do ângulo, agora no idioma pedido.
+ *
+ * Ela vivia solta no corpo do prompt, em português, e para EN e ES chegava
+ * sem tradução. A regra em si não muda: ao menos um termo vem de um ângulo.
+ */
+const CONTRATO_ANGULO: Record<Locale, string> = {
+  pt: "PELO MENOS UM TERMO VEM DE UM ÂNGULO. O que mudou hoje é a relação entre os corpos, não a qualidade de cada um isolado.",
+  en: "AT LEAST ONE TERM COMES FROM AN ANGLE. What changed today is the relation between the bodies, not the quality of each one on its own.",
+  es: "AL MENOS UN TÉRMINO VIENE DE UN ÁNGULO. Lo que cambió hoy es la relación entre los cuerpos, no la cualidad de cada uno por separado.",
 }
 
 /** Marca, no idioma pedido, quais origens daquele fato são retrogradação. */
@@ -408,7 +437,7 @@ As origens são atômicas, e cada uma sustenta um termo só. Um planeta e a retr
 
 ${CONTRATO_RETROGRADACAO[locale](EXEMPLOS_RETROGRADACAO[locale].join(", "))}
 
-PELO MENOS UM TERMO VEM DE UM ÂNGULO. O que mudou hoje é a relação entre os corpos, não a qualidade de cada um isolado.
+${CONTRATO_ANGULO[locale]}
 
 O MOVIMENTO PRIMEIRO, O ENCONTRO DEPOIS. A primeira frase nomeia o que está sendo mobilizado hoje. A segunda nomeia o que esse movimento encontra: o que o sustenta, o que o atravessa, o que o revisa.
 
@@ -417,12 +446,12 @@ VOCÊ NÃO SABE NADA SOBRE QUEM LÊ. Não nomeie esfera nenhuma da vida: nem rel
 NÃO ESCREVA CONSELHO NEM PEDIDO. O céu não exige, não pede, não demanda, não convida, não favorece, não sugere e não desafia ninguém. Escreva no indicativo o que está posto, o que se aproxima, o que se separa, o que fica em tensão.
 
 O QUE DEVOLVER
-- termos: ${minimo} ou ${TERMOS.max} entradas com texto e origem. A origem é exatamente uma das ORIGENS listadas no fato.
+- termos: ${minimo} ou ${TERMOS.max} entradas com texto, fato_id e origem. A origem é exatamente uma das ORIGENS listadas naquele fato.
 - sintese: DUAS frases, no máximo ${PALAVRAS_MAX} palavras somadas, contendo todos os termos.
 
 ${CONTRATO_TERMOS[locale](minimo, TERMOS.max)}
 
-Devolva JSON: {"termos": [{"texto": "...", "origem": "..."}], "sintese": "..."}
+Devolva JSON: {"termos": [{"texto": "...", "fato_id": "...", "origem": "..."}], "sintese": "..."}
 
 ${IDIOMA_FECHO[locale]}`
 }
@@ -445,7 +474,11 @@ export function promptCeuDoDia(ceu: Ceu, escolhidos: FatoDoCeu[], locale: Locale
   ]
   escolhidos.forEach((f, i) => {
     linhas.push(`${i + 1}. ${f.texto}`)
-    linhas.push(`   ORIGENS possíveis: ${f.origens.join(" | ")}`)
+    // o identificador estável do fato, para o termo dizer de qual fato veio.
+    // Sem ele a origem é ambígua: "oposição" pode pertencer a dois fatos no
+    // mesmo dia, e em 2026-10-02 pertencia.
+    linhas.push(`   fato_id: ${f.id}`)
+    linhas.push(`   ORIGENS possíveis deste fato: ${f.origens.join(" | ")}`)
     // a exigência da retrogradação dita no ponto em que a origem é escolhida,
     // e não só trezentas palavras antes. Em 2026-10-01 o modelo declarou duas
     // origens de retrogradação e escreveu termos sem volta nenhuma nas duas.
@@ -530,9 +563,15 @@ export function verificarCeu(params: {
   const violacoes: string[] = []
 
   const termosBrutos = (bruto as { termos?: unknown })?.termos
-  const termos: TermoDoCeu[] = Array.isArray(termosBrutos)
+  // `fato_id` NÃO entra no filtro: termo sem ele produz uma violação com nome,
+  // que o reparo pode corrigir, em vez de desaparecer da contagem em silêncio.
+  const termos: Array<{ texto: string; origem: string; fato_id: string }> = Array.isArray(termosBrutos)
     ? termosBrutos
-        .map((t) => ({ texto: String((t as TermoDoCeu)?.texto ?? "").trim(), origem: String((t as TermoDoCeu)?.origem ?? "").trim() }))
+        .map((t) => ({
+          texto: String((t as TermoDoCeu)?.texto ?? "").trim(),
+          origem: String((t as TermoDoCeu)?.origem ?? "").trim(),
+          fato_id: String((t as TermoDoCeu)?.fato_id ?? "").trim(),
+        }))
         .filter((t) => t.texto && t.origem)
     : []
   const sintese = typeof (bruto as { sintese?: unknown })?.sintese === "string" ? (bruto as { sintese: string }).sintese.trim() : ""
@@ -557,32 +596,61 @@ export function verificarCeu(params: {
     violacoes.push(`a síntese nomeia "${nome}"`)
   }
 
-  // 2. cada termo declara uma origem que existe, e aparece na síntese
-  const origensValidas = new Set(escolhidos.flatMap((f) => f.origens))
-  const baseDaOrigem = new Map<string, string[]>()
-  const fatoDaOrigem = new Map<string, string>()
-  for (const f of escolhidos) {
-    for (const o of f.origens) {
-      baseDaOrigem.set(o, f.bases[o] ?? [])
-      if (!fatoDaOrigem.has(o)) fatoDaOrigem.set(o, f.id)
-    }
-  }
+  // 2. cada termo declara QUAL FATO o sustenta, e uma origem DAQUELE fato.
+  //
+  // A IDENTIDADE DA ORIGEM É COMPOSTA, e isso foi medido. A string sozinha não
+  // identifica nada: em 2026-10-02 havia 17 origens expostas e só 14 strings
+  // distintas, porque "Marte" e "Leão" aparecem no quadrado e na oposição de
+  // Plutão, e "oposição" aparece em DOIS fatos diferentes (Sol~Saturno e
+  // Marte~Plutão).
+  //
+  // O código anterior resolvia origem -> fato pelo primeiro fato que a
+  // continha, e isso errava nos dois sentidos, os dois reproduzidos em teste:
+  //
+  //   um termo para cada uma das duas oposições era recusado como "origem
+  //   usada por mais de um termo", sendo que são dois pares diferentes e o
+  //   comportamento estava correto;
+  //
+  //   quatro termos do MESMO fato passavam, porque "Marte" era atribuído ao
+  //   quadrado e "oposição" a Sol~Saturno, e a regra de abrangência contava
+  //   três fatos que não existiam.
+  //
+  // Agora o termo diz o fato, tudo é resolvido DENTRO dele, e `fatoDaOrigem`
+  // deixou de existir.
+  const porFato = new Map<string, FatoDoCeu>()
+  for (const f of escolhidos) porFato.set(f.id, f)
 
   const minimo = params.minimoTermos ?? TERMOS.min
   if (termos.length < minimo || termos.length > TERMOS.max) {
     violacoes.push(`${termos.length} termos (queremos de ${minimo} a ${TERMOS.max})`)
   }
 
+  const angulos = new Set(Object.values(ASPECTOS[locale]))
   const usadas = new Set<string>()
+  const fatosCobertos = new Set<string>()
+  let termoDeAngulo = false
+
   for (const t of termos) {
-    if (!origensValidas.has(t.origem)) {
-      violacoes.push(`"${t.texto}" declara origem "${t.origem}", que não existe nos fatos`)
+    const fato = porFato.get(t.fato_id)
+    if (!fato) {
+      violacoes.push(`"${t.texto}" declara fato_id "${t.fato_id || "(vazio)"}", que não está entre os fatos de hoje`)
       continue
     }
+    if (!fato.origens.includes(t.origem)) {
+      violacoes.push(`"${t.texto}" declara origem "${t.origem}", que não é uma das origens de "${t.fato_id}"`)
+      continue
+    }
+
+    // unicidade pelo PAR, e não pela string: a mesma palavra em dois fatos
+    // diferentes são duas origens diferentes
+    const par = `${t.fato_id}\u0000${t.origem}`
+    if (usadas.has(par)) violacoes.push(`a origem "${t.origem}" de "${t.fato_id}" foi usada por mais de um termo`)
+    usadas.add(par)
+    fatosCobertos.add(t.fato_id)
+    if (angulos.has(t.origem)) termoDeAngulo = true
+
     if (!semAcento(sintese).includes(semAcento(t.texto))) violacoes.push(`"${t.texto}" não aparece na síntese`)
-    if (usadas.has(t.origem)) violacoes.push(`origem "${t.origem}" usada por mais de um termo`)
-    usadas.add(t.origem)
-    if (ecoTotal(t.texto, baseDaOrigem.get(t.origem) ?? [])) {
+    if (ecoTotal(t.texto, fato.bases[t.origem] ?? [])) {
       violacoes.push(`"${t.texto}" é só a base de "${t.origem}", não interpreta nada`)
     }
     if (ehRetrogradacao(t.origem, locale) && !carregaRetrogradacao(t.texto, locale)) {
@@ -590,13 +658,12 @@ export function verificarCeu(params: {
     }
   }
 
-  const fatosCobertos = new Set([...usadas].map((o) => fatoDaOrigem.get(o)))
+  // abrangência pelo fato DECLARADO, nunca por inferência
   if (fatosCobertos.size < 2) violacoes.push("todos os termos vêm do mesmo fato")
 
   // o ângulo é a notícia: sem ele a síntese vira lista de qualidades soltas
-  const angulos = new Set(Object.values(ASPECTOS[locale]))
   const temAngulo = escolhidos.some((f) => f.origens.some((o) => angulos.has(o)))
-  if (temAngulo && ![...usadas].some((o) => angulos.has(o))) {
+  if (temAngulo && !termoDeAngulo) {
     violacoes.push("nenhum termo vem de um ângulo: a relação entre os corpos ficou de fora")
   }
 
