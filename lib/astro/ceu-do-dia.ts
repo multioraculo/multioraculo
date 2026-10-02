@@ -29,12 +29,12 @@ import {
 } from "./simbolos"
 import {
   ESFERA_DE_VIDA,
-  PEDIDO,
   PROIBIDAS,
   REGRAS_COMUNS,
   TRACOS,
   idiomaDivergente,
   nomesExpostos,
+  pedidoDoCeu,
   vocabularioTecnico,
 } from "./editorial"
 
@@ -283,7 +283,80 @@ ${lista}.
 Algunos son también palabra común del español. En el sentido común sí: lo que no se puede es nombrar la fase, el aspecto, el signo o el cuerpo.`,
 }
 
-export function sistemaDoCeu(locale: Locale): string {
+/**
+ * O CONTRATO DE `termos`, dito de forma inequívoca e na ordem de execução.
+ *
+ * O verificador exige que cada `termos[].texto` seja encontrado LITERALMENTE
+ * dentro da `sintese`: é um teste de substring, e por isso a lista de termos
+ * funciona como índice da síntese, não como resumo dela. A regra está certa
+ * para esta arquitetura e não mudou.
+ *
+ * O que faltava era o modelo saber disso. Nos logs de produção de 2026-10-01,
+ * 10 das 13 violações foram `"..." não aparece na síntese`, e os termos
+ * recusados eram frases inteiras, do tipo "Investigation meets assertiveness,
+ * pushing boundaries of expression." — mini-interpretações novas, não trechos
+ * copiados. Quatro termos desse tamanho não cabem numa síntese de duas frases.
+ *
+ * Daí a ordem explícita, o "copie palavra por palavra" e um exemplo curto
+ * mostrando síntese e termos lado a lado. O exemplo é de FORMA, não de
+ * conteúdo, e foi conferido contra o verificador inteiro: ele passa limpo em
+ * todas as regras, para não ensinar violação nenhuma.
+ */
+const CONTRATO_TERMOS: Record<Locale, (min: number, max: number) => string> = {
+  pt: (min, max) => `COMO MONTAR \`termos\`, e a ordem importa:
+1. Escreva a \`sintese\` primeiro.
+2. Depois escolha ${min} ou ${max} trechos CURTOS que já existam dentro dela.
+3. Copie cada trecho palavra por palavra para \`termos[].texto\`.
+4. Nunca parafraseie em \`termos\`.
+5. Nunca escreva uma mini-interpretação nova em \`termos\`.
+6. Todo \`termos[].texto\` precisa ser encontrado, letra por letra, dentro da \`sintese\`.
+7. Cada termo mantém a \`origem\` que o sustenta.
+
+Exemplo da FORMA, não do conteúdo de hoje:
+  sintese: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito."
+  termos:  "precisão que examina" | "insistência atravessada" | "profundidade em revisão" | "acordo sem atrito"
+Os quatro aparecem na frase acima, palavra por palavra.`,
+  en: (min, max) => `HOW TO BUILD \`termos\`, and the order matters:
+1. Write the \`sintese\` first.
+2. Then pick ${min} or ${max} SHORT stretches that already exist inside it.
+3. Copy each stretch word for word into \`termos[].texto\`.
+4. Never paraphrase in \`termos\`.
+5. Never write a new mini-interpretation in \`termos\`.
+6. Every \`termos[].texto\` must be findable, letter for letter, inside the \`sintese\`.
+7. Each term keeps the \`origem\` that sustains it.
+
+Example of the SHAPE, not of today's content:
+  sintese: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord."
+  termos:  "examining precision" | "crossed insistence" | "depth under review" | "frictionless accord"
+All four appear in the sentence above, word for word.`,
+  es: (min, max) => `CÓMO ARMAR \`termos\`, y el orden importa:
+1. Escribe la \`sintese\` primero.
+2. Después elige ${min} o ${max} fragmentos CORTOS que ya existan dentro de ella.
+3. Copia cada fragmento palabra por palabra a \`termos[].texto\`.
+4. Nunca parafrasees en \`termos\`.
+5. Nunca escribas una mini-interpretación nueva en \`termos\`.
+6. Todo \`termos[].texto\` tiene que encontrarse, letra por letra, dentro de la \`sintese\`.
+7. Cada término mantiene la \`origem\` que lo sostiene.
+
+Ejemplo de la FORMA, no del contenido de hoy:
+  sintese: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas."
+  termos:  "precisión que examina" | "insistencia cruzada" | "profundidad en revisión" | "fuerzas enfrentadas"
+Los cuatro aparecen en la frase de arriba, palabra por palabra.`,
+}
+
+/**
+ * `minimo` é o do DIA, e não a constante.
+ *
+ * Isto era uma contradição entre o prompt e o verificador, do mesmo tipo da que
+ * já custou geração nesta base: o prompt pedia "de 3 a 5" porque usava
+ * `TERMOS.min`, enquanto `verificarCeu` cobrava `minimoDeTermos`, que é 4 em
+ * dia com dois ângulos ou mais. Em 2026-10-01 duas das quatro tentativas em
+ * inglês entregaram exatamente 3 termos e foram reprovadas por isso: o modelo
+ * obedeceu o que estava escrito.
+ *
+ * O mínimo não mudou. O que mudou foi o prompt passar a dizer a verdade.
+ */
+export function sistemaDoCeu(locale: Locale, minimo: number = TERMOS.min): string {
   return `${IDIOMA[locale]}
 
 Você escreve a leitura coletiva do céu de hoje no Multioráculo. Ela vale para todas as pessoas, sem exceção: não é horóscopo de signo e não é leitura pessoal.
@@ -314,8 +387,10 @@ VOCÊ NÃO SABE NADA SOBRE QUEM LÊ. Não nomeie esfera nenhuma da vida: nem rel
 NÃO ESCREVA CONSELHO NEM PEDIDO. O céu não exige, não pede, não demanda, não convida, não favorece, não sugere e não desafia ninguém. Escreva no indicativo o que está posto, o que se aproxima, o que se separa, o que fica em tensão.
 
 O QUE DEVOLVER
-- termos: de ${TERMOS.min} a ${TERMOS.max} entradas com texto e origem. A origem é exatamente uma das ORIGENS listadas no fato.
+- termos: ${minimo} ou ${TERMOS.max} entradas com texto e origem. A origem é exatamente uma das ORIGENS listadas no fato.
 - sintese: DUAS frases, no máximo ${PALAVRAS_MAX} palavras somadas, contendo todos os termos.
+
+${CONTRATO_TERMOS[locale](minimo, TERMOS.max)}
 
 Devolva JSON: {"termos": [{"texto": "...", "origem": "..."}], "sintese": "..."}
 
@@ -342,7 +417,7 @@ export function promptCeuDoDia(ceu: Ceu, escolhidos: FatoDoCeu[], locale: Locale
     linhas.push(`${i + 1}. ${f.texto}`)
     linhas.push(`   ORIGENS possíveis: ${f.origens.join(" | ")}`)
   })
-  return { system: sistemaDoCeu(locale), user: linhas.join("\n") }
+  return { system: sistemaDoCeu(locale, minimoDeTermos(escolhidos)), user: linhas.join("\n") }
 }
 
 // ---------------------------------------------------------------------------
@@ -474,9 +549,7 @@ export function verificarCeu(params: {
   // Enquanto toda saída vinha em português isso não aparecia. Agora que a
   // síntese sai no idioma pedido, elas estão em `editorial.ts` com as três
   // versões, e o PT é a mesma lista de antes, sem um verbo a mais nem a menos.
-  for (const re of PEDIDO[locale]) {
-    for (const achou of sintese.matchAll(re)) violacoes.push(`fala como conselho: "${achou[0]}"`)
-  }
+  for (const achou of pedidoDoCeu(sintese, locale)) violacoes.push(`fala como conselho: "${achou}"`)
   for (const re of ESFERA_DE_VIDA[locale]) {
     for (const achou of sintese.matchAll(re)) violacoes.push(`inventa esfera de vida: "${achou[0]}"`)
   }

@@ -79,7 +79,11 @@ export async function payloadDoCeuDoDia(locale: Locale): Promise<CeuDoDiaNaTela>
       cache: resultado.cache,
     }
   } catch (erro) {
-    console.error("[ceu-dia]", erro)
+    // ERRO DE INFRAESTRUTURA, e não esgotamento do ciclo de qualidade. A
+    // distinção é de dinheiro: aqui nada é gravado, e o próximo pedido pode
+    // tentar de novo, porque as quatro respostas nunca existiram. O
+    // esgotamento, que tranca o dia, é registrado em `leituraDoCeu` e só lá.
+    console.error(`[ceu-dia] dia=${dia} locale=${locale} erro=infraestrutura`, erro)
     return semTexto()
   }
 }

@@ -25,10 +25,12 @@
  * Nenhuma chamada paga: `verificarCeu` é função pura, e os fatos saem do
  * cálculo do céu de uma data fixa.
  */
+import http from "http"
+import type { AddressInfo } from "net"
 import { readFileSync } from "node:fs"
 import { estadoDoCeu } from "../lib/astro/ceu"
-import { fatosDoCeu, verificarCeu, sistemaDoCeu, nomesTecnicos } from "../lib/astro/ceu-do-dia"
-import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente, nomesExpostos } from "../lib/astro/editorial"
+import { fatosDoCeu, verificarCeu, sistemaDoCeu, nomesTecnicos, minimoDeTermos } from "../lib/astro/ceu-do-dia"
+import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente, nomesExpostos, pedidoDoCeu } from "../lib/astro/editorial"
 import { LOCALES, type Locale } from "../lib/i18n/config"
 
 const falhas: string[] = []
@@ -190,9 +192,18 @@ function parteD() {
 // ── E · o PT não mudou, e as regras não voltaram para dentro do arquivo ────
 function parteE() {
   // as listas que vieram de `verificarCeu`, exatamente como eram lá
+  // O PT de PEDIDO mudou em UM ponto, e só nele: `desafi` virou `desafia`,
+  // porque o radical curto alcançava o substantivo "desafios". Esta asserção
+  // guarda as duas coisas ao mesmo tempo: a lista é a esperada, e a diferença
+  // em relação à original é exatamente essa troca e nada mais.
   const PT_PEDIDO_ORIGINAL = "(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\\w*"
+  const PT_PEDIDO_AGORA = "(exig|ped(e|indo)|demand|convid|favorec|desafia|propõe|sugere|aconselha)\\w*"
   const PT_ESFERA_ORIGINAL = "(afetiv|afeto|amoros|relaç|relacionament|vínculo|trabalh|carreir|financ|dinheiro|saúde|família)\\w*"
-  confere("E · o PT de PEDIDO é a lista original, intacta", PEDIDO.pt.length === 1 && PEDIDO.pt[0].source === PT_PEDIDO_ORIGINAL, PEDIDO.pt.map((r) => r.source).join(" "))
+  confere("E · o PT de PEDIDO é o esperado", PEDIDO.pt.length === 1 && PEDIDO.pt[0].source === PT_PEDIDO_AGORA, PEDIDO.pt.map((r) => r.source).join(" "))
+  confere(
+    "E · a única diferença do PT original é `desafi` -> `desafia`",
+    PT_PEDIDO_ORIGINAL.replace("favorec|desafi|", "favorec|desafia|") === PT_PEDIDO_AGORA,
+  )
   confere("E · o PT de ESFERA_DE_VIDA é a lista original, intacta", ESFERA_DE_VIDA.pt.length === 1 && ESFERA_DE_VIDA.pt[0].source === PT_ESFERA_ORIGINAL, ESFERA_DE_VIDA.pt.map((r) => r.source).join(" "))
 
   for (const locale of LOCALES) {
@@ -206,7 +217,11 @@ function parteE() {
   const fonte = readFileSync(new URL("../lib/astro/ceu-do-dia.ts", import.meta.url), "utf8")
   confere("E · `ceu-do-dia.ts` não redeclara a regex de pedido", !/const\s+CONSELHO\s*=\s*\//.test(fonte), "a regex local voltou")
   confere("E · `ceu-do-dia.ts` não redeclara a regex de esfera de vida", !/const\s+VIDA\s*=\s*\//.test(fonte), "a regex local voltou")
-  confere("E · `ceu-do-dia.ts` usa as tabelas por idioma", /PEDIDO\[locale\]/.test(fonte) && /ESFERA_DE_VIDA\[locale\]/.test(fonte))
+  // `PEDIDO` deixou de ser lido direto aqui: quem aplica a regra, e qualifica
+  // o homógrafo, é `pedidoDoCeu`. A esfera de vida continua por tabela.
+  confere("E · `ceu-do-dia.ts` delega o pedido a `pedidoDoCeu`", /pedidoDoCeu\(sintese, locale\)/.test(fonte))
+  confere("E · `ceu-do-dia.ts` usa a tabela de esfera de vida por idioma", /ESFERA_DE_VIDA\[locale\]/.test(fonte))
+  confere("E · `ceu-do-dia.ts` não redeclara a lista de pedido", !/const\s+PEDIDO\s*[:=]/.test(fonte))
 
   // o fecho de idioma, que é a outra metade da correção, nos três prompts
   const marcas: Record<Locale, RegExp> = {
@@ -333,7 +348,314 @@ function parteG() {
   }
 }
 
-function main() {
+// ── H · o contrato de `termos` ─────────────────────────────────────────────
+// A regra de cobertura é um teste de substring: cada `termos[].texto` precisa
+// ser encontrado LITERALMENTE dentro da síntese. Ela está correta para esta
+// arquitetura e não mudou. O que faltava era o prompt dizer isso de forma
+// inequívoca, e 10 das 13 violações de produção vieram daí.
+//
+// Estes casos provam que a regra aceita paráfrase legítima dos FATOS e recusa
+// paráfrase entre os termos e a própria síntese, igual nos três idiomas.
+type Caso = { termos: Array<{ texto: string; origem: string }>; sintese: string }
+
+const VALIDO: Record<Locale, Caso> = {
+  en: {
+    termos: [
+      { texto: "examining precision", origem: "Mercury" },
+      { texto: "crossed insistence", origem: "square" },
+      { texto: "depth under review", origem: "retrogradation of Pluto" },
+      { texto: "frictionless accord", origem: "trine" },
+    ],
+    sintese: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord. What orients itself holds steady.",
+  },
+  pt: {
+    termos: [
+      { texto: "precisão que examina", origem: "Mercúrio" },
+      { texto: "insistência atravessada", origem: "quadratura" },
+      { texto: "profundidade em revisão", origem: "retrogradação de Plutão" },
+      { texto: "acordo sem atrito", origem: "trígono" },
+    ],
+    sintese: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito. O que orienta se mantém firme.",
+  },
+  es: {
+    termos: [
+      { texto: "precisión que examina", origem: "Mercurio" },
+      { texto: "insistencia cruzada", origem: "cuadratura" },
+      { texto: "profundidad en revisión", origem: "retrogradación de Plutón" },
+      { texto: "fuerzas enfrentadas", origem: "oposición" },
+    ],
+    sintese: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas. Lo que orienta se mantiene firme.",
+  },
+}
+
+/** um quinto termo, para provar que 5 também passa */
+const QUINTO: Record<Locale, { texto: string; origem: string }> = {
+  en: { texto: "what orients itself", origem: "Sun" },
+  pt: { texto: "o que orienta", origem: "Sol" },
+  es: { texto: "lo que orienta", origem: "Sol" },
+}
+
+/** paráfrase do próprio termo: mesmo sentido, outras palavras */
+const PARAFRASE: Record<Locale, string[]> = {
+  en: ["precise examination", "insistence that crosses", "depth revisited", "accord without friction"],
+  pt: ["exame preciso", "insistência que atravessa", "profundidade revista", "entendimento sem atrito"],
+  es: ["examen preciso", "insistencia que cruza", "profundidad revisada", "fuerzas cara a cara"],
+}
+
+function violacoesDoCaso(locale: Locale, caso: Caso): string[] {
+  const ceu = estadoDoCeu(DIA)
+  const { escolhidos } = fatosDoCeu(ceu, locale)
+  const v = verificarCeu({ bruto: caso, escolhidos, locale, minimoTermos: minimoDeTermos(escolhidos) })
+  return v.ok ? [] : v.violacoes
+}
+
+function parteH() {
+  for (const locale of LOCALES) {
+    const base = VALIDO[locale]
+    const { escolhidos } = fatosDoCeu(estadoDoCeu(DIA), locale)
+    confere(`H · ${locale}: o mínimo do dia é 4`, minimoDeTermos(escolhidos) === 4, String(minimoDeTermos(escolhidos)))
+
+    confere(`H · ${locale}: 4 termos literais passam`, violacoesDoCaso(locale, base).length === 0, violacoesDoCaso(locale, base).join(" / "))
+
+    const cinco = { ...base, termos: [...base.termos, QUINTO[locale]] }
+    confere(`H · ${locale}: 5 termos literais passam`, violacoesDoCaso(locale, cinco).length === 0, violacoesDoCaso(locale, cinco).join(" / "))
+
+    const tres = { ...base, termos: base.termos.slice(0, 3) }
+    confere(
+      `H · ${locale}: 3 termos reprovam`,
+      violacoesDoCaso(locale, tres).some((v) => v.includes("termos (queremos")),
+      violacoesDoCaso(locale, tres).join(" / "),
+    )
+
+    const parafraseado = { ...base, termos: base.termos.map((t, i) => ({ ...t, texto: PARAFRASE[locale][i] })) }
+    const vsP = violacoesDoCaso(locale, parafraseado)
+    confere(
+      `H · ${locale}: termo parafraseado reprova`,
+      vsP.filter((v) => v.includes("não aparece na síntese")).length === 4,
+      vsP.join(" / "),
+    )
+
+    const ausente = { ...base, termos: base.termos.map((t, i) => (i === 0 ? { ...t, texto: "nada disso está na frase" } : t)) }
+    confere(
+      `H · ${locale}: termo que não existe na síntese reprova`,
+      violacoesDoCaso(locale, ausente).some((v) => v.includes("não aparece na síntese")),
+      violacoesDoCaso(locale, ausente).join(" / "),
+    )
+
+    const origemFalsa = { ...base, termos: base.termos.map((t, i) => (i === 0 ? { ...t, origem: "Saturno Saturn" } : t)) }
+    confere(
+      `H · ${locale}: origem inexistente reprova`,
+      violacoesDoCaso(locale, origemFalsa).some((v) => v.includes("que não existe nos fatos")),
+      violacoesDoCaso(locale, origemFalsa).join(" / "),
+    )
+
+    // o prompt precisa dizer o mínimo do DIA, e não a constante. Era a
+    // contradição que reprovou duas tentativas: o prompt pedia 3, o
+    // verificador cobrava 4, e o modelo obedeceu o prompt.
+    const sys = sistemaDoCeu(locale, 4)
+    confere(`H · ${locale}: o prompt pede 4 termos quando o dia pede 4`, sys.includes("4") && !/de 3 a 5|3 ou 5/.test(sys), "o prompt ainda fala em 3")
+    confere(`H · ${locale}: o prompt manda copiar palavra por palavra`, /palavra por palavra|word for word|palabra por palabra/.test(sys))
+  }
+}
+
+// ── I · o homógrafo `challenges` ───────────────────────────────────────────
+// Mesma frase, mesmos termos literais, mudando só se a palavra é substantivo
+// ou verbo. Em produção `Communication meets assertive challenges` foi
+// reprovado como conselho, e ali o céu não pedia nada.
+const CHALLENGE: Record<Locale, { nome: string[]; verbo: string[] }> = {
+  en: {
+    nome: [
+      "Communication meets assertive challenges.",
+      "The challenges remain visible.",
+      "Deep challenges cross the movement.",
+      "Challenges remain visible while depth returns.",
+    ],
+    verbo: ["This movement challenges you to reconsider what returns.", "The transit challenges what was established."],
+  },
+  pt: {
+    nome: ["Comunicação encontra desafios assertivos.", "Os desafios seguem visíveis.", "Desafios profundos atravessam o movimento."],
+    verbo: ["Este movimento desafia você a rever o que retorna.", "O movimento desafia o que estava estabelecido."],
+  },
+  es: {
+    nome: ["Comunicación encuentra desafíos asertivos.", "Los desafíos siguen visibles.", "Desafíos profundos atraviesan el movimiento."],
+    verbo: ["Este movimiento te desafía a revisar lo que vuelve.", "El movimiento desafía lo que estaba establecido."],
+  },
+}
+
+function parteI() {
+  for (const locale of LOCALES) {
+    for (const texto of CHALLENGE[locale].nome) {
+      confere(`I · ${locale}: substantivo passa — "${texto.slice(0, 40)}"`, pedidoDoCeu(texto, locale).length === 0, `pegou: ${pedidoDoCeu(texto, locale).join(", ")}`)
+    }
+    for (const texto of CHALLENGE[locale].verbo) {
+      confere(`I · ${locale}: ação do céu reprova — "${texto.slice(0, 40)}"`, pedidoDoCeu(texto, locale).length > 0, "passou sem violação")
+    }
+  }
+}
+
+// ── J · o detector de idioma e as marcas de ortografia ─────────────────────
+// `ll[aeiou]` no espanhol casava dentro de palavra inglesa comum, e `nh` no
+// português fazia o mesmo. Como a marca vale 2 e a margem é 2, uma frase
+// inglesa curta era acusada de outro idioma. Os dois ramos saíram.
+function parteJ() {
+  const ingles = ["challenges", "allow", "village", "collect", "follow", "illuminate", "stellar", "parallel", "enhance", "inhale", "unhappy"]
+  for (const palavra of ingles) {
+    const frase = `Communication meets ${palavra}.`
+    confere(`J · "${palavra}" sozinha não empurra EN para outro idioma`, idiomaDivergente(frase, "en") === null, String(idiomaDivergente(frase, "en")))
+  }
+  // e o espanhol e o português continuam sendo reconhecidos sem esses ramos
+  confere("J · espanhol ainda é reconhecido", idiomaDivergente(VALIDO.es.sintese, "es") === null, String(idiomaDivergente(VALIDO.es.sintese, "es")))
+  confere("J · português ainda é reconhecido", idiomaDivergente(VALIDO.pt.sintese, "pt") === null, String(idiomaDivergente(VALIDO.pt.sintese, "pt")))
+  confere("J · português ainda é pego dentro de `en`", idiomaDivergente(VALIDO.pt.sintese, "en") === "pt", String(idiomaDivergente(VALIDO.pt.sintese, "en")))
+  confere("J · espanhol ainda é pego dentro de `en`", idiomaDivergente(VALIDO.es.sintese, "en") === "es", String(idiomaDivergente(VALIDO.es.sintese, "en")))
+}
+
+// ── K · proteção contra custo repetido ─────────────────────────────────────
+// O problema, medido em produção em 2026-10-01: sem linha gravada, cada
+// visitante dispara até 4 chamadas pagas, todas reprovam, nada é gravado, e o
+// próximo visitante repete. Aconteceu três vezes no mesmo dia.
+//
+// Aqui o PostgREST é falso e roda no processo, e o "modelo" é uma função local
+// que conta quantas vezes foi chamada. Nenhuma chamada paga.
+async function parteK() {
+  const sky = new Map<string, Record<string, unknown>>()
+  const esgotado = new Map<string, Record<string, unknown>>()
+  const chave = (u: string) => {
+    const dia = /dia=eq\.([^&]+)/.exec(u)?.[1] ?? ""
+    const loc = /locale=eq\.([^&]+)/.exec(u)?.[1] ?? ""
+    return `${dia}|${loc}`
+  }
+
+  const servidor = http.createServer((req, res) => {
+    let corpo = ""
+    req.on("data", (c) => (corpo += String(c)))
+    req.on("end", () => {
+      const url = req.url ?? ""
+      const alvo = url.includes("sky_generation_exhausted") ? esgotado : sky
+      res.writeHead(req.method === "POST" ? 201 : 200, { "content-type": "application/json" })
+      if (req.method === "POST") {
+        try {
+          const b = JSON.parse(corpo)
+          const linha = Array.isArray(b) ? b[0] : b
+          const k = `${linha.dia}|${linha.locale}`
+          if (!alvo.has(k)) alvo.set(k, linha) // on conflict do nothing
+        } catch {}
+        return res.end("[]")
+      }
+      // `cacheDisponivel`: existe a tabela?
+      if (url.includes("select=dia&limit=1")) return res.end("[]")
+      // leitura por (dia, locale), em forma de objeto ou nulo
+      return res.end(JSON.stringify(alvo.get(chave(url)) ?? null))
+    })
+  })
+  await new Promise<void>((r) => servidor.listen(0, "127.0.0.1", r))
+  process.env.NEXT_PUBLIC_SUPABASE_URL = `http://127.0.0.1:${(servidor.address() as AddressInfo).port}`
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "teste"
+
+  const { leituraDoCeu } = await import("../lib/astro/ceu-do-dia-server")
+
+  let chamadas = 0
+  /** devolve sempre algo que reprova, para consumir o ciclo */
+  const gerarRuim = async () => {
+    chamadas += 1
+    return { conteudo: JSON.stringify({ termos: [], sintese: "nada que preste aqui." }), model: "falso" }
+  }
+  const gerarBom = async (locale: Locale) => {
+    chamadas += 1
+    return { conteudo: JSON.stringify(VALIDO[locale]), model: "falso" }
+  }
+
+  // 1. sem estado -> geração permitida, e o ciclo roda as 4 tentativas
+  chamadas = 0
+  const r1 = await leituraDoCeu({ dia: DIA, locale: "en", gerar: gerarRuim })
+  confere("K · 1. sem estado, a geração é permitida", chamadas === 4, `chamadas=${chamadas}`)
+  confere("K · 1. e devolve sintese nula", r1.sintese === null)
+
+  // 2. as 4 reprovações gravaram o esgotamento
+  confere("K · 2. o esgotamento foi gravado", esgotado.has(`${DIA}|en`), [...esgotado.keys()].join(","))
+  confere("K · 2. com o número de tentativas", esgotado.get(`${DIA}|en`)?.tentativas === 4, String(esgotado.get(`${DIA}|en`)?.tentativas))
+
+  // 3. nova visita no mesmo dia e idioma: ZERO chamadas
+  chamadas = 0
+  const r3 = await leituraDoCeu({ dia: DIA, locale: "en", gerar: gerarRuim })
+  confere("K · 3. nova visita não chama a IA", chamadas === 0, `chamadas=${chamadas}`)
+  confere("K · 3. e ainda devolve a camada factual", r3.factual.length > 0 && r3.sintese === null)
+
+  // 4. outro idioma é independente
+  chamadas = 0
+  await leituraDoCeu({ dia: DIA, locale: "es", gerar: gerarRuim })
+  confere("K · 4. outro idioma pode gerar", chamadas === 4, `chamadas=${chamadas}`)
+
+  // 5. o dia seguinte é independente
+  chamadas = 0
+  await leituraDoCeu({ dia: "2026-10-02", locale: "en", gerar: gerarRuim })
+  confere("K · 5. o dia seguinte pode gerar", chamadas === 4, `chamadas=${chamadas}`)
+
+  // 6. síntese válida tem precedência sobre o esgotamento.
+  //
+  // Usa DIA e `pt`, e não outra data: o caso válido foi montado contra os
+  // fatos DESTE dia, e as origens dele só existem aqui. Em outra data as
+  // origens seriam outras e a geração "boa" reprovaria por motivo alheio ao
+  // que se quer provar.
+  chamadas = 0
+  const bom = await leituraDoCeu({ dia: DIA, locale: "pt", gerar: () => gerarBom("pt") })
+  confere("K · 6. a geração aprovada grava a síntese", bom.sintese !== null, String(bom.violacoes))
+  confere("K · 6. e gravou em sky_daily", sky.has(`${DIA}|pt`), [...sky.keys()].join(","))
+  confere("K · 6. com uma chamada só", chamadas === 1, `chamadas=${chamadas}`)
+  // agora existe linha boa E plantamos um esgotamento no mesmo dia e idioma
+  esgotado.set(`${DIA}|pt`, { dia: DIA, locale: "pt", tentativas: 4 })
+  chamadas = 0
+  const precedencia = await leituraDoCeu({ dia: DIA, locale: "pt", gerar: gerarRuim })
+  confere("K · 6. a síntese válida vence o esgotamento", precedencia.sintese !== null && precedencia.cache === true, `sintese=${precedencia.sintese}`)
+  confere("K · 6. e sem chamar a IA", chamadas === 0, `chamadas=${chamadas}`)
+
+  // ── a semântica do esgotamento: só reprovação do verificador tranca o dia ──
+  // `failed-today` significa "o modelo respondeu quatro vezes e o verificador
+  // recusou as quatro". Falha de entrega não é isso, e não pode trancar: a
+  // chamada foi paga, mas o ciclo de qualidade não foi consumido.
+  const gerarParse = async () => {
+    chamadas += 1
+    return { conteudo: "isto não é json", model: "falso" }
+  }
+
+  // 7. quatro erros de parse: consome as chamadas, não tranca o dia
+  const D7 = "2026-10-05"
+  chamadas = 0
+  await leituraDoCeu({ dia: D7, locale: "en", gerar: gerarParse })
+  confere("K · 7. parse inválido consome as 4 tentativas", chamadas === 4, `chamadas=${chamadas}`)
+  confere("K · 7. e NÃO grava esgotamento", !esgotado.has(`${D7}|en`), "trancou o dia por erro de formato")
+
+  // 8. três reprovações de verdade e um parse inválido: ainda não tranca
+  const D8 = "2026-10-06"
+  chamadas = 0
+  await leituraDoCeu({
+    dia: D8,
+    locale: "en",
+    gerar: async () => (chamadas < 3 ? gerarRuim() : gerarParse()),
+  })
+  confere("K · 8. três reprovações mais um parse não trancam", !esgotado.has(`${D8}|en`), "trancou com 3 reprovações")
+
+  // 9. quatro reprovações reais: tranca
+  const D9 = "2026-10-07"
+  chamadas = 0
+  await leituraDoCeu({ dia: D9, locale: "en", gerar: gerarRuim })
+  confere("K · 9. quatro reprovações reais trancam o dia", esgotado.has(`${D9}|en`), [...esgotado.keys()].join(","))
+  confere("K · 9. com tentativas=4", esgotado.get(`${D9}|en`)?.tentativas === 4, String(esgotado.get(`${D9}|en`)?.tentativas))
+
+  // 10. e a visita seguinte não chama a IA
+  chamadas = 0
+  await leituraDoCeu({ dia: D9, locale: "en", gerar: gerarRuim })
+  confere("K · 10. a visita seguinte não chama a IA", chamadas === 0, `chamadas=${chamadas}`)
+
+  // e o dia que ficou aberto por erro de formato continua aberto
+  chamadas = 0
+  await leituraDoCeu({ dia: D7, locale: "en", gerar: gerarRuim })
+  confere("K · 10. o dia aberto por erro de formato ainda tenta", chamadas === 4, `chamadas=${chamadas}`)
+
+  servidor.close()
+}
+
+async function main() {
   parteA()
   parteB()
   parteC()
@@ -341,6 +663,10 @@ function main() {
   parteE()
   parteF()
   parteG()
+  parteH()
+  parteI()
+  parteJ()
+  await parteK()
 
   if (falhas.length) {
     console.error(`\nA leitura do céu falhou em ${falhas.length} ponto(s):\n`)

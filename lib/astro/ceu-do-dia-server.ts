@@ -77,15 +77,37 @@ export async function leituraDoCeu(params: { dia: string; locale: Locale; gerar:
     return { ...base, violacoes: ["cache indisponível"] }
   }
 
+  // SÍNTESE VÁLIDA TEM PRECEDÊNCIA, sempre e antes de tudo. O bloqueio de
+  // custo que vem a seguir nunca pode esconder um texto que existe.
   const guardada = await ler(dia, locale)
   if (guardada) {
     registrar(dia, locale, "cache=hit")
     return { ...base, sintese: guardada.sintese, termos: guardada.termos, model: guardada.model, cache: true }
   }
 
+  if (await esgotadoHoje(dia, locale)) {
+    registrar(dia, locale, "cache=failed-today")
+    return { ...base, violacoes: ["geração esgotada hoje"] }
+  }
+
   const prompt = promptCeuDoDia(ceu, escolhidos, locale)
   const minimoTermos = minimoDeTermos(escolhidos)
   let violacoes: string[] = []
+
+  // SÓ REPROVAÇÃO DO VERIFICADOR CONTA PARA TRANCAR O DIA.
+  //
+  // `failed-today` significa uma coisa precisa: o modelo respondeu quatro
+  // vezes e o verificador recusou as quatro. É julgamento de qualidade, e é o
+  // único caso em que insistir no mesmo dia seria gastar dinheiro para repetir
+  // o mesmo resultado.
+  //
+  // Falha de entrega não é isso. Erro da OpenAI, timeout e queda de rede
+  // levantam exceção dentro de `gerar` e saem por fora deste laço, sem
+  // chegar ao fim. Resposta que não é JSON válido consome a tentativa, porque
+  // a chamada foi paga, mas NÃO incrementa este contador: o verificador nunca
+  // viu nada para recusar, e o formato quebrado é problema de entrega. Em
+  // qualquer um desses casos o dia continua aberto.
+  let reprovacoesVerificador = 0
 
   for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
     const tIa = Date.now()
@@ -107,6 +129,7 @@ export async function leituraDoCeu(params: { dia: string; locale: Locale; gerar:
 
     if (!veredito.ok) {
       violacoes = veredito.violacoes
+      reprovacoesVerificador += 1
       registrar(dia, locale, "cache=miss", { tentativa, desfecho: "reprovado", msIa, msVerificador, regras: violacoes })
       continue
     }
@@ -117,8 +140,73 @@ export async function leituraDoCeu(params: { dia: string; locale: Locale; gerar:
 
   // o caminho que devolve `sintese: null`. Ele existia sem deixar rastro, e
   // diagnosticar uma reprovação em produção virava dedução a partir do nada.
-  registrar(dia, locale, "cache=miss", { tentativa: TENTATIVAS, desfecho: "esgotado", msIa: 0, msVerificador: 0, regras: violacoes })
+  //
+  // E agora ele TRANCA O DIA para este idioma. Sem isso, o próximo visitante
+  // repete as quatro chamadas pagas, e o seguinte também: foi o que aconteceu
+  // em 2026-10-01. A tranca vence sozinha na virada, porque a chave é o dia.
+  if (reprovacoesVerificador === TENTATIVAS) {
+    await registrarEsgotamento(dia, locale, reprovacoesVerificador, violacoes)
+  }
+  registrar(dia, locale, `cache=miss reprovacoes=${reprovacoesVerificador}`, {
+    tentativa: TENTATIVAS,
+    desfecho: "esgotado",
+    msIa: 0,
+    msVerificador: 0,
+    regras: violacoes,
+  })
   return { ...base, violacoes }
+}
+
+/**
+ * Aquele dia e idioma já consumiu o ciclo de qualidade?
+ *
+ * FALHA PARA O LADO DE PERMITIR. Tabela ausente, indisponível ou sem service
+ * role devolve falso, e a geração segue como antes desta mudança. A proteção
+ * de custo não pode virar um jeito novo de a leitura do céu parar de
+ * funcionar; ela é uma economia, não um invariante.
+ *
+ * O preço dessa escolha é explícito: se a migration não tiver rodado, a
+ * proteção simplesmente não existe, e o aviso abaixo é o único sinal disso.
+ */
+async function esgotadoHoje(dia: string, locale: Locale): Promise<boolean> {
+  if (!hasAdminClient()) return false
+  const { data, error } = await createAdminClient()
+    .from("sky_generation_exhausted")
+    .select("dia")
+    .eq("dia", dia)
+    .eq("locale", locale)
+    .maybeSingle()
+  if (error) {
+    console.warn(`[ceu-dia] sem tabela de esgotamento, proteção de custo desligada: ${error.message}`)
+    return false
+  }
+  // o campo, e não o objeto: qualquer forma inesperada de resposta devolve
+  // falso, que é o lado seguro — permite gerar em vez de trancar o dia à toa
+  return Boolean((data as { dia?: string } | null)?.dia)
+}
+
+/**
+ * Grava que o ciclo acabou sem texto aprovado.
+ *
+ * SÓ O ESGOTAMENTO REAL CHEGA AQUI, e quem garante isso é
+ * `reprovacoesVerificador === TENTATIVAS` no chamador. Erro de rede ou da
+ * OpenAI levanta exceção dentro de `gerar` e sai por fora do laço, sem passar
+ * por aqui. JSON inválido consome a tentativa mas não conta como reprovação,
+ * porque o verificador nunca viu nada para recusar. O que se registra é
+ * exatamente "quatro respostas geradas e recusadas pelo verificador".
+ */
+async function registrarEsgotamento(dia: string, locale: Locale, tentativas: number, regras: string[]): Promise<void> {
+  if (!hasAdminClient()) return
+  try {
+    await createAdminClient()
+      .from("sky_generation_exhausted")
+      .upsert(
+        { dia, locale, tentativas, regras: regras.slice(0, 20).map((r) => r.slice(0, 200)) },
+        { onConflict: "dia,locale", ignoreDuplicates: true },
+      )
+  } catch {
+    // não gravar significa só que o próximo pedido tenta de novo
+  }
 }
 
 type Tentativa = {

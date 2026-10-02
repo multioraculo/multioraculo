@@ -263,13 +263,90 @@ export const CONSELHO: Record<Locale, RegExp[]> = {
  * o verbo conjugado, e agora os outros dois também.
  */
 export const PEDIDO: Record<Locale, RegExp[]> = {
-  pt: [/(exig|ped(e|indo)|demand|convid|favorec|desafi|propõe|sugere|aconselha)\w*/gi],
+  // `desafia` e não `desafi`: o radical curto alcançava o SUBSTANTIVO "desafio"
+  // e "desafios", que não são o céu pedindo nada. "desafia" mais `\w*` cobre
+  // desafia, desafiam, desafiando, desafiar e desafiaria, e deixa o
+  // substantivo passar. Medido: `Comunicação encontra desafios assertivos`
+  // era reprovado, e não devia. O resto da lista está intacto.
+  pt: [/(exig|ped(e|indo)|demand|convid|favorec|desafia|propõe|sugere|aconselha)\w*/gi],
+  // `challenges?` saiu daqui e foi para HOMOGRAFOS: em inglês a grafia do
+  // verbo na 3ª pessoa e a do substantivo plural são a MESMA, e nenhuma regra
+  // de forma separa as duas. Precisa de contexto.
   en: [
-    /\b(requires?|requiring|demands?|demanding|asks?|asking|invites?|inviting|favou?rs?|favou?ring|challenges?|challenging|proposes?|proposing|suggests?|suggesting|advises?|advising)\b/gi,
+    /\b(requires?|requiring|demands?|demanding|asks?|asking|invites?|inviting|favou?rs?|favou?ring|proposes?|proposing|suggests?|suggesting|advises?|advising)\b/gi,
   ],
+  // O espanhol já estava correto, e por isso não muda: as formas verbais são
+  // explícitas, e `desafía` simplesmente não alcança o substantivo "desafíos".
+  // Foi ele que mostrou a forma certa para os outros dois.
   es: [
     /\b(exige[n]?|exigiendo|pide[n]?|pidiendo|demanda[n]?|demandando|invita[n]?|invitando|favorece[n]?|favoreciendo|desafía[n]?|desafia[n]?|desafiando|propone[n]?|proponiendo|sugiere[n]?|sugiriendo|aconseja[n]?|aconsejando)\b/gi,
   ],
+}
+
+/**
+ * HOMÓGRAFOS: a mesma grafia serve de verbo e de substantivo.
+ *
+ * Em inglês "challenges" é a 3ª pessoa do verbo E o plural do substantivo,
+ * caractere por caractere. Nenhuma regra de forma separa as duas, ao contrário
+ * do português ("desafia" contra "desafios") e do espanhol ("desafía" contra
+ * "desafíos"), onde a flexão já resolve. Então em inglês, e só em inglês,
+ * precisa de contexto.
+ *
+ * Medido nos logs de produção: `Communication meets assertive challenges` foi
+ * reprovado como conselho, e ali "challenges" é substantivo. O céu não estava
+ * pedindo nada.
+ */
+const HOMOGRAFOS: Record<Locale, RegExp[]> = {
+  pt: [],
+  en: [/\bchallenges?\b/gi],
+  es: [],
+}
+
+/**
+ * Marcas de que o homógrafo está como SUBSTANTIVO. Testadas contra o texto que
+ * vem antes dele, e todas de classe fechada ou de sufixo, sem nada de análise
+ * sintática: determinante ou possessivo ("the challenges"), adjetivo comum ou
+ * com sufixo adjetival ("assertive challenges", "deep challenges"), ou início
+ * de frase, porque uma declarativa inglesa não começa por verbo finito.
+ *
+ * SEM `-ent` E SEM `-ant` na lista de sufixos, e o motivo foi medido: "ent"
+ * casa o final de "movement", "element", "statement" e "moment", que são
+ * substantivos, e com eles `This movement challenges you to reconsider`
+ * escapava como se "challenges" fosse substantivo. O sufixo nominal `-ment`
+ * termina em "ent", e separar os dois por regex não vale o que custa.
+ *
+ * LIMITE CONHECIDO, e deliberado: um substantivo em `-ing` ou `-ed` antes do
+ * homógrafo é lido como adjetivo, então "the crossing challenges you" escapa.
+ * É uma falha para o lado de deixar passar, que é o lado certo aqui: o defeito
+ * que se corrige é a recusa do substantivo, e as formas verbais claras
+ * continuam pegas.
+ */
+const ADJETIVOS_CURTOS =
+  "deep|new|old|great|strong|quiet|clear|sharp|hard|soft|bold|firm|vast|open|wide|long|short|high|low|real|true|same|other|further|inner|outer|mere|sheer"
+const DETERMINANTES = "a|an|the|this|that|these|those|its|their|his|her|our|your|my|some|any|no|few|many|several|both|each"
+
+const COMO_SUBSTANTIVO: Record<Locale, RegExp> = {
+  pt: /.^/,
+  en: new RegExp(`(^|[.!?]["')\\]]?\\s+)$|\\b(${DETERMINANTES}|${ADJETIVOS_CURTOS}|\\w+(ive|ous|al|ic|ful|less|ary|ed|ing))\\s+$`, "i"),
+  es: /.^/,
+}
+
+/**
+ * As palavras em que o texto fala como pedido, já descontado o homógrafo em
+ * uso de substantivo.
+ */
+export function pedidoDoCeu(sintese: string, locale: Locale): string[] {
+  const achados: string[] = []
+  for (const re of PEDIDO[locale]) {
+    for (const m of sintese.matchAll(re)) achados.push(m[0])
+  }
+  for (const re of HOMOGRAFOS[locale]) {
+    for (const m of sintese.matchAll(re)) {
+      const antes = sintese.slice(0, m.index ?? 0)
+      if (!COMO_SUBSTANTIVO[locale].test(antes)) achados.push(m[0])
+    }
+  }
+  return achados
 }
 
 /**
@@ -474,10 +551,32 @@ const GRAMATICAIS: Record<Locale, string[]> = {
  * não usa acento. Valem 2 pontos porque uma só já decide, enquanto uma palavra
  * de função isolada pode ser coincidência.
  */
+/**
+ * SÓ SINAIS QUE NÃO SE ESCONDEM DENTRO DE PALAVRA DOS OUTROS IDIOMAS.
+ *
+ * A primeira versão tinha dois ramos que faziam exatamente isso, e os dois
+ * eram meus:
+ *
+ *   `ll[aeiou]` no espanhol casava em "cha(lle)nges", "a(llo)w", "fo(llo)w",
+ *   "co(lle)ct", "ste(lla)r", "para(lle)l" — inglês comuníssimo. Como a marca
+ *   vale 2 pontos e a margem do detector é 2, uma frase inglesa curta e pobre
+ *   em palavras de função era acusada de espanhol. Medido:
+ *   `Communication meets assertive challenges.` dava "es";
+ *
+ *   `nh` no português casava em "e(nh)ance", "i(nh)ale", "u(nh)appy".
+ *
+ * Os dois saíram. `ç` e `ão` sustentam o português sem ajuda, e `ñ` e `ción`
+ * sustentam o espanhol: nenhum dos quatro existe em inglês, e nenhum deles
+ * aparece dentro de palavra do outro idioma latino. `lh` saiu junto por ser
+ * redundante, e não por ser perigoso.
+ *
+ * A direção do erro importa: sem evidência suficiente o detector devolve nulo,
+ * em vez de acusar idioma errado.
+ */
 const ORTOGRAFIA: Record<Locale, RegExp[]> = {
-  pt: [/ção|ções|ão|ões|nh|lh|ç/i],
+  pt: [/ção|ções|ão|ões|ç/i],
   en: [],
-  es: [/ñ|ción|ciones|ll[aeiou]|¿|¡/i],
+  es: [/ñ|ción|ciones|¿|¡/i],
 }
 
 /**
