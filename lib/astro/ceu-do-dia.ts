@@ -311,6 +311,7 @@ const CONTRATO_TERMOS: Record<Locale, (min: number, max: number) => string> = {
 5. Nunca escreva uma mini-interpretação nova em \`termos\`.
 6. Todo \`termos[].texto\` precisa ser encontrado, letra por letra, dentro da \`sintese\`.
 7. Cada termo mantém a \`origem\` que o sustenta.
+8. A \`sintese\` tem EXATAMENTE duas frases completas, cada uma terminada em ponto. Não uma, não três.
 
 Exemplo da FORMA, não do conteúdo de hoje:
   sintese: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito."
@@ -324,6 +325,7 @@ Os quatro aparecem na frase acima, palavra por palavra.`,
 5. Never write a new mini-interpretation in \`termos\`.
 6. Every \`termos[].texto\` must be findable, letter for letter, inside the \`sintese\`.
 7. Each term keeps the \`origem\` that sustains it.
+8. The \`sintese\` has EXACTLY two complete sentences, each ending with a period. Not one, not three.
 
 Example of the SHAPE, not of today's content:
   sintese: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord."
@@ -337,11 +339,37 @@ All four appear in the sentence above, word for word.`,
 5. Nunca escribas una mini-interpretación nueva en \`termos\`.
 6. Todo \`termos[].texto\` tiene que encontrarse, letra por letra, dentro de la \`sintese\`.
 7. Cada término mantiene la \`origem\` que lo sostiene.
+8. La \`sintese\` tiene EXACTAMENTE dos frases completas, cada una terminada en punto. No una, no tres.
 
 Ejemplo de la FORMA, no del contenido de hoy:
   sintese: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas."
   termos:  "precisión que examina" | "insistencia cruzada" | "profundidad en revisión" | "fuerzas enfrentadas"
 Los cuatro aparecen en la frase de arriba, palabra por palabra.`,
+}
+
+/**
+ * A retrogradação, dita no idioma pedido e com as palavras que a função aceita.
+ *
+ * O "não serve" em inglês é literalmente o termo que reprovou em produção, e
+ * está ali de propósito: o contraexemplo real ensina mais que a regra abstrata.
+ */
+const CONTRATO_RETROGRADACAO: Record<Locale, (palavras: string) => string> = {
+  pt: (palavras) => `QUANDO A ORIGEM FOR UMA RETROGRADAÇÃO, o termo precisa trazer o movimento de volta: algo em revisão, retomada, retorno, algo que ainda está sendo revisto. Nomear o tema que está sendo revisto não basta.
+Palavras que servem: ${palavras}.
+Serve: "profundidade em revisão". Não serve: "transformação profunda", que nomeia o tema e perde a volta.`,
+  en: (palavras) => `WHEN THE ORIGIN IS A RETROGRADATION, the term must carry the movement back: something under review, revisited, returned to, gone over again. Naming the theme being reviewed is not enough.
+Words that work: ${palavras}.
+Works: "depth under review". Does not work: "deep transformation", which names the theme and loses the return.`,
+  es: (palavras) => `CUANDO EL ORIGEN SEA UNA RETROGRADACIÓN, el término tiene que traer el movimiento de vuelta: algo en revisión, retomada, retorno, algo que todavía se está revisando. Nombrar el tema que se revisa no basta.
+Palabras que sirven: ${palavras}.
+Sirve: "profundidad en revisión". No sirve: "transformación profunda", que nombra el tema y pierde la vuelta.`,
+}
+
+/** Marca, no idioma pedido, quais origens daquele fato são retrogradação. */
+const AVISO_RETROGRADACAO: Record<Locale, string> = {
+  pt: "São retrogradação, e o termo precisa trazer a volta",
+  en: "These are retrogradations, and the term must carry the return",
+  es: "Son retrogradación, y el término tiene que traer la vuelta",
 }
 
 /**
@@ -377,6 +405,8 @@ Cada TERMO nasce de um pedaço declarado de um fato, e você declara qual. O que
 
 O TERMO PRECISA CARREGAR O QUE É ESPECÍFICO DA ORIGEM
 As origens são atômicas, e cada uma sustenta um termo só. Um planeta e a retrogradação dele são origens diferentes: se você declarar a retrogradação, o termo precisa trazer o movimento de volta, como revisão, retomada, retorno ou algo que ainda está sendo revisto. E o termo nunca é apenas a base da origem repetida: ele situa aquilo no que está acontecendo hoje.
+
+${CONTRATO_RETROGRADACAO[locale](EXEMPLOS_RETROGRADACAO[locale].join(", "))}
 
 PELO MENOS UM TERMO VEM DE UM ÂNGULO. O que mudou hoje é a relação entre os corpos, não a qualidade de cada um isolado.
 
@@ -416,6 +446,15 @@ export function promptCeuDoDia(ceu: Ceu, escolhidos: FatoDoCeu[], locale: Locale
   escolhidos.forEach((f, i) => {
     linhas.push(`${i + 1}. ${f.texto}`)
     linhas.push(`   ORIGENS possíveis: ${f.origens.join(" | ")}`)
+    // a exigência da retrogradação dita no ponto em que a origem é escolhida,
+    // e não só trezentas palavras antes. Em 2026-10-01 o modelo declarou duas
+    // origens de retrogradação e escreveu termos sem volta nenhuma nas duas.
+    //
+    // EM LINHA SEPARADA, e não colada no nome da origem: o verificador compara
+    // `termos[].origem` com a string exata, e um marcador grudado ali seria
+    // copiado para dentro da origem e reprovaria por "origem que não existe".
+    const retro = f.origens.filter((o) => ehRetrogradacao(o, locale))
+    if (retro.length) linhas.push(`   ${AVISO_RETROGRADACAO[locale]}: ${retro.join(" | ")}`)
   })
   return { system: sistemaDoCeu(locale, minimoDeTermos(escolhidos)), user: linhas.join("\n") }
 }
@@ -450,7 +489,32 @@ const NOCOES_RETROGRADACAO: Record<Locale, string[]> = {
   es: ["revis", "retom", "retorn", "vuelt", "volv", "rehac", "reexam", "atras"],
 }
 
-function carregaRetrogradacao(texto: string, locale: Locale): boolean {
+/**
+ * Palavras que SATISFAZEM `carregaRetrogradacao`, para o prompt citar.
+ *
+ * Existem porque o prompt e a função descreviam contratos diferentes. O prompt
+ * dizia "como revisão, retomada, retorno ou algo que ainda está sendo revisto",
+ * em português, e mandava o modelo inferir o equivalente no idioma dele.
+ * Metade das traduções naturais desses exemplos reprova na função: "resumption"
+ * e "retaking" para retomada, "reconsidered" e "rethought" para "algo
+ * revisto". O modelo podia acertar a semântica e falhar na lista de raízes.
+ *
+ * Em 2026-10-01 a geração em inglês caiu exatamente aqui, com dois termos:
+ * "deep transformation" de "retrogradation of Pluto" e "unusual perspectives"
+ * de "retrogradation of Uranus". Nenhum dos dois traz a volta.
+ *
+ * Cada palavra desta lista é conferida contra `carregaRetrogradacao` no
+ * verificador. Se alguém acrescentar aqui algo que a função recusa, ou tirar
+ * uma raiz de `NOCOES_RETROGRADACAO` que uma destas usava, o build para. É o
+ * que impede os dois contratos de divergirem de novo.
+ */
+export const EXEMPLOS_RETROGRADACAO: Record<Locale, string[]> = {
+  pt: ["revisão", "revisto", "retomada", "retorno", "volta", "refazer", "reexame"],
+  en: ["review", "revisiting", "revisited", "returning", "return", "back", "again"],
+  es: ["revisión", "retomada", "retorno", "vuelta", "rehacer", "reexamen"],
+}
+
+export function carregaRetrogradacao(texto: string, locale: Locale): boolean {
   const t = semAcento(texto)
   return NOCOES_RETROGRADACAO[locale].some((raiz) => t.includes(raiz))
 }

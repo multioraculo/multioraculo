@@ -29,7 +29,16 @@ import http from "http"
 import type { AddressInfo } from "net"
 import { readFileSync } from "node:fs"
 import { estadoDoCeu } from "../lib/astro/ceu"
-import { fatosDoCeu, verificarCeu, sistemaDoCeu, nomesTecnicos, minimoDeTermos } from "../lib/astro/ceu-do-dia"
+import {
+  fatosDoCeu,
+  verificarCeu,
+  sistemaDoCeu,
+  nomesTecnicos,
+  minimoDeTermos,
+  promptCeuDoDia,
+  carregaRetrogradacao,
+  EXEMPLOS_RETROGRADACAO,
+} from "../lib/astro/ceu-do-dia"
 import { ESFERA_DE_VIDA, PEDIDO, idiomaDivergente, nomesExpostos, pedidoDoCeu } from "../lib/astro/editorial"
 import { LOCALES, type Locale } from "../lib/i18n/config"
 
@@ -655,6 +664,114 @@ async function parteK() {
   servidor.close()
 }
 
+// ── L · retrogradação e as duas frases ─────────────────────────────────────
+// As duas últimas incompatibilidades, medidas em 2026-10-01. A geração em
+// inglês reprovou com exatamente três violações:
+//
+//   "deep transformation" vem de "retrogradation of Pluto" mas não carrega o
+//   movimento de volta
+//   "unusual perspectives" vem de "retrogradation of Uranus" mas não carrega o
+//   movimento de volta
+//   1 frases (queremos 2)
+//
+// Nenhuma era de idioma, nome técnico, contagem de termos, literalidade ou
+// `challenge`: as correções anteriores tinham funcionado.
+//
+// A causa das duas primeiras era desencontro de contrato. O prompt dizia "como
+// revisão, retomada, retorno", em português, e mandava o modelo inferir. Mas
+// `carregaRetrogradacao` compara contra raízes fechadas, e metade das
+// traduções naturais daqueles exemplos reprova: "resumption" e "retaking" para
+// retomada, "reconsidered" e "rethought" para algo revisto. A função NÃO foi
+// relaxada; o prompt passou a citar palavras que ela aceita, e a primeira
+// asserção abaixo é o que impede os dois de divergirem outra vez.
+const SEM_VOLTA: Record<Locale, { termo: string; sintese: string }> = {
+  en: {
+    termo: "deep transformation",
+    sintese: "Examining precision meets crossed insistence, while deep transformation finds a frictionless accord. What orients itself holds steady.",
+  },
+  pt: {
+    termo: "transformação profunda",
+    sintese: "Precisão que examina encontra insistência atravessada, enquanto transformação profunda acha acordo sem atrito. O que orienta se mantém firme.",
+  },
+  es: {
+    termo: "transformación profunda",
+    sintese: "Precisión que examina encuentra insistencia cruzada, mientras transformación profunda halla fuerzas enfrentadas. Lo que orienta se mantiene firme.",
+  },
+}
+
+const UMA_FRASE: Record<Locale, string> = {
+  en: "Examining precision meets crossed insistence, while depth under review finds a frictionless accord and what orients itself holds steady.",
+  pt: "Precisão que examina encontra insistência atravessada, enquanto profundidade em revisão acha acordo sem atrito e o que orienta se mantém firme.",
+  es: "Precisión que examina encuentra insistencia cruzada, mientras profundidad en revisión halla fuerzas enfrentadas y lo que orienta se mantiene firme.",
+}
+
+const TRES_FRASES: Record<Locale, string> = {
+  en: "Examining precision meets crossed insistence. Depth under review finds a frictionless accord. What orients itself holds steady.",
+  pt: "Precisão que examina encontra insistência atravessada. Profundidade em revisão acha acordo sem atrito. O que orienta se mantém firme.",
+  es: "Precisión que examina encuentra insistencia cruzada. Profundidad en revisión halla fuerzas enfrentadas. Lo que orienta se mantiene firme.",
+}
+
+const MARCA_RETRO_PROMPT: Record<Locale, RegExp> = {
+  pt: /QUANDO A ORIGEM FOR UMA RETROGRADAÇÃO/,
+  en: /WHEN THE ORIGIN IS A RETROGRADATION/,
+  es: /CUANDO EL ORIGEN SEA UNA RETROGRADACIÓN/,
+}
+const MARCA_FRASES_PROMPT: Record<Locale, RegExp> = {
+  pt: /EXATAMENTE duas frases completas/,
+  en: /EXACTLY two complete sentences/,
+  es: /EXACTAMENTE dos frases completas/,
+}
+
+function parteL() {
+  for (const locale of LOCALES) {
+    // A GUARDA CONTRA DIVERGÊNCIA: tudo que o prompt cita, a função aceita.
+    for (const palavra of EXEMPLOS_RETROGRADACAO[locale]) {
+      confere(
+        `L · ${locale}: o prompt cita "${palavra}" e a função aceita`,
+        carregaRetrogradacao(palavra, locale),
+        "o prompt promete o que o verificador recusa",
+      )
+    }
+
+    const base = VALIDO[locale]
+    confere(`L · ${locale}: retrogradação com a volta passa`, violacoesDoCaso(locale, base).length === 0, violacoesDoCaso(locale, base).join(" / "))
+
+    // o termo nomeia o tema e perde o movimento: é o caso de produção
+    const sem = SEM_VOLTA[locale]
+    const semVolta = {
+      termos: base.termos.map((t) => (t.origem.includes("Plut") ? { ...t, texto: sem.termo } : t)),
+      sintese: sem.sintese,
+    }
+    const vsSem = violacoesDoCaso(locale, semVolta)
+    confere(
+      `L · ${locale}: retrogradação sem a volta reprova`,
+      vsSem.some((v) => v.includes("não carrega o movimento de volta")),
+      vsSem.join(" / ") || "(nenhuma violação)",
+    )
+
+    // exatamente duas frases
+    confere(`L · ${locale}: duas frases passam`, !violacoesDoCaso(locale, base).some((v) => v.includes("frases (queremos")))
+    const uma = violacoesDoCaso(locale, { ...base, sintese: UMA_FRASE[locale] })
+    confere(`L · ${locale}: uma frase reprova`, uma.some((v) => v.includes("1 frases (queremos")), uma.join(" / "))
+    const tres = violacoesDoCaso(locale, { ...base, sintese: TRES_FRASES[locale] })
+    confere(`L · ${locale}: três frases reprovam`, tres.some((v) => v.includes("3 frases (queremos")), tres.join(" / "))
+
+    // e o prompt diz as duas coisas, no idioma pedido
+    const sys = sistemaDoCeu(locale, 4)
+    confere(`L · ${locale}: o prompt explicita a semântica da retrogradação`, MARCA_RETRO_PROMPT[locale].test(sys))
+    confere(`L · ${locale}: o prompt lista as palavras que servem`, EXEMPLOS_RETROGRADACAO[locale].every((p) => sys.includes(p)))
+    confere(`L · ${locale}: o prompt exige exatamente duas frases`, MARCA_FRASES_PROMPT[locale].test(sys))
+
+    // e a mensagem do usuário marca quais origens são retrogradação, em linha
+    // separada, para o marcador não acabar dentro de `termos[].origem`
+    const { escolhidos } = fatosDoCeu(estadoDoCeu(DIA), locale)
+    const { user } = promptCeuDoDia(estadoDoCeu(DIA), escolhidos, locale)
+    const temRetro = escolhidos.some((f) => f.origens.some((o) => /retrograda/i.test(o)))
+    confere(`L · ${locale}: o pedido marca as origens de retrogradação`, !temRetro || /retrograda/i.test(user))
+    confere(`L · ${locale}: e a linha de ORIGENS não leva marcador grudado`, !/ORIGENS[^\n]*(precisa|must|tiene que)/.test(user))
+  }
+}
+
 async function main() {
   parteA()
   parteB()
@@ -666,6 +783,7 @@ async function main() {
   parteH()
   parteI()
   parteJ()
+  parteL()
   await parteK()
 
   if (falhas.length) {
