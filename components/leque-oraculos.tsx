@@ -40,8 +40,19 @@ import { useI18n } from "@/components/i18n-provider"
 import { RuneObject } from "@/components/runes-spread"
 import { BuzioOpen, BuzioClosed } from "@/components/buzios-board"
 
-/** A placa. Uma medida só, para os cinco. */
-const SLOT = { largura: 62, altura: 92 }
+/**
+ * A placa. Uma medida só, para os cinco.
+ *
+ * Subiu de 62×92 para 76×112, uns 22 % em cada eixo. O leque estava com
+ * presença pequena demais dentro da placa, no celular e no desktop: lia como
+ * um detalhe no rodapé do card, e ele é assinatura da marca.
+ *
+ * A LARGURA TOTAL DO LEQUE QUASE NÃO MUDOU, e isso é o ponto. As peças
+ * cresceram e os deslocamentos encolheram um pouco, então o conjunto ganhou
+ * corpo pela sobreposição, não por ocupar mais espaço. Continua dentro do vão
+ * da placa mais estreita da Home, sem encostar nas bordas.
+ */
+const SLOT = { largura: 76, altura: 112 }
 
 /**
  * As cinco posições do leque, NA ORDEM EM QUE UMA PEÇA AS PERCORRE: entra pela
@@ -54,11 +65,11 @@ const SLOT = { largura: 62, altura: 92 }
  * profundidade sem custar sombra nem desfoque.
  */
 const POSICOES = [
-  { x: -102, y: 26, giro: -16, escala: 0.66, opacidade: 0.62, plano: 10 },
-  { x: -51, y: 9, giro: -8, escala: 0.85, opacidade: 0.86, plano: 30 },
+  { x: -98, y: 31, giro: -16, escala: 0.66, opacidade: 0.62, plano: 10 },
+  { x: -49, y: 11, giro: -8, escala: 0.85, opacidade: 0.86, plano: 30 },
   { x: 0, y: 0, giro: 0, escala: 1, opacidade: 1, plano: 50 },
-  { x: 51, y: 9, giro: 8, escala: 0.85, opacidade: 0.86, plano: 30 },
-  { x: 102, y: 26, giro: 16, escala: 0.66, opacidade: 0.62, plano: 10 },
+  { x: 49, y: 11, giro: 8, escala: 0.85, opacidade: 0.86, plano: 30 },
+  { x: 98, y: 31, giro: 16, escala: 0.66, opacidade: 0.62, plano: 10 },
 ]
 
 /*
@@ -91,14 +102,14 @@ const CICLO_MS = PAUSA_MS + TRAVESSIA_MS
 function Lamina({ children, escala = 1 }: { children: React.ReactNode; escala?: number }) {
   return (
     <div
-      className="relative flex items-center justify-center overflow-hidden rounded-[11px]"
+      className="relative flex items-center justify-center overflow-hidden rounded-[13px]"
       style={{
         width: SLOT.largura,
         height: SLOT.altura,
         background:
           "linear-gradient(158deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.065) 48%, rgba(255,255,255,0.03) 100%), rgba(24,9,56,0.58)",
         boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.24), inset 0 0 0 1px rgba(255,255,255,0.13), 0 12px 26px rgba(14,3,48,0.36)",
+          "inset 0 1px 0 rgba(255,255,255,0.24), inset 0 0 0 1px rgba(255,255,255,0.13), 0 14px 30px rgba(14,3,48,0.36)",
       }}
     >
       {/* o reflexo do canto, igual ao das placas grandes */}
@@ -115,8 +126,14 @@ function Lamina({ children, escala = 1 }: { children: React.ReactNode; escala?: 
   )
 }
 
-/** A arte de uma carta, encaixada na lâmina sem esticar. */
-function Arte({ src }: { src: string }) {
+/**
+ * A arte de uma carta, encaixada na lâmina sem esticar.
+ *
+ * `tom` é um tratamento de cor LOCAL, só para este uso no leque. A arte
+ * oficial do baralho não muda, e nenhuma outra tela do produto é afetada:
+ * quem recebe o tratamento é a tag `img` deste componente, não o arquivo.
+ */
+function Arte({ src, tom = "" }: { src: string; tom?: string }) {
   return (
     <img
       src={src}
@@ -127,8 +144,8 @@ function Arte({ src }: { src: string }) {
       // cedo evita o pop, e o slot de tamanho fixo garante que o atraso não
       // mexa em nada de qualquer jeito
       loading="eager"
-      className="block h-[74px] w-auto max-w-[50px] object-contain"
-      style={{ filter: "drop-shadow(0 2px 6px rgba(12,2,40,0.35))" }}
+      className="block h-[90px] w-auto max-w-[61px] object-contain"
+      style={{ filter: `${tom} drop-shadow(0 2px 6px rgba(12,2,40,0.35))`.trim() }}
       onError={(ev) => {
         ev.currentTarget.style.visibility = "hidden"
       }}
@@ -140,14 +157,14 @@ function Arte({ src }: { src: string }) {
 function Hexagrama() {
   const padrao = [1, 0, 1, 1, 0, 1]
   return (
-    <span className="flex w-[34px] flex-col-reverse gap-[8px] text-white/80" aria-hidden="true">
+    <span className="flex w-[42px] flex-col-reverse gap-[10px] text-white/80" aria-hidden="true">
       {padrao.map((yang, i) =>
         yang ? (
-          <span key={i} className="h-[4px] w-full rounded-[1px] bg-current" />
+          <span key={i} className="h-[5px] w-full rounded-[1px] bg-current" />
         ) : (
-          <span key={i} className="flex gap-[6px]">
-            <span className="h-[4px] flex-1 rounded-[1px] bg-current" />
-            <span className="h-[4px] flex-1 rounded-[1px] bg-current" />
+          <span key={i} className="flex gap-[7px]">
+            <span className="h-[5px] flex-1 rounded-[1px] bg-current" />
+            <span className="h-[5px] flex-1 rounded-[1px] bg-current" />
           </span>
         ),
       )}
@@ -158,11 +175,11 @@ function Hexagrama() {
 /** Quatro búzios em dois pares: numa lâmina em pé, fileira vira fiapo. */
 function Buzios() {
   return (
-    <span className="grid grid-cols-2 gap-x-[9px] gap-y-[7px] text-white/85" aria-hidden="true">
-      <BuzioOpen size={19} />
-      <BuzioClosed size={19} />
-      <BuzioClosed size={19} />
-      <BuzioOpen size={19} />
+    <span className="grid grid-cols-2 gap-x-[11px] gap-y-[9px] text-white/85" aria-hidden="true">
+      <BuzioOpen size={23} />
+      <BuzioClosed size={23} />
+      <BuzioClosed size={23} />
+      <BuzioOpen size={23} />
     </span>
   )
 }
@@ -185,12 +202,33 @@ const PECAS = [
   // nome podem ficar um ano na borda sem risco de servir arte velha.
   { chave: "tarot", escala: 1, conteudo: <Arte src="/brand/fixo/leque-tarot-222.png" /> },
   { chave: "iching", escala: 1, conteudo: <Hexagrama /> },
-  { chave: "runas", escala: 1.25, conteudo: <RuneObject name="Fehu" glyph="ᚠ" reversed={false} index={0} width={38} height={50} /> },
+  { chave: "runas", escala: 1.25, conteudo: <RuneObject name="Fehu" glyph="ᚠ" reversed={false} index={0} width={46} height={61} /> },
   { chave: "buzios", escala: 1.18, conteudo: <Buzios /> },
-  // a carta do lenormand é escolhida pelo DESENHO, não pelo significado: num
-  // slot de 62 px a 44 % de opacidade, a gravura de "Estrelas" é pontinhos
-  // esparsos e some. "Chave" tem silhueta cheia e lê de relance
-  { chave: "lenormand", escala: 1, conteudo: <Arte src="/brand/fixo/leque-lenormand-222.png" /> },
+  // a carta do lenormand é escolhida pelo DESENHO, não pelo significado: numa
+  // placa pequena e meio translúcida, gravura de traço esparso vira pontinhos e
+  // some. O critério é silhueta cheia, que lê de relance.
+  //
+  // Era a "Chave", e passou a ser o "Sol": a chave tinha silhueta cheia mas um
+  // objeto de contorno duro, que destoava das outras quatro peças. O sol é
+  // radial, tem a mesma temperatura de desenho do resto do leque e mantém o
+  // critério — e ainda pesa 15 KB contra 27 KB.
+  //
+  // Nome novo no arquivo, e não substituição: `/brand/fixo` é servido com cache
+  // de um ano e `immutable`, então trocar o conteúdo sob o mesmo nome deixaria
+  // a arte velha na borda por meses.
+  //
+  // E ele entra DESSATURADO, por tratamento local. Medindo a cor média das
+  // artes do leque, o problema não era o matiz e sim a saturação:
+  //
+  //     tarô            hsl(18,  8%, 67%)   <- a referência do conjunto
+  //     sol, cru        hsl(30, 66%, 75%)   <- oito vezes mais saturado
+  //     chave, antes    hsl(22, 46%, 72%)
+  //
+  // Dourado a 66 % num leque onde tudo mais é creme quase cinza lê como peça
+  // de outro jogo. `saturate` puxa para perto do conjunto e `hue-rotate` tira
+  // os poucos graus que separavam o laranja do creme do tarô. A silhueta não
+  // depende de cor nenhuma: ela é radial e cheia, e continua lendo de relance.
+  { chave: "lenormand", escala: 1, conteudo: <Arte src="/brand/fixo/leque-lenormand-sol-222.png" tom="saturate(0.35) hue-rotate(-8deg)" /> },
 ] as const
 
 export default function LequeOraculos({ className = "" }: { className?: string }) {
@@ -231,7 +269,7 @@ export default function LequeOraculos({ className = "" }: { className?: string }
     // A ALTURA É DECLARADA AQUI E NÃO MUDA MAIS. É o que reserva o espaço antes
     // de qualquer peça carregar, e o que impede o bloco de empurrar a página.
     <div
-      className={`relative h-[124px] w-full overflow-hidden sm:h-[150px] ${className}`}
+      className={`relative h-[150px] w-full overflow-hidden sm:h-[178px] ${className}`}
       role="img"
       aria-label={`${o.tarot} · ${o.iching} · ${o.runas} · ${o.buzios} · ${o.lenormand}`}
     >
@@ -239,9 +277,18 @@ export default function LequeOraculos({ className = "" }: { className?: string }
           em qualquer largura, e a altura do palco continua sendo a declarada
           acima. A redução é pequena de propósito — em 0,74 a gravura do tarô
           ficava com 30 px e virava borrão, e uma peça ilegível no leque é uma
-          peça a menos. O leque inteiro mede 246 px, e a placa mais estreita da
-          Home tem 279 px de vão. */}
-      <div className="absolute inset-0 scale-[0.92] sm:scale-100">
+          peça a menos.
+
+          Com as placas maiores o leque inteiro mede 265 px. A redução do
+          celular subiu de 0,92 para 0,95, porque o que apertava não era a
+          largura e sim o tamanho de cada peça: a 0,95 o conjunto dá 252 px e
+          continua dentro do vão do card no celular mais estreito. */}
+      {/* O LEQUE SOBE 9 px DENTRO DO PALCO. As posições descem em arco a partir
+          da carta da frente, então o conjunto inteiro fica abaixo do centro
+          geométrico: medido, sobravam 26 px em cima e 5 embaixo, e o leque
+          parecia pendurado no rodapé do card. Subir o container inteiro
+          preserva o arco e só corrige onde ele mora. */}
+      <div className="absolute inset-0 scale-[0.95] sm:scale-100" style={{ translate: "0 -9px" }}>
         {PECAS.map((peca, i) => {
           const p = POSICOES[(i + passo) % POSICOES.length]
           const saltou = i === voltando

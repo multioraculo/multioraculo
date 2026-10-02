@@ -619,7 +619,12 @@ function ConviteDePergunta({
       className={`group p-6 sm:p-7 flex flex-col justify-center ${className}`}
     >
       <Rotulo>{rotulo}</Rotulo>
-      <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-2.5">{convite}</h2>
+      {/* HIERARQUIA DO BLOCO, em três grupos e não em cinco linhas soltas.
+          O olho lê [rótulo + convite], depois [o campo da pergunta], depois
+          [a frase + o leque]. O que amarra cada grupo é a distância: curta por
+          dentro, larga por fora. Antes os cinco respiros eram quase iguais e o
+          leque parecia um anexo no rodapé do card. */}
+      <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-3 max-w-[22ch]">{convite}</h2>
 
       {/* O CAMPO. A pergunta voltou a ter lugar próprio dentro da placa: barra
           à esquerda, fundo mais fundo e altura de toque. Sem isso ela virava
@@ -635,7 +640,17 @@ function ConviteDePergunta({
               {mostrada}
             </span>
           </span>
-          <span className="text-white/35 group-hover:text-white/80 text-[16px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
+          {/* SÓ NO DESKTOP, e por breakpoint em vez de some-para-todos.
+              Aqui a seta não está junto do texto: o `justify-between` a joga
+              para o canto do campo, e no celular, onde o campo é estreito, ela
+              vira um ícone genérico pendurado. No desktop há vão suficiente
+              para ela ler como parte da composição do campo, e ali fica.
+
+              Sem ela o celular não perde nada: o campo já tem a barra à
+              esquerda que acende, o fundo que aprofunda, o texto que vai a
+              branco e a linha de destino logo abaixo dizendo para onde vai. E
+              o card inteiro é o link, não a seta. */}
+          <span className="hidden sm:inline text-white/35 group-hover:text-white/80 text-[16px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
             ↗
           </span>
         </span>
@@ -644,11 +659,19 @@ function ConviteDePergunta({
 
       {/* o que acontece do outro lado do clique, dito uma vez só e aqui: era
           isto que estava repetido na placa da marca */}
-      <span className="block text-white/55 text-[14px] leading-relaxed font-light mt-5">{explica}</span>
+      {/* a largura máxima só a partir de `sm`: no celular o card já é estreito
+          e o limite extra quebrava "Uma pergunta. Cinco oráculos. Uma síntese."
+          deixando "síntese." sozinha na segunda linha */}
+      <span className="block text-white/55 text-[14px] leading-relaxed font-light mt-7 sm:max-w-[32ch]">{explica}</span>
 
       {/* e o que ele PARECE: as cinco placas num leque que gira. Ilustração,
-          não tiragem — sem nome, sem posição, sem significado */}
-      <span className="block mt-6">
+          não tiragem — sem nome, sem posição, sem significado.
+
+          Colado na frase acima de propósito: "Uma pergunta. Cinco oráculos.
+          Uma síntese." e o leque são a mesma afirmação, uma escrita e outra
+          desenhada. Com respiro igual ao dos outros blocos, liam como coisas
+          separadas. */}
+      <span className="block mt-3">
         <LequeOraculos />
       </span>
     </Modulo>
