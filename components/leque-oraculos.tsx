@@ -31,11 +31,18 @@
  *     objeto atrás faz. A profundidade vem de escala e opacidade, não de sombra
  *     nem de desfoque, que custam caro e borram a atmosfera.
  *
+ * O MOVIMENTO É A FRASE, EM VEZ DE UM GIRO. Antes as cinco placas rodavam
+ * sem parar, e o giro não dizia nada sobre o que o card oferece. Agora o leque
+ * CONVERGE: abre em arco (cinco oráculos), fecha numa pilha só (uma síntese) e
+ * reabre com outro oráculo à frente, para que cada um passe pelo primeiro
+ * lugar. É "Uma pergunta. Cinco oráculos. Uma síntese." acontecendo, devagar,
+ * logo abaixo do campo da pergunta.
+ *
  * Só transform e opacity, que a GPU resolve sem recalcular layout. Sem vídeo,
  * sem canvas, sem blur grande, sem nada remoto. Com `prefers-reduced-motion` o
  * leque para na primeira composição, que já ilustra a mesma coisa.
  */
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { RuneObject } from "@/components/runes-spread"
 import { BuzioOpen, BuzioClosed } from "@/components/buzios-board"
@@ -72,6 +79,22 @@ const POSICOES = [
   { x: 98, y: 31, giro: 16, escala: 0.66, opacidade: 0.62, plano: 10 },
 ]
 
+/**
+ * A PILHA: as mesmas cinco posições, recolhidas para o centro.
+ *
+ * Cada índice corresponde ao da posição do leque que a peça ocupava (0 a 4), e
+ * é por isso que o fechamento é um recolher e não um embaralhar: a da frente
+ * continua em cima, as vizinhas aparecem logo atrás com uma borda à mostra, e
+ * as das pontas por último, mais apagadas. Lê como um baralho recém-juntado.
+ */
+const PILHA = [
+  { x: -9, y: -8, giro: -6, escala: 0.94, opacidade: 0.6, plano: 20 },
+  { x: -5, y: -4, giro: -3, escala: 0.97, opacidade: 0.86, plano: 40 },
+  { x: 0, y: 0, giro: 0, escala: 1, opacidade: 1, plano: 50 },
+  { x: 5, y: -4, giro: 3, escala: 0.97, opacidade: 0.86, plano: 40 },
+  { x: 9, y: -8, giro: 6, escala: 0.94, opacidade: 0.6, plano: 20 },
+]
+
 /*
  * PESO ENTRE ESCALA E OPACIDADE. A primeira distribuição levava a opacidade das
  * pontas a 0,40, e as pontas sumiam: o fundo da Home é um gradiente que se move,
@@ -81,15 +104,46 @@ const POSICOES = [
  * escala, que não depende de fundo nenhum, e menos da opacidade.
  */
 
-/** O índice da ponta: é dela que a peça salta de volta para o começo. */
-const SAIDA = POSICOES.length - 1
+/**
+ * O LEQUE É MAIOR QUE O VÃO DO CARD, E O CARD O CORTA.
+ *
+ * O componente ocupa a largura inteira da placa em que mora (quem o usa tira o
+ * padding com margem negativa, e a placa tem `overflow-hidden`), e a abertura
+ * é calculada para as peças das pontas passarem da borda em `SANGRIA` px de
+ * cada lado: elas se escondem um pouco para fora do balão, cortadas pelo
+ * contorno dele, e o resto da página não é tocado. Fechado, o leque volta ao
+ * centro, onde sempre esteve, e a pilha fica inteira dentro da placa.
+ *
+ * Duas coisas sobem com a largura: a ESCALA das peças (entre 1,3 e 1,75) e o
+ * AFASTAMENTO horizontal `kx`, que só é acrescentado ao que falta para a ponta
+ * alcançar a sangria. O afastamento não pode dar tudo sozinho, ou o leque
+ * viraria uma fileira de placas lado a lado.
+ */
+const SANGRIA = 24
+/** meia largura da peça da ponta (76 × 0,66 / 2), na escala 1 */
+const MEIA_PONTA = 25.1
+const ESCALA_MIN = 1.3
+const ESCALA_MAX = 1.75
+/** a altura útil do arco, na escala 1: da carta da frente até a base das pontas */
+const ALTURA_ARCO = 128
 
-/** Tempo parado em cada posição, e o quanto demora para chegar na seguinte. */
-const PAUSA_MS = 2400
-const TRAVESSIA_MS = 1100
+function geometria(largura: number) {
+  const s = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, largura / 260))
+  const alvo = largura / 2 + SANGRIA
+  const kx = Math.max(1, (alvo / s - MEIA_PONTA) / POSICOES[POSICOES.length - 1].x)
+  return { s, kx, altura: Math.round(ALTURA_ARCO * s) }
+}
 
-/** Uma volta inteira leva cinco pausas: cada oráculo passa pela frente uma vez. */
-const CICLO_MS = PAUSA_MS + TRAVESSIA_MS
+/**
+ * Os tempos de uma volta (≈ 10 s), lentos de propósito: o movimento acompanha
+ * a leitura do card, não compete com ela.
+ *
+ *   aberto   6,4 s: 1,7 s para abrir + o resto parado, em leque
+ *   fechado  4,0 s: 1,7 s para recolher + o resto parado, em pilha
+ */
+const TRAVESSIA_MS = 1700
+const ABERTO_MS = 6400
+const FECHADO_MS = 4000
 
 /**
  * A lâmina de vidro: a moldura igual para os cinco.
@@ -234,64 +288,66 @@ const PECAS = [
 export default function LequeOraculos({ className = "" }: { className?: string }) {
   const { dict } = useI18n()
   const o = dict.oracles as unknown as Record<string, string>
+  // `passo` é quem está à frente; só avança quando o leque REABRE, para
+  // cada oráculo ter a sua vez sem ninguém atravessar a composição.
   const [passo, setPasso] = useState(0)
+  const [fechado, setFechado] = useState(false)
   const [parado, setParado] = useState(false)
+  const raiz = useRef<HTMLDivElement>(null)
+  // 340 até medir: é a largura de um celular comum, e evita um quadro sem geometria
+  const [largura, setLargura] = useState(340)
 
   useEffect(() => {
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-      setParado(true)
-      return
-    }
-    const id = setInterval(() => setPasso((p) => (p + 1) % PECAS.length), CICLO_MS)
-    return () => clearInterval(id)
+    const el = raiz.current
+    if (!el) return
+    setLargura(el.clientWidth || 340)
+    const ro = new ResizeObserver(([e]) => setLargura(Math.round(e.contentRect.width) || 340))
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
-  /**
-   * A peça que acabou de dar a volta.
-   *
-   * Num leque de cinco, alguém tem de sair pela direita e voltar pela esquerda.
-   * Deslizar atravessaria a composição inteira na diagonal, então ela CORTA: só
-   * o deslocamento dela não é animado, e ela reaparece na ponta de fora, que é o
-   * ponto mais apagado do leque e exatamente onde uma carta entraria numa mão
-   * real.
-   *
-   * TENTEI SUAVIZAR ESSE CORTE DUAS VEZES, e as duas fracassaram do mesmo jeito.
-   * Um quadro transparente controlado por requestAnimationFrame, e depois uma
-   * animação CSS de entrada: as duas dependem de o navegador estar animando, e
-   * em aba oculta, em segundo plano ou numa captura estática ele não está. A
-   * peça ficava presa em opacidade 0 e o leque aparecia com quatro. Para um
-   * bloco que é identidade da marca, sumir uma peça é pior do que cortar: o
-   * corte custa um instante, a ausência custa a composição inteira.
-   */
-  const voltando = (POSICOES.length - passo) % POSICOES.length
+  useEffect(() => {
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) setParado(true)
+  }, [])
+
+  // a volta inteira: abre → fecha → reabre (com outra peça à frente). Uma
+  // máquina de dois estados com um temporizador só, e nada roda em segundo
+  // plano além dele.
+  useEffect(() => {
+    if (parado) return
+    const id = setTimeout(
+      () => {
+        if (!fechado) setFechado(true)
+        else {
+          setFechado(false)
+          setPasso((p) => (p + 1) % PECAS.length)
+        }
+      },
+      fechado ? FECHADO_MS : ABERTO_MS,
+    )
+    return () => clearTimeout(id)
+  }, [fechado, parado])
+
+  const { s: escalaDoLeque, kx, altura } = geometria(largura)
 
   return (
-    // A ALTURA É DECLARADA AQUI E NÃO MUDA MAIS. É o que reserva o espaço antes
-    // de qualquer peça carregar, e o que impede o bloco de empurrar a página.
+    // A ALTURA SAI DA GEOMETRIA (sobe com a escala) e é aplicada no primeiro
+    // render, antes de qualquer peça carregar: não há salto de layout.
     <div
-      className={`relative h-[150px] w-full overflow-hidden sm:h-[178px] ${className}`}
+      ref={raiz}
+      className={`relative w-full overflow-hidden ${className}`}
+      style={{ height: altura }}
       role="img"
       aria-label={`${o.tarot} · ${o.iching} · ${o.runas} · ${o.buzios} · ${o.lenormand}`}
     >
-      {/* No celular o leque encolhe em vez de estreitar: a composição é a mesma
-          em qualquer largura, e a altura do palco continua sendo a declarada
-          acima. A redução é pequena de propósito — em 0,74 a gravura do tarô
-          ficava com 30 px e virava borrão, e uma peça ilegível no leque é uma
-          peça a menos.
-
-          Com as placas maiores o leque inteiro mede 265 px. A redução do
-          celular subiu de 0,92 para 0,95, porque o que apertava não era a
-          largura e sim o tamanho de cada peça: a 0,95 o conjunto dá 252 px e
-          continua dentro do vão do card no celular mais estreito. */}
-      {/* O LEQUE SOBE 9 px DENTRO DO PALCO. As posições descem em arco a partir
-          da carta da frente, então o conjunto inteiro fica abaixo do centro
-          geométrico: medido, sobravam 26 px em cima e 5 embaixo, e o leque
-          parecia pendurado no rodapé do card. Subir o container inteiro
-          preserva o arco e só corrige onde ele mora. */}
-      <div className="absolute inset-0 scale-[0.95] sm:scale-100" style={{ translate: "0 -9px" }}>
+      {/* O palco inteiro cresce em torno do centro. As posições do leque aberto
+          ganham o afastamento `kx`; as da pilha não, porque a pilha é o leque
+          recolhido e fica no centro, inteira, dentro da placa. */}
+      <div className="absolute inset-0" style={{ scale: escalaDoLeque, translate: `0 ${-6 * escalaDoLeque}px` }}>
         {PECAS.map((peca, i) => {
-          const p = POSICOES[(i + passo) % POSICOES.length]
-          const saltou = i === voltando
+          const lugar = (i + passo) % POSICOES.length
+          const base = (fechado ? PILHA : POSICOES)[lugar]
+          const p = fechado ? base : { ...base, x: base.x * kx }
           return (
             <div
               key={peca.chave}
@@ -302,13 +358,9 @@ export default function LequeOraculos({ className = "" }: { className?: string }
                 transform: `translate(-50%, -50%) translate(${p.x}px, ${p.y}px) rotate(${p.giro}deg) scale(${p.escala})`,
                 opacity: p.opacidade,
                 zIndex: p.plano,
-                // quem saltou não anima o deslocamento, que atravessaria a
-                // composição inteira na diagonal; anima só o acender
                 transition: parado
                   ? "none"
-                  : saltou
-                    ? `opacity ${TRAVESSIA_MS}ms ease`
-                    : `transform ${TRAVESSIA_MS}ms cubic-bezier(0.32, 0.72, 0.24, 1), opacity ${TRAVESSIA_MS}ms ease`,
+                  : `transform ${TRAVESSIA_MS}ms cubic-bezier(0.32, 0.72, 0.24, 1), opacity ${TRAVESSIA_MS}ms ease`,
                 willChange: "transform, opacity",
               }}
             >

@@ -671,7 +671,7 @@ function ConviteDePergunta({
       href="/"
       onClick={() => guardarPerguntaEscolhida(mostrada)}
       aria={mostrada}
-      className={`group p-6 sm:p-7 lg:p-8 flex flex-col ${className}`}
+      className={`group p-6 sm:p-7 lg:p-8 flex flex-col overflow-hidden ${className}`}
     >
       <Rotulo>{rotulo}</Rotulo>
       {/* HIERARQUIA DO BLOCO, em três grupos e não em cinco linhas soltas.
@@ -728,7 +728,11 @@ function ConviteDePergunta({
           Uma síntese." e o leque são a mesma afirmação, uma escrita e outra
           desenhada. Com respiro igual ao dos outros blocos, liam como coisas
           separadas. */}
-      <span className="block mt-3">
+      {/* A margem negativa tira o padding da placa: o leque mede a largura
+          inteira dela, vaza um pouco pelas duas bordas e é cortado pelo
+          contorno do card (`overflow-hidden` acima), sem tocar o resto da
+          página. Embaixo ele desce 16px para sentar mais perto da base. */}
+      <span className="block mt-3 -mx-6 sm:-mx-7 lg:-mx-8 -mb-4">
         <LequeOraculos />
       </span>
     </Modulo>
