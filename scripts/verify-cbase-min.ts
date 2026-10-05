@@ -57,17 +57,26 @@ function parteFiltro() {
     ["en", "What recurs in the material is a search.", "What recurs is a search."],
     ["es", "Lo que se repite en el material es una búsqueda.", "Lo que se repite es una búsqueda."],
     // "referência" não tem uso inocente numa síntese: o complemento NÃO inocenta.
-    // O que o filtro garante é que o TERMO não chega ao leitor; o resíduo que o
-    // complemento deixa ("que você reuniu", "fornecidas") é o preço de só
-    // suprimir, nunca reescrever — e reescrever está fora do escopo.
-    ["referências + que", "Confiar nas referências que você reuniu.", "Confiar que você reuniu."],
-    ["referências fornecidas", "O que pesa, nas referências fornecidas, é a demora.", "O que pesa, fornecidas, é a demora."],
-    ["segundo as referências", "Há, segundo as referências, um peso antigo.", "Há, um peso antigo."],
-    ["conforme as referências", "Isso aparece conforme as referências reunidas.", "Isso aparece reunidas."],
-    ["according to en", "This recurs, according to the references, as a doubt.", "This recurs, as a doubt."],
-    ["según es", "Esto vuelve, según las referencias, como una duda.", "Esto vuelve, como una duda."],
-    // começo de frase: a maiúscula volta, não fica "há um peso"
-    ["início de frase", "Ela hesita. Segundo as referências, há um peso.", "Ela hesita. Há um peso."],
+    //
+    // E quando a locução leva consigo um modificador — a relativa de "que você
+    // reuniu", o particípio de "fornecidas" —, suprimir só a locução deixaria
+    // resíduo órfão ("Confiar que você reuniu"). Nesses casos o corte cresce até
+    // a fronteira de oração, e se essa fronteira for o fim da frase, a frase
+    // inteira sai. Nada é gerado para ocupar o lugar.
+    ["modificador dispensável", "Segundo as referências, há um peso.", "Há um peso."],
+    ["dispensável em 2ª frase", "Ela hesita. Segundo as referências, há um peso.", "Ela hesita. Há um peso."],
+    ["integrada ao predicado", "Confiar nas referências que você reuniu.", ""],
+    ["integrada, em contexto", "Ela hesita. Confiar nas referências que você reuniu. Depois segue.", "Ela hesita. Depois segue."],
+    ["particípio órfão", "A conclusão aparece nas referências fornecidas.", ""],
+    ["particípio entre vírgulas", "O que pesa, nas referências fornecidas, é a demora.", "O que pesa, é a demora."],
+    ["aposto pt", "Há, segundo as referências, um peso antigo.", "Há, um peso antigo."],
+    ["integrada en", "Trust in the references that you gathered.", ""],
+    ["particípio órfão en", "The conclusion appears in the references provided.", ""],
+    ["dispensável en", "This recurs, according to the references, as a doubt.", "This recurs, as a doubt."],
+    ["integrada es", "Confiar en las referencias que reuniste.", ""],
+    ["particípio órfão es", "La conclusión aparece en las referencias proporcionadas.", ""],
+    ["dispensável es", "Esto vuelve, según las referencias, como una duda.", "Esto vuelve, como una duda."],
+    // começo de texto: a maiúscula volta, não fica "há um peso"
     ["início do texto", "No material, há um peso antigo.", "Há um peso antigo."],
     // o complemento torna a locução legítima na família ambígua: nada é cortado
     ["complemento pt", "Um cuidado no material de trabalho.", "Um cuidado no material de trabalho."],

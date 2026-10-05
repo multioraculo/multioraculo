@@ -137,45 +137,122 @@ const escapaRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 const alternativa = (frases: string[]) => frases.map(escapaRegex).sort((a, b) => b.length - a.length).join("|")
 /** o complemento que inocenta — só vale para a família ambígua */
 const COMPLEMENTO = `(?!\\s+(?:de|do|da|dos|das|que|of|del|the)\\b)`
-const CORPO =
-  `(?:\\b(?:${alternativa(FRASES_AMBIGUAS)})\\b${COMPLEMENTO}` +
-  `|\\b(?:${alternativa(FRASES_INEQUIVOCAS)})\\b)`
 /**
  * A supressão consome o que vem DEPOIS da locução, nunca o que vem antes.
  *
  * Isso não é detalhe: no streaming o espaço anterior já saiu do servidor quando
  * a locução termina de chegar, então comer para trás deixaria espaço duplo no
  * texto do leitor. Comendo para a frente, o seam fecha sozinho —
- * "repete " + "é" — e a vírgula de um aposto ("Há, nas referências, um peso")
- * sai junto em vez de virar vírgula órfã.
+ * "repete " + "é" — e a vírgula de um aposto sai junto com ela.
  */
-const BASTIDOR_RE = new RegExp(`${CORPO}\\s*,?\\s*`, "gi")
-/**
- * No começo de frase a supressão deixaria minúscula ("Segundo as referências,
- * há um peso." → "há um peso."), então a inicial seguinte é recomposta. É a
- * mesma supressão; só devolve a maiúscula que a locução carregava.
- */
-const BASTIDOR_INICIO_RE = new RegExp(`([.!?]["”’)\\]]?\\s+)${CORPO}\\s*,?\\s*(\\p{L})`, "giu")
-const BASTIDOR_TEXTO_RE = new RegExp(`^${CORPO}\\s*,?\\s*(\\p{L})`, "iu")
+const RE_AMBIGUA = new RegExp(`\\b(?:${alternativa(FRASES_AMBIGUAS)})\\b${COMPLEMENTO}\\s*,?\\s*`, "gi")
+const RE_INEQUIVOCA = new RegExp(`\\b(?:${alternativa(FRASES_INEQUIVOCAS)})\\b\\s*,?\\s*`, "gi")
 
 /**
- * Tira as locuções de bastidor. Só suprime; a única coisa que recompõe é a
- * maiúscula de início de frase que a locução suprimida levava consigo.
+ * O QUE FICA ÓRFÃO QUANDO A LOCUÇÃO SAI.
+ *
+ * "Confiar nas referências que você reuniu" vira "Confiar que você reuniu": a
+ * oração relativa modificava o substantivo que acabou de ser removido, e sem ele
+ * não se sustenta. O mesmo com o particípio de "nas referências fornecidas".
+ *
+ * O teste é posicional e fechado: olha SÓ o que vem imediatamente depois da
+ * locução, e só para a família inequívoca — ali a locução já vai sair de
+ * qualquer jeito, então um gatilho a mais só amplia um corte que já acontece.
+ * Na família ambígua ele não roda, para "cada", "cuidado" ou "estrada" nunca
+ * serem confundidos com particípio.
+ */
+const ORFAO_RE =
+  /^(?:que|quem|onde|cujos?|cujas?|[oa]s? (?:qual|quais)|that|which|who|whose|where|[a-zà-ÿ]+(?:ad[oa]s?|id[oa]s?)|provided|given|cited|listed|gathered|supplied|attached|above|below)\b/i
+
+/** onde é seguro cortar sem partir sintagma */
+const FRONTEIRA_RE = /[,;:.!?]/
+
+type Corte = { ini: number; fim: number; frase: boolean }
+
+/** A oração que contém [ini, fim): da fronteira anterior até a próxima. */
+function oracaoEmVolta(texto: string, ini: number, fim: number): Corte {
+  let esq = 0
+  for (let i = ini - 1; i >= 0; i--) {
+    if (FRONTEIRA_RE.test(texto[i])) { esq = i + 1; break }
+  }
+  while (esq < ini && /\s/.test(texto[esq])) esq++
+  let dir = texto.length
+  let frase = true
+  for (let i = fim; i < texto.length; i++) {
+    if (FRONTEIRA_RE.test(texto[i])) {
+      dir = i + 1
+      frase = /[.!?]/.test(texto[i])
+      break
+    }
+  }
+  // O CORTE NUNCA ALCANÇA TEXTO ANTERIOR À PRÓPRIA ORAÇÃO. Levar junto a vírgula
+  // da esquerda deixaria "O que pesa, nas referências fornecidas, é a demora"
+  // mais limpo — "O que pesa é a demora" em vez de "O que pesa, é a demora" —,
+  // mas essa vírgula já teria saído do servidor quando a locução chegasse, e
+  // desenviar não existe. Vírgula sobrando é infelicidade de pontuação; texto que
+  // se contradiz no meio do streaming seria defeito.
+  while (dir < texto.length && /\s/.test(texto[dir])) dir++
+  return { ini: esq, fim: dir, frase }
+}
+
+/** Costura o que o corte deixou: pontuação dobrada e espaço solto. */
+function costura(texto: string): string {
+  return texto
+    .replace(/\s+([,;:.!?])/g, "$1")
+    .replace(/([,;:])\s*([,;:.!?])/g, "$2")
+    .replace(/[ \t]{2,}/g, " ")
+}
+
+/**
+ * Tira as locuções de bastidor.
+ *
+ * Suprime a locução; não gera texto e não substitui nada por sinônimo. Só duas
+ * coisas vão além da tesoura, e as duas existem para o leitor não receber frase
+ * quebrada: quando a locução deixaria um modificador órfão, o corte cresce até a
+ * fronteira de oração seguinte (e, se essa fronteira for fim de frase, leva a
+ * frase inteira); e a maiúscula que a locução carregava no começo da frase é
+ * devolvida à palavra que passa a abri-la.
  *
  * `inicioDeTexto` existe por causa do streaming: lá cada pedaço começa no meio
  * do texto, e tratar o começo do pedaço como começo de frase poria maiúscula
  * onde não há frase nova.
  */
 export function stripBackstage(texto: string, inicioDeTexto = true): string {
-  let t = texto
-  if (inicioDeTexto) t = t.replace(BASTIDOR_TEXTO_RE, (_m, letra: string) => letra.toUpperCase())
-  return t
-    .replace(BASTIDOR_INICIO_RE, (_m, antes: string, letra: string) => antes + letra.toUpperCase())
-    .replace(BASTIDOR_RE, "")
+  const achados: Array<Corte & { inequivoca: boolean }> = []
+  for (const [re, inequivoca] of [[RE_AMBIGUA, false], [RE_INEQUIVOCA, true]] as const) {
+    re.lastIndex = 0
+    for (const m of texto.matchAll(re)) {
+      achados.push({ ini: m.index, fim: m.index + m[0].length, frase: false, inequivoca })
+    }
+  }
+  if (!achados.length) return texto
+  achados.sort((a, b) => a.ini - b.ini)
+
+  const cortes: Corte[] = []
+  for (const a of achados) {
+    if (cortes.length && a.ini < cortes[cortes.length - 1].fim) continue // já coberto
+    const sobra = texto.slice(a.fim)
+    const corte = a.inequivoca && ORFAO_RE.test(sobra) ? oracaoEmVolta(texto, a.ini, a.fim) : a
+    cortes.push(corte)
+  }
+
+  let saida = texto
+  for (const c of [...cortes].reverse()) {
+    const antes = saida.slice(0, c.ini)
+    let depois = saida.slice(c.fim)
+    // a palavra que passa a abrir a frase recebe a maiúscula que saiu com o corte
+    const comecaFrase = antes.length === 0 ? inicioDeTexto : /[.!?]["”’)\]]?\s+$/.test(antes)
+    if (comecaFrase && depois) depois = depois[0].toUpperCase() + depois.slice(1)
+    saida = antes + depois
+  }
+  return costura(saida)
 }
 
 export function normalizeSynthesisText(raw: string): string {
+  // só aqui, com o texto inteiro na mão, uma vírgula no fim é de fato final:
+  // no meio do streaming ela ainda pode ser seguida de mais oração
   return stripBackstage(raw)
+    .replace(/,(\s*)$/, ".$1")
     .replace(MARKER_RE, "\n\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]+\n/g, "\n")
@@ -189,9 +266,10 @@ export function normalizeSynthesisText(raw: string): string {
  * locução (algumas dezenas de caracteres), então não há atraso perceptível.
  */
 export function createSynthesisFilter() {
-  let buf = ""
-  /** só o primeiro pedaço entregue começa de fato o texto */
-  let comecou = false
+  /** tudo que chegou do modelo, do começo */
+  let bruto = ""
+  /** tudo que já saiu para o navegador */
+  let enviado = ""
   /** quantos caracteres do fim ainda podem ser marcador ou locução incompletos */
   const holdBack = (s: string): number => {
     const baixo = s.toLowerCase()
@@ -209,33 +287,51 @@ export function createSynthesisFilter() {
       )
       if (pendente) { keep = n; break }
     }
-    // O PONTO FINAL FICA JUNTO. Sem isso, o fim da frase anterior já teria saído
-    // do servidor quando a locução terminasse de chegar, e a recomposição da
-    // maiúscula não teria o que olhar: "Ela hesita. Segundo as referências, há"
-    // viraria "Ela hesita. há". São um ou dois caracteres de atraso.
-    const antes = s.slice(0, s.length - keep)
-    const pontuacao = /[.!?]["”’)\]]?\s*$/.exec(antes)
-    if (pontuacao) keep += pontuacao[0].length
+    // A ORAÇÃO SAI INTEIRA OU NÃO SAI. A remoção de órfão pode começar ANTES da
+    // locução — "O que pesa, nas referências fornecidas, é a demora" perde o
+    // A ORAÇÃO SÓ É DECIDIDA DEPOIS DE FECHADA. Saber se o corte para na vírgula
+    // ou vai até o fim da frase depende da fronteira que a fecha, e devolver a
+    // maiúscula depende do ponto anterior: os dois precisam já ter chegado. Daí o
+    // hold-back ir até a última fronteira — nenhuma decisão é tomada com meia
+    // oração na mão. O atraso é de uma oração, e o servidor já segura o texto a
+    // partir de 80 caracteres de qualquer modo.
+    const ultima = s.search(/[,;:.!?][^,;:.!?]*$/)
+    keep = Math.max(keep, ultima >= 0 ? s.length - (ultima + 1) : s.length)
     return keep
+  }
+  /**
+   * O TEXTO É REFEITO DO COMEÇO A CADA PEDAÇO, e só o que ainda não saiu é
+   * devolvido.
+   *
+   * Processar pedaço isolado não funciona: a decisão de remover uma oração
+   * inteira e a de devolver a maiúscula ao início de frase dependem do que veio
+   * antes, e esse contexto já teria saído do servidor. Refazendo do começo, o
+   * resultado do streaming é, por construção, idêntico ao de uma passagem única
+   * — e os testes conferem isso pedaço a pedaço. O texto tem alguns milhares de
+   * caracteres; refazer é barato.
+   *
+   * O que já saiu nunca é retirado, e não precisa ser: o hold-back só libera
+   * orações completas, e nenhum corte alcança oração anterior à da locução.
+   */
+  const render = (fim: boolean): string => {
+    const keep = fim ? 0 : holdBack(bruto)
+    const pronto = bruto.slice(0, bruto.length - keep)
+    const texto = stripBackstage(pronto).replace(MARKER_RE, "\n\n")
+    let comum = 0
+    while (comum < texto.length && comum < enviado.length && texto[comum] === enviado[comum]) comum++
+    const delta = texto.slice(Math.max(comum, Math.min(enviado.length, texto.length)))
+    enviado = texto
+    return delta
   }
   return {
     /** parte já segura do texto, com marcadores resolvidos e bastidor fora */
     push(chunk: string): string {
-      buf += chunk
-      const keep = holdBack(buf)
-      const ready = buf.slice(0, buf.length - keep)
-      buf = buf.slice(buf.length - keep)
-      if (!ready) return ""
-      const saida = stripBackstage(ready, !comecou).replace(MARKER_RE, "\n\n")
-      comecou = true
-      return saida
+      bruto += chunk
+      return render(false)
     },
     /** o que sobrou no fim do stream */
     flush(): string {
-      const rest = stripBackstage(buf, !comecou).replace(MARKER_RE, "\n\n")
-      comecou = true
-      buf = ""
-      return rest
+      return render(true)
     },
   }
 }
