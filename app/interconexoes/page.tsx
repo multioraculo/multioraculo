@@ -6,7 +6,7 @@ import { getI18n } from "@/lib/i18n/server"
 import { formatDate } from "@/lib/i18n"
 import { diaDeHoje } from "@/lib/astro/ceu"
 import { getUserEntitlement } from "@/lib/billing/entitlement"
-import { isPaidPlan } from "@/lib/billing/plans"
+import { hasAstroPessoal } from "@/lib/billing/plans"
 
 /**
  * Interconexões: o céu de hoje encontrando o mapa da pessoa.
@@ -32,7 +32,7 @@ export default async function Interconexoes() {
   const { dict, locale } = await getI18n()
 
   const entitlement = user ? await getUserEntitlement(user.id) : null
-  const temPlano = isPaidPlan(entitlement?.plan)
+  const temPlano = hasAstroPessoal(entitlement?.plan)
 
   return (
     <ShaderBackground>

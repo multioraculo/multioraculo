@@ -240,7 +240,7 @@ export const es: Dictionary = {
     applying: "aplicativo",
     separating: "separativo",
     cuspAt: "{casa} natal empieza en {posicao}",
-    readingPaid: "La lectura escrita de tus interconexiones forma parte de los planes pagos.",
+    readingPaid: "La lectura escrita de tus interconexiones forma parte del plan Ilimitado.",
     factsYours: "Los hechos de arriba son calculados y siguen siendo tuyos.",
     none: "Hoy ningún cuerpo del cielo se acerca lo suficiente a un punto de tu carta. Pasa, y es una información.",
     cancel: "Cancelar",
@@ -429,7 +429,7 @@ export const es: Dictionary = {
       },
       {
         q: "¿Cuántas tiradas tengo en cada plan?",
-        a: "Free: 1 tirada y 1 interpretación de sueño gratuitas sin registro y, con cuenta, 1 de cada al mes.\nEsencial: 8 tiradas y 3 interpretaciones de sueños al mes, más 1 Viaje onírico.\nIlimitado: todo sin límite para uso personal.",
+        a: "Free: 1 tirada y 1 interpretación de sueño gratuitas sin registro y, con cuenta, 1 de cada al mes.\nEsencial: 8 tiradas y 3 interpretaciones de sueños al mes, más 1 Viaje onírico.\nIlimitado: todo sin límite para uso personal. Incluye también el horóscopo personal (la lectura escrita de las Interconexiones) y la sinastría.",
       },
       {
         q: "¿Qué cuenta como una tirada?",
@@ -453,7 +453,7 @@ export const es: Dictionary = {
       },
       {
         q: "¿La app guarda mis preguntas y lecturas?",
-        a: "El historial queda en tu dispositivo para que puedas revisarlo. Si activamos la sincronización en la nube, avisaremos con transparencia y opciones de control.",
+        a: "Las lecturas y los sueños que guardas quedan vinculados a tu cuenta, y así los encuentras de nuevo en cualquier dispositivo. Sin cuenta, nada se guarda. La Frase de poder queda solo en el dispositivo donde la escribiste.",
       },
       {
         q: "¿Las lecturas sustituyen el asesoramiento médico, jurídico o financiero?",
@@ -488,10 +488,28 @@ export const es: Dictionary = {
 
   subscription: {
     titleSuffix: ": Suscríbete a la claridad.",
-    subtitle: "Las decisiones correctas empiezan con respuestas precisas. Cinco oráculos convergen para ti.",
+    subtitle: "La lectura simultánea de Multioráculo: Tarot, I Ching, Runas, Caracoles y Lenormand reunidos en una sola síntesis.",
     perMonth: "/mes",
     forWhom: "Para quien:",
-    mostPopular: "Más Popular",
+    mostPopular: "Recomendado",
+    freeTitle: "Para todos, sin suscribirse",
+    freeLead: "Lo que ya está abierto, con o sin cuenta.",
+    freeItems: [
+      "La tirada colectiva del día: dos cartas para todos, con la lectura del cruce",
+      "Elige una carta: los 22 Arcanos Mayores, con el significado de cada uno",
+      "El cielo de hoy y el horóscopo de tu signo",
+      "La Imagen del inconsciente y la Frase de poder",
+      "Con cuenta: Hitos, Diario, sueños y lecturas guardadas, y el cálculo de tu mapa en Interconexiones",
+    ],
+    compareTitle: "Qué cambia en cada plan",
+    compareHead: ["Recurso", "Free", "Esencial", "Ilimitado"],
+    compareRows: [
+      { label: "Tirada completa: cinco oráculos y síntesis", free: "1 al mes", essential: "8 al mes", unlimited: "Ilimitada" },
+      { label: "Interpretación de sueños", free: "1 al mes", essential: "3 al mes", unlimited: "Ilimitada" },
+      { label: "Viaje onírico", free: "No incluido", essential: "1 al mes", unlimited: "Ilimitado" },
+      { label: "Horóscopo personal: la lectura escrita de tus Interconexiones", free: "No incluido", essential: "No incluido", unlimited: "Incluido" },
+      { label: "Sinastría: la comparación entre dos mapas", free: "No incluida", essential: "No incluida", unlimited: "Incluida" },
+    ],
     essential: {
       name: "Esencial",
       price: "R$ 9,99",
@@ -510,11 +528,13 @@ export const es: Dictionary = {
       name: "Ilimitado",
       price: "R$ 13,99",
       tagline: "Decisión a ritmo vivo.",
-      description: "Tiradas, sueños y Viaje sin límite (uso personal) para transformar símbolo en gesto, todos los días.",
+      description: "Tiradas, sueños y Viaje sin límite (uso personal), más el horóscopo personal y la sinastría, para transformar símbolo en gesto, todos los días.",
       features: [
         "Tiradas completas ilimitadas",
         "Interpretaciones de sueños ilimitadas",
         "Viaje onírico siempre que quieras",
+        "Horóscopo personal: la lectura escrita de tus Interconexiones",
+        "Sinastría: la comparación entre dos mapas",
         "Historial completo de lecturas, sueños y Diario",
       ],
       forWhom: "crea, lidera o ajusta el rumbo con frecuencia y quiere cero fricción.",
@@ -523,6 +543,7 @@ export const es: Dictionary = {
     notesTitle: "Observaciones",
     notes: [
       "Cuenta como 1 tirada cuando haces una pregunta nueva y recibes la lectura completa; reabrir la misma lectura no consume.",
+      "El horóscopo personal y la sinastría forman parte del plan Ilimitado. El cálculo de tu mapa sigue disponible con cuenta.",
       "Cancelación en cualquier momento; cobro mensual recurrente (BRL).",
       "\"Ilimitado\" sujeto a un uso personal razonable (no permite automatización/uso masivo)",
     ],

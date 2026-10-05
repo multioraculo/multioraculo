@@ -242,7 +242,7 @@ export const pt = {
     applying: "aplicativo",
     separating: "separativo",
     cuspAt: "{casa} natal começa a {posicao}",
-    readingPaid: "A leitura escrita das suas interconexões faz parte dos planos pagos.",
+    readingPaid: "A leitura escrita das suas interconexões faz parte do plano Ilimitado.",
     factsYours: "Os fatos acima são calculados e continuam seus.",
     none: "Hoje nenhum corpo do céu chega perto o bastante de um ponto do seu mapa. Acontece, e é uma informação.",
     cancel: "Cancelar",
@@ -431,7 +431,7 @@ export const pt = {
       },
       {
         q: "Quantas tiragens tenho em cada plano?",
-        a: "Free: 1 tiragem e 1 interpretação de sonho gratuitas sem cadastro e, com conta, 1 de cada por mês.\nEssencial: 8 tiragens e 3 interpretações de sonho por mês, mais 1 Jornada onírica.\nIlimitado: tudo sem limite para uso pessoal.",
+        a: "Free: 1 tiragem e 1 interpretação de sonho gratuitas sem cadastro e, com conta, 1 de cada por mês.\nEssencial: 8 tiragens e 3 interpretações de sonho por mês, mais 1 Jornada onírica.\nIlimitado: tudo sem limite para uso pessoal. Inclui também o horóscopo pessoal (a leitura escrita das Interconexões) e a sinastria.",
       },
       {
         q: "O que conta como uma tiragem?",
@@ -455,7 +455,7 @@ export const pt = {
       },
       {
         q: "O app armazena minhas perguntas e leituras?",
-        a: "O histórico fica no seu dispositivo para que você possa revisar. Se ativarmos sincronização em nuvem, avisaremos com transparência e opção de controle.",
+        a: "As leituras e os sonhos que você salva ficam vinculados à sua conta, e é por ela que você os reencontra em qualquer aparelho. Sem conta, nada fica guardado. A Frase de poder fica só no aparelho em que você a escreveu.",
       },
       {
         q: "As leituras substituem aconselhamento médico, jurídico ou financeiro?",
@@ -490,10 +490,28 @@ export const pt = {
 
   subscription: {
     titleSuffix: ": Assine clareza.",
-    subtitle: "Decisões certas começam com respostas precisas. Cinco oráculos convergem para você.",
+    subtitle: "A leitura simultânea do Multioráculo: Tarô, I Ching, Runas, Búzios e Lenormand reunidos numa só síntese.",
     perMonth: "/mês",
     forWhom: "Para quem:",
-    mostPopular: "Mais Popular",
+    mostPopular: "Recomendado",
+    freeTitle: "Para todos, sem assinar",
+    freeLead: "O que já está aberto, com ou sem conta.",
+    freeItems: [
+      "A tiragem coletiva do dia: duas cartas para todo mundo, com a leitura do cruzamento",
+      "Escolha uma carta: os 22 Arcanos Maiores, com o significado de cada um",
+      "O céu de hoje e o horóscopo do seu signo",
+      "A Imagem do inconsciente e a Frase de poder",
+      "Com conta: Marcos, Diário, sonhos e leituras salvas, e o cálculo do seu mapa nas Interconexões",
+    ],
+    compareTitle: "O que muda em cada plano",
+    compareHead: ["Recurso", "Free", "Essencial", "Ilimitado"],
+    compareRows: [
+      { label: "Tiragem completa: cinco oráculos e síntese", free: "1 por mês", essential: "8 por mês", unlimited: "Ilimitada" },
+      { label: "Interpretação de sonhos", free: "1 por mês", essential: "3 por mês", unlimited: "Ilimitada" },
+      { label: "Jornada onírica", free: "Não inclui", essential: "1 por mês", unlimited: "Ilimitada" },
+      { label: "Horóscopo pessoal: a leitura escrita das suas Interconexões", free: "Não inclui", essential: "Não inclui", unlimited: "Incluído" },
+      { label: "Sinastria: a comparação entre dois mapas", free: "Não inclui", essential: "Não inclui", unlimited: "Incluída" },
+    ],
     essential: {
       name: "Essencial",
       price: "R$ 9,99",
@@ -512,11 +530,13 @@ export const pt = {
       name: "Ilimitado",
       price: "R$ 13,99",
       tagline: "Decisão em ritmo vivo.",
-      description: "Tiragens, sonhos e Jornada sem limite (uso pessoal) para transformar símbolo em gesto, todos os dias.",
+      description: "Tiragens, sonhos e Jornada sem limite (uso pessoal), mais o horóscopo pessoal e a sinastria, para transformar símbolo em gesto, todos os dias.",
       features: [
         "Tiragens completas ilimitadas",
         "Interpretações de sonho ilimitadas",
         "Jornada onírica sempre que quiser",
+        "Horóscopo pessoal: a leitura escrita das suas Interconexões",
+        "Sinastria: a comparação entre dois mapas",
         "Histórico completo de leituras, sonhos e Diário",
       ],
       forWhom: "cria, lidera ou ajusta rota com frequência e quer fricção zero.",
@@ -525,6 +545,7 @@ export const pt = {
     notesTitle: "Observações",
     notes: [
       "Conta como 1 tiragem quando você faz uma pergunta nova e recebe a leitura completa; reabrir a mesma leitura não consome.",
+      "O horóscopo pessoal e a sinastria fazem parte do plano Ilimitado. O cálculo do seu mapa continua disponível com conta.",
       "Cancelamento a qualquer momento; cobrança mensal recorrente (BRL).",
       "\"Ilimitado\" sujeito a uso pessoal razoável (não permite automação/massa)",
     ],

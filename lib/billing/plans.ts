@@ -28,6 +28,18 @@ export function isPlan(v: unknown): v is Plan {
   return typeof v === "string" && (PLANS as string[]).includes(v)
 }
 
+/**
+ * A camada astrológica PESSOAL escrita (a leitura das Interconexões, que é o
+ * horóscopo pessoal, e a Sinastria) é do plano Ilimitado. O cálculo do mapa e a
+ * roda das Interconexões continuam abertos: o que exige plano é o texto, que é
+ * onde está o custo.
+ */
+export const ASTRO_PESSOAL_PLANS: Plan[] = ["unlimited"]
+
+export function hasAstroPessoal(v: unknown): boolean {
+  return typeof v === "string" && (ASTRO_PESSOAL_PLANS as string[]).includes(v)
+}
+
 export function isPaidPlan(v: unknown): v is Exclude<Plan, "free"> {
   return typeof v === "string" && (PAID_PLANS as string[]).includes(v)
 }

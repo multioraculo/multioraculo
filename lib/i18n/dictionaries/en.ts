@@ -240,7 +240,7 @@ export const en: Dictionary = {
     applying: "applying",
     separating: "separating",
     cuspAt: "natal {casa} begins at {posicao}",
-    readingPaid: "The written reading of your interconnections is part of the paid plans.",
+    readingPaid: "The written reading of your interconnections is part of the Unlimited plan.",
     factsYours: "The facts above are calculated and remain yours.",
     none: "Today no body in the sky comes close enough to a point in your chart. It happens, and it is information.",
     cancel: "Cancel",
@@ -429,7 +429,7 @@ export const en: Dictionary = {
       },
       {
         q: "How many readings do I get on each plan?",
-        a: "Free: 1 reading and 1 dream interpretation with no account and, with an account, 1 of each per month.\nEssential: 8 readings and 3 dream interpretations per month, plus 1 Dream Journey.\nUnlimited: everything without limit for personal use.",
+        a: "Free: 1 reading and 1 dream interpretation with no account and, with an account, 1 of each per month.\nEssential: 8 readings and 3 dream interpretations per month, plus 1 Dream Journey.\nUnlimited: everything without limit for personal use. It also includes the personal horoscope (the written reading of your Interconnections) and synastry.",
       },
       {
         q: "What counts as a reading?",
@@ -453,7 +453,7 @@ export const en: Dictionary = {
       },
       {
         q: "Does the app store my questions and readings?",
-        a: "Your history stays on your device so you can review it. If we enable cloud sync, we will let you know transparently, with control options.",
+        a: "The readings and dreams you save are tied to your account, and that is how you find them again on any device. Without an account, nothing is kept. The Power Phrase stays only on the device where you wrote it.",
       },
       {
         q: "Do the readings replace medical, legal or financial advice?",
@@ -488,10 +488,28 @@ export const en: Dictionary = {
 
   subscription: {
     titleSuffix: ": Subscribe to clarity.",
-    subtitle: "Right decisions begin with precise answers. Five oracles converge for you.",
+    subtitle: "The simultaneous reading of Multioráculo: Tarot, I Ching, Runes, Cowries and Lenormand brought together in a single synthesis.",
     perMonth: "/month",
     forWhom: "For those who:",
-    mostPopular: "Most Popular",
+    mostPopular: "Recommended",
+    freeTitle: "For everyone, no subscription",
+    freeLead: "What is already open, with or without an account.",
+    freeItems: [
+      "The collective draw of the day: two cards for everyone, with the reading of how they cross",
+      "Choose a card: the 22 Major Arcana, with the meaning of each",
+      "Today's sky and the horoscope for your sign",
+      "The Image of the Unconscious and the Power Phrase",
+      "With an account: Milestones, Journal, saved dreams and readings, and the calculation of your chart in Interconnections",
+    ],
+    compareTitle: "What changes in each plan",
+    compareHead: ["Feature", "Free", "Essential", "Unlimited"],
+    compareRows: [
+      { label: "Complete reading: five oracles and synthesis", free: "1 per month", essential: "8 per month", unlimited: "Unlimited" },
+      { label: "Dream interpretation", free: "1 per month", essential: "3 per month", unlimited: "Unlimited" },
+      { label: "Dream Journey", free: "Not included", essential: "1 per month", unlimited: "Unlimited" },
+      { label: "Personal horoscope: the written reading of your Interconnections", free: "Not included", essential: "Not included", unlimited: "Included" },
+      { label: "Synastry: the comparison between two charts", free: "Not included", essential: "Not included", unlimited: "Included" },
+    ],
     essential: {
       name: "Essential",
       price: "R$ 9.99",
@@ -510,11 +528,13 @@ export const en: Dictionary = {
       name: "Unlimited",
       price: "R$ 13.99",
       tagline: "Decisions at a living pace.",
-      description: "Unlimited readings, dreams and Journey (personal use) to turn symbol into gesture, every day.",
+      description: "Unlimited readings, dreams and Journey (personal use), plus the personal horoscope and synastry, to turn symbol into gesture, every day.",
       features: [
         "Unlimited complete readings",
         "Unlimited dream interpretations",
         "Dream Journey whenever you want",
+        "Personal horoscope: the written reading of your Interconnections",
+        "Synastry: the comparison between two charts",
         "Full history of readings, dreams and Journal",
       ],
       forWhom: "create, lead or adjust course often and want zero friction.",
@@ -523,6 +543,7 @@ export const en: Dictionary = {
     notesTitle: "Notes",
     notes: [
       "It counts as 1 reading when you ask a new question and receive the complete reading; reopening the same reading does not use one.",
+      "The personal horoscope and synastry are part of the Unlimited plan. The calculation of your chart remains available with an account.",
       "Cancel at any time; recurring monthly billing (BRL).",
       "\"Unlimited\" is subject to reasonable personal use (no automation/mass use).",
     ],

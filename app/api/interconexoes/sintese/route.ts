@@ -6,7 +6,7 @@ import { mapaNatal, type DadosNascimento } from "@/lib/astro/mapa"
 import { interconexoesDoDia } from "@/lib/astro/interconexoes"
 import { hashDoMapa, sinteseDoDia } from "@/lib/astro/interconexoes-server"
 import { getUserEntitlement } from "@/lib/billing/entitlement"
-import { isPaidPlan } from "@/lib/billing/plans"
+import { hasAstroPessoal } from "@/lib/billing/plans"
 import { recordAiUsage } from "@/lib/ai/usage"
 import { getLocale } from "@/lib/i18n/server"
 
@@ -44,7 +44,7 @@ export async function POST() {
   if (!user) return NextResponse.json({ error: "nao_autenticado" }, { status: 401 })
 
   const entitlement = await getUserEntitlement(user.id)
-  if (!isPaidPlan(entitlement.plan)) {
+  if (!hasAstroPessoal(entitlement.plan)) {
     // sai daqui sem ter tocado na OpenAI
     return NextResponse.json({ error: "plano_necessario", plan: entitlement.plan }, { status: 402 })
   }

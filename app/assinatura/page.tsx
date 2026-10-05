@@ -106,23 +106,31 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
     ok: "border-green-300/40 bg-green-400/10 text-green-100",
   }
 
+  const negativo = /^(Não inclui|Not included|No incluid[oa])$/
+  const colunas = [
+    { chave: "free" as const, plano: "free" as Plan },
+    { chave: "essential" as const, plano: "essential" as Plan },
+    { chave: "unlimited" as const, plano: "unlimited" as Plan },
+  ]
+  const GRADE = "md:grid md:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-x-6"
+
   return (
     <ShaderBackground>
       <Header initialUser={user} />
 
-      <div className="relative z-10 pt-24 px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="max-w-lg mb-8">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl md:leading-tight tracking-tight font-light text-white mb-4">
-              <span className="font-medium italic instrument">{dict.common.appName}</span>{t.titleSuffix}
+      <div className="relative z-10 pt-16 sm:pt-24 lg:pt-12 pb-24">
+        <div className="max-w-xl lg:max-w-6xl mx-auto px-5 sm:px-8">
+          <header className="mb-9 sm:mb-11">
+            <h1 className="text-white text-[34px] sm:text-[42px] lg:text-[46px] leading-tight tracking-tight font-light">
+              <span className="italic instrument">{dict.common.appName}</span>
+              {t.titleSuffix}
             </h1>
-
-            <p className="text-base sm:text-lg font-light text-white/70 leading-relaxed">{t.subtitle}</p>
-          </div>
+            <p className="text-white/65 text-[16px] sm:text-[17px] font-light leading-relaxed mt-3 max-w-2xl">{t.subtitle}</p>
+          </header>
 
           {/* Estado do usuário */}
           {user && (
-            <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div className="bento p-5 sm:p-6 mb-6 flex flex-wrap items-center gap-x-8 gap-y-3 max-w-3xl">
               <div>
                 <p className="text-white/50 text-xs">{b.currentPlan}</p>
                 <p className="text-white text-lg font-light">{planName(ent.plan)}</p>
@@ -138,22 +146,15 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
             </div>
           )}
 
-          {/* Regra do plano Free, visível para todos */}
-          {!entitledPaid && (
-            <p className="text-white/55 text-sm max-w-lg mb-8">
-              <span className="text-white/80">{b.planNames.free}:</span> {b.freeDescription}
-            </p>
-          )}
-
           {banner && (
-            <div className={`backdrop-blur-md border rounded-2xl p-5 mb-8 text-sm leading-relaxed ${toneClass[banner.tone]}`} role="status">
+            <div className={`backdrop-blur-md border rounded-2xl p-5 mb-8 text-sm leading-relaxed max-w-3xl ${toneClass[banner.tone]}`} role="status">
               {banner.text}
             </div>
           )}
 
           {/* Leitura pendente: volta à mesma tiragem quando o plano liberar */}
           {pendingOwned && pendingSeed && (
-            <div className="backdrop-blur-md border border-white/20 bg-white/10 rounded-2xl p-5 mb-8 flex flex-wrap items-center justify-between gap-3" role="status">
+            <div className="backdrop-blur-md border border-white/20 bg-white/10 rounded-2xl p-5 mb-8 flex flex-wrap items-center justify-between gap-3 max-w-3xl" role="status">
               <p className="text-white/85 text-sm">{pendingUnlockable ? dict.paywall.unlockedNote : dict.paywall.pendingOnPlans}</p>
               {pendingUnlockable && (
                 <Link
@@ -166,83 +167,141 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Essencial Plan */}
-            <div className={`backdrop-blur-md bg-white/10 border rounded-2xl p-8 hover:bg-white/15 transition-all duration-300 relative ${ent.plan === "essential" ? "border-white/40" : "border-white/20"}`}>
-              {ent.plan === "essential" && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="backdrop-blur-md bg-white/20 border border-white/30 text-white text-xs px-3 py-1 rounded-full font-medium">
+          {/* ── CAPÍTULO 1 · O que é de todos ─────────────────────────────────
+              O que já está aberto, sem assinar. Vem primeiro porque é o que a
+              pessoa já tem, e porque deixa claro que o plano pago é uma camada
+              a mais, e não o ingresso. Sem caixa: o espaço e o fio fazem o
+              trabalho, como na Home. */}
+          <section aria-label={t.freeTitle}>
+            <Capitulo titulo={t.freeTitle} />
+            <p className="text-white/55 text-[15px] font-light mb-5 max-w-xl">{t.freeLead}</p>
+            <ul className="grid gap-x-10 gap-y-3 sm:grid-cols-2 max-w-4xl">
+              {t.freeItems.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-white/80 text-[15px] font-light leading-relaxed">
+                  <span className="text-white/40 mt-[3px]" aria-hidden="true">✓</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            {/* Regra do plano Free, visível para quem não assina */}
+            {!entitledPaid && (
+              <p className="text-white/45 text-[14px] font-light mt-6 max-w-2xl">
+                <span className="text-white/70">{b.planNames.free}:</span> {b.freeDescription}
+              </p>
+            )}
+          </section>
+
+          {/* ── CAPÍTULO 2 · O que muda em cada plano ─────────────────────── */}
+          <section aria-label={t.compareTitle} className="mt-14 sm:mt-16">
+            <Capitulo titulo={t.compareTitle} />
+            <div className="bento p-5 sm:p-7">
+              <div className={`hidden ${GRADE} pb-3 border-b border-white/10`}>
+                {t.compareHead.map((h, i) => (
+                  <p
+                    key={h}
+                    className={`text-[12px] uppercase tracking-[0.18em] font-light ${i > 0 && colunas[i - 1].plano === ent.plan && user ? "text-white/80" : "text-white/40"}`}
+                  >
+                    {h}
+                  </p>
+                ))}
+              </div>
+              {t.compareRows.map((r) => (
+                <div key={r.label} className={`py-4 border-b border-white/[0.07] last:border-0 last:pb-0 ${GRADE} md:items-baseline`}>
+                  <p className="text-white/85 text-[15px] font-light leading-snug">{r.label}</p>
+                  {/* celular: os três valores lado a lado, cada um com o nome do plano */}
+                  <div className="grid grid-cols-3 gap-3 mt-2.5 md:hidden">
+                    {colunas.map((c, i) => (
+                      <div key={c.chave}>
+                        <p className="text-white/35 text-[11px] uppercase tracking-[0.14em]">{t.compareHead[i + 1]}</p>
+                        <p className={`text-[13px] font-light mt-0.5 ${negativo.test(r[c.chave]) ? "text-white/35" : "text-white/85"}`}>{r[c.chave]}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {colunas.map((c) => (
+                    <p
+                      key={c.chave}
+                      className={`hidden md:block text-[14px] font-light ${negativo.test(r[c.chave]) ? "text-white/30" : "text-white/85"}`}
+                    >
+                      {r[c.chave]}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ── CAPÍTULO 3 · Os planos ────────────────────────────────────── */}
+          <section aria-label={planName("unlimited")} className="mt-14 sm:mt-16">
+            <Capitulo titulo={`${planName("essential")} · ${planName("unlimited")}`} />
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* Essencial */}
+              <div className={`bento p-7 sm:p-8 relative ${ent.plan === "essential" ? "ring-1 ring-white/35" : ""}`}>
+                {ent.plan === "essential" && (
+                  <span className="!absolute -top-3 left-7 bg-white/20 border border-white/30 text-white text-xs px-3 py-1 rounded-full font-medium backdrop-blur-md">
                     {b.currentPlan}
                   </span>
-                </div>
-              )}
-              <div className="mb-6">
+                )}
                 <h2 className="text-xl font-light text-white mb-2">{t.essential.name}</h2>
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="text-5xl font-light text-white">{t.essential.price}</span>
                   <span className="text-white/60">{t.perMonth}</span>
                 </div>
-                <p className="text-white/80 font-medium mb-4">{t.essential.tagline}</p>
-                <p className="text-white/70 text-base">{t.essential.description}</p>
+                <p className="text-white/85 font-medium mb-3">{t.essential.tagline}</p>
+                <p className="text-white/65 text-[15px] leading-relaxed mb-6">{t.essential.description}</p>
+
+                <ul className="space-y-3 mb-7">
+                  {t.essential.features.map((feat) => (
+                    <li key={feat} className="flex items-start gap-3 text-white/80 text-sm">
+                      <span className="text-green-400/80 mt-0.5" aria-hidden="true">✓</span>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mb-6">
+                  <p className="text-white/50 text-xs mb-1.5">{t.forWhom}</p>
+                  <p className="text-white/75 text-sm">{t.essential.forWhom}</p>
+                </div>
+
+                <SubscriptionActions plan="essential" {...actionFor("essential")} />
               </div>
 
-              <ul className="space-y-3 mb-8">
-                {t.essential.features.map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-white/80 text-sm">
-                    <span className="text-green-400 mt-1">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mb-6">
-                <p className="text-white/60 text-xs mb-2">{t.forWhom}</p>
-                <p className="text-white/80 text-sm">{t.essential.forWhom}</p>
-              </div>
-
-              <SubscriptionActions plan="essential" {...actionFor("essential")} />
-            </div>
-
-            {/* Ilimitado Plan */}
-            <div className={`backdrop-blur-md bg-white/15 border rounded-2xl p-8 hover:bg-white/20 transition-all duration-300 relative ${ent.plan === "unlimited" ? "border-white/50" : "border-white/30"}`}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="backdrop-blur-md bg-gradient-to-r from-purple-400/80 to-pink-400/80 border border-white/20 text-white text-xs px-3 py-1 rounded-full font-medium">
+              {/* Ilimitado */}
+              <div className={`bento bento-forte p-7 sm:p-8 relative ${ent.plan === "unlimited" ? "ring-1 ring-white/45" : ""}`}>
+                <span className="!absolute -top-3 left-7 bg-white/20 border border-white/30 text-white text-xs px-3 py-1 rounded-full font-medium backdrop-blur-md">
                   {ent.plan === "unlimited" ? b.currentPlan : t.mostPopular}
                 </span>
-              </div>
-
-              <div className="mb-6">
                 <h2 className="text-xl font-light text-white mb-2">{t.unlimited.name}</h2>
                 <div className="flex items-baseline gap-2 mb-4">
                   <span className="text-5xl font-light text-white">{t.unlimited.price}</span>
                   <span className="text-white/60">{t.perMonth}</span>
                 </div>
-                <p className="text-white/80 font-medium mb-4">{t.unlimited.tagline}</p>
-                <p className="text-white/70 text-base">{t.unlimited.description}</p>
+                <p className="text-white/90 font-medium mb-3">{t.unlimited.tagline}</p>
+                <p className="text-white/70 text-[15px] leading-relaxed mb-6">{t.unlimited.description}</p>
+
+                <ul className="space-y-3 mb-7">
+                  {t.unlimited.features.map((feat) => (
+                    <li key={feat} className="flex items-start gap-3 text-white/85 text-sm">
+                      <span className="text-green-400/80 mt-0.5" aria-hidden="true">✓</span>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mb-6">
+                  <p className="text-white/50 text-xs mb-1.5">{t.forWhom}</p>
+                  <p className="text-white/80 text-sm">{t.unlimited.forWhom}</p>
+                </div>
+
+                <SubscriptionActions plan="unlimited" highlighted {...actionFor("unlimited")} />
               </div>
-
-              <ul className="space-y-3 mb-8">
-                {t.unlimited.features.map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-white/80 text-sm">
-                    <span className="text-green-400 mt-1">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mb-6">
-                <p className="text-white/60 text-xs mb-2">{t.forWhom}</p>
-                <p className="text-white/80 text-sm">{t.unlimited.forWhom}</p>
-              </div>
-
-              <SubscriptionActions plan="unlimited" highlighted {...actionFor("unlimited")} />
             </div>
-          </div>
+          </section>
 
-          {/* Terms */}
-          <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-xl p-6 mb-16">
-            <h3 className="text-white font-medium mb-4">{t.notesTitle}</h3>
-            <ul className="space-y-2 text-white/70 text-sm">
+          {/* Observações */}
+          <div className="mt-12 sm:mt-14 max-w-3xl">
+            <h3 className="text-white/70 text-sm font-medium mb-3">{t.notesTitle}</h3>
+            <ul className="space-y-2 text-white/55 text-sm font-light leading-relaxed">
               {t.notes.map((n) => (
                 <li key={n}>• {n}</li>
               ))}
@@ -251,5 +310,15 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: S
         </div>
       </div>
     </ShaderBackground>
+  )
+}
+
+/** O microtítulo de um capítulo da página: o mesmo da Home (rótulo + fio até a borda). */
+function Capitulo({ titulo }: { titulo: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-5">
+      <p className="shrink-0 text-white/50 text-[12px] uppercase tracking-[0.22em] font-light">{titulo}</p>
+      <div className="h-px flex-1 bg-white/[0.12]" aria-hidden="true" />
+    </div>
   )
 }
