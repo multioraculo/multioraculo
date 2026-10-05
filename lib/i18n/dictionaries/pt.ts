@@ -96,6 +96,7 @@ export const pt = {
       "Se eu tivesse que guardar uma frase de hoje, seria",
     ],
     today: "Hoje",
+    chapterYourDay: "Seu dia",
     forYou: "Para você",
     yourRecord: "Seu registro",
     powerTitle: "Frase de poder",

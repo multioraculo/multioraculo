@@ -94,6 +94,7 @@ export const es: Dictionary = {
       "Si tuviera que guardar una frase de hoy, sería",
     ],
     today: "Hoy",
+    chapterYourDay: "Tu día",
     forYou: "Para ti",
     yourRecord: "Tu registro",
     powerTitle: "Frase de poder",

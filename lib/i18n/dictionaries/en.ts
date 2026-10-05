@@ -94,6 +94,7 @@ export const en: Dictionary = {
       "If I had to keep one sentence from today, it would be",
     ],
     today: "Today",
+    chapterYourDay: "Your day",
     forYou: "For you",
     yourRecord: "Your record",
     powerTitle: "Power phrase",

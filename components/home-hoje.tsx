@@ -8,9 +8,15 @@
  * assunto tem a sua placa, e o TAMANHO da placa é que informa o peso: dois
  * módulos dominam, dois apoiam, o resto é microplaca.
  *
- * NÃO É UMA GRADE DE CARTÕES IGUAIS. As larguras são 4, 5 e 3 de doze na
- * primeira faixa, 7 e 5 na segunda, 6 e quatro micros na terceira. A
- * assimetria é o que faz o olho encontrar o protagonista sem ler nada.
+ * DOIS CAPÍTULOS, numa grade-mãe de doze colunas: HOJE, em duas fileiras que
+ * repetem a divisão 7/5 (tiragem coletiva e pessoal; céu de hoje e imagem do
+ * inconsciente), e SEU DIA (marcos 5, frase 3, registro 4, numa faixa só, sem
+ * placas), que fecha a página. Quem marca o capítulo é o microtítulo com seu
+ * fio, o alinhamento e o ritmo; as tiragens (forte), o céu e a imagem
+ * continuam em placa.
+ *
+ * O texto abaixo é o do deck original, e a regra de peso continua valendo:
+ * o TAMANHO e a matéria da placa informam o que domina.
  *
  * A ORDEM das camadas continua sendo o argumento do produto:
  *
@@ -126,6 +132,27 @@ function Rotulo({ children }: { children: ReactNode }) {
  * no hover a borda acende e ela sobe um pixel. Nada além disso — os módulos
  * existem para organizar, não para chamar atenção uns dos outros.
  */
+/**
+ * O microtítulo de um capítulo (HOJE e SEU DIA).
+ *
+ * Os três capítulos são percebidos por alinhamento, ritmo e repetição, e não
+ * por caixas externas: um rótulo no mesmo eixo esquerdo, um fio fino que corre
+ * até a borda direita da grade, e o mesmo espaço antes e depois, três vezes. O
+ * rótulo é um grau mais forte que o dos módulos (que continua em 25%), para a
+ * hierarquia ter dois níveis legíveis: capítulo e assunto.
+ */
+function Capitulo({ titulo, complemento }: { titulo: string; complemento?: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-4 sm:mb-5">
+      <p className="shrink-0 text-white/50 text-[12px] uppercase tracking-[0.22em] font-light">
+        {titulo}
+        {complemento && <span className="text-white/35"> · {complemento}</span>}
+      </p>
+      <div className="h-px flex-1 bg-white/[0.12]" aria-hidden="true" />
+    </div>
+  )
+}
+
 function Modulo({
   children,
   className = "",
@@ -348,19 +375,19 @@ export default function HomeHoje({
           como primeira placa ela virava a prioridade da Home. */}
       <h1 className="text-white instrument italic text-[34px] sm:text-[42px] lg:text-[46px] leading-none">Multioráculo</h1>
       <p className="text-white/60 text-[16px] sm:text-[15.5px] font-light mt-3">{t.brandSubtitle}</p>
-      <p className="text-white/30 text-[12px] uppercase tracking-[0.22em] font-light mt-5">
-        {t.today}
-        {data && <span className="text-white/25"> · {data}</span>}
-      </p>
+      {/* A data deixou de ser uma terceira linha sob o título: virou o rótulo do
+          capítulo HOJE, logo acima das tiragens. Mesmas palavras, outro lugar, e
+          a experiência começa mais cedo. */}
+      <div className="h-6 sm:h-8 lg:h-7" />
 
-      <div className="h-8 sm:h-10" />
-
-      <div className="space-y-4 sm:space-y-5">
+      <div>
         {/* ── FAIXA A · o dia pergunta ─────────────────────────────────────
             A tiragem do dia é uma consulta reduzida: duas cartas, para todo
             mundo, já pronta. A da direita é a inteira: a sua pergunta, cinco
             oráculos, uma síntese. Lado a lado, uma explica a outra, e é por isso
             que a chamada para consultar mora só aqui. */}
+        <section aria-label={t.today}>
+        <Capitulo titulo={t.today} complemento={data} />
         <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
           <Modulo forte className="p-6 sm:p-7 lg:p-8 lg:col-span-7">
             <Rotulo>{t.drawCollective}</Rotulo>
@@ -414,9 +441,9 @@ export default function HomeHoje({
               className="lg:col-span-5"
             />
           ) : (
-            <Modulo forte className="p-6 sm:p-7 lg:col-span-5">
+            <Modulo forte className="p-6 sm:p-7 lg:p-8 lg:col-span-5">
               <Rotulo>{t.drawPersonal}</Rotulo>
-              <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-2.5">
+              <h2 className="text-white/95 instrument italic text-[23px] sm:text-[25px] leading-snug mt-2.5">
                 {t.andYouToday}
               </h2>
               <LinhasCarregando linhas={2} className="mt-6" />
@@ -424,53 +451,11 @@ export default function HomeHoje({
           )}
         </div>
 
-        {/* ── FAIXA B · o que é seu ────────────────────────────────────────
-            Metas, frase e diário: as três coisas da Home que a pessoa escreve,
-            e não recebe. É a faixa do acompanhamento, e por isso vem antes do
-            céu: a evolução é o que se volta para ver. */}
-        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
-          <Modulo className="p-6 sm:p-7 lg:col-span-5">
-            <MarcosHome logado={Boolean(initialUser)} />
-          </Modulo>
-
-          <Modulo className="p-5 sm:p-6 lg:col-span-3">
-            <FraseDePoder />
-          </Modulo>
-
-          <Modulo className="p-6 sm:p-7 lg:col-span-4">
-            <Rotulo>{t.yourRecord}</Rotulo>
-            <div className="mt-4">
-              {registro?.hoje ? (
-                <>
-                  <p className="text-white/40 text-xs font-light">{t.diaryToday}</p>
-                  <p className="text-white/75 text-[15px] leading-relaxed font-light mt-2 line-clamp-2">{registro.titulo}</p>
-                  <Chamada href="/diario">{t.diaryContinue}</Chamada>
-                </>
-              ) : (
-                <>
-                  {/* Uma abertura, não uma pergunta. "O que ficou de hoje?"
-                      devolve à pessoa o trabalho de começar, e começar é a
-                      parte difícil de escrever. A frase abaixo é só um convite
-                      editorial: NADA é gravado por vê-la, e ela chega ao Diário
-                      como rascunho, para ser apagada em uma tecla se não
-                      servir. Muda com o dia, igual para todos. */}
-                  <p className="text-white/70 instrument italic text-[17px] sm:text-[18px] leading-snug">
-                    {aberturaDoDia(ceu.dia, dict.home.journalOpenings)}
-                  </p>
-                  <Chamada href={`/diario?abertura=${indiceDaAbertura(ceu.dia, dict.home.journalOpenings.length)}`}>
-                    {t.journalContinue}
-                  </Chamada>
-                </>
-              )}
-            </div>
-          </Modulo>
-        </div>
-
-        {/* ── FAIXA C · o céu de hoje ──────────────────────────────────────
-            A camada astrológica inteira, e ela fecha a página: é contexto do
-            dia, não a identidade dele. */}
-        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
-          <Modulo className="p-6 sm:p-7 lg:col-span-7">
+        {/* SEGUNDA FILEIRA DE HOJE · o céu e a imagem do dia. O céu de hoje (com a
+            Lua e o horóscopo) e o estudo do dia também são "de hoje", e a divisão
+            7/5 da primeira fileira se repete aqui, no mesmo eixo. */}
+        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12 mt-4 sm:mt-5">
+          <Modulo className="p-6 sm:p-7 lg:p-8 lg:col-span-7">
             <CeuDeHoje
               sintese={ceuDoDia}
               ceu={ceu}
@@ -484,10 +469,61 @@ export default function HomeHoje({
               para todos, com a fonte à vista. As duas chamadas que moravam aqui
               (horóscopo e Interconexões) foram para "O céu de hoje", que é a
               camada a que elas pertencem. */}
-          <Modulo className="p-6 sm:p-7 lg:col-span-5">
+          <Modulo className="p-6 sm:p-7 lg:p-8 lg:col-span-5">
             <ImagemDoInconsciente dia={ceu.dia} />
           </Modulo>
         </div>
+        </section>
+
+        {/* ── CAPÍTULO SEU DIA · o que é seu ───────────────────────────────
+            Metas, frase e diário: as três coisas da Home que a pessoa escreve,
+            e não recebe. Vem antes do céu porque a evolução é o que se volta
+            para ver. Eram
+            três placas independentes e liam como três widgets. Agora são um
+            território só: uma faixa contínua, sem borda e sem desfoque, em que o
+            espaço e os fios verticais fazem o trabalho das caixas. As três
+            colunas começam no mesmo topo (o rótulo de cada uma na mesma linha) e
+            seguem a divisão 5/3/4 da grade-mãe. */}
+        <section aria-label={t.chapterYourDay} className="mt-12 sm:mt-14">
+          <Capitulo titulo={t.chapterYourDay} />
+          <div className="rounded-[20px] bg-[rgba(24,9,56,0.10)] lg:grid lg:grid-cols-12 divide-y divide-white/[0.07] lg:divide-y-0">
+            <div className="px-6 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8 lg:col-span-5">
+              <MarcosHome logado={Boolean(initialUser)} />
+            </div>
+
+            <div className="px-6 py-6 sm:px-7 sm:py-7 lg:px-7 lg:py-8 lg:col-span-3 lg:border-l lg:border-white/[0.07]">
+              <FraseDePoder />
+            </div>
+
+            <div className="px-6 py-6 sm:px-7 sm:py-7 lg:px-8 lg:py-8 lg:col-span-4 lg:border-l lg:border-white/[0.07]">
+              <Rotulo>{t.yourRecord}</Rotulo>
+              <div className="mt-4">
+                {registro?.hoje ? (
+                  <>
+                    <p className="text-white/40 text-xs font-light">{t.diaryToday}</p>
+                    <p className="text-white/75 text-[15px] leading-relaxed font-light mt-2 line-clamp-2">{registro.titulo}</p>
+                    <Chamada href="/diario">{t.diaryContinue}</Chamada>
+                  </>
+                ) : (
+                  <>
+                    {/* Uma abertura, não uma pergunta. "O que ficou de hoje?"
+                        devolve à pessoa o trabalho de começar, e começar é a
+                        parte difícil de escrever. A frase abaixo é só um convite
+                        editorial: NADA é gravado por vê-la, e ela chega ao Diário
+                        como rascunho, para ser apagada em uma tecla se não
+                        servir. Muda com o dia, igual para todos. */}
+                    <p className="text-white/70 instrument italic text-[17px] sm:text-[18px] leading-snug">
+                      {aberturaDoDia(ceu.dia, dict.home.journalOpenings)}
+                    </p>
+                    <Chamada href={`/diario?abertura=${indiceDaAbertura(ceu.dia, dict.home.journalOpenings.length)}`}>
+                      {t.journalContinue}
+                    </Chamada>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
@@ -635,7 +671,7 @@ function ConviteDePergunta({
       href="/"
       onClick={() => guardarPerguntaEscolhida(mostrada)}
       aria={mostrada}
-      className={`group p-6 sm:p-7 flex flex-col justify-center ${className}`}
+      className={`group p-6 sm:p-7 lg:p-8 flex flex-col ${className}`}
     >
       <Rotulo>{rotulo}</Rotulo>
       {/* HIERARQUIA DO BLOCO, em três grupos e não em cinco linhas soltas.
@@ -643,7 +679,7 @@ function ConviteDePergunta({
           [a frase + o leque]. O que amarra cada grupo é a distância: curta por
           dentro, larga por fora. Antes os cinco respiros eram quase iguais e o
           leque parecia um anexo no rodapé do card. */}
-      <h2 className="text-white/95 instrument italic text-[21px] sm:text-[23px] leading-snug mt-3 max-w-[22ch]">{convite}</h2>
+      <h2 className="text-white/95 instrument italic text-[23px] sm:text-[25px] leading-snug mt-2.5 max-w-[22ch]">{convite}</h2>
 
       {/* O CAMPO. A pergunta voltou a ter lugar próprio dentro da placa: barra
           à esquerda, fundo mais fundo e altura de toque. Sem isso ela virava
@@ -681,7 +717,9 @@ function ConviteDePergunta({
       {/* a largura máxima só a partir de `sm`: no celular o card já é estreito
           e o limite extra quebrava "Uma pergunta. Cinco oráculos. Uma síntese."
           deixando "síntese." sozinha na segunda linha */}
-      <span className="block text-white/55 text-[14px] leading-relaxed font-light mt-7 sm:max-w-[32ch]">{explica}</span>
+      {/* o par frase + leque desce até a base da placa (mt-auto): assim a pessoal
+          termina na mesma linha da coletiva em vez de flutuar no meio */}
+      <span className="block text-white/55 text-[14px] leading-relaxed font-light mt-7 lg:mt-auto lg:pt-7 sm:max-w-[32ch]">{explica}</span>
 
       {/* e o que ele PARECE: as cinco placas num leque que gira. Ilustração,
           não tiragem — sem nome, sem posição, sem significado.
@@ -740,38 +778,45 @@ function CeuDeHoje({
           não há requisição nova nem espera — desenha no primeiro quadro, antes
           mesmo de a síntese chegar. É o único conteúdo da Home que não depende de
           rede. */}
-      <div className="flex justify-center mt-6 text-white/70">
+      {/* A MANDALA ao lado do texto a partir de lg: o céu era a placa mais alta
+          da Home e deixava a imagem do inconsciente com a metade de baixo vazia.
+          No celular nada muda: continua empilhado. */}
+      <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+      <div className="flex justify-center mt-6 lg:mt-0 text-white/70 lg:justify-start">
         <RodaDoDia ceu={ceu} tamanho={200} />
       </div>
 
-      {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-6 max-w-xl" />}
-      {sintese.estado === "pronto" && (
-        <p className="text-white/80 text-[16px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
-      )}
-      {sintese.estado === "ausente" && (
-        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
-      )}
-      {sintese.estado === "erro" && (
-        <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
-      )}
+        <div className="min-w-0">
+        {sintese.estado === "carregando" && <LinhasCarregando linhas={3} className="mt-6 max-w-xl" />}
+        {sintese.estado === "pronto" && (
+          <p className="text-white/80 text-[16px] leading-[1.75] font-light mt-4 max-w-xl">{sintese.dado}</p>
+        )}
+        {sintese.estado === "ausente" && (
+          <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.horoscopeWaiting}</p>
+        )}
+        {sintese.estado === "erro" && (
+          <p className="text-white/35 text-[15px] leading-relaxed font-light mt-4">{t.loadFailed}</p>
+        )}
 
-      {/* A LUA MORA AQUI, e em nenhum outro lugar. Ela já foi desenhada duas
-          vezes na mesma página, e depois virou a primeira placa do deck, o que
-          a transformou na prioridade da Home e apagou o Multioráculo. O lugar
-          dela é junto do céu: as duas coisas são o mesmo assunto. */}
-      <div className="mt-6 pt-6 border-t border-white/[0.06]">
-        <MoonToday variante="compacta" />
+        {/* A LUA MORA AQUI, e em nenhum outro lugar. Ela já foi desenhada duas
+            vezes na mesma página, e depois virou a primeira placa do deck, o que
+            a transformou na prioridade da Home e apagou o Multioráculo. O lugar
+            dela é junto do céu: as duas coisas são o mesmo assunto. */}
+        <div className="mt-6 pt-6 border-t border-white/[0.06]">
+          <MoonToday variante="compacta" />
+        </div>
+
+        <Chamada href="/horoscopo">{t.seeFullSky}</Chamada>
+
+        {/* As duas saídas da camada astrológica moram aqui, e não num card
+            separado: o horóscopo é este mesmo céu lido por signo, e as
+            Interconexões são este mesmo céu lido pelo mapa de quem abre. Estavam
+            num terceiro módulo que repetia o assunto com outro título. */}
+        <Chamada href="/interconexoes" destino={ti.callFields}>
+          {ti.callCta}
+        </Chamada>
+        </div>
       </div>
-
-      <Chamada href="/horoscopo">{t.seeFullSky}</Chamada>
-
-      {/* As duas saídas da camada astrológica moram aqui, e não num card
-          separado: o horóscopo é este mesmo céu lido por signo, e as
-          Interconexões são este mesmo céu lido pelo mapa de quem abre. Estavam
-          num terceiro módulo que repetia o assunto com outro título. */}
-      <Chamada href="/interconexoes" destino={ti.callFields}>
-        {ti.callCta}
-      </Chamada>
     </div>
   )
 }

@@ -67,7 +67,7 @@ export default async function HomePage() {
       {/* menos respiro no topo do celular: eram 96px entre o cabeçalho e o
           título, e eles empurravam as cartas para fora da primeira dobra. No
           desktop, onde sobra altura, a folga original fica. */}
-      <div className="relative z-10 min-h-screen pt-16 sm:pt-24 pb-24">
+      <div className="relative z-10 min-h-screen pt-16 sm:pt-24 lg:pt-8 pb-24">
         {/* A largura cresce no desktop, a medida de leitura não: cada bloco de
             texto corrido continua limitado lá dentro, e a largura extra é gasta
             em composição. No celular e no tablet nada muda. */}
