@@ -164,35 +164,37 @@ const RE_INEQUIVOCA = new RegExp(`\\b(?:${alternativa(FRASES_INEQUIVOCAS)})\\b\\
 const ORFAO_RE =
   /^(?:que|quem|onde|cujos?|cujas?|[oa]s? (?:qual|quais)|that|which|who|whose|where|[a-zà-ÿ]+(?:ad[oa]s?|id[oa]s?)|provided|given|cited|listed|gathered|supplied|attached|above|below)\b/i
 
-/** onde é seguro cortar sem partir sintagma */
-const FRONTEIRA_RE = /[,;:.!?]/
+/**
+ * INTERCALADA: a locução está entre vírgulas, e tirá-la sozinha deixaria a
+ * vírgula da esquerda regendo o nada — "O que pesa, nas referências fornecidas,
+ * é a demora" viraria "O que pesa, é a demora". Alcançar aquela vírgula não é
+ * opção: ela já saiu do servidor quando a locução chega, e desenviar não existe.
+ */
+const INTERCALADA_RE = /[,;:]\s*$/
 
-type Corte = { ini: number; fim: number; frase: boolean }
+/** fim de frase: o ponto, o que o acompanha, e o espaço depois */
+const TERMINAL_RE = /[.!?]["”’)\]]*(?=\s|\[\[P\]\]|$)/g
 
-/** A oração que contém [ini, fim): da fronteira anterior até a próxima. */
-function oracaoEmVolta(texto: string, ini: number, fim: number): Corte {
+type Corte = { ini: number; fim: number }
+
+/** A frase que contém [ini, fim): do fim da frase anterior ao fim desta. */
+function fraseEmVolta(texto: string, ini: number, fim: number): Corte {
   let esq = 0
-  for (let i = ini - 1; i >= 0; i--) {
-    if (FRONTEIRA_RE.test(texto[i])) { esq = i + 1; break }
+  TERMINAL_RE.lastIndex = 0
+  for (const m of texto.matchAll(TERMINAL_RE)) {
+    const apos = m.index + m[0].length
+    if (apos <= ini) esq = apos
+    else break
   }
   while (esq < ini && /\s/.test(texto[esq])) esq++
   let dir = texto.length
-  let frase = true
-  for (let i = fim; i < texto.length; i++) {
-    if (FRONTEIRA_RE.test(texto[i])) {
-      dir = i + 1
-      frase = /[.!?]/.test(texto[i])
-      break
-    }
+  TERMINAL_RE.lastIndex = 0
+  for (const m of texto.matchAll(TERMINAL_RE)) {
+    const apos = m.index + m[0].length
+    if (apos >= fim) { dir = apos; break }
   }
-  // O CORTE NUNCA ALCANÇA TEXTO ANTERIOR À PRÓPRIA ORAÇÃO. Levar junto a vírgula
-  // da esquerda deixaria "O que pesa, nas referências fornecidas, é a demora"
-  // mais limpo — "O que pesa é a demora" em vez de "O que pesa, é a demora" —,
-  // mas essa vírgula já teria saído do servidor quando a locução chegasse, e
-  // desenviar não existe. Vírgula sobrando é infelicidade de pontuação; texto que
-  // se contradiz no meio do streaming seria defeito.
   while (dir < texto.length && /\s/.test(texto[dir])) dir++
-  return { ini: esq, fim: dir, frase }
+  return { ini: esq, fim: dir }
 }
 
 /** Costura o que o corte deixou: pontuação dobrada e espaço solto. */
@@ -222,7 +224,7 @@ export function stripBackstage(texto: string, inicioDeTexto = true): string {
   for (const [re, inequivoca] of [[RE_AMBIGUA, false], [RE_INEQUIVOCA, true]] as const) {
     re.lastIndex = 0
     for (const m of texto.matchAll(re)) {
-      achados.push({ ini: m.index, fim: m.index + m[0].length, frase: false, inequivoca })
+      achados.push({ ini: m.index, fim: m.index + m[0].length, inequivoca })
     }
   }
   if (!achados.length) return texto
@@ -231,9 +233,12 @@ export function stripBackstage(texto: string, inicioDeTexto = true): string {
   const cortes: Corte[] = []
   for (const a of achados) {
     if (cortes.length && a.ini < cortes[cortes.length - 1].fim) continue // já coberto
-    const sobra = texto.slice(a.fim)
-    const corte = a.inequivoca && ORFAO_RE.test(sobra) ? oracaoEmVolta(texto, a.ini, a.fim) : a
-    cortes.push(corte)
+    // A REGRA, para a família inequívoca: se a locução sai sozinha e o que fica
+    // continua gramatical, sai sozinha; se sair deixaria oração órfã ou vírgula
+    // regendo o nada, a FRASE INTEIRA sai. Perder uma frase contaminada é melhor
+    // que entregar frase quebrada, e nada é reconstruído para ocupar o lugar.
+    const quebraria = ORFAO_RE.test(texto.slice(a.fim)) || INTERCALADA_RE.test(texto.slice(0, a.ini))
+    cortes.push(a.inequivoca && quebraria ? fraseEmVolta(texto, a.ini, a.fim) : a)
   }
 
   let saida = texto
@@ -289,14 +294,18 @@ export function createSynthesisFilter() {
     }
     // A ORAÇÃO SAI INTEIRA OU NÃO SAI. A remoção de órfão pode começar ANTES da
     // locução — "O que pesa, nas referências fornecidas, é a demora" perde o
-    // A ORAÇÃO SÓ É DECIDIDA DEPOIS DE FECHADA. Saber se o corte para na vírgula
-    // ou vai até o fim da frase depende da fronteira que a fecha, e devolver a
-    // maiúscula depende do ponto anterior: os dois precisam já ter chegado. Daí o
-    // hold-back ir até a última fronteira — nenhuma decisão é tomada com meia
-    // oração na mão. O atraso é de uma oração, e o servidor já segura o texto a
-    // partir de 80 caracteres de qualquer modo.
-    const ultima = s.search(/[,;:.!?][^,;:.!?]*$/)
-    keep = Math.max(keep, ultima >= 0 ? s.length - (ultima + 1) : s.length)
+    // A FRASE SAI INTEIRA OU NÃO SAI. Se a locução obrigar a remover a frase
+    // toda, o começo dela não pode já ter saído do servidor — e só dá para saber
+    // se a frase está contaminada quando ela termina. Por isso o hold-back vai
+    // até o último fim de FRASE, não de oração.
+    //
+    // Nenhuma frase escapa por chegar antes da locução: a contaminação pode estar
+    // na última palavra. O atraso é de uma frase, e o servidor já segura o texto
+    // a partir de 80 caracteres de qualquer modo.
+    let fimDeFrase = 0
+    TERMINAL_RE.lastIndex = 0
+    for (const m of s.matchAll(TERMINAL_RE)) fimDeFrase = m.index + m[0].length
+    keep = Math.max(keep, s.length - fimDeFrase)
     return keep
   }
   /**

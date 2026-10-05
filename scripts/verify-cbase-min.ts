@@ -53,29 +53,33 @@ function parteFiltro() {
     // [rótulo, entrada, saída esperada]
     ["o caso real da bateria", "O que se repete no material é um movimento de busca.", "O que se repete é um movimento de busca."],
     ["trechos", "O que aparece nos trechos é uma hesitação.", "O que aparece é uma hesitação."],
-    ["referências", "Há, nas referências, um peso antigo.", "Há, um peso antigo."],
+    ["referências intercaladas", "Há, nas referências, um peso antigo.", ""],
     ["en", "What recurs in the material is a search.", "What recurs is a search."],
     ["es", "Lo que se repite en el material es una búsqueda.", "Lo que se repite es una búsqueda."],
     // "referência" não tem uso inocente numa síntese: o complemento NÃO inocenta.
     //
-    // E quando a locução leva consigo um modificador — a relativa de "que você
-    // reuniu", o particípio de "fornecidas" —, suprimir só a locução deixaria
-    // resíduo órfão ("Confiar que você reuniu"). Nesses casos o corte cresce até
-    // a fronteira de oração, e se essa fronteira for o fim da frase, a frase
-    // inteira sai. Nada é gerado para ocupar o lugar.
-    ["modificador dispensável", "Segundo as referências, há um peso.", "Há um peso."],
+    // E a saída tem de ficar gramatical. Quando a locução sai sozinha e o que
+    // resta se sustenta, sai sozinha. Quando sair deixaria oração órfã ("Confiar
+    // que você reuniu") ou vírgula regendo o nada ("O que pesa, é a demora"), a
+    // FRASE INTEIRA sai. Perder uma frase contaminada é melhor que entregar frase
+    // quebrada, e nada é gerado para ocupar o lugar.
+    ["dispensável", "Segundo as referências, há um peso.", "Há um peso."],
     ["dispensável em 2ª frase", "Ela hesita. Segundo as referências, há um peso.", "Ela hesita. Há um peso."],
     ["integrada ao predicado", "Confiar nas referências que você reuniu.", ""],
     ["integrada, em contexto", "Ela hesita. Confiar nas referências que você reuniu. Depois segue.", "Ela hesita. Depois segue."],
     ["particípio órfão", "A conclusão aparece nas referências fornecidas.", ""],
-    ["particípio entre vírgulas", "O que pesa, nas referências fornecidas, é a demora.", "O que pesa, é a demora."],
-    ["aposto pt", "Há, segundo as referências, um peso antigo.", "Há, um peso antigo."],
+    ["intercalada", "O que pesa, nas referências fornecidas, é a demora.", ""],
+    ["intercalada, em contexto", "Isso pesa. O que pesa, nas referências fornecidas, é a demora. Depois melhora.", "Isso pesa. Depois melhora."],
+    ["aposto", "Há, segundo as referências, um peso antigo.", ""],
+    ["aposto, em contexto", "Primeiro isto. Há, segundo as referências, um peso antigo. E depois aquilo.", "Primeiro isto. E depois aquilo."],
     ["integrada en", "Trust in the references that you gathered.", ""],
     ["particípio órfão en", "The conclusion appears in the references provided.", ""],
-    ["dispensável en", "This recurs, according to the references, as a doubt.", "This recurs, as a doubt."],
+    ["intercalada en", "This recurs, according to the references, as a doubt.", ""],
+    ["intercalada en, em contexto", "He waits. This recurs, according to the references, as a doubt. Then it fades.", "He waits. Then it fades."],
     ["integrada es", "Confiar en las referencias que reuniste.", ""],
+    ["integrada es, em contexto", "Ella duda. Confiar en las referencias que reuniste. Luego sigue.", "Ella duda. Luego sigue."],
     ["particípio órfão es", "La conclusión aparece en las referencias proporcionadas.", ""],
-    ["dispensável es", "Esto vuelve, según las referencias, como una duda.", "Esto vuelve, como una duda."],
+    ["intercalada es", "Esto vuelve, según las referencias, como una duda.", ""],
     // começo de texto: a maiúscula volta, não fica "há um peso"
     ["início do texto", "No material, há um peso antigo.", "Há um peso antigo."],
     // o complemento torna a locução legítima na família ambígua: nada é cortado
