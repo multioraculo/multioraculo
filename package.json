@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas",
+    "prebuild": "npm run verify:synthesis && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
@@ -16,7 +16,8 @@
     "verify:ceu": "node --import ./scripts/ts-register.mjs scripts/verify-ceu-dia.ts",
     "verify:interconexoes": "node --import ./scripts/ts-register.mjs scripts/verify-interconexoes.ts",
     "verify:simbolos": "node --import ./scripts/ts-register.mjs scripts/verify-simbolos.ts",
-    "verify:tiragem-cartas": "node --import ./scripts/ts-register.mjs scripts/verify-tiragem-dia-cartas.ts"
+    "verify:tiragem-cartas": "node --import ./scripts/ts-register.mjs scripts/verify-tiragem-dia-cartas.ts",
+    "verify:arcanos": "node --import ./scripts/ts-register.mjs scripts/verify-arcanos.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

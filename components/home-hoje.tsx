@@ -69,6 +69,7 @@ import { TarotCapsule } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import LequeOraculos from "@/components/leque-oraculos"
 import ImagemDoInconsciente from "@/components/imagem-do-inconsciente"
+import EscolhaUmaCarta from "@/components/escolha-uma-carta"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 import type { CartasIndividuais } from "@/lib/oracles/cartas-individuais"
@@ -451,7 +452,13 @@ export default function HomeHoje({
           )}
         </div>
 
-        {/* SEGUNDA FILEIRA DE HOJE · o céu e a imagem do dia. O céu de hoje (com a
+        {/* SEGUNDA FILEIRA DE HOJE · o baralho dos arcanos maiores, na largura
+            inteira: uma carta que a própria pessoa tira, e que abre grande. */}
+        <div className="mt-4 sm:mt-5">
+          <EscolhaUmaCarta />
+        </div>
+
+        {/* TERCEIRA FILEIRA DE HOJE · o céu e a imagem do dia. O céu de hoje (com a
             Lua e o horóscopo) e o estudo do dia também são "de hoje", e a divisão
             7/5 da primeira fileira se repete aqui, no mesmo eixo. */}
         <div className="grid gap-4 sm:gap-5 lg:grid-cols-12 mt-4 sm:mt-5">
