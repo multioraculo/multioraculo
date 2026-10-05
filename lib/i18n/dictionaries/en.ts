@@ -82,10 +82,7 @@ export const en: Dictionary = {
   home: {
     brandSubtitle: "Different paths to read the present.",
     symbolTitle: "Image from the unconscious",
-    symbolAsk: "Did this image show up in your dream?",
-    symbolCta: "Interpret my dream",
-    symbolNote: "The same image for everyone today. Something to explore, not a reading of yours.",
-    symbolEditorial: "our editorial reading",
+    symbolStudy: "Study of the day",
     powerEdit: "Edit",
     journalContinue: "Continue in the Journal",
     journalOpenings: [

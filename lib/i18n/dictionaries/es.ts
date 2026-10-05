@@ -82,10 +82,7 @@ export const es: Dictionary = {
   home: {
     brandSubtitle: "Diferentes caminos para leer el presente.",
     symbolTitle: "Imagen del inconsciente",
-    symbolAsk: "¿Esta imagen apareció en tu sueño?",
-    symbolCta: "Interpretar mi sueño",
-    symbolNote: "La misma imagen para todos hoy. Es algo para explorar, no una lectura tuya.",
-    symbolEditorial: "lectura editorial nuestra",
+    symbolStudy: "Estudio del día",
     powerEdit: "Editar",
     journalContinue: "Continuar en el Diario",
     journalOpenings: [

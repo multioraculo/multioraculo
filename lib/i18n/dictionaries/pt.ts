@@ -84,10 +84,7 @@ export const pt = {
   home: {
     brandSubtitle: "Diferentes caminhos para ler o presente.",
     symbolTitle: "Imagem do inconsciente",
-    symbolAsk: "Essa imagem apareceu no seu sonho?",
-    symbolCta: "Interpretar meu sonho",
-    symbolNote: "A mesma imagem para todos hoje. É algo para explorar, e não uma leitura sua.",
-    symbolEditorial: "leitura editorial nossa",
+    symbolStudy: "Estudo do dia",
     powerEdit: "Editar",
     journalContinue: "Continuar no Diário",
     journalOpenings: [

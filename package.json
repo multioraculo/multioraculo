@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes",
+    "prebuild": "npm run verify:synthesis && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
@@ -14,7 +14,8 @@
     "verify:horoscopo": "node --import ./scripts/ts-register.mjs scripts/verify-horoscopo.ts",
     "verify:cache": "node --import ./scripts/ts-register.mjs scripts/verify-cache-horoscopo.ts",
     "verify:ceu": "node --import ./scripts/ts-register.mjs scripts/verify-ceu-dia.ts",
-    "verify:interconexoes": "node --import ./scripts/ts-register.mjs scripts/verify-interconexoes.ts"
+    "verify:interconexoes": "node --import ./scripts/ts-register.mjs scripts/verify-interconexoes.ts",
+    "verify:simbolos": "node --import ./scripts/ts-register.mjs scripts/verify-simbolos.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
