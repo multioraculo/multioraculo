@@ -17,6 +17,7 @@
 import fs from "fs"
 import path from "path"
 import { APPROVED_PDFS_INDEX_SHA256 } from "../lib/oracles/references"
+import { createSynthesisFilter, normalizeSynthesisText, stripBackstage } from "../lib/oracles/synthesis"
 import { fixturePromptDigest, itemsDigest, realPromptDigest, sha256 } from "./cbase-min-fixtures"
 
 type Golden = {
@@ -38,7 +39,76 @@ conferir("SHA-256 do índice registrado em lib/oracles/references.ts", APPROVED_
 for (const f of golden.itens) conferir(`itens do seed ${f.seed} (${f.locale}, ${f.origem})`, itemsDigest(f.seed, f.locale), f.sha256)
 for (const f of golden.promptComTrechosDeTeste) conferir(`prompt com trechos de teste, seed ${f.seed} (${f.locale})`, fixturePromptDigest(f.pergunta, f.seed, f.locale), f.sha256)
 
+/**
+ * O FILTRO DE SAÍDA, que é a outra metade da proteção.
+ *
+ * A regra 10 do prompt proíbe linguagem de bastidor, mas regra de prompt é
+ * pedido, não garantia: numa bateria de 12 leituras uma abriu com "O que se
+ * repete no material é...". O filtro tira a locução antes de o texto sair do
+ * servidor, e estas conferências existem para que ele não volte a deixar passar
+ * nem passe a comer frase legítima.
+ */
+function parteFiltro() {
+  const casos: Array<[string, string, string]> = [
+    // [rótulo, entrada, saída esperada]
+    ["o caso real da bateria", "O que se repete no material é um movimento de busca.", "O que se repete é um movimento de busca."],
+    ["trechos", "O que aparece nos trechos é uma hesitação.", "O que aparece é uma hesitação."],
+    ["referências", "Há, nas referências, um peso antigo.", "Há, um peso antigo."],
+    ["en", "What recurs in the material is a search.", "What recurs is a search."],
+    ["es", "Lo que se repite en el material es una búsqueda.", "Lo que se repite es una búsqueda."],
+    // "referência" não tem uso inocente numa síntese: o complemento NÃO inocenta.
+    // O que o filtro garante é que o TERMO não chega ao leitor; o resíduo que o
+    // complemento deixa ("que você reuniu", "fornecidas") é o preço de só
+    // suprimir, nunca reescrever — e reescrever está fora do escopo.
+    ["referências + que", "Confiar nas referências que você reuniu.", "Confiar que você reuniu."],
+    ["referências fornecidas", "O que pesa, nas referências fornecidas, é a demora.", "O que pesa, fornecidas, é a demora."],
+    ["segundo as referências", "Há, segundo as referências, um peso antigo.", "Há, um peso antigo."],
+    ["conforme as referências", "Isso aparece conforme as referências reunidas.", "Isso aparece reunidas."],
+    ["according to en", "This recurs, according to the references, as a doubt.", "This recurs, as a doubt."],
+    ["según es", "Esto vuelve, según las referencias, como una duda.", "Esto vuelve, como una duda."],
+    // começo de frase: a maiúscula volta, não fica "há um peso"
+    ["início de frase", "Ela hesita. Segundo as referências, há um peso.", "Ela hesita. Há um peso."],
+    ["início do texto", "No material, há um peso antigo.", "Há um peso antigo."],
+    // o complemento torna a locução legítima na família ambígua: nada é cortado
+    ["complemento pt", "Um cuidado no material de trabalho.", "Um cuidado no material de trabalho."],
+    ["complemento pt 2", "Atenção aos trechos de estrada que faltam.", "Atenção aos trechos de estrada que faltam."],
+    ["complemento en", "A care in the material of the work.", "A care in the material of the work."],
+    // substantivos ambíguos continuam intocados
+    ["fontes", "Relações podem ser fontes de suporte e solução.", "Relações podem ser fontes de suporte e solução."],
+    ["sinais", "Há sinais de que uma nova fase se delineia.", "Há sinais de que uma nova fase se delineia."],
+    ["sistemas", "Os sistemas de crença que você herdou pesam.", "Os sistemas de crença que você herdou pesam."],
+    // nome de hexagrama em português é palavra corrente: não é lista negra
+    ["hexagrama homógrafo", "O contraste entre estagnação e progresso é forte.", "O contraste entre estagnação e progresso é forte."],
+    ["hexagrama homógrafo 2", "Há um conflito interno sobre como lidar com isso.", "Há um conflito interno sobre como lidar com isso."],
+  ]
+  for (const [rotulo, entrada, esperado] of casos) {
+    conferir(`filtro · ${rotulo}`, stripBackstage(entrada), esperado)
+  }
+
+  // o filtro de streaming tem de dar o MESMO resultado, com o texto chegando
+  // picado em qualquer tamanho — inclusive partindo a locução ao meio
+  for (const [rotulo, entrada, esperado] of casos) {
+    for (const passo of [1, 3, 7, 13]) {
+      const f = createSynthesisFilter()
+      let saida = ""
+      for (let i = 0; i < entrada.length; i += passo) saida += f.push(entrada.slice(i, i + passo))
+      saida += f.flush()
+      conferir(`filtro em stream (passo ${passo}) · ${rotulo}`, saida, esperado)
+    }
+  }
+
+  // o marcador de parágrafo continua funcionando como antes
+  conferir("filtro · marcador de parágrafo", normalizeSynthesisText("Uma frase.[[P]]Outra frase."), "Uma frase.\n\nOutra frase.")
+  const fm = createSynthesisFilter()
+  conferir(
+    "filtro em stream · marcador partido",
+    ["Uma frase.[[", "P]]Outra frase."].map((c) => fm.push(c)).join("") + fm.flush(),
+    "Uma frase.\n\nOutra frase."
+  )
+}
+
 async function main() {
+  parteFiltro()
   const indiceLocal = path.join(process.cwd(), "data", "pdfs_index", "pdfs.index.json")
   let comIndice = false
   if (fs.existsSync(indiceLocal)) {

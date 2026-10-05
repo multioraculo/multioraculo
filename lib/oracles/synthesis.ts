@@ -65,8 +65,117 @@ export const PARAGRAPH_MARKER = "[[P]]"
 const MARKER_RE = /[ \t]*\r?\n?[ \t]*\[\[\s*[Pp]\s*\]\][ \t]*\r?\n?[ \t]*/g
 
 /** Texto final: marcadores viram parágrafos, sem linhas em branco sobrando. */
+/**
+ * LOCUÇÕES DE BASTIDOR: o texto não pode dizer DE ONDE tirou o que diz.
+ *
+ * A regra 10 do pedido já proíbe isso, e a bateria de 12 leituras mostrou que a
+ * regra sozinha não basta: uma delas abriu com "O que se repete no material é um
+ * movimento de busca...". O filtro existe justamente para o andaime não chegar ao
+ * navegador — o marcador de parágrafo é andaime, e isto também é.
+ *
+ * O ESCOPO É ESTREITO DE PROPÓSITO. Só entram locuções PREPOSICIONAIS que
+ * apontam para a evidência e que saem por SUPRESSÃO, deixando frase gramatical e
+ * com o mesmo sentido:
+ *
+ *   "O que se repete no material é um movimento"  →  "O que se repete é um movimento"
+ *
+ * NÃO entram substantivos comuns ambíguos. "fontes" aparece legitimamente em
+ * "fontes de suporte"; "sinais" é idiomático em "há sinais de que"; "sistemas"
+ * cabe em "sistemas de crença". E os nomes de hexagrama em português —
+ * Progresso, Conflito, Espera, Estagnação — são palavras correntes da língua:
+ * usá-las não é citar o símbolo, então nenhuma lista dessas entra aqui.
+ *
+ * DUAS FAMÍLIAS, porque os substantivos não são todos iguais.
+ *
+ *  AMBÍGUA — "material", "trecho", "fragmento". Pedem complemento para virar
+ *    conteúdo legítimo: "no material de trabalho" é assunto de quem pergunta,
+ *    não bastidor. Aqui o lookahead negativo preserva a locução.
+ *  INEQUÍVOCA — "referência". Numa síntese do Multioráculo não existe uso
+ *    inocente: "nas referências que você reuniu" e "nas referências fornecidas"
+ *    continuam apontando para a evidência, e o complemento não as inocenta.
+ *    Esta família não tem exceção, e aceita também "segundo as referências".
+ */
+const BASTIDOR_PREPOSICOES = [
+  "no", "na", "nos", "nas", "do", "da", "dos", "das",
+  "in the", "from the",
+  "en el", "en la", "en los", "en las", "del", "de la", "de los", "de las",
+]
+/** pedem complemento para serem legítimas */
+const BASTIDOR_AMBIGUOS = [
+  "material", "materiais", "materials",
+  "trecho", "trechos", "fragmento", "fragmentos", "excerpt", "excerpts",
+]
+/** não têm uso inocente numa síntese */
+const BASTIDOR_INEQUIVOCOS = [
+  "referência", "referencia", "referências", "referencias", "reference", "references",
+]
+/** só a família inequívoca aceita estas: "segundo as referências fornecidas" */
+const BASTIDOR_ATRIBUICOES = [
+  "segundo", "conforme", "de acordo com",
+  "according to", "based on",
+  "según", "de acuerdo con",
+]
+const BASTIDOR_ARTIGOS = ["", "a", "as", "o", "os", "the", "la", "las", "el", "los"]
+
+const frasesCom = (prep: string[], nomes: string[]) =>
+  prep.flatMap((p) => nomes.map((n) => (p ? `${p} ${n}` : n)))
+
+const FRASES_AMBIGUAS = frasesCom(BASTIDOR_PREPOSICOES, BASTIDOR_AMBIGUOS)
+const FRASES_INEQUIVOCAS = [
+  ...frasesCom(BASTIDOR_PREPOSICOES, BASTIDOR_INEQUIVOCOS),
+  ...frasesCom(
+    BASTIDOR_ATRIBUICOES.flatMap((a) => BASTIDOR_ARTIGOS.map((art) => (art ? `${a} ${art}` : a))),
+    BASTIDOR_INEQUIVOCOS
+  ),
+]
+/** todas as locuções, em minúsculas; servem ao casamento e ao hold-back */
+const BASTIDOR_FRASES = [...FRASES_AMBIGUAS, ...FRASES_INEQUIVOCAS]
+const BASTIDOR_MAX = Math.max(...BASTIDOR_FRASES.map((f) => f.length))
+/** quanto é preciso ver DEPOIS da locução para decidir e para refazer a maiúscula */
+const BASTIDOR_FOLGA = 8
+const escapaRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const alternativa = (frases: string[]) => frases.map(escapaRegex).sort((a, b) => b.length - a.length).join("|")
+/** o complemento que inocenta — só vale para a família ambígua */
+const COMPLEMENTO = `(?!\\s+(?:de|do|da|dos|das|que|of|del|the)\\b)`
+const CORPO =
+  `(?:\\b(?:${alternativa(FRASES_AMBIGUAS)})\\b${COMPLEMENTO}` +
+  `|\\b(?:${alternativa(FRASES_INEQUIVOCAS)})\\b)`
+/**
+ * A supressão consome o que vem DEPOIS da locução, nunca o que vem antes.
+ *
+ * Isso não é detalhe: no streaming o espaço anterior já saiu do servidor quando
+ * a locução termina de chegar, então comer para trás deixaria espaço duplo no
+ * texto do leitor. Comendo para a frente, o seam fecha sozinho —
+ * "repete " + "é" — e a vírgula de um aposto ("Há, nas referências, um peso")
+ * sai junto em vez de virar vírgula órfã.
+ */
+const BASTIDOR_RE = new RegExp(`${CORPO}\\s*,?\\s*`, "gi")
+/**
+ * No começo de frase a supressão deixaria minúscula ("Segundo as referências,
+ * há um peso." → "há um peso."), então a inicial seguinte é recomposta. É a
+ * mesma supressão; só devolve a maiúscula que a locução carregava.
+ */
+const BASTIDOR_INICIO_RE = new RegExp(`([.!?]["”’)\\]]?\\s+)${CORPO}\\s*,?\\s*(\\p{L})`, "giu")
+const BASTIDOR_TEXTO_RE = new RegExp(`^${CORPO}\\s*,?\\s*(\\p{L})`, "iu")
+
+/**
+ * Tira as locuções de bastidor. Só suprime; a única coisa que recompõe é a
+ * maiúscula de início de frase que a locução suprimida levava consigo.
+ *
+ * `inicioDeTexto` existe por causa do streaming: lá cada pedaço começa no meio
+ * do texto, e tratar o começo do pedaço como começo de frase poria maiúscula
+ * onde não há frase nova.
+ */
+export function stripBackstage(texto: string, inicioDeTexto = true): string {
+  let t = texto
+  if (inicioDeTexto) t = t.replace(BASTIDOR_TEXTO_RE, (_m, letra: string) => letra.toUpperCase())
+  return t
+    .replace(BASTIDOR_INICIO_RE, (_m, antes: string, letra: string) => antes + letra.toUpperCase())
+    .replace(BASTIDOR_RE, "")
+}
+
 export function normalizeSynthesisText(raw: string): string {
-  return raw
+  return stripBackstage(raw)
     .replace(MARKER_RE, "\n\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]+\n/g, "\n")
@@ -74,34 +183,57 @@ export function normalizeSynthesisText(raw: string): string {
 }
 
 /**
- * Filtro incremental para o streaming: troca o marcador por parágrafo sem
- * nunca deixar um marcador partido escapar para o navegador. Segura só o
- * pedaço final que ainda pode ser começo de marcador (no máximo 4 caracteres),
- * então não há atraso perceptível.
+ * Filtro incremental para o streaming: troca o marcador por parágrafo e tira as
+ * locuções de bastidor, sem nunca deixar um nem outro escaparem partidos para o
+ * navegador. Segura só o pedaço final que ainda pode ser começo de marcador ou de
+ * locução (algumas dezenas de caracteres), então não há atraso perceptível.
  */
 export function createSynthesisFilter() {
   let buf = ""
-  /** quantos caracteres do fim ainda podem ser um marcador incompleto */
+  /** só o primeiro pedaço entregue começa de fato o texto */
+  let comecou = false
+  /** quantos caracteres do fim ainda podem ser marcador ou locução incompletos */
   const holdBack = (s: string): number => {
-    const max = Math.min(PARAGRAPH_MARKER.length - 1, s.length)
-    for (let n = max; n > 0; n--) {
+    const baixo = s.toLowerCase()
+    let keep = 0
+    for (let n = Math.min(PARAGRAPH_MARKER.length - 1, s.length); n > 0; n--) {
       const tail = s.slice(s.length - n)
-      if (PARAGRAPH_MARKER.startsWith(tail) || "[[ p ]]".startsWith(tail)) return n
+      if (PARAGRAPH_MARKER.startsWith(tail) || "[[ p ]]".startsWith(tail)) { keep = n; break }
     }
-    return 0
+    // uma locução ainda chegando, ou já inteira mas à espera do complemento que
+    // decidiria se ela é legítima
+    for (let n = Math.min(BASTIDOR_MAX + BASTIDOR_FOLGA, s.length); n > keep; n--) {
+      const tail = baixo.slice(baixo.length - n)
+      const pendente = BASTIDOR_FRASES.some(
+        (f) => f.startsWith(tail) || (tail.startsWith(f) && tail.length <= f.length + BASTIDOR_FOLGA)
+      )
+      if (pendente) { keep = n; break }
+    }
+    // O PONTO FINAL FICA JUNTO. Sem isso, o fim da frase anterior já teria saído
+    // do servidor quando a locução terminasse de chegar, e a recomposição da
+    // maiúscula não teria o que olhar: "Ela hesita. Segundo as referências, há"
+    // viraria "Ela hesita. há". São um ou dois caracteres de atraso.
+    const antes = s.slice(0, s.length - keep)
+    const pontuacao = /[.!?]["”’)\]]?\s*$/.exec(antes)
+    if (pontuacao) keep += pontuacao[0].length
+    return keep
   }
   return {
-    /** parte já segura do texto, com marcadores resolvidos */
+    /** parte já segura do texto, com marcadores resolvidos e bastidor fora */
     push(chunk: string): string {
       buf += chunk
       const keep = holdBack(buf)
       const ready = buf.slice(0, buf.length - keep)
       buf = buf.slice(buf.length - keep)
-      return ready.replace(MARKER_RE, "\n\n")
+      if (!ready) return ""
+      const saida = stripBackstage(ready, !comecou).replace(MARKER_RE, "\n\n")
+      comecou = true
+      return saida
     },
     /** o que sobrou no fim do stream */
     flush(): string {
-      const rest = buf.replace(MARKER_RE, "\n\n")
+      const rest = stripBackstage(buf, !comecou).replace(MARKER_RE, "\n\n")
+      comecou = true
       buf = ""
       return rest
     },
