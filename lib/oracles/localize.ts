@@ -25,6 +25,18 @@ import {
   type Sym,
 } from "./draw"
 
+/**
+ * As runas que a referência declara SEM posição invertida, para o texto de
+ * método. DERIVADA de RUNES, nunca escrita à mão: a lista estava fixa no texto
+ * e teria ficado errada quando Nauthiz passou a não produzir invertida.
+ */
+const semRev = RUNES.filter((r) => !r.reversaoNaFonte).map((r) => r.name)
+const SEM_REVERSAO = {
+  pt: `${semRev.slice(0, -1).join(", ")} e ${semRev[semRev.length - 1]}`,
+  en: `${semRev.slice(0, -1).join(", ")} and ${semRev[semRev.length - 1]}`,
+  es: `${semRev.slice(0, -1).join(", ")} y ${semRev[semRev.length - 1]}`,
+} as const
+
 export type RenderedItem = { position: string; name: string }
 export type RenderedDraw = {
   items: RenderedItem[]
@@ -96,10 +108,16 @@ const NAMES: Record<Locale, Names> = {
     oduSecond: "Segunda queda (confirmação)",
     oduLabel: (n, odu) => `${n} búzios abertos — ${odu}`,
     lenormand: LENORMAND_DECK.map((c) => c.name),
+    // AS POSIÇÕES SÃO AS DO LIVRO, não as da tela. Matthews, "Spread 6: The
+    // Portrait" (p. 194): as colunas são passado, presente e futuro; a carta 5
+    // é o foco da questão; a carta 1 é o que a provocou. As outras sete não
+    // recebem sentido próprio porque a fonte não dá nenhum — o que elas têm é a
+    // propriedade da coluna. Os rótulos anteriores ("Acima", "Abaixo") eram
+    // geometria de tela, sem lastro na fonte.
     lenormandPositions: [
-      "Canto sup. esq.", "Acima", "Canto sup. dir.",
-      "Esquerda", "Centro", "Direita",
-      "Canto inf. esq.", "Abaixo", "Canto inf. dir.",
+      "Passado · origem", "Presente", "Futuro",
+      "Passado", "Presente · foco", "Futuro",
+      "Passado", "Presente", "Futuro",
     ],
   },
   en: {
@@ -142,9 +160,9 @@ const NAMES: Record<Locale, Names> = {
     oduLabel: (n, odu) => `${n} open shells — ${odu}`,
     lenormand: LENORMAND_EN,
     lenormandPositions: [
-      "Top left", "Above", "Top right",
-      "Left", "Center", "Right",
-      "Bottom left", "Below", "Bottom right",
+      "Past · origin", "Present", "Future",
+      "Past", "Present · focus", "Future",
+      "Past", "Present", "Future",
     ],
   },
   es: {
@@ -206,9 +224,9 @@ const NAMES: Record<Locale, Names> = {
       "Los Peces", "El Ancla", "La Cruz",
     ],
     lenormandPositions: [
-      "Esquina sup. izq.", "Arriba", "Esquina sup. der.",
-      "Izquierda", "Centro", "Derecha",
-      "Esquina inf. izq.", "Abajo", "Esquina inf. der.",
+      "Pasado · origen", "Presente", "Futuro",
+      "Pasado", "Presente · foco", "Futuro",
+      "Pasado", "Presente", "Futuro",
     ],
   },
 }
@@ -252,16 +270,16 @@ const PHRASES: Record<Locale, Phrases> = {
     ichingNotes: (p, r, mv) => (r ? `Hex. ${p} → ${r} (linhas mutantes: ${mv.join(", ")})` : `Hex. ${p}, sem linhas mutantes`),
     lineName: (v, ord) => (v === 9 ? `Nove na ${ord} posição (yang → yin)` : `Seis na ${ord} posição (yin → yang)`),
     runesIntro:
-      "Mapa de 9 forças: 9 runas sorteadas de um saco com as 24 runas do Futhark Antigo, sem reposição. Runas reversíveis saem invertidas com 50% de chance; Gebo, Hagalaz, Isa, Jera, Eihwaz, Sowilo, Ingwaz e Dagaz não têm posição invertida.",
+      `Mapa de 9 forças: 9 runas sorteadas de um saco com as 24 runas do Futhark Antigo, sem reposição. As 15 runas que a referência dá com posição invertida saem invertidas com 50% de chance; ${SEM_REVERSAO.pt} não têm posição invertida e são sempre lidas de pé.`,
     runesNotes: (r) => `9 runas de 24, ${r} invertida${r === 1 ? "" : "s"}`,
     buziosIntro:
       "Jogo de 16 búzios (merindilogun). Cada concha cai aberta ou fechada com igual probabilidade; o Odu é dado pelo número de búzios abertos.",
     buziosThrows: (a, b) =>
       `Primeira queda (Odu principal): ${a}.\nSegunda queda (confirmação / aspecto complementar): ${b}.\nObservação: 0 abertos = Opirá (jogo fechado); 16 abertos = Alafia.`,
     buziosNotes: (o1, n1, o2, n2) => `${o1} (${n1}) · confirmação ${o2} (${n2})`,
-    lenormandIntro: "Mesa de 9 cartas (quadrado 3×3), sorteadas de um baralho de 36 sem reposição. Disposição linha a linha:",
-    lenormandCenter: (n) => `Carta central (tema dominante): ${n}.`,
-    lenormandNotes: (n) => `Centro: ${n}`,
+    lenormandIntro: "Mesa de 9 cartas (Portrait Spread, quadrado 3×3), sorteadas de um baralho de 36 sem reposição e sem inversões. Disposição linha a linha:",
+    lenormandCenter: (n) => `Estrutura da mesa, segundo a fonte: as colunas são passado (1,4,7), presente (2,5,8) e futuro (3,6,9); a carta 1 é o que provocou a questão; a carta 5 é o foco da questão — aqui, ${n}.`,
+    lenormandNotes: (n) => `Foco: ${n}`,
   },
   en: {
     tarotIntro:
@@ -277,16 +295,16 @@ const PHRASES: Record<Locale, Phrases> = {
     ichingNotes: (p, r, mv) => (r ? `Hex. ${p} → ${r} (moving lines: ${mv.join(", ")})` : `Hex. ${p}, no moving lines`),
     lineName: (v, ord) => (v === 9 ? `Nine in the ${ord} place (yang → yin)` : `Six in the ${ord} place (yin → yang)`),
     runesIntro:
-      "Map of 9 forces: 9 runes drawn from a bag with the 24 runes of the Elder Futhark, without replacement. Reversible runes come out reversed with a 50% chance; Gebo, Hagalaz, Isa, Jera, Eihwaz, Sowilo, Ingwaz and Dagaz have no reversed position.",
+      `Map of 9 forces: 9 runes drawn from a bag with the 24 runes of the Elder Futhark, without replacement. The 15 runes the reference gives a reversed position come out reversed with a 50% chance; ${SEM_REVERSAO.en} have no reversed position and are always read upright.`,
     runesNotes: (r) => `9 runes of 24, ${r} reversed`,
     buziosIntro:
       "Sixteen-cowrie game (merindilogun). Each shell lands open or closed with equal probability; the Odu is given by the number of open shells.",
     buziosThrows: (a, b) =>
       `First cast (main Odu): ${a}.\nSecond cast (confirmation / complementary aspect): ${b}.\nNote: 0 open = Opirá (closed game); 16 open = Alafia.`,
     buziosNotes: (o1, n1, o2, n2) => `${o1} (${n1}) · confirmation ${o2} (${n2})`,
-    lenormandIntro: "Nine-card spread (3×3 square), drawn from a 36-card deck without replacement. Layout row by row:",
-    lenormandCenter: (n) => `Center card (dominant theme): ${n}.`,
-    lenormandNotes: (n) => `Center: ${n}`,
+    lenormandIntro: "Nine-card spread (the Portrait Spread, 3×3 square), drawn from a 36-card deck without replacement and without reversals. Layout row by row:",
+    lenormandCenter: (n) => `Structure of the spread, per the source: the columns are past (1,4,7), present (2,5,8) and future (3,6,9); card 1 is what provoked the issue; card 5 is the focus of the issue — here, ${n}.`,
+    lenormandNotes: (n) => `Focus: ${n}`,
   },
   es: {
     tarotIntro:
@@ -302,16 +320,16 @@ const PHRASES: Record<Locale, Phrases> = {
     ichingNotes: (p, r, mv) => (r ? `Hex. ${p} → ${r} (líneas mutantes: ${mv.join(", ")})` : `Hex. ${p}, sin líneas mutantes`),
     lineName: (v, ord) => (v === 9 ? `Nueve en la ${ord} posición (yang → yin)` : `Seis en la ${ord} posición (yin → yang)`),
     runesIntro:
-      "Mapa de 9 fuerzas: 9 runas sorteadas de una bolsa con las 24 runas del Futhark Antiguo, sin reposición. Las runas reversibles salen invertidas con un 50% de probabilidad; Gebo, Hagalaz, Isa, Jera, Eihwaz, Sowilo, Ingwaz y Dagaz no tienen posición invertida.",
+      `Mapa de 9 fuerzas: 9 runas sorteadas de una bolsa con las 24 runas del Futhark Antiguo, sin reposición. Las 15 runas con posición invertida en la referencia salen invertidas con un 50% de probabilidad; ${SEM_REVERSAO.es} no tienen posición invertida y se leen siempre derechas.`,
     runesNotes: (r) => `9 runas de 24, ${r} invertida${r === 1 ? "" : "s"}`,
     buziosIntro:
       "Juego de 16 caracolas (merindilogun). Cada caracola cae abierta o cerrada con igual probabilidad; el Odu lo da el número de caracolas abiertas.",
     buziosThrows: (a, b) =>
       `Primera caída (Odu principal): ${a}.\nSegunda caída (confirmación / aspecto complementario): ${b}.\nObservación: 0 abiertas = Opirá (juego cerrado); 16 abiertas = Alafia.`,
     buziosNotes: (o1, n1, o2, n2) => `${o1} (${n1}) · confirmación ${o2} (${n2})`,
-    lenormandIntro: "Mesa de 9 cartas (cuadrado 3×3), sorteadas de una baraja de 36 sin reposición. Disposición fila por fila:",
-    lenormandCenter: (n) => `Carta central (tema dominante): ${n}.`,
-    lenormandNotes: (n) => `Centro: ${n}`,
+    lenormandIntro: "Mesa de 9 cartas (Portrait Spread, cuadrado 3×3), sorteadas de una baraja de 36 sin reposición y sin inversiones. Disposición fila por fila:",
+    lenormandCenter: (n) => `Estructura de la mesa, según la fuente: las columnas son pasado (1,4,7), presente (2,5,8) y futuro (3,6,9); la carta 1 es lo que provocó la cuestión; la carta 5 es el foco de la cuestión — aquí, ${n}.`,
+    lenormandNotes: (n) => `Foco: ${n}`,
   },
 }
 

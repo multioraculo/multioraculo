@@ -57,9 +57,15 @@ export function cbaseMinSynthesisPrompt(question: string, material: CBaseMinMate
   const order = synthesisOrder(seed)
   const blocks = order.map((k, i) => {
     const c = material[k]
+    // O TETO SOBE SÓ PARA O TARÔ, e por um motivo de contagem. Ele é o único
+    // oráculo com 10 itens sorteados, e a ficha estruturada manda uma entrada
+    // por carta: com teto 10 elas sozinhas ocupariam tudo e o trecho do ensaio
+    // junguiano, que é a profundidade dos Arcanos Maiores, seria cortado
+    // inteiro. Os outros quatro continuam em 10, para que o material deles não
+    // mude junto e a comparação pareada siga medindo uma coisa só.
     const refs = c.evidence
       .filter((e) => typeof e.itemIndex === "number")
-      .slice(0, 10)
+      .slice(0, k === "tarot" ? 16 : 10)
       .map((e) => `  [item ${(e.itemIndex as number) + 1}] (${e.source}) ${e.excerpt.replace(/\s+/g, " ").slice(0, 320)}`)
     return [
       NAME_TAG(i + 1),

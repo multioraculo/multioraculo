@@ -507,31 +507,57 @@ export function drawIChing(rng: Rng): Extract<OracleDraw, { key: "iching" }> {
 // RUNAS — Futhark Antigo, mapa de 9 forças
 // ---------------------------------------------------------------------------
 
-export const RUNES: Array<{ name: string; glyph: string; reversible: boolean }> = [
-  { name: "Fehu", glyph: "ᚠ", reversible: true },
-  { name: "Uruz", glyph: "ᚢ", reversible: true },
-  { name: "Thurisaz", glyph: "ᚦ", reversible: true },
-  { name: "Ansuz", glyph: "ᚨ", reversible: true },
-  { name: "Raidho", glyph: "ᚱ", reversible: true },
-  { name: "Kenaz", glyph: "ᚲ", reversible: true },
-  { name: "Gebo", glyph: "ᚷ", reversible: false },
-  { name: "Wunjo", glyph: "ᚹ", reversible: true },
-  { name: "Hagalaz", glyph: "ᚺ", reversible: false },
-  { name: "Nauthiz", glyph: "ᚾ", reversible: true },
-  { name: "Isa", glyph: "ᛁ", reversible: false },
-  { name: "Jera", glyph: "ᛃ", reversible: false },
-  { name: "Eihwaz", glyph: "ᛇ", reversible: false },
-  { name: "Perthro", glyph: "ᛈ", reversible: true },
-  { name: "Algiz", glyph: "ᛉ", reversible: true },
-  { name: "Sowilo", glyph: "ᛊ", reversible: false },
-  { name: "Tiwaz", glyph: "ᛏ", reversible: true },
-  { name: "Berkano", glyph: "ᛒ", reversible: true },
-  { name: "Ehwaz", glyph: "ᛖ", reversible: true },
-  { name: "Mannaz", glyph: "ᛗ", reversible: true },
-  { name: "Laguz", glyph: "ᛚ", reversible: true },
-  { name: "Ingwaz", glyph: "ᛜ", reversible: false },
-  { name: "Dagaz", glyph: "ᛞ", reversible: false },
-  { name: "Othala", glyph: "ᛟ", reversible: true },
+/**
+ * As 24 runas do Elder Futhark, na ordem tradicional.
+ *
+ * DUAS FLAGS, DUAS PERGUNTAS DIFERENTES. Não unifique.
+ *
+ * `reversible` — QUEM CONSOME O RNG. `drawRunes` chama `rng.bool()` só quando
+ *   ela é true (o `&&` curto-circuita), então esta flag define a sequência de
+ *   bools do stream `${seed}:runas`. Mudar qualquer valor aqui desloca a
+ *   orientação de TODAS as runas sorteadas depois dela, em todo seed existente.
+ *   Medido: tirar Nauthiz daqui mudaria 21 de 360 orientações em 40 seeds, e
+ *   não só a dela. Por isso ela ficou como está e NÃO é fonte de verdade sobre
+ *   reversão — é compatibilidade com as leituras já geradas.
+ *
+ * `reversaoNaFonte` — O QUE A FONTE DIZ. Wayne Brekke, The Complete Guide to
+ *   Runes (Rockridge Press, 2023) declara, runa por runa, quais têm sentido
+ *   invertido: 15 têm, 9 declaram não ter. É esta flag que decide se a runa
+ *   chega invertida à leitura.
+ *
+ * Elas diferem em exatamente uma runa: Nauthiz. "Nauthiz has no reversed
+ * interpretation" (Brekke, p78). Ela continua consumindo um bool, e o
+ * resultado é mascarado — ver `drawRunes`. Efeito medido nos 40 seeds
+ * congelados: 5 de 360 orientações mudam, todas elas a própria Nauthiz.
+ *
+ * `scripts/verify-runas.ts` cobra as duas contagens e a coerência com as
+ * fichas de `runas-fichas.ts`.
+ */
+export const RUNES: Array<{ name: string; glyph: string; reversible: boolean; reversaoNaFonte: boolean }> = [
+  { name: "Fehu", glyph: "ᚠ", reversible: true, reversaoNaFonte: true },
+  { name: "Uruz", glyph: "ᚢ", reversible: true, reversaoNaFonte: true },
+  { name: "Thurisaz", glyph: "ᚦ", reversible: true, reversaoNaFonte: true },
+  { name: "Ansuz", glyph: "ᚨ", reversible: true, reversaoNaFonte: true },
+  { name: "Raidho", glyph: "ᚱ", reversible: true, reversaoNaFonte: true },
+  { name: "Kenaz", glyph: "ᚲ", reversible: true, reversaoNaFonte: true },
+  { name: "Gebo", glyph: "ᚷ", reversible: false, reversaoNaFonte: false },
+  { name: "Wunjo", glyph: "ᚹ", reversible: true, reversaoNaFonte: true },
+  { name: "Hagalaz", glyph: "ᚺ", reversible: false, reversaoNaFonte: false },
+  { name: "Nauthiz", glyph: "ᚾ", reversible: true, reversaoNaFonte: false },  // Brekke p78: "has no reversed interpretation"
+  { name: "Isa", glyph: "ᛁ", reversible: false, reversaoNaFonte: false },
+  { name: "Jera", glyph: "ᛃ", reversible: false, reversaoNaFonte: false },
+  { name: "Eihwaz", glyph: "ᛇ", reversible: false, reversaoNaFonte: false },
+  { name: "Perthro", glyph: "ᛈ", reversible: true, reversaoNaFonte: true },
+  { name: "Algiz", glyph: "ᛉ", reversible: true, reversaoNaFonte: true },
+  { name: "Sowilo", glyph: "ᛊ", reversible: false, reversaoNaFonte: false },
+  { name: "Tiwaz", glyph: "ᛏ", reversible: true, reversaoNaFonte: true },
+  { name: "Berkano", glyph: "ᛒ", reversible: true, reversaoNaFonte: true },
+  { name: "Ehwaz", glyph: "ᛖ", reversible: true, reversaoNaFonte: true },
+  { name: "Mannaz", glyph: "ᛗ", reversible: true, reversaoNaFonte: true },
+  { name: "Laguz", glyph: "ᛚ", reversible: true, reversaoNaFonte: true },
+  { name: "Ingwaz", glyph: "ᛜ", reversible: false, reversaoNaFonte: false },
+  { name: "Dagaz", glyph: "ᛞ", reversible: false, reversaoNaFonte: false },
+  { name: "Othala", glyph: "ᛟ", reversible: true, reversaoNaFonte: true },
 ]
 
 export const RUNE_POSITIONS_COUNT = 9
@@ -542,7 +568,12 @@ export function drawRunes(rng: Rng): Extract<OracleDraw, { key: "runas" }> {
   let reversedCount = 0
   for (let i = 0; i < RUNE_POSITIONS_COUNT; i++) {
     const index = order[i]
-    const reversed = RUNES[index].reversible && rng.bool()
+    // O CONSUMO DO RNG É PRESO A `reversible`, e a doutrina só mascara a saída.
+    // Se a condição do `&&` passasse a ser `reversaoNaFonte`, Nauthiz deixaria
+    // de consumir um bool e todas as runas sorteadas depois dela mudariam de
+    // orientação em todo seed existente. Ver o comentário em RUNES.
+    const caiuInvertida = RUNES[index].reversible && rng.bool()
+    const reversed = caiuInvertida && RUNES[index].reversaoNaFonte
     if (reversed) reversedCount++
     items.push({ positionKey: `r${i}`, sym: { kind: "rune", index, reversed }, searchTerms: [RUNES[index].name] })
   }

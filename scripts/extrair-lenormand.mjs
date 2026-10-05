@@ -180,3 +180,188 @@ export const LENORMAND_FICHAS: FichaLenormand[] = ${JSON.stringify(fichas, null,
 fs.writeFileSync(SAIDA, cab)
 console.log(`[extrair-lenormand] ${fichas.length} fichas gravadas em ${path.relative(process.cwd(), SAIDA)}`)
 console.log(`frases do General cortadas por citar outra carta: ${fichas.reduce((a, f) => a + f.frasesCortadas, 0)} (mín ${Math.min(...fichas.map((f) => f.geral.length))} caracteres restantes no menor General)`)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAMADA 2 — AS COMBINAÇÕES, em módulo separado.
+//
+// POR QUE SEPARADA. A ficha é o que a carta significa sozinha; a combinação é o
+// que duas cartas dizem JUNTAS, numa ordem. São níveis diferentes de evidência e
+// o verso da carta da Home só pode usar o primeiro. Gerar dois módulos mantém o
+// schema que a Home já consome intocado e deixa a responsabilidade separada.
+//
+// A DIREÇÃO É DADA. O livro afirma, na ficha da Raposa: "When Fox comes before a
+// card, it will affect what follows more severely, so Fox + Fish means that
+// something is seriously up with your money, whereas Fish + Fox is saying you
+// received the wrong change." Nos 21 pares que aparecem nas duas direções, o
+// texto difere em 21. Por isso `cartas` guarda a ORDEM da fonte e nada aqui
+// simetriza.
+//
+// O QUE NÃO ENTRA: as entradas `X on House of Y` / `X in House of Y`, que são o
+// sistema de CASAS do Grand Tableau — outro método, com outra mesa, e não as
+// combinações do Portrait Spread.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SAIDA_COMB = path.join(process.cwd(), "lib", "oracles", "lenormand-combinacoes.ts")
+
+/** Colapsa espaços guardando, para cada caractere do resultado, o índice original. */
+function normalizaComMapa(s, deslocamento) {
+  let saida = ""
+  const mapa = []
+  let espacoAtras = false
+  for (let j = 0; j < s.length; j++) {
+    const c = s[j]
+    const espaco = c === " " || c === "\n" || c === "\t" || c === "\r"
+    if (espaco) {
+      if (!espacoAtras) { saida += " "; mapa.push(deslocamento + j) }
+      espacoAtras = true
+    } else {
+      saida += c
+      mapa.push(deslocamento + j)
+      espacoAtras = false
+    }
+  }
+  return { saida, mapa }
+}
+
+// Todos os nomes que o livro usa para uma carta, apelidos inclusive, do mais
+// longo para o mais curto (senão "Star" casaria dentro de "Stars").
+const NOMES_TODOS = CARTAS.flatMap((ns, i) => ns.map((n) => ({ n, i })))
+  .sort((a, b) => b.n.length - a.n.length)
+const ALTERNATIVA = NOMES_TODOS.map((x) => x.n).join("|")
+const indiceDoNome = (n) => NOMES_TODOS.find((x) => x.n === n)?.i ?? -1
+
+// `-i-` é o "+" lido errado pelo OCR; o espaço antes do "+" às vezes some
+// ("Anchor+ Mice"); o qualificador de direção vem como " L" ou " R".
+const CARTA_RE = `(?:${ALTERNATIVA})(?: [LR])?`
+const ENTRADA_RE = new RegExp(`(${CARTA_RE})((?: ?(?:\\+|-i-) ?${CARTA_RE})+) ?:`, "g")
+const PECA_RE = new RegExp(`(${ALTERNATIVA})(?: ([LR]))?`, "g")
+// o livro escreve as casas de quatro jeitos: "on House of", "in House of",
+// "on the House of", "in the House of"
+const CASA_RE = / (?:on|in)(?: the)? House of /
+
+const combinacoes = []
+const avisosComb = []
+let casasIgnoradas = 0
+
+for (let i = 0; i < 36; i++) {
+  const ini = marcasGeneral[i]
+  const fim = i + 1 < 36 ? marcasGeneral[i + 1] : Math.min(texto.length, ini + 6000)
+  const fatia = texto.slice(ini, fim)
+  const mc = REGEX.Combinations.exec(fatia)
+  REGEX.Combinations.lastIndex = 0
+  if (!mc) { avisosComb.push(`${i + 1} ${CARTAS[i][0]}: sem rótulo "Combinations"`); continue }
+
+  const base = ini + mc.index + mc[0].length
+  const { saida: corpoCru, mapa } = normalizaComMapa(texto.slice(base, fim), base)
+  const nasCasas = corpoCru.match(new RegExp(CASA_RE.source, "g"))
+  casasIgnoradas += nasCasas ? nasCasas.length : 0
+
+  // corta na primeira entrada de CASA, recuando até o fim da frase anterior
+  // para não deixar meia frase de casa colada na última glosa
+  const posCasa = corpoCru.search(CASA_RE)
+  let corpo = corpoCru
+  if (posCasa >= 0) {
+    const fimFrase = corpoCru.lastIndexOf(". ", posCasa)
+    corpo = corpoCru.slice(0, fimFrase >= 0 ? fimFrase + 1 : posCasa)
+  }
+  // depois das entradas vem a legenda da gravura, que o OCR devolve como uma
+  // sequência de letras soltas ("f lo i j a c k Out* n tta frim ti")
+  const lixo = corpo.search(/(?: [a-zA-Z]){4,}(?![a-zA-Z])/)
+  if (lixo >= 0) corpo = corpo.slice(0, lixo)
+
+  const achados = [...corpo.matchAll(ENTRADA_RE)]
+  if (!achados.length) avisosComb.push(`${i + 1} ${CARTAS[i][0]}: nenhuma entrada reconhecida`)
+
+  achados.forEach((m, k) => {
+    PECA_RE.lastIndex = 0
+    const pecas = [...m[0].matchAll(PECA_RE)].map((p) => ({ i: indiceDoNome(p[1]), q: p[2] ?? "" }))
+    if (pecas.some((p) => p.i < 0)) { avisosComb.push(`${i + 1} ${CARTAS[i][0]}: nome desconhecido em "${m[0]}"`); return }
+    const a = m.index + m[0].length
+    const b = k + 1 < achados.length ? achados[k + 1].index : corpo.length
+    // "Ring + Man/Woman:" não é uma entrada (a barra é uma alternativa do autor,
+    // não uma carta): a glosa é cortada antes dela, em vez de inventar um par
+    let glosa = corpo.slice(a, b).trim()
+    const grudado = glosa.search(new RegExp(` ?(?:${ALTERNATIVA})(?: [LR])? ?(?:\\+|-i-|/)`))
+    if (grudado >= 0) glosa = glosa.slice(0, grudado)
+    glosa = glosa.trim().replace(/[;,.]+$/, "")
+    if (!glosa) { avisosComb.push(`${i + 1} ${CARTAS[i][0]}: glosa vazia em "${m[0]}"`); return }
+    combinacoes.push({
+      dono: i,
+      cartas: pecas.map((p) => p.i),
+      qualificadores: pecas.map((p) => p.q),
+      glosa,
+      pagina: paginaDe(mapa[m.index] ?? base),
+    })
+  })
+}
+
+// ── travas das combinações: nada é gravado se a extração não fechar ──────────
+const falhasComb = [...avisosComb]
+const paresComb = combinacoes.filter((c) => c.cartas.length === 2)
+if (combinacoes.length < 200) falhasComb.push(`só ${combinacoes.length} entradas (esperado ~224)`)
+if (paresComb.length < 160) falhasComb.push(`só ${paresComb.length} pares (esperado ~182)`)
+for (const c of combinacoes) {
+  const quem = `${c.cartas.map((x) => CARTAS[x][0]).join(" + ")} (p${c.pagina})`
+  if (c.cartas.length < 2) falhasComb.push(`${quem}: entrada com menos de duas cartas`)
+  if (c.cartas.some((x) => x < 0 || x > 35)) falhasComb.push(`${quem}: índice fora de 0–35`)
+  if (c.qualificadores.some((q) => q && q !== "L" && q !== "R")) falhasComb.push(`${quem}: qualificador inesperado`)
+  // só Nuvens (5) e Foice (9) têm direção de arte no livro
+  c.qualificadores.forEach((q, j) => {
+    if (q && c.cartas[j] !== 5 && c.cartas[j] !== 9) falhasComb.push(`${quem}: qualificador "${q}" numa carta que não é Nuvens nem Foice`)
+  })
+  if (c.pagina < 61 || c.pagina > 120) falhasComb.push(`${quem}: página ${c.pagina} fora do léxico (61–120)`)
+  if (/House of/i.test(c.glosa)) falhasComb.push(`${quem}: glosa com entrada de casa do Grand Tableau`)
+  if (/Combinations|General\s*:/i.test(c.glosa)) falhasComb.push(`${quem}: glosa com rótulo`)
+  if (/(?: [a-zA-Z]){4,}(?![a-zA-Z])/.test(c.glosa)) falhasComb.push(`${quem}: glosa com lixo de OCR`)
+  if (c.glosa.length < 8 || c.glosa.length > 200) falhasComb.push(`${quem}: glosa com ${c.glosa.length} caracteres`)
+  if (c.glosa.includes("\0")) falhasComb.push(`${quem}: NUL na glosa`)
+}
+if (falhasComb.length) {
+  console.error("[extrair-lenormand] as combinações não fecharam; o módulo de combinações não foi gravado:\n  " + falhasComb.join("\n  "))
+  process.exit(1)
+}
+
+const cabComb = `/**
+ * GERADO POR scripts/extrair-lenormand.mjs — NÃO EDITAR À MÃO.
+ *
+ * As COMBINAÇÕES do léxico de ${FONTE},
+ * uma entrada por combinação glosada, na ordem em que a fonte a escreve.
+ * Extraído em ${new Date().toISOString().slice(0, 10)}. sha256 do PDF: ${sha}
+ *
+ * A ORDEM É O SENTIDO. O livro afirma, na ficha da Raposa: "When Fox comes
+ * before a card, it will affect what follows more severely, so Fox + Fish means
+ * that something is seriously up with your money, whereas Fish + Fox is saying
+ * you received the wrong change." Dos pares que aparecem nas duas direções,
+ * NENHUM repete o texto. Por isso \`cartas\` é uma lista ORDENADA e nada aqui
+ * simetriza: a ausência de A→B não é suprida por B→A.
+ *
+ * NÃO ESTÃO AQUI as entradas "X on House of Y": são o sistema de CASAS do Grand
+ * Tableau, outro método e outra mesa.
+ *
+ * \`qualificadores\` só é preenchido para Nuvens e Foice, as duas cartas cuja
+ * direção na arte muda o sentido segundo a fonte (p. 62, 71 e 159).
+ */
+
+export type CombinacaoLenormand = {
+  /** índices em LENORMAND_DECK, NA ORDEM DA FONTE: cartas[0] age sobre cartas[1] */
+  cartas: number[]
+  /** "L", "R" ou "" por carta, na mesma ordem */
+  qualificadores: string[]
+  glosa: string
+  /** página do PDF */
+  pagina: number
+  /** índice da carta em cuja ficha a entrada está impressa */
+  dono: number
+}
+
+export const LENORMAND_COMBINACOES_FONTE = ${JSON.stringify(FONTE)}
+export const LENORMAND_COMBINACOES_PDF_SHA256 = ${JSON.stringify(sha)}
+
+export const LENORMAND_COMBINACOES: CombinacaoLenormand[] = ${JSON.stringify(combinacoes, null, 1)}
+`
+fs.writeFileSync(SAIDA_COMB, cabComb)
+const trios = combinacoes.length - paresComb.length
+const comQual = combinacoes.filter((c) => c.qualificadores.some((q) => q)).length
+console.log(`[extrair-lenormand] ${combinacoes.length} combinações gravadas em ${path.relative(process.cwd(), SAIDA_COMB)}`)
+console.log(`  ${paresComb.length} pares, ${trios} de três ou mais, ${comQual} com qualificador L/R`)
+console.log(`  entradas "House of" ignoradas (casas do Grand Tableau): ${casasIgnoradas}`)

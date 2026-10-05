@@ -15,6 +15,11 @@ import { keywords, selectEvidence, type Chunk, type Evidence } from "./evidence"
 import { renderDraw, type RenderedDraw } from "./localize"
 import { ORACLE_ORDER } from "./synthesis"
 import { methodFacts, type CBaseMinMaterial } from "./synthesis-cbase-min"
+import { referenciaDoTarot, REVERSAO_METODO } from "./tarot-referencia"
+import { referenciaDosBuzios } from "./buzios-referencia"
+import { referenciaDasRunas, REVERSAO_RUNAS } from "./runas-referencia"
+import { referenciaDoIChing } from "./iching-referencia"
+import { referenciaDoLenormand, METODO_LENORMAND } from "./lenormand-referencia"
 import type { Locale } from "@/lib/i18n"
 
 const INDEX_TIMEOUT_MS = 10_000
@@ -207,8 +212,49 @@ export async function buildCBaseMinMaterial(question: string, seed: string, loca
   const entries = await Promise.all(
     ORACLE_ORDER.map(async (k) => {
       const rendered = renderDraw(draws[k], locale)
-      const evidence = await getEvidenceForOracle(draws[k], rendered, question, ORACLE_SOURCES[k].files)
-      return [k, { method: ORACLE_SOURCES[k].method, items: rendered.items, facts: methodFacts(k, draws, rendered), evidence }] as const
+      const lexical = await getEvidenceForOracle(draws[k], rendered, question, ORACLE_SOURCES[k].files)
+      // O TARÔ RECEBE A FICHA ESTRUTURADA ANTES DO TRECHO LEXICAL. As fichas
+      // vêm primeiro de propósito: são uma por carta sorteada, cobrem as 10, e
+      // a busca lexical em `jung_tarot.pdf` continua entrando depois como
+      // profundidade — mas ela só alcança os Arcanos Maiores, que é a razão de
+      // 7 das 10 cartas ficarem sem referência nenhuma até aqui.
+      // OS BÚZIOS SUBSTITUEM a busca lexical, em vez de somar a ela. É o único
+      // oráculo em que a fonte tem uma tabela com uma linha por símbolo, e o
+      // trecho lexical dela era sempre uma JANELA dessa tabela: trazia em média
+      // 1,6 Odus que não foram sorteados e deixava 16 de 40 leituras com uma
+      // das duas quedas sem referência nenhuma. Somar os dois manteria a
+      // contaminação. Medido: nas 40 leituras do baseline, 100% dos trechos
+      // lexicais de búzios vinham deste mesmo arquivo, então não se perde
+      // nenhuma fonte que estivesse de fato em uso.
+      // AS RUNAS SOMAM a ficha ao trecho lexical, como o tarô, em vez de
+      // substituir como os búzios. A razão é que as duas fontes de runa
+      // preenchem campos disjuntos: Brekke dá o sentido divinatório e a
+      // reversão, Thorsson dá etimologia, ideografia do traço e uso mágico.
+      // Substituir perderia a camada de runelore; somar mantém as duas
+      // atribuídas em separado.
+      const evidence =
+        k === "tarot" ? [...referenciaDoTarot(draws.tarot.items, locale), ...lexical]
+        : k === "runas" ? [...referenciaDasRunas(draws.runas.items, locale), ...lexical]
+        // O I CHING SUBSTITUI a busca lexical, como os búzios. A fonte indexada
+        // é uma concordância por palavra-chave: cada trecho dela cita dezenas de
+        // coordenadas de hexagramas diferentes, então somar manteria a
+        // contaminação. A ficha entrega a hierarquia que o livro prescreve.
+        : k === "iching" ? referenciaDoIChing(draws.iching.items, locale)
+        : k === "buzios" ? referenciaDosBuzios(draws.buzios.items, locale)
+        // O LENORMAND SUBSTITUI a busca lexical, como os búzios e o I Ching. O
+        // livro tem ficha individual para as 36 cartas (cap. 2) e as combinações
+        // vêm separadas; qualquer janela de texto dele, porém, arrasta cartas que
+        // não saíram — medido: 79% dos trechos lexicais citavam carta não
+        // sorteada, 1.156 ocorrências em 40 leituras. A ficha cobre 9 de 9 e o
+        // bloco relacional entrega as combinações da mesa que a fonte documenta.
+        : k === "lenormand" ? referenciaDoLenormand(draws.lenormand.items, locale)
+        : lexical
+      const method =
+        k === "tarot" ? `${ORACLE_SOURCES[k].method}. ${REVERSAO_METODO[locale]}`
+        : k === "runas" ? `${ORACLE_SOURCES[k].method}. ${REVERSAO_RUNAS[locale]}`
+        : k === "lenormand" ? METODO_LENORMAND[locale]
+        : ORACLE_SOURCES[k].method
+      return [k, { method, items: rendered.items, facts: methodFacts(k, draws, rendered), evidence }] as const
     })
   )
   return Object.fromEntries(entries) as CBaseMinMaterial
