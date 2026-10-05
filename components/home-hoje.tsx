@@ -65,10 +65,22 @@ import LequeOraculos from "@/components/leque-oraculos"
 import ImagemDoInconsciente from "@/components/imagem-do-inconsciente"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
+import type { CartasIndividuais } from "@/lib/oracles/cartas-individuais"
 
 export type RegistroDeHoje = { titulo: string; hoje: boolean } | null
 
-type RespostaTiragem = { dia: string; tiragem: TiragemDoDia; eixo: [string, string] | null; sintese: string | null }
+/**
+ * Três camadas, em campos separados: `tiragem` é o resultado bruto, `cartas` a
+ * interpretação individual de cada carta (o verso dela) e `sintese` a relação
+ * entre as duas (o bloco abaixo da tiragem). `cartas` é nulo em registro antigo.
+ */
+type RespostaTiragem = {
+  dia: string
+  tiragem: TiragemDoDia
+  eixo: [string, string] | null
+  sintese: string | null
+  cartas?: CartasIndividuais | null
+}
 
 const CHAVE_SIGNO = "multioraculo:signo"
 
@@ -498,9 +510,14 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
   const tarot = tiragem.tiragem.tarot
   const lenormand = tiragem.tiragem.lenormand
   const nomeLenormand = semNumero(lenormand.nome)
-  // a leitura do dia é do CRUZAMENTO das duas, então é ela que aparece no
-  // verso de qualquer uma: não existe leitura separada por carta
-  const leitura = tiragem.sintese ?? undefined
+  // O VERSO DE CADA CARTA É A INTERPRETAÇÃO INDIVIDUAL DELA, e só ela. A síntese
+  // (`tiragem.sintese`) é o cruzamento das duas e mora no bloco abaixo da
+  // tiragem: usá-la aqui fazia o verso do Seis de Ouros falar da Raposa.
+  // Sem interpretação individual (dia antigo, registro legado, texto que não
+  // passou na verificação) o verso mostra só oráculo, nome e orientação. É
+  // fallback deliberado: NUNCA cair para a síntese.
+  const interpretacaoTarot = tiragem.cartas?.tarot?.interpretation ?? undefined
+  const interpretacaoLenormand = tiragem.cartas?.lenormand?.interpretation ?? undefined
   const orientacao = tarot.invertida ? dict.tarot.reversed : dict.tarot.upright
 
   return (
@@ -533,7 +550,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
 
       <FocusCard
         state={focoTarot.state}
-        items={[{ position: dict.oracles.tarot, name: tarot.nome, orientation: orientacao, meaning: leitura }]}
+        items={[{ position: dict.oracles.tarot, name: tarot.nome, orientation: orientacao, meaning: interpretacaoTarot }]}
+        hideEmptyMeaning
         renderFront={() => (
           <div style={{ transform: tarot.carta.reversed ? "rotate(180deg)" : undefined }}>
             <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={300} />
@@ -547,7 +565,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
 
       <FocusCard
         state={focoLenormand.state}
-        items={[{ position: dict.oracles.lenormand, name: `${lenormand.indice + 1} · ${nomeLenormand}`, meaning: leitura }]}
+        items={[{ position: dict.oracles.lenormand, name: `${lenormand.indice + 1} · ${nomeLenormand}`, meaning: interpretacaoLenormand }]}
+        hideEmptyMeaning
         renderFront={() => (
           <LenormandCard
             index={lenormand.indice}

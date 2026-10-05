@@ -22,6 +22,7 @@ export type TiragemDoDiaNaTela = Awaited<ReturnType<typeof leituraDoDia>> | {
   tiragem: ReturnType<typeof tiragemDoDia>
   eixo: null
   sintese: null
+  cartas: null
   cache: false
 }
 
@@ -35,12 +36,12 @@ export async function payloadDaTiragemDoDia(
   // dia diferente de hoje só é servido do que já está gravado: o passado não
   // se gera sob demanda, e o futuro não se anuncia
   if (dia !== hoje) {
-    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cache: false }
+    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cartas: null, cache: false }
   }
 
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
-    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cache: false }
+    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cartas: null, cache: false }
   }
   const openai = new OpenAI({ apiKey })
 
@@ -69,7 +70,7 @@ export async function payloadDaTiragemDoDia(
     })
   } catch (erro) {
     console.error("[tiragem-dia]", erro)
-    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cache: false }
+    return { dia, tiragem: tiragemDoDia(dia, locale), eixo: null, sintese: null, cartas: null, cache: false }
   }
 }
 
@@ -86,6 +87,7 @@ export async function payloadDaTiragemDoDiaSeGravada(locale: Locale): Promise<Ti
     tiragem: tiragemDoDia(dia, locale),
     eixo: guardada.eixo,
     sintese: guardada.sintese,
+    cartas: guardada.cartas,
     model: guardada.model,
     cache: true,
     violacoes: [],

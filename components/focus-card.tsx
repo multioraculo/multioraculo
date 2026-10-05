@@ -42,9 +42,15 @@ type Props = {
   live?: boolean
   /** classe extra para o verso (variações de material por oráculo) */
   backClassName?: string
+  /**
+   * Sem significado, não mostrar a frase "a leitura não guardou…": o verso fica
+   * só com oráculo, nome e orientação. Usado onde a ausência é um fallback
+   * deliberado e não uma falha da leitura (a tiragem do dia da Home).
+   */
+  hideEmptyMeaning?: boolean
 }
 
-export default function FocusCard({ state, items, renderFront, onAdvance, onClose, width, aspect, live = false, backClassName = "" }: Props) {
+export default function FocusCard({ state, items, renderFront, onAdvance, onClose, width, aspect, live = false, backClassName = "", hideEmptyMeaning = false }: Props) {
   const { dict } = useI18n()
   const t = dict.focus
   const open = state !== null
@@ -92,7 +98,9 @@ export default function FocusCard({ state, items, renderFront, onAdvance, onClos
                 {item.position && <p className="fc-pos">{item.position}</p>}
                 <p className="fc-name">{item.name}</p>
                 {item.orientation && <p className="fc-orient">{item.orientation}</p>}
-                <p className={`fc-meaning ${meaning ? "" : "is-empty"}`}>{meaning || (live ? t.pending : t.none)}</p>
+                {(meaning || !hideEmptyMeaning) && (
+                  <p className={`fc-meaning ${meaning ? "" : "is-empty"}`}>{meaning || (live ? t.pending : t.none)}</p>
+                )}
               </div>
             </div>
           </div>

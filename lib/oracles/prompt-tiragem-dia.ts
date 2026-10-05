@@ -17,12 +17,20 @@
 import type { Locale } from "@/lib/i18n/config"
 import { languageRule } from "./language"
 import type { TiragemDoDia } from "./tiragem-dia"
+import {
+  cartasDeJson, materialDoLenormand, materialDoTarot, referenciasCruzadas, REGRA_DE_REVERSAO, type CartasIndividuais,
+} from "./cartas-individuais"
 
 export type SinteseDoDia = { eixo: [string, string]; sintese: string }
+
+/** O veredito das interpretações INDIVIDUAIS (o verso de cada carta), separado da síntese. */
+export type VereditoCartas = { tarot: string | null; lenormand: string | null; violacoes: string[] }
 
 export type VereditoDia = { ok: true; eixo: [string, string]; sintese: string } | { ok: false; violacoes: string[] }
 
 const PALAVRAS = { min: 30, max: 70 }
+/** Interpretação individual: curta, porque cabe no verso da carta. A janela do verificador é mais larga que a do pedido. */
+const PALAVRAS_CARTA = { pedido: [25, 55], min: 18, max: 65 }
 const PALAVRAS_EIXO = { min: 1, max: 3 }
 
 /** Travessão e meia risca não são usados em nenhum texto do produto. */
@@ -80,9 +88,9 @@ const EVITAR: Record<Locale, string[]> = {
 const semNumero = (nome: string) => nome.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 
 export const SISTEMA_TIRAGEM_DIA: Record<Locale, string> = {
-  pt: "Responda apenas com JSON válido, sem Markdown. Os campos 'eixo' e 'sintese' são escritos em português do Brasil.",
-  en: "Respond only with valid JSON, no Markdown. The fields 'eixo' and 'sintese' are written in English.",
-  es: "Responde solo con JSON válido, sin Markdown. Los campos 'eixo' y 'sintese' se escriben en español.",
+  pt: "Responda apenas com JSON válido, sem Markdown. Os campos 'eixo', 'interpretation' e 'sintese' são escritos em português do Brasil.",
+  en: "Respond only with valid JSON, no Markdown. The fields 'eixo', 'interpretation' and 'sintese' are written in English.",
+  es: "Responde solo con JSON válido, sin Markdown. Los campos 'eixo', 'interpretation' y 'sintese' se escriben en español.",
 }
 
 export function promptTiragemDia(tiragem: TiragemDoDia, locale: Locale): { system: string; user: string } {
@@ -93,16 +101,32 @@ export function promptTiragemDia(tiragem: TiragemDoDia, locale: Locale): { syste
     `LENORMAND: ${nomeLenormand}`,
   ].join("\n")
 
+  const materialTarot = materialDoTarot(tiragem)
+  const materialLenormand = materialDoLenormand(tiragem)
+  const [pmin, pmax] = PALAVRAS_CARTA.pedido
+  const blocoMaterial = `MATERIAL DE CADA CARTA (é tudo o que você pode usar para dizer o que cada uma significa)
+
+TARÔ, ${tiragem.tarot.nome}:
+${materialTarot ?? "(sem material: devolva interpretation null para o Tarô)"}
+
+LENORMAND, ${nomeLenormand}:
+${materialLenormand ?? "(sem material: devolva interpretation null para o Lenormand)"}`
+
   const user = `Duas cartas foram tiradas hoje, uma de cada baralho, e ficam lado a lado. O sorteio já aconteceu e não se discute. Esta é a tiragem do dia de TODAS as pessoas, não de alguém em particular.
 
 ${material}
 
+${blocoMaterial}
+
 O QUE ESCREVER
 
 1. "eixo": duas palavras, uma por carta, na ordem acima. A primeira responde pela carta de Tarô, a segunda pela de Lenormand. Substantivos, em minúsculas, sem nome de carta.
-2. "sintese": de ${PALAVRAS.min} a ${PALAVRAS.max} palavras, dois ou três períodos, sobre o CRUZAMENTO das duas.
+2. "cartas": a interpretação INDIVIDUAL de cada carta, que vai no verso dela. "cartas.tarot.interpretation" e "cartas.lenormand.interpretation", de ${pmin} a ${pmax} palavras cada, dois períodos.
+3. "sintese": de ${PALAVRAS.min} a ${PALAVRAS.max} palavras, dois ou três períodos, sobre o CRUZAMENTO das duas.
 
-REGRAS
+São TRÊS camadas que não se misturam: o que foi sorteado, o que cada carta significa SOZINHA, e a síntese entre as duas. As interpretações individuais não dizem nada sobre a outra carta; a relação entre elas existe só na síntese.
+
+REGRAS DA SÍNTESE
 
 1. Escreva os DOIS NOMES no texto, como estão acima ("${tiragem.tarot.nome}" e "${nomeLenormand}"). Não troque o nome por uma paráfrase do que ele significa: sem os nomes, o leitor não sabe do que você está falando. As duas continuam distintas ao longo da frase. Não dissolva as duas numa moral única: se a frase serviria para outra dupla, está errada.
 2. O assunto é o encontro. Diga o que cada carta traz e o que acontece quando uma atravessa a outra.
@@ -115,10 +139,19 @@ REGRAS
 
 9. Nenhum destes termos, em campo nenhum: ${EVITAR[locale].map((e) => `"${e}"`).join(", ")}.
 
+REGRAS DAS INTERPRETAÇÕES INDIVIDUAIS ("cartas")
+
+I1. Cada interpretação fala SOMENTE da própria carta, dentro do próprio oráculo. Use apenas o material dela, acima: não acrescente significados que ele não traga e não preencha lacunas com o que você sabe de outras fontes.
+I2. PROIBIDO relacionar. O texto do Tarô não cita a carta "${nomeLenormand}", nem a palavra "Lenormand". O texto do Lenormand não cita a carta "${tiragem.tarot.nome}", nem as palavras "Tarô" ou "Tarot". Nenhum dos dois cita outro oráculo (I Ching, Runas, Búzios), a outra carta, "a outra", "as duas", nem as ideias de síntese, conjunto, cruzamento, convergência ou combinação. Esse tipo de relação pertence exclusivamente à "sintese".
+I3. Dois períodos, linguagem simbólica e descritiva. Sem previsão, sem conselho, sem diagnóstico, sem frase motivacional. Valem as mesmas expressões proibidas, a regra do travessão e o registro da síntese.
+I4. O material do Tarô está em português e o do Lenormand em inglês: reescreva com as suas palavras, no idioma pedido. Não copie listas, não cite autor, não transcreva.
+I5. Tarô invertida: diga o que a inversão desloca NESTA carta, segundo a reversão do material. Se o material diz que o sentido permanece semelhante, diga isso. Inversão não é "versão negativa". Regra geral da fonte: ${REGRA_DE_REVERSAO("pt")}
+I6. O Lenormand não tem carta invertida.
+
 ${languageRule(locale)}
 
 Devolva JSON exatamente assim:
-{"eixo": ["...", "..."], "sintese": "..."}`
+{"eixo": ["...", "..."], "cartas": {"tarot": {"interpretation": "..."}, "lenormand": {"interpretation": "..."}}, "sintese": "..."}`
 
   return { system: SISTEMA_TIRAGEM_DIA[locale], user }
 }
@@ -181,3 +214,95 @@ export function verificarSintese(params: { bruto: unknown; tiragem: TiragemDoDia
   if (violacoes.length) return { ok: false, violacoes }
   return { ok: true, eixo, sintese }
 }
+
+/**
+ * O VERSO DE CADA CARTA. Verificado à parte da síntese, com a regra oposta: a
+ * síntese PRECISA nomear as duas; a interpretação individual NÃO PODE citar a
+ * outra, nem outro oráculo, nem a ideia de conjunto.
+ *
+ * Sai `null` no texto que não passa, e a UI mostra só nome e orientação: é
+ * fallback deliberado, nunca a síntese no lugar.
+ */
+export function verificarCartas(params: { bruto: unknown; tiragem: TiragemDoDia; locale: Locale }): VereditoCartas {
+  const { bruto, tiragem, locale } = params
+  const violacoes: string[] = []
+  const cartas = (bruto as { cartas?: unknown })?.cartas as
+    | { tarot?: { interpretation?: unknown }; lenormand?: { interpretation?: unknown } }
+    | undefined
+
+  const avalia = (oraculo: "tarot" | "lenormand", material: string | null): string | null => {
+    const rotulo = `cartas.${oraculo}`
+    if (!material) return null // sem material, não se interpreta: é o fallback, não é falha
+    const cru = cartas?.[oraculo]?.interpretation
+    const texto = typeof cru === "string" ? cru.trim() : ""
+    if (!texto) {
+      violacoes.push(`${rotulo}: interpretação ausente`)
+      return null
+    }
+    const antes = violacoes.length
+    const n = texto.split(/\s+/).filter(Boolean).length
+    if (n < PALAVRAS_CARTA.min || n > PALAVRAS_CARTA.max) {
+      violacoes.push(`${rotulo}: ${n} palavras, fora de ${PALAVRAS_CARTA.min} a ${PALAVRAS_CARTA.max}`)
+    }
+    if (TRACOS.test(texto)) violacoes.push(`${rotulo}: usa travessão ou meia risca`)
+    for (const regex of PROIBIDAS[locale]) {
+      const achou = texto.match(regex)
+      if (achou) violacoes.push(`${rotulo}: expressão proibida "${achou[0].trim()}"`)
+    }
+    const cruzadas = referenciasCruzadas(texto, {
+      oraculo,
+      propria: oraculo === "tarot" ? tiragem.tarot.nome : tiragem.lenormand.nome,
+      outra: oraculo === "tarot" ? tiragem.lenormand.nome : tiragem.tarot.nome,
+      locale,
+    })
+    for (const c of cruzadas) violacoes.push(`${rotulo}: referência cruzada, ${c}. O verso de uma carta não fala de outra; isso é da síntese`)
+    return violacoes.length === antes ? texto : null
+  }
+
+  const tarot = avalia("tarot", materialDoTarot(tiragem))
+  const lenormand = avalia("lenormand", materialDoLenormand(tiragem))
+  return { tarot, lenormand, violacoes }
+}
+
+/**
+ * O que fazer com UMA resposta do modelo. Função pura, para o servidor e para os
+ * testes com respostas simuladas usarem a mesma decisão.
+ *
+ * A síntese e os dois versos são unidades SEPARADAS e são julgadas
+ * separadamente:
+ *
+ *  - JSON inválido ou síntese reprovada  → refazer (única razão de refazer);
+ *  - síntese aprovada                    → gravar SEMPRE, com cada verso que
+ *    passou e `null` em cada verso que não passou, de forma independente.
+ *
+ * Verso reprovado NUNCA dispara nova chamada: reprovou → `null`, e a UI mostra
+ * só oráculo, nome e orientação. As travas de referência cruzada continuam
+ * decidindo se um `interpretation` pode ser gravado; o que mudou é só o
+ * destino de quem reprova. Nunca se grava texto cruzado e nunca se usa a
+ * síntese como verso.
+ */
+export type Avaliacao =
+  | { acao: "refazer"; violacoes: string[] }
+  | { acao: "gravar"; eixo: [string, string]; sintese: string; cartas: CartasIndividuais | null; violacoes: string[] }
+
+export function avaliarGeracao(params: { conteudo: string; tiragem: TiragemDoDia; locale: Locale }): Avaliacao {
+  const { conteudo, tiragem, locale } = params
+  let bruto: unknown
+  try {
+    bruto = JSON.parse(conteudo)
+  } catch {
+    return { acao: "refazer", violacoes: ["a resposta não era JSON válido"] }
+  }
+  const veredito = verificarSintese({ bruto, tiragem, locale })
+  if (!veredito.ok) return { acao: "refazer", violacoes: veredito.violacoes }
+
+  const individuais = verificarCartas({ bruto, tiragem, locale })
+  const cartas = cartasDeJson({
+    tarot: { interpretation: individuais.tarot },
+    lenormand: { interpretation: individuais.lenormand },
+  })
+  // `violacoes` aqui é informativo (por que algum verso ficou nulo); não gera retry
+  return { acao: "gravar", eixo: veredito.eixo, sintese: veredito.sintese, cartas, violacoes: individuais.violacoes }
+}
+
+export type { CartasIndividuais }

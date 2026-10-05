@@ -11,7 +11,8 @@
  */
 import type { Locale } from "@/lib/i18n/config"
 import { createAdminClient, hasAdminClient } from "@/lib/supabase/admin"
-import { promptTiragemDia, verificarSintese } from "./prompt-tiragem-dia"
+import { avaliarGeracao, promptTiragemDia } from "./prompt-tiragem-dia"
+import { cartasDeJson, type CartasIndividuais } from "./cartas-individuais"
 import { tiragemDoDia, type TiragemDoDia } from "./tiragem-dia"
 
 export type Gerar = (prompt: { system: string; user: string }) => Promise<{ conteudo: string; model: string }>
@@ -20,7 +21,14 @@ export type LeituraDoDia = {
   dia: string
   tiragem: TiragemDoDia
   eixo: [string, string] | null
+  /** a síntese CRUZADA das duas cartas: mora abaixo da tiragem e nunca é o verso de uma carta */
   sintese: string | null
+  /**
+   * a interpretação INDIVIDUAL de cada carta, o verso dela. Nulo em registro
+   * antigo (gravado antes desta camada existir) e em dia sem texto aprovado:
+   * a UI então mostra só nome e orientação.
+   */
+  cartas: CartasIndividuais | null
   model: string | null
   cache: boolean
   violacoes: string[]
@@ -47,32 +55,30 @@ export async function cacheDisponivel(): Promise<boolean> {
 export async function leituraDoDia(params: { dia: string; locale: Locale; gerar: Gerar }): Promise<LeituraDoDia> {
   const { dia, locale, gerar } = params
   const tiragem = tiragemDoDia(dia, locale)
-  const base: LeituraDoDia = { dia, tiragem, eixo: null, sintese: null, model: null, cache: false, violacoes: [] }
+  const base: LeituraDoDia = { dia, tiragem, eixo: null, sintese: null, cartas: null, model: null, cache: false, violacoes: [] }
 
   if (!(await cacheDisponivel())) return { ...base, violacoes: ["cache indisponível"] }
 
+  // registro antigo, sem `cartas`, funciona igual: o verso cai no fallback e a
+  // síntese antiga segue onde estava. Não se regera o histórico.
   const guardada = await ler(dia, locale)
-  if (guardada) return { ...base, eixo: guardada.eixo, sintese: guardada.sintese, model: guardada.model, cache: true }
+  if (guardada) return { ...base, eixo: guardada.eixo, sintese: guardada.sintese, cartas: guardada.cartas, model: guardada.model, cache: true }
 
   const prompt = promptTiragemDia(tiragem, locale)
   let violacoes: string[] = []
 
   for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
     const { conteudo, model } = await gerar(comCorrecao(prompt, violacoes))
-    let bruto: unknown
-    try {
-      bruto = JSON.parse(conteudo)
-    } catch {
-      violacoes = ["a resposta não era JSON válido"]
+    // A síntese e cada verso são julgados SEPARADAMENTE (avaliarGeracao). Só a
+    // síntese pode justificar refazer a geração; um verso reprovado vira null e
+    // a Home mostra só a carta. Nunca texto cruzado, nunca a síntese como verso.
+    const decisao = avaliarGeracao({ conteudo, tiragem, locale })
+    if (decisao.acao === "refazer") {
+      violacoes = decisao.violacoes
       continue
     }
-    const veredito = verificarSintese({ bruto, tiragem, locale })
-    if (!veredito.ok) {
-      violacoes = veredito.violacoes
-      continue
-    }
-    await gravar({ dia, locale, seed: tiragem.seed, eixo: veredito.eixo, sintese: veredito.sintese, model, tentativas: tentativa })
-    return { ...base, eixo: veredito.eixo, sintese: veredito.sintese, model }
+    await gravar({ dia, locale, seed: tiragem.seed, eixo: decisao.eixo, sintese: decisao.sintese, cartas: decisao.cartas, model, tentativas: tentativa })
+    return { ...base, eixo: decisao.eixo, sintese: decisao.sintese, cartas: decisao.cartas, model, violacoes: decisao.violacoes }
   }
 
   return { ...base, violacoes }
@@ -91,16 +97,25 @@ ${violacoes.map((v) => `- ${v}`).join("\n")}`,
 
 async function ler(dia: string, locale: Locale) {
   if (!hasAdminClient()) return null
-  const { data, error } = await createAdminClient()
+  const db = createAdminClient()
+  // `cartas` é coluna ADITIVA (migration 20261005). Antes de ela existir, pedir a
+  // coluna falha; nesse caso lê-se sem ela, e o cache da síntese continua valendo
+  // em vez de a Home regerar (e pagar) a cada visita.
+  let res: { data: Record<string, unknown> | null; error: unknown } = await db
     .from("daily_draw")
-    .select("eixo, sintese, model")
+    .select("eixo, sintese, model, cartas")
     .eq("dia", dia)
     .eq("locale", locale)
     .maybeSingle()
+  if (res.error) {
+    res = await db.from("daily_draw").select("eixo, sintese, model").eq("dia", dia).eq("locale", locale).maybeSingle()
+  }
+  const { data, error } = res
   if (error || !data?.sintese) return null
   return {
     eixo: (data.eixo as [string, string] | null) ?? null,
     sintese: data.sintese as string,
+    cartas: cartasDeJson(data.cartas),
     model: data.model as string,
   }
 }
@@ -119,25 +134,26 @@ async function gravar(linha: {
   seed: string
   eixo: [string, string]
   sintese: string
+  cartas: CartasIndividuais | null
   model: string
   tentativas: number
 }): Promise<void> {
   if (!hasAdminClient()) return
   try {
-    await createAdminClient()
-      .from("daily_draw")
-      .upsert(
-        {
-          dia: linha.dia,
-          locale: linha.locale,
-          seed: linha.seed,
-          eixo: linha.eixo,
-          sintese: linha.sintese,
-          model: linha.model,
-          tentativas: linha.tentativas,
-        },
-        { onConflict: "dia,locale", ignoreDuplicates: true },
-      )
+    const db = createAdminClient()
+    const registro = {
+      dia: linha.dia,
+      locale: linha.locale,
+      seed: linha.seed,
+      eixo: linha.eixo,
+      sintese: linha.sintese,
+      model: linha.model,
+      tentativas: linha.tentativas,
+    }
+    const opcoes = { onConflict: "dia,locale", ignoreDuplicates: true }
+    // com a coluna `cartas`; sem ela (migration ainda não aplicada), grava só o que já existia
+    const { error } = await db.from("daily_draw").upsert({ ...registro, cartas: linha.cartas }, opcoes)
+    if (error) await db.from("daily_draw").upsert(registro, opcoes)
   } catch {
     // gravar é otimização: sem cache o próximo pedido gera de novo
   }
