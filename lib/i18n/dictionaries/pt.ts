@@ -286,6 +286,11 @@ export const pt = {
     continueWithout: "Continuar sem login",
     success: "Login feito com sucesso.",
     accountCreated: "Conta criada. Verifique seu email para confirmar o cadastro antes de entrar.",
+    google: "Continuar com Google",
+    googleLoading: "Abrindo o Google…",
+    or: "ou",
+    googleCancelled: "Login com Google cancelado. Você pode tentar de novo ou usar seu email.",
+    googleFailed: "Não foi possível entrar com o Google agora. Tente novamente em instantes.",
   },
 
   brand: {

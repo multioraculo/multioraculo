@@ -153,6 +153,67 @@ export async function loadOwnedReading(
   return rec
 }
 
+/** Prova de posse: conta dona, ou o mesmo visitante enquanto a leitura ainda não tem conta. */
+export function isReadingOwner(
+  rec: { user_id: string | null; visitor_id: string | null },
+  userId: string | null,
+  visitorId: string | null
+): boolean {
+  if (userId) return rec.user_id === userId
+  return Boolean(visitorId) && !rec.user_id && rec.visitor_id === visitorId
+}
+
+/** Só o necessário do cliente admin; permite testar a regra sem banco. */
+export type ReopenClient = { from: (table: string) => any }
+
+/**
+ * Reabre, SÓ PARA LEITURA, uma leitura NORMAL (não preview) recém-gerada, por
+ * exemplo ao voltar do login (OAuth) para /leitura/<seed>.
+ *
+ * Regras (o seed NÃO é credencial):
+ *  - a linha de uso tem de existir, ser preview=false e estar completed
+ *    (preview tem regra própria em preview.ts e nunca passa por aqui);
+ *  - o dono é provado por user_id (conta) ou por visitor_id (cookie) enquanto
+ *    a leitura ainda não foi atribuída a uma conta;
+ *  - dentro da janela técnica de TECHNICAL_TTL_HOURS e com síntese pronta.
+ * Não consome cota, não cria nem altera nenhuma linha: só SELECT.
+ */
+export async function loadReopenableReading(
+  seed: string,
+  userId: string | null,
+  visitorId: string | null,
+  client?: ReopenClient
+): Promise<StoredReading | null> {
+  if (typeof seed !== "string" || !seed || seed.length > 200) return null
+  const ready = (rec: StoredReading | null) => {
+    if (!rec || !rec.synthesis || !rec.synthesis.trim()) return null
+    if (!isReadingOwner(rec, userId, visitorId)) return null
+    if (Date.now() - new Date(rec.created_at).getTime() > TECHNICAL_TTL_MS) return null
+    return rec
+  }
+
+  const db: ReopenClient | null = client ?? (hasAdminClient() ? createAdminClient() : null)
+  if (!db) {
+    if (!devFallbackAllowed()) return null
+    return ready(devStore.get(seed) ?? null)
+  }
+
+  const { data: usage } = await db
+    .from("reading_usage")
+    .select("seed, preview, status")
+    .eq("seed", seed)
+    .maybeSingle()
+  if (!usage || usage.preview !== false || usage.status !== "completed") return null
+
+  const { data, error } = await db
+    .from("reading_results")
+    .select("seed, user_id, visitor_id, question, locale, oracles, synthesis, created_at")
+    .eq("seed", seed)
+    .maybeSingle()
+  if (error || !data) return null
+  return ready(data as StoredReading)
+}
+
 /** Grava a síntese na leitura já guardada. */
 export async function storeSynthesis(seed: string, synthesis: string): Promise<void> {
   if (!hasAdminClient()) {

@@ -30,6 +30,44 @@ export async function upsertProfile(
   return { profile: data as Profile | null, error }
 }
 
+/**
+ * Garante o profile de quem entrou (senha ou Google), sem sobrescrever nada:
+ * cria se não existir; se existir, só preenche full_name/avatar_url que
+ * estejam vazios. O metadata do provedor é valor inicial, nunca fonte
+ * permanente. Idempotente (vários SIGNED_IN seguidos não duplicam nem
+ * apagam edições).
+ */
+export async function ensureProfile(
+  supabase: SupabaseClient,
+  input: { id: string; full_name?: string | null; avatar_url?: string | null }
+) {
+  const clean = (v?: string | null) => (typeof v === "string" && v.trim() ? v.trim() : null)
+  const full_name = clean(input.full_name)
+  const avatar_url = clean(input.avatar_url)
+
+  const { data: existing, error: readError } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .eq("id", input.id)
+    .maybeSingle()
+  if (readError) return { error: readError }
+
+  if (!existing) {
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: input.id, full_name, avatar_url }, { onConflict: "id", ignoreDuplicates: true })
+    return { error }
+  }
+
+  const patch: { full_name?: string; avatar_url?: string } = {}
+  if (!clean(existing.full_name) && full_name) patch.full_name = full_name
+  if (!clean(existing.avatar_url) && avatar_url) patch.avatar_url = avatar_url
+  if (!Object.keys(patch).length) return { error: null }
+
+  const { error } = await supabase.from("profiles").update(patch).eq("id", input.id)
+  return { error }
+}
+
 // ─── Consultations ────────────────────────────────────────────────────────────
 
 export async function getConsultations(supabase: SupabaseClient, userId: string) {

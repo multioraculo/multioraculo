@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos",
+    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos && npm run verify:auth-next && npm run verify:reabrir-leitura && npm run verify:profile-marker",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
@@ -22,7 +22,10 @@
     "verify:interconexoes": "node --import ./scripts/ts-register.mjs scripts/verify-interconexoes.ts",
     "verify:simbolos": "node --import ./scripts/ts-register.mjs scripts/verify-simbolos.ts",
     "verify:tiragem-cartas": "node --import ./scripts/ts-register.mjs scripts/verify-tiragem-dia-cartas.ts",
-    "verify:arcanos": "node --import ./scripts/ts-register.mjs scripts/verify-arcanos.ts"
+    "verify:arcanos": "node --import ./scripts/ts-register.mjs scripts/verify-arcanos.ts",
+    "verify:auth-next": "node --import ./scripts/ts-register.mjs scripts/verify-auth-next.ts",
+    "verify:reabrir-leitura": "node --import ./scripts/ts-register.mjs scripts/verify-reabrir-leitura.ts",
+    "verify:profile-marker": "node --import ./scripts/ts-register.mjs scripts/verify-profile-marker.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

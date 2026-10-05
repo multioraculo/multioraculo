@@ -6,7 +6,9 @@ import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { upsertProfile } from "@/lib/supabase/queries"
+import { ensureProfile } from "@/lib/supabase/queries"
+import { clearProfileMarker, markProfileDone, profileMarkerDone } from "@/lib/auth/profile-marker"
+import { safeNext } from "@/lib/auth/safe-next"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
@@ -24,6 +26,8 @@ export default function Header({ initialUser }: HeaderProps) {
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
+  // destino de retorno do OAuth quando quem pediu o login informou um (ex.: a leitura recém-gerada)
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   // Menu leve do desktop: "Explorar" (Oráculos e
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
   const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
@@ -47,16 +51,25 @@ export default function Header({ initialUser }: HeaderProps) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null)
 
-      if (event === "SIGNED_IN" && session?.user) {
-        await upsertProfile(supabase, {
-          id: session.user.id,
-          full_name: session.user.user_metadata?.full_name ?? null,
-          avatar_url: session.user.user_metadata?.avatar_url ?? null,
-        })
-        router.refresh()
+      // Depois do OAuth o cookie já vem do servidor, então o cliente emite
+      // INITIAL_SESSION (não SIGNED_IN): os dois garantem o profile. A marca
+      // em sessionStorage evita repetir a consulta a cada página.
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        const uid = session.user.id
+        if (!profileMarkerDone(uid)) {
+          const meta = session.user.user_metadata ?? {}
+          const { error } = await ensureProfile(supabase, {
+            id: uid,
+            full_name: meta.full_name ?? meta.name ?? null,
+            avatar_url: meta.avatar_url ?? meta.picture ?? null,
+          })
+          if (!error) markProfileDone(uid)
+        }
+        if (event === "SIGNED_IN") router.refresh()
       }
 
       if (event === "SIGNED_OUT") {
+        clearProfileMarker()
         router.refresh()
       }
     })
@@ -64,10 +77,26 @@ export default function Header({ initialUser }: HeaderProps) {
     return () => subscription.unsubscribe()
   }, [supabase, router])
 
+  // Volta do OAuth com falha ou cancelamento: o callback anexa ?auth_error=.
+  // Mostramos copy curta e limpamos o parâmetro da URL.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const reason = url.searchParams.get("auth_error")
+    if (!reason) return
+    toast.error(reason === "cancelled" ? dict.login.googleCancelled : dict.login.googleFailed)
+    url.searchParams.delete("auth_error")
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Outras partes do site (página de assinatura, bloqueio por login) pedem o
   // modal de login por evento, sem duplicar o formulário.
   useEffect(() => {
-    const open = () => setShowLogin(true)
+    const open = (e: Event) => {
+      const rt = (e as CustomEvent<{ returnTo?: string } | undefined>).detail?.returnTo
+      setReturnTo(rt ? safeNext(rt, "") || null : null)
+      setShowLogin(true)
+    }
     window.addEventListener("open-login", open)
     return () => window.removeEventListener("open-login", open)
   }, [])
@@ -176,6 +205,7 @@ export default function Header({ initialUser }: HeaderProps) {
 
       <LoginModal
         isOpen={showLogin}
+        returnTo={returnTo}
         onClose={() => setShowLogin(false)}
         onSuccess={() => {
           setShowLogin(false)
