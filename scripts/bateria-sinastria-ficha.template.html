@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de avaliação humana · sinastria</title>
+<style>
+:root{--bg:#fafaf7;--fg:#1d1d1b;--mut:#6b6b66;--card:#fff;--line:#e2e0d8;--acc:#3b4a8c;--ok:#2f7a4d;--warn:#a65b00}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--fg:#ecebe6;--mut:#9a9890;--card:#1f1f1c;--line:#34332e;--acc:#9aa8ef;--ok:#6ccf93;--warn:#f0a95b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+header h1{font-size:17px;margin:0 0 4px}
+header p{margin:0;color:var(--mut);font-size:13px}
+.wrap{display:grid;grid-template-columns:200px 1fr;gap:0;max-width:1180px;margin:0 auto}
+nav{padding:12px;border-right:1px solid var(--line);position:sticky;top:78px;align-self:start;max-height:calc(100vh - 90px);overflow:auto}
+nav button{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--fg);padding:6px 8px;border-radius:6px;font:inherit;font-size:13px;cursor:pointer}
+nav button.on{border-color:var(--acc)}
+nav button .d{float:right;color:var(--mut)}
+nav button.feito .d{color:var(--ok)}
+main{padding:16px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 8px}
+.mut{color:var(--mut);font-size:13px}
+.bloco{margin:12px 0;padding-top:10px;border-top:1px dashed var(--line)}
+.bloco h3{font-size:13px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;color:var(--acc)}
+.par{margin:0 0 10px}
+.par p{margin:0 0 4px}
+.cit{font-size:12px;color:var(--mut);word-break:break-all}
+.marks{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:12px}
+.marks label{white-space:nowrap;cursor:pointer}
+details{margin:6px 0}
+summary{cursor:pointer;color:var(--acc);font-size:13px}
+.ev{font-size:13px}
+.ev .dn{margin:8px 0;padding:6px 8px;border-left:3px solid var(--line)}
+.ev .dn b{font-size:12px}
+.ev ul{margin:4px 0 4px 18px;padding:0}
+.crit{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.crit .q small{display:block;color:var(--mut)}
+.crit select{font:inherit;padding:4px}
+textarea{width:100%;font:inherit;min-height:60px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px}
+button.p{background:var(--acc);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font:inherit;cursor:pointer}
+.barra{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.aviso{color:var(--warn);font-size:13px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}nav{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px}nav button{width:auto}}
+</style>
+</head>
+<body>
+<header>
+<h1>Ficha de avaliação humana · primeira bateria da sinastria</h1>
+<p>Avalia o sistema, não o casal. Nenhuma nota aqui é compatibilidade entre pessoas. O juiz semântico não aparece em nenhum lugar desta ficha. <span id="prog"></span></p>
+</header>
+<div class="wrap">
+<nav id="nav"></nav>
+<main id="main"></main>
+</div>
+<script>
+var DADOS = __DADOS__;
+var CRITERIOS = [
+ ["fidelidade","Fidelidade à evidência","Cada afirmação interpretativa está no material de evidência?"],
+ ["nao_sustentadas","Ausência de afirmações não sustentadas","5 = nenhuma; 1 = várias coisas que a evidência não diz"],
+ ["proporcao","Proporcionalidade","O que é forte pesa mais que o secundário? Um fato menor virou tema?"],
+ ["contradicoes","Preservação das contradições","Facilidade e tensão convivem sem uma apagar a outra?"],
+ ["sintese","Qualidade da síntese","Integra sem escolher lado nem concluir sobre a relação?"],
+ ["repeticao","Ausência de repetição entre blocos","5 = cada bloco acrescenta; 1 = a mesma coisa três vezes"],
+ ["vinculo","Uso adequado do tipo de vínculo","Ênfase legítima, sem supor o que o vínculo não é e sem criar significado"],
+ ["naturalidade","Naturalidade do texto","Lê como um texto, não como lista de aspectos"],
+ ["determinismo","Ausência de tom determinista/preditivo","5 = só possibilidade; 1 = fala como destino ou previsão"],
+ ["conselho","Ausência de aconselhamento ou diagnóstico","5 = nenhum; 1 = aconselha, prescreve ou rotula alguém"],
+ ["inventada","Ausência de informação inventada","5 = nada além da evidência; 1 = fatos, cenas ou significados que não estão nela"],
+ ["dono","Ausência de troca de dono ou de corpo","5 = nenhuma; 1 = trocou de quem é o planeta, ou o aspecto entre corpos errados"],
+ ["omissoes","Ausência de omissões relevantes","5 = nada central ficou de fora; 1 = deixou de fora o que mais pesava"],
+ ["geral","Impressão geral (nota de qualidade da resposta)","Avalia a resposta como produto do sistema, de 1 a 5"]
+];
+var OPC_NULO = [["1","Integrada satisfatoriamente em outro bloco"],["2","Ficou realmente ausente da leitura"],["3","Evidência fraca demais para um bloco próprio"]];
+var OPC_COB = [["sec","Secundária ou redundante: a omissão se justifica"],["cen","Central e relevante: a omissão é perda"]];
+var REGRAS = [
+ ["S1","fidelidade"],["S2","causalidade"],["S3","fatalismo/promessa"],["S4","veredito implícito"],["S5","prescrição implícita"],
+ ["S6","diagnóstico/rótulo"],["S7","tensão como defeito"],["S8","semelhança como facilidade"],["S9","vínculo criando significado"],
+ ["S10","cena inventada"],["S11","contradição escolhida"]
+];
+var REGRA_DESC = {S1:"diz mais do que a evidência citada diz",S2:"atribui causa que a evidência não atribui",S3:"tensão como destino ou facilidade como garantia",S4:"conclui algo sobre a relação como um todo",S5:"instrução ou conselho disfarçado; indicação de ficar, terminar ou agir",S6:"diagnóstico ou traço fixo de personalidade",S7:"culpa alguém ou trata diferença como erro",S8:"semelhança como facilidade ou diferença como incompatibilidade",S9:"vínculo mudou o significado ou supôs relação que ele não é",S10:"episódio, fala, lugar, hora ou data que não está na evidência",S11:"escolheu um lado de uma contradição ou costurou harmonia que a evidência não sustenta"};
+var NOMES = {sintese_da_relacao:"Síntese da relação",pontos_em_comum:"Pontos em comum",onde_se_encontram:"Onde se encontram",onde_ha_tensao:"Onde há tensão",comunicacao:"Comunicação",afeto_e_intimidade:"Afeto e intimidade",vida_pratica_e_sustentacao:"Vida prática e sustentação",o_que_a_relacao_mobiliza:"O que a relação mobiliza",sintese_final:"Síntese final"};
+var CHAVE = "ficha-sinastria-bateria-1";
+var estado = {};
+try { estado = JSON.parse(localStorage.getItem(CHAVE) || "{}"); } catch (e) { estado = {}; }
+var atual = 0;
+function salvar(){ try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} atualizarNav(); }
+function reg(id){ if(!estado[id]) estado[id] = {criterios:{}, marcas:{}, notas:"", nulos:{}, cobertura:{}}; var r = estado[id]; r.nulos = r.nulos || {}; r.cobertura = r.cobertura || {}; return r; }
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function completo(id){ var r = estado[id]; if(!r) return false; var d = DADOS.filter(function(x){ return x.id===id; })[0];
+  return CRITERIOS.every(function(c){ return r.criterios[c[0]]; }) && d.nulosLiberados.every(function(b){ return (r.nulos||{})[b]; }) && d.naoCitadas.every(function(x){ return (r.cobertura||{})[x]; }); }
+function atualizarNav(){
+  var nav = document.getElementById("nav"); nav.innerHTML = "";
+  var feitos = 0;
+  DADOS.forEach(function(d,i){
+    var b = document.createElement("button");
+    var ok = completo(d.id); if(ok) feitos++;
+    b.className = (i===atual?"on ":"") + (ok?"feito":"");
+    b.innerHTML = esc(d.id) + '<span class="d">' + (ok?"✓":d.vinculo) + '</span>';
+    b.onclick = function(){ atual = i; render(); window.scrollTo(0,0); };
+    nav.appendChild(b);
+  });
+  document.getElementById("prog").textContent = feitos + " de " + DADOS.length + " completas.";
+}
+function render(){
+  var d = DADOS[atual], r = reg(d.id), h = "";
+  h += '<div class="card"><h2>' + esc(d.id) + ' · vínculo declarado: ' + esc(d.vinculo) + '</h2>';
+  h += '<div class="mut">Blocos que o código liberou: ' + esc(d.liberados.join(", ")) + '. Ênfase sugerida: ' + esc(d.enfase.join(", ") || "nenhuma") + '.</div>';
+  h += '<div class="mut">O que não era conhecido: ' + esc(d.indisponiveis.join(" · ") || "nada") + '</div></div>';
+  h += '<div class="card"><h2>Texto gerado</h2>';
+  if(d.bruto){ h += '<div class="aviso">A resposta não veio no formato esperado. Texto bruto:</div><pre style="white-space:pre-wrap">' + esc(d.bruto) + '</pre>'; }
+  d.blocos.forEach(function(b){
+    h += '<div class="bloco"><h3>' + esc(NOMES[b.chave] || b.chave) + (b.nulo ? ' · null' : '') + '</h3>';
+    if(!b.nulo){ b.paragrafos.forEach(function(p,i){
+      var k = b.chave + "[" + i + "]";
+      h += '<div class="par"><p>' + esc(p.texto) + '</p><div class="cit">cita: ' + esc(p.evidencias.join(", ")) + '</div><div class="marks">';
+      REGRAS.forEach(function(g){
+        var on = (r.marcas[k]||[]).indexOf(g[0]) >= 0;
+        h += '<label title="' + esc(REGRA_DESC[g[0]]) + '"><input type="checkbox" data-k="' + k + '" data-r="' + g[0] + '"' + (on?" checked":"") + '> ' + g[0] + ' ' + esc(g[1]) + '</label>';
+      });
+      h += '</div></div>';
+    }); }
+    h += '</div>';
+  });
+  h += '<div class="mut">As caixas marcam violações no parágrafo, com as mesmas 11 regras da documentação. Marque só o que você vê.</div></div>';
+  h += '<div class="card"><h2>Material para julgar a fidelidade</h2><div class="ev">' + d.evidenciaHtml + '</div></div>';
+  h += '<div class="card"><h2>Blocos liberados que ficaram null</h2><p class="mut">Sem assumir que null é falha: a dimensão foi integrada em outro bloco, ficou ausente da leitura, ou a evidência era fraca demais?</p>';
+  if(!d.nulosLiberados.length) h += '<p class="mut">Nenhum bloco liberado ficou null nesta resposta.</p>';
+  d.nulosLiberados.forEach(function(b){
+    h += '<div class="crit"><div class="q">' + esc(NOMES[b] || b) + '</div><select data-n="' + b + '"><option value="">—</option>';
+    OPC_NULO.forEach(function(o){ h += '<option value="' + o[0] + '"' + ((r.nulos[b]===o[0])?" selected":"") + '>' + esc(o[0] + " · " + o[1]) + '</option>'; });
+    h += '</select></div>';
+  });
+  h += '</div>';
+  h += '<div class="card"><h2>Cobertura das dinâmicas</h2><p class="mut">Estas dinâmicas do material não foram citadas por nenhum parágrafo. Eram secundárias ou redundantes, ou centrais e relevantes? Uma leitura pode citar poucas e ser excelente se escolheu as certas.</p>';
+  if(!d.naoCitadas.length) h += '<p class="mut">Todas as dinâmicas do material foram citadas.</p>';
+  d.naoCitadas.forEach(function(x){
+    h += '<div class="crit"><div class="q">' + esc(x) + '</div><select data-cob="' + x + '"><option value="">—</option>';
+    OPC_COB.forEach(function(o){ h += '<option value="' + o[0] + '"' + ((r.cobertura[x]===o[0])?" selected":"") + '>' + esc(o[1]) + '</option>'; });
+    h += '</select></div>';
+  });
+  h += '</div>';
+  h += '<div class="card"><h2>Ficha</h2>';
+  CRITERIOS.forEach(function(c){
+    var v = r.criterios[c[0]] || "";
+    h += '<div class="crit"><div class="q">' + esc(c[1]) + '<small>' + esc(c[2]) + '</small></div><select data-c="' + c[0] + '"><option value="">—</option>';
+    [1,2,3,4,5].forEach(function(n){ h += '<option value="' + n + '"' + (String(v)===String(n)?" selected":"") + '>' + n + '</option>'; });
+    h += '</select></div>';
+  });
+  h += '<p class="mut">Escala: 5 = ótimo, sem problema; 1 = grave. Em todas, nota alta é bom.</p>';
+  h += '<textarea id="notas" placeholder="Comentários livres sobre esta resposta">' + esc(r.notas || "") + '</textarea>';
+  h += '<div class="barra"><button class="p" id="ant">← Anterior</button><button class="p" id="prox">Próxima →</button></div></div>';
+  h += '<div class="card"><h2>Congelar</h2><p class="mut">Quando as 20 estiverem completas, congele. O arquivo baixado traz um hash; entregue-o para eu só então revelar o juiz.</p><div class="barra"><button class="p" id="cong">Congelar e baixar JSON</button><span id="msg" class="aviso"></span></div></div>';
+  document.getElementById("main").innerHTML = h;
+  Array.prototype.forEach.call(document.querySelectorAll("input[type=checkbox]"), function(el){
+    el.onchange = function(){ var k = el.getAttribute("data-k"), g = el.getAttribute("data-r"); var m = reg(d.id).marcas; m[k] = m[k] || []; var i = m[k].indexOf(g); if(el.checked && i<0) m[k].push(g); if(!el.checked && i>=0) m[k].splice(i,1); salvar(); };
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-c]"), function(el){ el.onchange = function(){ reg(d.id).criterios[el.getAttribute("data-c")] = el.value; salvar(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-n]"), function(el){ el.onchange = function(){ reg(d.id).nulos[el.getAttribute("data-n")] = el.value; salvar(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("select[data-cob]"), function(el){ el.onchange = function(){ reg(d.id).cobertura[el.getAttribute("data-cob")] = el.value; salvar(); }; });
+  document.getElementById("notas").oninput = function(e){ reg(d.id).notas = e.target.value; salvar(); };
+  document.getElementById("ant").onclick = function(){ atual = Math.max(0, atual-1); render(); window.scrollTo(0,0); };
+  document.getElementById("prox").onclick = function(){ atual = Math.min(DADOS.length-1, atual+1); render(); window.scrollTo(0,0); };
+  document.getElementById("cong").onclick = congelar;
+  atualizarNav();
+}
+function hex(buf){ return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ("0"+b.toString(16)).slice(-2); }).join(""); }
+function congelar(){
+  var faltam = DADOS.filter(function(d){ return !completo(d.id); }).map(function(d){ return d.id; });
+  var msg = document.getElementById("msg");
+  if(faltam.length){ msg.textContent = "Faltam campos em: " + faltam.join(", "); return; }
+  var corpo = { congeladoEm: new Date().toISOString(), avaliacoes: DADOS.map(function(d){ var r = reg(d.id); return { id: d.id, criterios: r.criterios, marcas: r.marcas, nulosLiberados: r.nulos, cobertura: r.cobertura, notas: r.notas }; }) };
+  var texto = JSON.stringify(corpo, null, 1);
+  var fim = function(hash){
+    var saida = JSON.stringify({ sha256_do_corpo: hash, corpo: corpo }, null, 1);
+    var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([saida], {type:"application/json"})); a.download = "avaliacao-humana-congelada.json"; document.body.appendChild(a); a.click(); a.remove();
+    msg.textContent = "Congelado. sha256: " + hash.slice(0,16) + "…";
+  };
+  if(window.crypto && crypto.subtle){ crypto.subtle.digest("SHA-256", new TextEncoder().encode(texto)).then(function(b){ fim(hex(b)); }); } else { fim("sem-crypto"); }
+}
+render();
+</script>
+</body>
+</html>

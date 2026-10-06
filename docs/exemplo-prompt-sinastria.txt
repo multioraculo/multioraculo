@@ -1,0 +1,245 @@
+# SYSTEM
+
+Responda apenas com JSON válido, sem Markdown. Todo texto destinado ao leitor é escrito em português do Brasil. Nenhum campo pode conter travessão, meia risca, qualquer flexão de "arquétipo", nem estas expressões: "à tona", "destaca a importância", "ressalta a necessidade", "é fundamental", "um convite para", "pede atenção especial", "o dia pede", "trata-se de um momento", "paz interior", "autoconhecimento", "jornada interior", "configuração celeste", "energia", "busca por harmonia", "encontrar equilíbrio", "novas conexões", "típico de", "este aspecto pede", "sorte", "felizmente".
+
+# USER
+
+Escreva a leitura de uma RELAÇÃO entre duas pessoas, a partir dos fatos astrológicos já calculados abaixo. O texto é para a primeira pessoa (você); a outra é 'a outra pessoa'.
+
+VÍNCULO DECLARADO: amizade. Ênfase sugerida, se houver lastro: pontos_em_comum, onde_se_encontram, comunicacao. O vínculo não muda nenhum fato abaixo.
+
+ASPECTOS ENTRE OS DOIS MAPAS (em ordem de relevância; cada dinâmica traz os fatos e o que o repertório diz):
+  [sun-uranus:geral]
+    fato A.uranus~B.sun:quincunx: seu Urano em quincunce com o Sol da outra pessoa (orbe 0,0°, limite 1,5°)
+  o que o repertório diz sobre isto:
+    - A combinação gera dinamismo intenso, com tensão, excitação e estímulo mental no lugar de tédio e frustração.
+    - As duas pessoas têm capacidade de independência, mas o Sol tende à ortodoxia e Urano busca um caminho original, livre de tradição e guiado por uma visão utópica.
+    - O par representa o desafio de expandir a individualidade em uma direção nova e inconformista, revelando novas facetas de si.
+    - Quem tem o Sol tende a achar quem tem Urano um companheiro novo e intrigante, que mostra novos campos a conquistar.
+    - Quem tem Urano tende a manter quem tem o Sol sempre alerta.
+    - O desafio constante de se ajustar e explorar pode levar ao limite a capacidade de quem tem o Sol, esgotando-o, e a relação costuma não ser fácil.
+    - O vínculo pode ter uma base particularmente frágil.
+    - Um choque súbito de vontades pode levar a uma briga que encerra a relação, se não há outros vínculos fortes em operação.
+    - Qualquer incompatibilidade de temperamento tende a ganhar importância muito além do que merece.
+    - Situações explosivas podem surgir com frequência incômoda.
+    - A combinação pode funcionar com mais naturalidade quando as duas pessoas permitem muita liberdade uma à outra, ao menos em algumas áreas, e Urano tem espaço para experimentar.
+    - Se as duas pessoas encaram com naturalidade as diferenças de opinião e quem tem o Sol adota atitude indulgente diante das excentricidades de quem tem Urano, uma relação satisfatória pode resultar.
+    - Se quem tem Urano não coage nem ignora o Sol, sem desafiar sua soberania nem ferir seu orgulho, a relação pode se tornar satisfatória.
+    - A tendência à desintegração pode ser contida se há uma proporção expressiva de aspectos favoráveis mútuos com o Saturno de cada pessoa.
+    - Sol: tende à ortodoxia e a procedimentos estabelecidos, com capacidade de independência
+    - Urano: busca um caminho original, livre de tradição, e desafia o outro a ampliar a individualidade
+
+  [moon-saturn:favoravel]
+    fato A.saturn~B.moon:trine: seu Saturno em trígono com a Lua da outra pessoa (orbe 0,2°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Quem tem a Lua pode apreciar a atitude de responsabilidade de quem tem Saturno e a disposição de assumir o trabalho de firmar a base do vínculo.
+    - Quem tem Saturno pode dar exemplo de dedicação ao dever, que quem tem a Lua acaba por apreciar.
+    - Quem tem Saturno pode prestar um serviço de longo prazo, assumindo responsabilidades extras diante de uma limitação da outra pessoa.
+    - Quem tem Saturno pode ter uma lição a ensinar a quem tem a Lua, conforme o signo em que Saturno está.
+    - Uma aparente falta de resposta emocional entusiasmada de quem tem Saturno pode levar quem tem a Lua a desejar uma companhia mais animada e menos prática.
+    - O vínculo pode ser um teste se uma das pessoas sente carregar parte pesada dos deveres e das responsabilidades.
+    - Quem não está disposto a aceitar os laços do vínculo pode achar as responsabilidades extremamente penosas.
+    - Saturno: tende a sustentar uma ligação de longa duração por dever, hesitando em romper o laço formal e vendo na outra pessoa um meio de mostrar constância
+    - Lua: pode se acostumar à presença de quem tem Saturno, preferir o que já conhece e criar o hábito de depender
+
+  [sun-mars:favoravel]
+    fato A.mars~B.sun:sextile: seu Marte em sextil com o Sol da outra pessoa (orbe 0,5°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - O desejo de quem tem Marte pode ser estimulado por uma qualidade interior básica de quem tem o Sol.
+    - Quem tem Marte pode despertar o ímpeto, às vezes adormecido, de quem tem o Sol e dar impulso e direção a seus esforços construtivos.
+    - O interesse benevolente de quem tem o Sol pode dar a quem tem Marte mais confiança e estímulo para sustentar esforços que poderiam esmorecer.
+    - A combinação pode gerar muito ímpeto, e uma cooperação entusiasmada pode levar a realizações significativas.
+    - Um interesse comum por atividades físicas com rivalidade amistosa pode favorecer uma companhia agradável.
+    - Marte pode fornecer o impulso para pôr em prática a grande estratégia concebida por quem tem o Sol.
+    - Sol: oferece interesse benevolente, confiança e estímulo, e pode conceber a estratégia geral
+    - Marte: traz desejo, impulso e direção aos esforços, e pode fornecer o ímpeto para pôr a estratégia em prática
+
+  [moon-venus:favoravel]
+    fato A.moon~B.venus:sextile: sua Lua em sextil com a Vênus da outra pessoa (orbe 0,6°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - As duas pessoas podem sentir muito prazer na companhia uma da outra.
+    - Pode haver interesses culturais compartilhados e os mesmos gostos em entretenimento.
+    - Quem tem Vênus pode pôr quem tem a Lua à vontade, dar afeto e fazer concessões aos seus humores.
+    - Isso costuma suscitar resposta afetuosa de quem tem a Lua, e as duas pessoas podem contribuir para um clima harmonioso.
+    - Vênus: deixa quem tem a Lua à vontade, dá afeto e faz concessões aos seus humores
+    - Lua: responde com afeto e contribui para o clima harmonioso
+
+  [sun-pluto:favoravel]
+    fato A.pluto~B.sun:trine: seu Plutão em trígono com o Sol da outra pessoa (orbe 2,7°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Pode haver um fortalecimento considerável de forças, com quem tem Plutão reforçando a crença de quem tem o Sol em si mesmo.
+    - Quem tem o Sol pode dar a quem tem Plutão uma saída eficaz para seus impulsos subconscientes.
+    - Quem tem o Sol pode incentivar quem tem Plutão a mobilizar amplo apoio para a parceria ou a submetê-la a uma reorganização profunda.
+    - O reconhecimento de um vínculo em nível profundo pode favorecer a formação de uma amizade firme.
+    - Pode haver muita atração física entre as duas pessoas.
+    - Sol: age abertamente para alcançar seus fins
+    - Plutão: age em geral encoberto, movido por impulsos subconscientes
+
+  [moon-mercury:favoravel]
+    fato A.moon~B.mercury:sextile: sua Lua em sextil com Mercúrio da outra pessoa (orbe 2,7°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Quem tem Mercúrio pode explicar os humores de quem tem a Lua e achar mais cativantes as qualidades lunares da outra pessoa.
+    - Quem tem a Lua pode se fascinar pelas qualidades intelectuais de quem tem Mercúrio, que encontra um público receptivo para suas ideias.
+    - Quem tem a Lua pode dar foco ao interesse intelectual de quem tem Mercúrio, apresentando fatos de modo imaginativo e mais atraente.
+    - A capacidade de se adaptar no nível intelectual pode ser correspondida pela capacidade de responder por instinto.
+    - Mercúrio: tenta racionalizar e explicar os sentimentos de quem tem a Lua, adaptando-se no nível intelectual
+    - Lua: dá foco ao interesse intelectual, apresenta fatos de modo imaginativo e responde por instinto
+
+  [sun-jupiter:favoravel]
+    fato A.jupiter~B.sun:sextile: seu Júpiter em sextil com o Sol da outra pessoa (orbe 3,6°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Pode haver camaradagem, generosidade de espírito e muito respeito, apreço e encorajamento mútuos.
+    - A combinação pode fortalecer a relação e até sustentá-la com vários aspectos cruzados difíceis, porque cada pessoa reconhece a benevolência da outra, se esforça em favor da outra e tolera suas falhas.
+    - Quem tem Júpiter pode saber como elevar a autoestima de quem tem o Sol.
+    - Quem tem o Sol tende a mostrar favoritismo por quem tem Júpiter e, se estiver em posição de fazê-lo, pode ser meio de avanço, de melhora financeira ou de bem-estar material.
+    - Cada pessoa tende a sentir prazer na companhia da outra.
+    - Sol: mostra preferência por quem tem Júpiter e pode ser meio de avanço e de melhora material
+    - Júpiter: eleva a autoestima de quem tem o Sol e é generoso, mas pode usar a lisonja em proveito próprio
+
+  [moon-mercury:adverso+especifico]
+    fato A.mercury~B.moon:square: seu Mercúrio em quadratura com a Lua da outra pessoa (orbe 4,5°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Quem tem Mercúrio pode parecer distante demais a quem tem a Lua, pronto a apontar falhas e sem compreender seus sentimentos.
+    - Quem tem a Lua pode se opor aos planos de quem tem Mercúrio por sentir, por instinto, que os planos não levam ao bem-estar comum.
+    - Cada pessoa pode falar em desencontro com a outra, em propósitos cruzados.
+    - Quem tem Mercúrio pode tentar racionalizar os sentimentos de quem tem a Lua e parecer, a quem os sente, distante demais.
+    - Quem tem Mercúrio pode ser cortante com os humores aparentemente irracionais de quem tem a Lua.
+    - Na quadratura, quem tem Mercúrio pode se agitar e se afobar para acalmar quem tem a Lua.
+    - Esse esforço de acalmar pode acabar agravando as coisas.
+    - Mercúrio: tenta racionalizar e explicar os sentimentos de quem tem a Lua, adaptando-se no nível intelectual
+    - Lua: dá foco ao interesse intelectual, apresenta fatos de modo imaginativo e responde por instinto
+
+  [moon-venus:adverso+especifico]
+    fato A.venus~B.moon:square: sua Vênus em quadratura com a Lua da outra pessoa (orbe 4,5°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - Quem tem Vênus pode mimar demais quem tem a Lua.
+    - Pode haver desarmonia por uma abordagem casual demais das questões que envolvem a afeição.
+    - Quem tem Vênus pode usar o charme para tirar vantagem de um vínculo passageiro.
+    - Quem tem a Lua pode parecer corresponder por flerte ou por ganho de curto prazo.
+    - Os desacordos podem ser menores, de ressentimentos ocasionais quando uma das pessoas não consegue o que quer.
+    - Na quadratura, a abordagem casual do afeto, o charme por vantagem e a resposta por flerte são mais prováveis.
+    - Vênus: deixa quem tem a Lua à vontade, dá afeto e faz concessões aos seus humores
+    - Lua: responde com afeto e contribui para o clima harmonioso
+
+  [sun-sun:favoravel]
+    fato A.sun~B.sun:sextile: seu Sol em sextil com o Sol da outra pessoa (orbe 5,0°, limite 5,0°)
+  o que o repertório diz sobre isto:
+    - As duas pessoas podem harmonizar seus objetivos de vida e seu modo básico de viver sem atrito excessivo.
+    - O respeito mútuo pelo valor de cada uma como indivíduo e a compatibilidade de temperamento podem formar uma base sólida para um vínculo duradouro.
+
+  [saturn-neptune:especifico]
+    fato A.saturn~B.neptune:conjunction: seu Saturno em conjunção com Netuno da outra pessoa (orbe 0,5°, limite 3,0°)
+  o que o repertório diz sobre isto:
+    - A conjunção pode colocar as pessoas diante da decisão de quem assume a responsabilidade na área do signo e das casas em que ocorre.
+    - Quem tem Saturno pode acabar assumindo o comando por conta própria, pois forçar quem tem Netuno a assumir responsabilidade costuma dar pouco resultado.
+    - Quem tem Saturno pode sentir-se no dever de tomar quem tem Netuno em mãos para ensinar a ser mais eficiente.
+    - Saturno: traz abordagem prática e realista, sentido de responsabilidade e leitura literal
+    - Netuno: traz ideais, inspiração, nuances e linguagem figurada, com compreensão ampla e compassiva
+
+OVERLAYS E PLANETAS SOBRE ÂNGULOS (camada secundária; 'quem tem o planeta' e 'quem tem a casa' são as duas pessoas, na direção dita no fato):
+  [jupiter@casa3]
+    fato A.jupiter@B.casa3: seu Júpiter está na casa 3 da outra pessoa
+  o que o repertório diz sobre isto:
+    - Quem tem Júpiter é fácil de conversar, e a conversa pode ocupar bastante do tempo de quem tem a casa.
+    - Conversa, conhecimento do dia a dia, informação e experiência.
+    - Com Júpiter bem aspectado e aspectos favoráveis, quem tem Júpiter pode querer ajudar quem tem a casa a ampliar seu conhecimento cotidiano.
+    - Quem tem Júpiter pode transmitir bastante informação útil a quem tem a casa.
+    - Quem tem Júpiter se dispõe a recorrer à própria experiência.
+    - Pode haver dificuldade se quem tem a casa não reconhece que quem tem Júpiter está distorcendo o senso de proporção.
+    - Mesmo com Júpiter bem aspectado, quem tem Júpiter pode dizer o que acha que agrada a quem tem a casa, em vez do que de fato é o caso.
+    - Quem tem Júpiter pode se gabar, exagerar ou até blefar quando não está seguro dos fatos.
+
+  [mars@casa3]
+    fato A.mars@B.casa3: seu Marte está na casa 3 da outra pessoa
+    fato B.mars@A.casa3: Marte da outra pessoa está na casa 3 sua
+  o que o repertório diz sobre isto:
+    - Quem tem Marte oferece forte estímulo mental a quem tem a casa.
+    - Pensamento claro, discussão franca, debate de opiniões e deslocamentos.
+    - Quem tem Marte quer conhecer e apreciar as razões por trás das ações de quem tem a casa e pode consultar quem tem a casa sobre problemas que pedem raciocínio claro.
+    - Quem tem Marte tende a expor os próprios problemas com franqueza e a argumentar e debater o ponto de vista de quem tem a casa.
+    - Quem tem Marte pode desafiar as opiniões de quem tem a casa para levar essa pessoa a se expor.
+    - Quem tem Marte pode esperar que quem tem a casa tenha opinião própria, sem se deixar levar por argumentos alheios ou boatos.
+    - Quem tem Marte pode invejar as realizações mentais de quem tem a casa.
+    - Divergências fortes nas discussões podem terminar em acrimônia.
+    - Quem tem Marte pode ser o motivo de quem tem a casa precisar viajar com frequência.
+
+  [moon@casa3]
+    fato A.moon@B.casa3: sua Lua está na casa 3 da outra pessoa
+  o que o repertório diz sobre isto:
+    - Quem tem a Lua pode se fascinar com o funcionamento mental de quem tem a casa e com o modo como enfrenta seus problemas mentais.
+    - Ideias, comunicação, informação e viagens curtas.
+    - Quando os aspectos entre os mapas ajudam, pode se estabelecer uma afinidade mental útil.
+    - Quem tem a Lua pode semear na mente de quem tem a casa uma ideia nova que floresce com o tempo, e ajudar a achar fontes de informação úteis.
+    - Quem tem a Lua pode funcionar como espelho, apontando falhas no raciocínio e ajudando quem tem a casa a se comunicar com mais eficácia.
+    - A memória de quem tem a Lua pode ajudar a acrescentar fatos úteis ao repertório de quem tem a casa.
+    - Quem tem a Lua pode motivar viagens curtas periódicas de quem tem a casa.
+    - As ideias de quem tem a casa podem estimular as reações mentais de quem tem a Lua, com resultados favoráveis ou instáveis.
+    - Quando falta harmonia entre os mapas, um fator emocional pode intrometer-se e impedir a compreensão exata das ideias que cada um quer comunicar.
+    - Quem tem a Lua pode absorver as ideias de quem tem a casa e depois repeti-las como suas.
+
+  [neptune@casa3]
+    fato A.neptune@B.casa3: seu Netuno está na casa 3 da outra pessoa
+    fato B.neptune@A.casa3: Netuno da outra pessoa está na casa 3 sua
+  o que o repertório diz sobre isto:
+    - Quem tem Netuno pode estimular a imaginação e a apreciação poética de quem tem a casa.
+    - Processos mentais, educação, aprendizado, informações e viagens.
+    - Pode acrescentar ao raciocínio comum uma dimensão de percepção intuitiva.
+    - Pode ter o dom de pintar as ideias em imagens que chegam com mais vivacidade a quem tem a casa.
+    - Pode tornar o estudo e o aprendizado mais atraentes para quem tem a casa.
+    - Pode levar a uma visão menos rígida do saber e a ampliar a base de estudo, abandonando o exclusivismo.
+    - Pode captar pensamentos de modo telepático e ampliar a intuição de quem tem a casa.
+    - Com aspectos favoráveis a Netuno, pode despertar o desejo de viajar por relatos fascinantes, inclusive por mar ou ar.
+    - Pode haver confusão mental, e as imagens evocadas podem admitir mais de uma interpretação.
+    - As opiniões de quem tem Netuno, ou o que quem tem a casa imagina que sejam, podem desviar e deixar quem tem a casa confusa.
+    - Pode haver informação errada sobre horários e comodidades de viagem, ou uma viagem inútil.
+
+PONTOS EM COMUM (semelhanças entre os mapas; não são aspectos e não significam facilidade):
+  [elemento] elemento dominante: terra em você, ar na outra pessoa
+    - Ar e terra pedem equilíbrio entre teoria e prática.
+    - O ar pode se frustrar com a lentidão da terra, e a terra pode achar o ar levado por teorias que talvez não se realizem.
+  [modo] modo dominante: cardinal em você, fixo na outra pessoa
+    - Cardinal e fixo: força irresistível junto a objeto imóvel, com a iniciativa de um e a força motriz do outro.
+    - Os atritos aparecem quando falta afinidade básica: o fixo vê o cardinal como precipitado, e o cardinal vê o fixo como pouco empreendedor e apegado à posição.
+
+O QUE NÃO É CONHECIDO:
+  (nada: as duas horas de nascimento são conhecidas)
+
+BLOCOS QUE VOCÊ PODE ESCREVER: sintese_da_relacao, pontos_em_comum, onde_se_encontram, onde_ha_tensao, comunicacao, afeto_e_intimidade, vida_pratica_e_sustentacao, o_que_a_relacao_mobiliza, sintese_final.
+BLOCOS QUE TÊM DE SER null: nenhum.
+
+O QUE CADA BLOCO É:
+  sintese_da_relacao: resumo do padrão geral, a partir das evidências mais relevantes: é um resumo e não um inventário, e o detalhe de cada dinâmica fica para os blocos seguintes
+  pontos_em_comum: similaridades entre os dois mapas (elemento, modo, mesmo signo), SOMENTE se houver pontos em comum na lista
+  onde_se_encontram: complementaridades, reconhecimento, apoio e facilidades que as evidências sustentam
+  onde_ha_tensao: diferenças, atritos e pressões que as evidências sustentam, sem tratar tensão como defeito
+  comunicacao: só se a evidência fala de troca de ideias, linguagem, escuta ou mal-entendido
+  afeto_e_intimidade: só se a evidência fala de afeição, atração, intimidade ou vida emocional
+  vida_pratica_e_sustentacao: só se a evidência fala de rotina, recursos, trabalho, dever, estabilidade ou permanência
+  o_que_a_relacao_mobiliza: só se a evidência fala de intensidade, crise, revelação ou transformação recorrentes
+  sintese_final: descreve a configuração que permanece em aberto entre o que converge e o que diverge, sem escolher uma delas e sem dizer como administrá-la
+
+REGRAS:
+1. REGRA DE OURO: tudo o que você afirma sai da lista acima. Você não calcula, não corrige e não completa astrologia, e não usa o que sabe de astrologia por conta própria para preencher lacunas. Planeta, aspecto, casa, signo, ângulo, elemento ou modo que não está na lista não existe para este texto. Toda afirmação interpretativa tem de poder apontar para um id em `evidencias`.
+2. CITAÇÃO: cada parágrafo declara em `evidencias` os ids (de dinâmica, de fato ou de ponto em comum) de onde saiu, pelo menos um, e só ids que existem na lista. Um parágrafo sem lastro não é escrito.
+3. NATUREZA DO TEXTO: você descreve dinâmicas possíveis entre dois mapas, e não a verdade factual da relação. Fale em possibilidade e tendência ('pode', 'tende'), no tempo presente, e nunca como relato do que acontece entre as duas pessoas.
+4. DONOS: 'seu/sua X' é de você, e 'X da outra pessoa' é da outra pessoa. Nunca troque os donos nem diga um aspecto entre corpos que a lista não liga.
+5. O QUE NÃO SE SABE: o que consta em 'O QUE NÃO É CONHECIDO' não pode ser afirmado nem estimado: nem o signo, nem a retrogradação, nem o Ascendente, o Meio do Céu ou as casas dessa pessoa.
+6. INTEGRE, NÃO VOTE: a ordem das dinâmicas é a de relevância. As primeiras pesam mais, e um fato secundário nunca vira o tema do texto. Não conte e não faça placar: três facilidades e duas tensões não são um resultado.
+7. CONTRADIÇÃO: facilidade e tensão podem existir na mesma relação, e quando a lista traz as duas, as duas aparecem. Não se costura uma harmonia que a evidência não sustenta, e não se resolve uma contradição que ela deixa em aberto.
+8. FACILIDADE NÃO É PROMESSA, TENSÃO NÃO É CONDENAÇÃO: uma facilidade descreve um apoio possível, e não garante afeto, durabilidade nem êxito; uma tensão descreve um atrito possível, e não é defeito de alguém nem sentença sobre a relação.
+9. PONTOS EM COMUM: semelhança não é compatibilidade, e diferença não é incompatibilidade. Escreva a semelhança só no bloco `pontos_em_comum`, só com o que a lista diz, e use a ressalva quando houver. Se a lista não tem pontos em comum, esse bloco é null: não invente um.
+10. SIGNO, ELEMENTO E MODO: para as evidências de signo (`signo:*`), de elemento e de modo, não infira características, personalidade ou estilo próprios daquele signo, elemento ou modo, a não ser que estejam explicitamente no material enviado. Não complete astrologia de memória: diga só o que a evidência diz.
+11. DESCREVA, NÃO PRESCREVA: nada de conselho, instrução ou 'o ideal seria', e nenhuma indicação de ficar, terminar ou agir. Nada de previsão de acontecimento, duração, desfecho ou destino. Karma e destino não são fatos. Nada de diagnóstico nem rótulo de personalidade. Nada de causalidade ('por causa disso ele faz'), de nota, porcentagem ou veredito de compatibilidade ('combinam', 'não combinam', 'alma gêmea').
+12. SEM CENA INVENTADA: não escreva episódios, falas, lugares, horas ou datas.
+13. BLOCOS: escreva só os blocos que você PODE escrever e deixe null todos os outros. Nenhum bloco existe à força, nem para manter simetria: se um bloco ficaria só repetindo outro, ou se a evidência dele é fina, deixe null. `sintese_da_relacao` e `sintese_final` sempre existem.
+14. VÍNCULO: ele pode orientar a ordem em que você apresenta, a atenção relativa, a escolha entre os blocos que você pode escrever e o espaço dado a uma dimensão. Ele não altera nenhum fato, não cria evidência, não transforma o que a evidência diz e não autoriza apagar uma dinâmica central porque ela destoa do vínculo. Não presuma uma relação que o vínculo não é: se não é romântico, não suponha namoro nem intimidade sexual.
+15. CONCISÃO: 2 parágrafos por bloco (3 nas duas sínteses), 90 palavras por parágrafo e 700 palavras no total são TETOS, não metas. Prefira o curto: se a evidência sustenta 350 palavras, escreva 350, e não expanda para chegar perto do teto.
+16. SEM REPETIÇÃO: a síntese da relação apresenta o padrão geral, os blocos temáticos o desenvolvem e a síntese final integra as contradições e encerra. Não repita a mesma dinâmica nos três só para preencher espaço: cada uma aparece onde tem o que acrescentar.
+17. SÍNTESE FINAL: descreve a configuração que permanece em aberto; não prescreve a maneira de administrá-la. Integra as forças presentes, preserva a contradição, não decide o destino da relação e não transforma a conclusão em conselho. Não feche com condição, esforço ou recomendação: nada de 'desde que...', 'se ambos...', 'para que a relação...', 'precisam...', 'devem...', 'é importante...', 'o caminho é...', 'encontrar equilíbrio...', 'com compreensão, paciência ou esforço...', nem equivalente em outras palavras (qualquer frase que diga o que as duas pessoas deveriam fazer ou de que o resultado dependeria). Termine na descrição: o que há, e o que fica em aberto. Correto = descreve a configuração que existe e deixa a tensão em aberto, sem ensinar como administrá-la: pode mostrar coexistência, contraste, tensão não resolvida ou áreas que funcionam de modos diferentes. Incorreto = prescreve como administrar a relação ou condiciona o seu sucesso a uma ação, por exemplo: 'A relação pode funcionar bem desde que ambos tenham paciência e aprendam a lidar com essas diferenças.' Isso mostra a diferença funcional; não há frase pronta para imitar, e cada fechamento deve ser escrito com o que esta relação tem.
+18. SÍNTESE DA RELAÇÃO: é um resumo do padrão geral, e não um inventário: não percorra os aspectos um a um (isso é dos blocos seguintes). Diga o que atravessa a relação em poucas frases e deixe o detalhe para onde ele cabe.
+19. ESTILO: fale com você em segunda pessoa e chame a outra pessoa de 'a outra pessoa'. Pode nomear planetas, signos e aspectos, e não ensine a técnica: nada de explicar o que é orbe, aspecto ou casa. Registro adulto, preciso, pouco adjetivado.
+
+IDIOMA: escreva em português do Brasil. A evidência já está em português: use-a normalmente.
+
+Devolva JSON, com TODAS as nove chaves; as que não existem valem null:
+{"sintese_da_relacao": {"paragrafos": [{"texto": "...", "evidencias": ["id"]}]}, "pontos_em_comum": null, "onde_se_encontram": {"paragrafos": [...]}, "onde_ha_tensao": {"paragrafos": [...]}, "comunicacao": null, "afeto_e_intimidade": null, "vida_pratica_e_sustentacao": null, "o_que_a_relacao_mobiliza": null, "sintese_final": {"paragrafos": [...]}}

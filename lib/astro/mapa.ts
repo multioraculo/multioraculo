@@ -36,13 +36,28 @@ export type DadosNascimento = {
   tz?: string
 }
 
+/**
+ * O movimento aparente de um corpo. `indeterminado` só existe sem hora de
+ * nascimento: o corpo estaciona durante o dia, então o estado muda dentro do
+ * intervalo possível e nenhum dos dois valores é verdade sobre aquela pessoa.
+ */
+export type RetrogradoEstado = "direto" | "retrogrado" | "indeterminado"
+
 export type CorpoNatal = {
   corpo: Corpo
   /** longitude eclíptica; com hora desconhecida, o meio do intervalo */
   lon: number
   signo: number
   grau: number
+  /**
+   * O estado no instante de referência. Com hora desconhecida ele é o do
+   * MEIO-DIA e pode estar errado para metade do dia: quem precisa saber se o
+   * estado é firme lê `retrogradoEstado`. O campo fica porque outras telas o
+   * leem; a correção é aditiva.
+   */
   retrogrado: boolean
+  /** firme ao longo de todo o intervalo possível, ou `indeterminado` */
+  retrogradoEstado: RetrogradoEstado
   /** casa natal; null quando a hora é desconhecida */
   casa: number | null
   /** amplitude da incerteza, em graus; 0 quando a hora é conhecida */
@@ -89,23 +104,30 @@ function calcular(dados: DadosNascimento, hora: number, minuto: number, casas: "
  * O intervalo de cada corpo ao longo do dia civil do nascimento, para quando
  * a hora é desconhecida. Vinte e cinco amostras: a cada hora, mais o fim.
  */
-function intervalos(dados: DadosNascimento): Record<string, { min: number; max: number }> {
+function intervalos(dados: DadosNascimento): Record<string, { min: number; max: number; retro: RetrogradoEstado }> {
   const amostras: Record<string, number[]> = {}
+  const retros: Record<string, boolean[]> = {}
   for (let h = 0; h <= 24; h++) {
     const { mapa } = calcular(dados, Math.min(h, 23), h === 24 ? 59 : 0, "whole_sign")
-    const corpos = mapa.bodies as unknown as Record<string, { lon: number }>
+    const corpos = mapa.bodies as unknown as Record<string, { lon: number; retrograde: boolean }>
     for (const corpo of CORPOS_MAPA) {
       if (!amostras[corpo]) amostras[corpo] = []
+      if (!retros[corpo]) retros[corpo] = []
       amostras[corpo].push(corpos[corpo].lon)
+      retros[corpo].push(Boolean(corpos[corpo].retrograde))
     }
   }
-  const saida: Record<string, { min: number; max: number }> = {}
+  const saida: Record<string, { min: number; max: number; retro: RetrogradoEstado }> = {}
   for (const [corpo, lons] of Object.entries(amostras)) {
+    // as vinte e cinco amostras têm de concordar. Uma estação no dia faz o
+    // estado mudar entre duas delas, e é isso que o torna indeterminado
+    const r = retros[corpo]
+    const retro: RetrogradoEstado = r.every((x) => x) ? "retrogrado" : r.every((x) => !x) ? "direto" : "indeterminado"
     // um dia inteiro cabe em bem menos de meio círculo para qualquer corpo,
     // então desenrolar em torno da primeira amostra basta para a volta de 360
     const base = lons[0]
     const soltos = lons.map((l) => base + ((((l - base) % 360) + 540) % 360) - 180)
-    saida[corpo] = { min: Math.min(...soltos), max: Math.max(...soltos) }
+    saida[corpo] = { min: Math.min(...soltos), max: Math.max(...soltos), retro }
   }
   return saida
 }
@@ -129,6 +151,7 @@ export function mapaNatal(dados: DadosNascimento): MapaNatal {
       signo: indiceDoSigno(lon),
       grau: grauNoSigno(lon),
       retrogrado: Boolean(bruto[corpo].retrograde),
+      retrogradoEstado: faixa ? faixa.retro : bruto[corpo].retrograde ? "retrogrado" : "direto",
       casa: horaConhecida ? bruto[corpo].house : null,
       incerteza,
       signoDefinido,
