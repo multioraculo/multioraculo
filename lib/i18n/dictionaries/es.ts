@@ -264,6 +264,7 @@ export const es: Dictionary = {
   header: {
     backToStart: "Volver al inicio",
     sessionEnded: "Sesión cerrada.",
+    logoutFailed: "No pudimos cerrar la sesión ahora. Inténtalo de nuevo.",
   },
 
   locale: {

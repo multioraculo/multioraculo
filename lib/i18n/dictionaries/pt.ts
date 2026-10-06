@@ -266,6 +266,7 @@ export const pt = {
   header: {
     backToStart: "Voltar ao início",
     sessionEnded: "Sessão encerrada.",
+    logoutFailed: "Não foi possível encerrar a sessão agora. Tente novamente.",
   },
 
   locale: {

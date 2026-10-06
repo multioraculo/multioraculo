@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 import { ensureProfile } from "@/lib/supabase/queries"
 import { clearProfileMarker, markProfileDone, profileMarkerDone } from "@/lib/auth/profile-marker"
 import { safeNext } from "@/lib/auth/safe-next"
+import { createAuthStateHandler, performSignOut } from "@/lib/auth/auth-state"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
@@ -48,31 +49,24 @@ export default function Header({ initialUser }: HeaderProps) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-
-      // Depois do OAuth o cookie já vem do servidor, então o cliente emite
-      // INITIAL_SESSION (não SIGNED_IN): os dois garantem o profile. A marca
-      // em sessionStorage evita repetir a consulta a cada página.
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
-        const uid = session.user.id
-        if (!profileMarkerDone(uid)) {
-          const meta = session.user.user_metadata ?? {}
-          const { error } = await ensureProfile(supabase, {
-            id: uid,
+    } = supabase.auth.onAuthStateChange(
+      // síncrono: nada de await de chamada ao Supabase aqui (ver lib/auth/auth-state.ts)
+      createAuthStateHandler({
+        setUser: (u) => setUser(u as User | null),
+        ensureProfile: (u) => {
+          const meta = (u as User).user_metadata ?? {}
+          return ensureProfile(supabase, {
+            id: u.id,
             full_name: meta.full_name ?? meta.name ?? null,
             avatar_url: meta.avatar_url ?? meta.picture ?? null,
           })
-          if (!error) markProfileDone(uid)
-        }
-        if (event === "SIGNED_IN") router.refresh()
-      }
-
-      if (event === "SIGNED_OUT") {
-        clearProfileMarker()
-        router.refresh()
-      }
-    })
+        },
+        refresh: () => router.refresh(),
+        markerDone: (uid) => profileMarkerDone(uid),
+        markDone: (uid) => markProfileDone(uid),
+        clearMarker: () => clearProfileMarker(),
+      })
+    )
 
     return () => subscription.unsubscribe()
   }, [supabase, router])
@@ -102,7 +96,12 @@ export default function Header({ initialUser }: HeaderProps) {
   }, [])
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
+    // só mostra "sessão encerrada" se a sessão sumiu de verdade
+    const ended = await performSignOut(supabase.auth, clearProfileMarker)
+    if (!ended) {
+      toast.error(dict.header.logoutFailed)
+      return
+    }
     toast.success(dict.header.sessionEnded)
     setUser(null)
     router.push("/")
