@@ -10,9 +10,22 @@ export const OAUTH_NEXT_PATH = "/auth"
 export const OAUTH_NEXT_MAX_AGE_S = 600
 const VERSION = "v1"
 
+// Parâmetros que pertencem a um retorno de OAuth, não ao destino. Se a página
+// onde o login foi clicado ainda trazia um `?code=` de tentativa anterior, ele
+// NÃO pode ir para o destino (o callback o devolveria na URL final).
+const AUTH_QUERY_PARAMS = ["code", "state", "error", "error_code", "error_description", "auth_error"]
+
+/** Remove da query do destino os parâmetros de OAuth; o resto da query fica como está. */
+export function stripAuthParams(path: string): string {
+  const url = new URL(path, "https://interno.invalid")
+  if (!AUTH_QUERY_PARAMS.some((p) => url.searchParams.has(p))) return path
+  for (const p of AUTH_QUERY_PARAMS) url.searchParams.delete(p)
+  return url.pathname + url.search
+}
+
 /** Valor do cookie: `v1.<epoch s>.<caminho codificado>`. Só o caminho interno, nada da leitura. */
 export function encodeNextCookieValue(next: string, nowMs: number = Date.now()): string {
-  return `${VERSION}.${Math.floor(nowMs / 1000)}.${encodeURIComponent(safeNext(next))}`
+  return `${VERSION}.${Math.floor(nowMs / 1000)}.${encodeURIComponent(stripAuthParams(safeNext(next)))}`
 }
 
 /** Linha para `document.cookie`. */
@@ -53,5 +66,5 @@ export function nextFromCookieValue(raw: string | null | undefined, nowMs: numbe
   } catch {
     return "/"
   }
-  return safeNext(decoded)
+  return stripAuthParams(safeNext(decoded))
 }

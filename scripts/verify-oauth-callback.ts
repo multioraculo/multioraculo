@@ -1,7 +1,7 @@
 // Transporte do destino do OAuth por cookie + callback. Sem rede e sem Supabase.
 import { handleAuthCallback } from "../lib/auth/callback"
 import {
-  OAUTH_NEXT_COOKIE, encodeNextCookieValue, nextFromCookieValue, serializeNextCookie,
+  OAUTH_NEXT_COOKIE, encodeNextCookieValue, nextFromCookieValue, serializeNextCookie, stripAuthParams,
 } from "../lib/auth/oauth-next"
 
 let falhas = 0
@@ -130,6 +130,41 @@ async function main() {
   {
     const res = await handleAuthCallback(req("?error=access_denied", val("/assinatura?plano=x")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
     ok(res.headers.get("location") === `${BASE}/assinatura?plano=x&auth_error=cancelled`, "query própria preservada", res.headers.get("location"))
+  }
+
+  // ── a URL final nunca carrega code/state, venha de onde vier ────────────────
+  const semAuth = (loc: string | null) => {
+    const u = new URL(loc ?? "")
+    return !["code", "state", "error", "error_code", "error_description"].some((p) => u.searchParams.has(p))
+  }
+  {
+    // request com code + destino "/" → "/" (nunca "/?code=abc123")
+    const res = await handleAuthCallback(req("?code=abc123", val("/")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(res.headers.get("location") === `${BASE}/`, "request ?code=abc123 + destino / → /", res.headers.get("location"))
+    ok(semAuth(res.headers.get("location")), "sem code na URL final (destino /)")
+    // destino com query própria preserva só a query do destino
+    const r2 = await handleAuthCallback(req("?code=abc123", val("/leitura/seed?tab=x")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(r2.headers.get("location") === `${BASE}/leitura/seed?tab=x`, "destino /leitura/seed?tab=x preservado, sem code", r2.headers.get("location"))
+    // state da request também não vaza
+    const r3 = await handleAuthCallback(req("?code=abc123&state=zzz", val("/faq")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(r3.headers.get("location") === `${BASE}/faq`, "state da request não vaza", r3.headers.get("location"))
+  }
+  {
+    // causa real: o destino gravado no clique já trazia ?code= de uma tentativa anterior
+    const velho = "/?code=ANTIGO"
+    ok(nextFromCookieValue(val(velho), NOW) === "/", "cookie com ?code= antigo é limpo na leitura")
+    const adulterado = `v1.${ts}.${encodeURIComponent("/leitura/x?code=ANTIGO&tab=x&state=s")}`
+    ok(nextFromCookieValue(adulterado, NOW) === "/leitura/x?tab=x", "limpa code/state e mantém a query do destino", nextFromCookieValue(adulterado, NOW))
+    const res = await handleAuthCallback(req("?code=NOVO", adulterado), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(res.headers.get("location") === `${BASE}/leitura/x?tab=x`, "callback com cookie sujo: sem code antigo nem novo", res.headers.get("location"))
+    // na gravação o destino já sai limpo
+    const gravado = serializeNextCookie(velho, { secure: true, nowMs: NOW }).split(";")[0].split("=")[1]
+    ok(decodeURIComponent(gravado.split(".").slice(2).join(".")) === "/", "gravação: /?code=ANTIGO vira /", gravado)
+    // erro/cancelamento: só auth_error entra
+    const c = await handleAuthCallback(req("?error=access_denied", val("/faq?code=ANTIGO&x=1")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(c.headers.get("location") === `${BASE}/faq?x=1&auth_error=cancelled`, "cancelamento: query legítima + só auth_error", c.headers.get("location"))
+    ok(stripAuthParams("/assinatura?plano=a%20b&x=1") === "/assinatura?plano=a%20b&x=1", "sem parâmetros de auth a query fica byte a byte igual")
+    ok(stripAuthParams("/a?error_description=x&b=2") === "/a?b=2", "error_description removido")
   }
 
   if (falhas) process.exit(1)
