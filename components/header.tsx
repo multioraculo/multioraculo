@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client"
 import { ensureProfile } from "@/lib/supabase/queries"
 import { clearProfileMarker, markProfileDone, profileMarkerDone } from "@/lib/auth/profile-marker"
 import { safeNext } from "@/lib/auth/safe-next"
+import { cleanAuthMarkers } from "@/lib/auth/oauth-next"
 import { createAuthStateHandler, performSignOut } from "@/lib/auth/auth-state"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
@@ -71,15 +72,14 @@ export default function Header({ initialUser }: HeaderProps) {
     return () => subscription.unsubscribe()
   }, [supabase, router])
 
-  // Volta do OAuth com falha ou cancelamento: o callback anexa ?auth_error=.
-  // Mostramos copy curta e limpamos o parâmetro da URL.
+  // Volta do OAuth: o callback anexa ?auth_error= (falha/cancelamento) ou
+  // ?auth_return=1 (sucesso; marcador técnico). Mostra o aviso do erro, se houver,
+  // e limpa os dois da URL sem refresh, preservando o resto da query.
   useEffect(() => {
-    const url = new URL(window.location.href)
-    const reason = url.searchParams.get("auth_error")
-    if (!reason) return
-    toast.error(reason === "cancelled" ? dict.login.googleCancelled : dict.login.googleFailed)
-    url.searchParams.delete("auth_error")
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash)
+    const cleaned = cleanAuthMarkers(window.location.pathname + window.location.search + window.location.hash)
+    if (!cleaned) return
+    if (cleaned.error) toast.error(cleaned.error === "cancelled" ? dict.login.googleCancelled : dict.login.googleFailed)
+    window.history.replaceState(window.history.state, "", cleaned.href)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -13,7 +13,7 @@ const VERSION = "v1"
 // Parâmetros que pertencem a um retorno de OAuth, não ao destino. Se a página
 // onde o login foi clicado ainda trazia um `?code=` de tentativa anterior, ele
 // NÃO pode ir para o destino (o callback o devolveria na URL final).
-const AUTH_QUERY_PARAMS = ["code", "state", "error", "error_code", "error_description", "auth_error"]
+const AUTH_QUERY_PARAMS = ["code", "state", "error", "error_code", "error_description", "auth_error", "auth_return"]
 
 /** Remove da query do destino os parâmetros de OAuth; o resto da query fica como está. */
 export function stripAuthParams(path: string): string {
@@ -67,4 +67,52 @@ export function nextFromCookieValue(raw: string | null | undefined, nowMs: numbe
     return "/"
   }
   return stripAuthParams(safeNext(decoded))
+}
+
+/** Marcador próprio do retorno bem-sucedido (ver withQueryParam e cleanAuthMarkers). */
+export const AUTH_RETURN_PARAM = "auth_return"
+
+/**
+ * Acrescenta `chave=valor` ao fim da query de um caminho interno, sem reescrever
+ * o resto da query (preserva os bytes dos parâmetros legítimos).
+ */
+export function withQueryParam(path: string, key: string, value: string): string {
+  const hashAt = path.indexOf("#")
+  const base = hashAt >= 0 ? path.slice(0, hashAt) : path
+  const hash = hashAt >= 0 ? path.slice(hashAt) : ""
+  const sep = base.includes("?") ? (base.endsWith("?") || base.endsWith("&") ? "" : "&") : "?"
+  return `${base}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}${hash}`
+}
+
+/**
+ * Usado pelo Header ao chegar da volta do OAuth. Remove da URL só `auth_error` e
+ * `auth_return`, preservando o resto da query byte a byte. Devolve null se não
+ * houver nenhum dos dois (nada a fazer).
+ */
+export function cleanAuthMarkers(href: string): { href: string; error: "cancelled" | "failed" | null; hadReturn: boolean } | null {
+  const url = new URL(href, "https://interno.invalid")
+  if (!url.search) return null
+  const parts = url.search.slice(1).split("&")
+  let error: "cancelled" | "failed" | null = null
+  let hadReturn = false
+  const keep: string[] = []
+  for (const part of parts) {
+    const eq = part.indexOf("=")
+    const key = decodeURIComponentSafe(eq < 0 ? part : part.slice(0, eq))
+    const value = eq < 0 ? "" : decodeURIComponentSafe(part.slice(eq + 1))
+    if (key === "auth_error") error = value === "cancelled" ? "cancelled" : "failed"
+    else if (key === AUTH_RETURN_PARAM) hadReturn = true
+    else if (part !== "") keep.push(part)
+  }
+  if (!error && !hadReturn) return null
+  const search = keep.length ? "?" + keep.join("&") : ""
+  return { href: url.pathname + search + url.hash, error, hadReturn }
+}
+
+function decodeURIComponentSafe(v: string): string {
+  try {
+    return decodeURIComponent(v.replace(/\+/g, " "))
+  } catch {
+    return v
+  }
 }

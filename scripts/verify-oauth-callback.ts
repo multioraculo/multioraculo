@@ -1,7 +1,7 @@
 // Transporte do destino do OAuth por cookie + callback. Sem rede e sem Supabase.
 import { handleAuthCallback } from "../lib/auth/callback"
 import {
-  OAUTH_NEXT_COOKIE, encodeNextCookieValue, nextFromCookieValue, serializeNextCookie, stripAuthParams,
+  OAUTH_NEXT_COOKIE, cleanAuthMarkers, encodeNextCookieValue, nextFromCookieValue, serializeNextCookie, stripAuthParams, withQueryParam,
 } from "../lib/auth/oauth-next"
 
 let falhas = 0
@@ -60,7 +60,7 @@ function req(qs: string, cookieValue: string | null) {
 }
 function apagaCookie(res: Response) {
   const sc = res.headers.get("set-cookie") ?? ""
-  return sc.includes(`${OAUTH_NEXT_COOKIE}=;`) && /Max-Age=0/i.test(sc) && /Path=\/auth/i.test(sc)
+  return sc.includes(`${OAUTH_NEXT_COOKIE}=;`) && /Max-Age=0/i.test(sc) && /Expires=Thu, 01 Jan 1970 00:00:00 GMT/i.test(sc) && /Path=\/auth/i.test(sc)
 }
 const exchangeOk = async () => ({ error: null as unknown })
 const exchangeErro = async () => ({ error: new Error("x") as unknown })
@@ -74,35 +74,35 @@ async function main() {
       base: BASE, nowMs: NOW, exchange: async (c) => { chamado = c; return { error: null } },
     })
     ok(chamado === "abc", "troca o code")
-    ok(res.headers.get("location") === `${BASE}/leitura/seed1`, "sucesso → destino do cookie", res.headers.get("location"))
+    ok(res.headers.get("location") === `${BASE}/leitura/seed1?auth_return=1`, "sucesso → destino do cookie", res.headers.get("location"))
     ok(apagaCookie(res), "sucesso apaga o cookie")
   }
   // sem cookie → "/"
   {
     const res = await handleAuthCallback(req("?code=abc", null), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res.headers.get("location") === `${BASE}/`, "sem cookie → /")
+    ok(res.headers.get("location") === `${BASE}/?auth_return=1`, "sem cookie → /")
     ok(apagaCookie(res), "sem cookie também limpa")
   }
   // a query `next` é ignorada
   {
     const res = await handleAuthCallback(req("?code=abc&next=https://evil.com", val("/faq")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res.headers.get("location") === `${BASE}/faq`, "query next ignorada")
+    ok(res.headers.get("location") === `${BASE}/faq?auth_return=1`, "query next ignorada")
     const res2 = await handleAuthCallback(req("?code=abc&next=//evil.com", null), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res2.headers.get("location") === `${BASE}/`, "query next hostil sem cookie → /")
+    ok(res2.headers.get("location") === `${BASE}/?auth_return=1`, "query next hostil sem cookie → /")
   }
   // cookie adulterado no callback: nunca sai do domínio
   for (const hostil of ["https://evil.com", "//evil.com", "/\\evil.com"]) {
     for (const forma of [`v1.${ts}.${encodeURIComponent(hostil)}`, hostil, encodeURIComponent(hostil)]) {
       const res = await handleAuthCallback(req("?code=abc", forma), { base: BASE, nowMs: NOW, exchange: exchangeOk })
       const loc = res.headers.get("location") ?? ""
-      ok(loc === `${BASE}/`, `callback com cookie ${hostil} fica no domínio`, loc)
+      ok(loc === `${BASE}/?auth_return=1`, `callback com cookie ${hostil} fica no domínio`, loc)
       ok(apagaCookie(res), "…e apaga o cookie")
     }
   }
   // recursivo
   {
     const res = await handleAuthCallback(req("?code=abc", val("/auth/callback?next=/x")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res.headers.get("location") === `${BASE}/`, "destino recursivo → /")
+    ok(res.headers.get("location") === `${BASE}/?auth_return=1`, "destino recursivo → /")
   }
   // cancelamento
   {
@@ -140,14 +140,14 @@ async function main() {
   {
     // request com code + destino "/" → "/" (nunca "/?code=abc123")
     const res = await handleAuthCallback(req("?code=abc123", val("/")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res.headers.get("location") === `${BASE}/`, "request ?code=abc123 + destino / → /", res.headers.get("location"))
+    ok(res.headers.get("location") === `${BASE}/?auth_return=1`, "request ?code=abc123 + destino / → /?auth_return=1", res.headers.get("location"))
     ok(semAuth(res.headers.get("location")), "sem code na URL final (destino /)")
     // destino com query própria preserva só a query do destino
     const r2 = await handleAuthCallback(req("?code=abc123", val("/leitura/seed?tab=x")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(r2.headers.get("location") === `${BASE}/leitura/seed?tab=x`, "destino /leitura/seed?tab=x preservado, sem code", r2.headers.get("location"))
+    ok(r2.headers.get("location") === `${BASE}/leitura/seed?tab=x&auth_return=1`, "destino /leitura/seed?tab=x preservado, sem code", r2.headers.get("location"))
     // state da request também não vaza
     const r3 = await handleAuthCallback(req("?code=abc123&state=zzz", val("/faq")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(r3.headers.get("location") === `${BASE}/faq`, "state da request não vaza", r3.headers.get("location"))
+    ok(r3.headers.get("location") === `${BASE}/faq?auth_return=1`, "state da request não vaza", r3.headers.get("location"))
   }
   {
     // causa real: o destino gravado no clique já trazia ?code= de uma tentativa anterior
@@ -156,7 +156,7 @@ async function main() {
     const adulterado = `v1.${ts}.${encodeURIComponent("/leitura/x?code=ANTIGO&tab=x&state=s")}`
     ok(nextFromCookieValue(adulterado, NOW) === "/leitura/x?tab=x", "limpa code/state e mantém a query do destino", nextFromCookieValue(adulterado, NOW))
     const res = await handleAuthCallback(req("?code=NOVO", adulterado), { base: BASE, nowMs: NOW, exchange: exchangeOk })
-    ok(res.headers.get("location") === `${BASE}/leitura/x?tab=x`, "callback com cookie sujo: sem code antigo nem novo", res.headers.get("location"))
+    ok(res.headers.get("location") === `${BASE}/leitura/x?tab=x&auth_return=1`, "callback com cookie sujo: sem code antigo nem novo", res.headers.get("location"))
     // na gravação o destino já sai limpo
     const gravado = serializeNextCookie(velho, { secure: true, nowMs: NOW }).split(";")[0].split("=")[1]
     ok(decodeURIComponent(gravado.split(".").slice(2).join(".")) === "/", "gravação: /?code=ANTIGO vira /", gravado)
@@ -165,6 +165,58 @@ async function main() {
     ok(c.headers.get("location") === `${BASE}/faq?x=1&auth_error=cancelled`, "cancelamento: query legítima + só auth_error", c.headers.get("location"))
     ok(stripAuthParams("/assinatura?plano=a%20b&x=1") === "/assinatura?plano=a%20b&x=1", "sem parâmetros de auth a query fica byte a byte igual")
     ok(stripAuthParams("/a?error_description=x&b=2") === "/a?b=2", "error_description removido")
+  }
+
+  // ── auth_return=1: o Location de sucesso sempre tem query própria ───────────
+  {
+    const cases: Array<[string, string]> = [
+      ["/", "/?auth_return=1"],
+      ["/leitura/x", "/leitura/x?auth_return=1"],
+      ["/leitura/x?tab=1", "/leitura/x?tab=1&auth_return=1"],
+      ["/assinatura?plano=a%20b&x=1", "/assinatura?plano=a%20b&x=1&auth_return=1"],
+    ]
+    for (const [destino, esperado] of cases) {
+      const res = await handleAuthCallback(req("?code=ATUAL&state=S", val(destino)), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+      const loc = res.headers.get("location") ?? ""
+      ok(loc === `${BASE}${esperado}`, `sucesso ${destino} → ${esperado}`, loc)
+      const u = new URL(loc)
+      ok(!["code", "state", "error", "error_code", "error_description", "auth_error"].some((p) => u.searchParams.has(p)), `${destino}: nada do OAuth no Location`, loc)
+      ok(!/ATUAL/.test(loc), `${destino}: o code da request não aparece`)
+    }
+    // o marcador nunca volta ao cookie de destino
+    ok(nextFromCookieValue(val("/?auth_return=1"), NOW) === "/", "stripAuthParams remove auth_return (leitura)")
+    ok(stripAuthParams("/leitura/x?tab=1&auth_return=1") === "/leitura/x?tab=1", "stripAuthParams remove auth_return e mantém a query legítima")
+    const gravado = serializeNextCookie("/leitura/x?auth_return=1", { secure: true, nowMs: NOW }).split(";")[0].split("=")[1]
+    ok(decodeURIComponent(gravado.split(".").slice(2).join(".")) === "/leitura/x", "gravação não guarda auth_return", gravado)
+    // erro/cancelamento continuam só com auth_error (sem auth_return)
+    const e = await handleAuthCallback(req("?error=access_denied&code=ATUAL", val("/leitura/x?tab=1")), { base: BASE, nowMs: NOW, exchange: exchangeOk })
+    ok(e.headers.get("location") === `${BASE}/leitura/x?tab=1&auth_error=cancelled`, "cancelamento: só auth_error", e.headers.get("location"))
+    const e2 = await handleAuthCallback(req("?code=ruim", val("/")), { base: BASE, nowMs: NOW, exchange: exchangeErro })
+    ok(e2.headers.get("location") === `${BASE}/?auth_error=failed`, "exchange com erro: só auth_error", e2.headers.get("location"))
+    // cookie expirado de verdade em TODA saída
+    for (const r of [await handleAuthCallback(req("?code=a", val("/")), { base: BASE, nowMs: NOW, exchange: exchangeOk }), e, e2]) {
+      const sc = r.headers.get("set-cookie") ?? ""
+      ok(/Max-Age=0/i.test(sc) && /Expires=Thu, 01 Jan 1970 00:00:00 GMT/i.test(sc) && /Path=\/auth/i.test(sc), "cookie expirado: Max-Age=0 + Expires passado + Path=/auth", sc)
+    }
+    // withQueryParam preserva a query existente byte a byte
+    ok(withQueryParam("/a?x=%20y&z=1", "auth_return", "1") === "/a?x=%20y&z=1&auth_return=1", "withQueryParam preserva bytes")
+  }
+
+  // ── Header: limpeza dos marcadores ──────────────────────────────────────────
+  {
+    const c1 = cleanAuthMarkers("/?auth_return=1")
+    ok(c1 !== null && c1.href === "/" && c1.hadReturn && c1.error === null, "auth_return sozinho → remove, sem erro", c1)
+    const c2 = cleanAuthMarkers("/leitura/x?tab=1&auth_return=1")
+    ok(c2 !== null && c2.href === "/leitura/x?tab=1", "remove só auth_return e preserva a query legítima", c2)
+    const c3 = cleanAuthMarkers("/leitura/x?auth_return=1&tab=1&y=%20z")
+    ok(c3 !== null && c3.href === "/leitura/x?tab=1&y=%20z", "preserva a query legítima byte a byte", c3)
+    const c4 = cleanAuthMarkers("/faq?auth_error=cancelled&x=1")
+    ok(c4 !== null && c4.href === "/faq?x=1" && c4.error === "cancelled" && !c4.hadReturn, "auth_error: aviso + remoção", c4)
+    const c5 = cleanAuthMarkers("/faq?auth_error=failed")
+    ok(c5 !== null && c5.href === "/faq" && c5.error === "failed", "auth_error=failed", c5)
+    ok(cleanAuthMarkers("/faq?tab=1") === null && cleanAuthMarkers("/faq") === null, "sem marcadores: não faz nada")
+    const c6 = cleanAuthMarkers("/faq?code=1&auth_return=1#topo")
+    ok(c6 !== null && c6.href === "/faq?code=1#topo", "só remove os marcadores próprios (não toca em outras chaves) e mantém o hash", c6)
   }
 
   if (falhas) process.exit(1)
