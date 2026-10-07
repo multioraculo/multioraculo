@@ -35,6 +35,7 @@ import SinteseInterconexoes from "@/components/sintese-interconexoes"
 import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
 import type { MapaNatal } from "@/lib/astro/mapa"
 import type { Interconexao } from "@/lib/astro/interconexoes"
+import Seta from "@/components/seta"
 
 type Cidade = { nome: string; regiao: string; pais: string; lat: number; lon: number; rotulo: string }
 type Nascimento = { born_on: string; born_at: string | null; lat: number; lon: number; place_label: string; tz?: string }
@@ -624,8 +625,8 @@ function DemaisPosicoes({
           <span className="hidden sm:block flex-1 truncate text-white/25 text-[14px] font-light group-open:invisible">
             {resto.map((c) => nomes[c.corpo]).join(" · ")}
           </span>
-          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[13px] transition-transform duration-200 group-open:rotate-180">
-            ▾
+          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[14px] transition-transform duration-200 group-open:rotate-180">
+            <Seta tipo="chevron" />
           </span>
         </summary>
 

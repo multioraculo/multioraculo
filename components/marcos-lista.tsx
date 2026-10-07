@@ -13,6 +13,7 @@ import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import { ContagemDeDias } from "@/components/marcos-home"
 import { diasDesde, hojeCivil, type Marco } from "@/lib/marcos"
+import Seta from "@/components/seta"
 
 type Rascunho = { name: string; started_on: string; note: string; target: string }
 
@@ -152,7 +153,7 @@ export default function MarcosLista() {
           </div>
         ) : (
           <button onClick={() => setNovo(vazio())} className="text-white/45 hover:text-white/75 text-sm transition-colors">
-            {t.add} ↗
+            {t.add} <Seta />
           </button>
         )}
       </div>

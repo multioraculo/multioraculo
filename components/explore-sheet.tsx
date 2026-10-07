@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useI18n } from "@/components/i18n-provider"
+import Seta from "@/components/seta"
 
 /**
  * Painel "Explorar": bottom sheet leve com os destinos de descoberta do
@@ -48,7 +49,7 @@ export default function ExploreSheet({ open, onClose }: { open: boolean; onClose
                   <span className="block text-base font-light">{it.label}</span>
                   <span className="block text-white/45 text-xs mt-0.5">{it.hint}</span>
                 </span>
-                <span className="text-white/35" aria-hidden="true">→</span>
+                <span className="text-white/35 text-[15px]" aria-hidden="true"><Seta tipo="direita" /></span>
               </Link>
             </li>
           ))}

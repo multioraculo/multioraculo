@@ -73,6 +73,7 @@ import EscolhaUmaCarta from "@/components/escolha-uma-carta"
 import { SIGNOS } from "@/lib/astro/nomes"
 import type { TiragemDoDia } from "@/lib/oracles/tiragem-dia"
 import type { CartasIndividuais } from "@/lib/oracles/cartas-individuais"
+import Seta from "@/components/seta"
 
 export type RegistroDeHoje = { titulo: string; hoje: boolean } | null
 
@@ -243,7 +244,7 @@ function Chamada({
       <span className="flex items-center gap-2">
         <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">{children}</span>
         <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-all duration-200 group-hover:translate-x-0.5">
-          ↗
+          <Seta />
         </span>
       </span>
       {destino && <span className="block text-white/35 text-[13px] font-light mt-1.5">{destino}</span>}
@@ -713,7 +714,7 @@ function ConviteDePergunta({
               branco e a linha de destino logo abaixo dizendo para onde vai. E
               o card inteiro é o link, não a seta. */}
           <span className="hidden sm:inline text-white/35 group-hover:text-white/80 text-[16px] shrink-0 mt-1 transition-all duration-200 group-hover:translate-x-0.5">
-            ↗
+            <Seta />
           </span>
         </span>
         <span className="block text-white/35 text-[13px] font-light mt-3">{destino}</span>

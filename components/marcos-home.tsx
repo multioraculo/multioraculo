@@ -19,6 +19,7 @@ import { useI18n } from "@/components/i18n-provider"
 import Lapis from "@/components/lapis"
 import { fmt } from "@/lib/i18n"
 import { diasDesde, hojeCivil, type Marco } from "@/lib/marcos"
+import Seta from "@/components/seta"
 
 const QUANTOS_NA_HOME = 2
 
@@ -71,7 +72,7 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
             {c.signIn}
           </span>
           <span className="text-white/45 group-hover:text-white/85 text-[16px] transition-transform duration-200 group-hover:translate-x-0.5">
-            →
+            <Seta tipo="direita" />
           </span>
         </button>
       </div>
@@ -233,7 +234,7 @@ export default function MarcosHome({ logado }: { logado: boolean }) {
             <Link href="/marcos" className="group py-3 flex items-center gap-2">
               <span className="text-white/85 group-hover:text-white text-[16px] font-light transition-colors">{t.all}</span>
               <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-all duration-200 group-hover:translate-x-0.5">
-                ↗
+                <Seta />
               </span>
             </Link>
           )}

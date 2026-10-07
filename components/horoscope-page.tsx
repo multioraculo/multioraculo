@@ -26,6 +26,7 @@ import type { Ceu } from "@/lib/astro/ceu"
 import type { Leitura, RelacaoEscrita } from "@/lib/astro/prompt-horoscopo"
 import { ASPECTOS, CORPOS, FASES, LIGACAO_ASPECTO, LUNACOES, SIGNOS } from "@/lib/astro/nomes"
 import { LENTOS, SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
+import Seta from "@/components/seta"
 
 type Resposta = {
   dia: string
@@ -311,8 +312,8 @@ function Gaveta({ titulo, nota, children }: { titulo: string; nota?: string; chi
           <Rotulo>{titulo}</Rotulo>
           {nota && <span className="block text-white/30 text-[13px] leading-relaxed mt-1">{nota}</span>}
         </span>
-        <span className="text-white/30 group-hover:text-white/55 text-[12px] transition-transform duration-200 group-open:rotate-180">
-          ▾
+        <span className="text-white/30 group-hover:text-white/55 text-[14px] transition-transform duration-200 group-open:rotate-180">
+          <Seta tipo="chevron" />
         </span>
       </summary>
       <div className="px-6 pb-6">{children}</div>
@@ -658,7 +659,7 @@ function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno:
           className="group inline-flex items-center gap-2 mt-7 px-5 py-2.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/20 hover:border-white/30 text-white font-light text-sm transition-all duration-300"
         >
           {t.callCta}
-          <span className="text-white/45 group-hover:text-white/70 text-[13px] transition-colors">↗</span>
+          <span className="text-white/45 group-hover:text-white/70 text-[14px] transition-colors"><Seta /></span>
         </Link>
         {/* o tamanho do pedido fica à vista antes do clique */}
         <p className="text-white/25 text-[13px] font-light mt-2.5">{t.callFields}</p>

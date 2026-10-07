@@ -3,6 +3,7 @@
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import { bitsOfHexagram } from "@/lib/oracles/draw"
+import Seta from "@/components/seta"
 
 /**
  * Visualização do I Ching: o hexagrama real da consulta, construído pelas
@@ -149,8 +150,8 @@ export default function IChingHexagram({ items, hexagram, animate = false }: Pro
         {rbits && r && data.resulting && (
           <>
             <div className={`flex flex-col items-center gap-0.5 text-white/35 ${fade}`} style={animate ? { animationDelay: "1400ms" } : undefined} aria-hidden="true">
-              <span className="text-xl leading-none hidden sm:inline">→</span>
-              <span className="text-xl leading-none sm:hidden">↓</span>
+              <span className="text-xl leading-none hidden sm:inline"><Seta tipo="direita" /></span>
+              <span className="text-xl leading-none sm:hidden"><Seta tipo="baixo" /></span>
               <span className="text-[12px] uppercase tracking-widest">{t.transformation}</span>
             </div>
             <div className={`flex flex-col items-center ${fade}`} style={animate ? { animationDelay: "1500ms" } : undefined}>

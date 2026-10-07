@@ -26,6 +26,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import ReadingProgress, { useReadingProgress } from "@/components/reading-progress"
+import Seta from "@/components/seta"
 
 type Estado =
   | { fase: "inicial" }
@@ -104,7 +105,7 @@ export default function SinteseInterconexoes({
                 {t.sinteseCta}
               </span>
               <span className="text-white/45 group-hover:text-white/85 text-[15px] transition-transform duration-200 group-hover:translate-x-0.5">
-                →
+                <Seta tipo="direita" />
               </span>
             </button>
           )}
@@ -147,7 +148,7 @@ export default function SinteseInterconexoes({
               >
                 {t.sinteseLocked}
                 <span className="text-[14px] text-white/45 group-hover:text-white/80 transition-transform duration-200 group-hover:translate-x-0.5">
-                  ↗
+                  <Seta />
                 </span>
               </Link>
             </div>

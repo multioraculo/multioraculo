@@ -5,6 +5,7 @@ import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
 import type { Dictionary } from "@/lib/i18n"
+import Seta from "@/components/seta"
 
 /**
  * "Registros": área pessoal da navegação principal. Reúne o que a pessoa
@@ -102,7 +103,7 @@ export default function RecordsSheet({ open, onClose }: { open: boolean; onClose
                     <span className="block text-base font-light">{it.label}</span>
                     <span className="block text-white/45 text-xs mt-0.5">{it.hint}</span>
                   </span>
-                  <span className="text-white/35" aria-hidden="true">→</span>
+                  <span className="text-white/35 text-[15px]" aria-hidden="true"><Seta tipo="direita" /></span>
                 </Link>
               </li>
             ))}
