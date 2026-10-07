@@ -264,6 +264,7 @@ export const es: Dictionary = {
   header: {
     backToStart: "Volver al inicio",
     sessionEnded: "Sesión cerrada.",
+    logoutFailed: "No pudimos cerrar la sesión ahora. Inténtalo de nuevo.",
   },
 
   locale: {
@@ -284,6 +285,11 @@ export const es: Dictionary = {
     continueWithout: "Continuar sin iniciar sesión",
     success: "Sesión iniciada con éxito.",
     accountCreated: "Cuenta creada. Revisa tu correo para confirmar el registro antes de entrar.",
+    google: "Continuar con Google",
+    googleLoading: "Abriendo Google…",
+    or: "o",
+    googleCancelled: "Se canceló el acceso con Google. Puedes intentarlo de nuevo o usar tu correo.",
+    googleFailed: "No pudimos entrar con Google ahora. Inténtalo de nuevo en unos instantes.",
   },
 
   brand: {

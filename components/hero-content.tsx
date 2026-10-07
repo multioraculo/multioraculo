@@ -406,6 +406,9 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
 
       if (res.status === 401) {
         toast.error(dict.results.loginToSave)
+        // volta do login direto para esta leitura (reaberta pelo seed, só para o dono)
+        const s = readingSeedRef.current
+        window.dispatchEvent(new CustomEvent("open-login", { detail: s ? { returnTo: "/leitura/" + encodeURIComponent(s) } : undefined }))
       } else if (!res.ok) {
         toast.error(dict.results.saveFailed)
       } else {

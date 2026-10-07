@@ -264,6 +264,7 @@ export const en: Dictionary = {
   header: {
     backToStart: "Back to start",
     sessionEnded: "You have been signed out.",
+    logoutFailed: "We couldn't sign you out right now. Please try again.",
   },
 
   locale: {
@@ -284,6 +285,11 @@ export const en: Dictionary = {
     continueWithout: "Continue without signing in",
     success: "Signed in successfully.",
     accountCreated: "Account created. Check your email to confirm your registration before signing in.",
+    google: "Continue with Google",
+    googleLoading: "Opening Google…",
+    or: "or",
+    googleCancelled: "Google sign-in was cancelled. You can try again or use your email.",
+    googleFailed: "We couldn't sign you in with Google right now. Please try again in a moment.",
   },
 
   brand: {

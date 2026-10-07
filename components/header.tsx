@@ -6,7 +6,11 @@ import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { upsertProfile } from "@/lib/supabase/queries"
+import { ensureProfile } from "@/lib/supabase/queries"
+import { clearProfileMarker, markProfileDone, profileMarkerDone } from "@/lib/auth/profile-marker"
+import { safeNext } from "@/lib/auth/safe-next"
+import { cleanAuthMarkers } from "@/lib/auth/oauth-next"
+import { createAuthStateHandler, performSignOut } from "@/lib/auth/auth-state"
 import LoginModal from "@/components/login-modal"
 import UserMenu from "@/components/user-menu"
 import LocaleSwitcher from "@/components/locale-switcher"
@@ -24,6 +28,8 @@ export default function Header({ initialUser }: HeaderProps) {
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
+  // destino de retorno do OAuth quando quem pediu o login informou um (ex.: a leitura recém-gerada)
+  const [returnTo, setReturnTo] = useState<string | null>(null)
   // Menu leve do desktop: "Explorar" (Oráculos e
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
   const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
@@ -44,36 +50,58 @@ export default function Header({ initialUser }: HeaderProps) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null)
-
-      if (event === "SIGNED_IN" && session?.user) {
-        await upsertProfile(supabase, {
-          id: session.user.id,
-          full_name: session.user.user_metadata?.full_name ?? null,
-          avatar_url: session.user.user_metadata?.avatar_url ?? null,
-        })
-        router.refresh()
-      }
-
-      if (event === "SIGNED_OUT") {
-        router.refresh()
-      }
-    })
+    } = supabase.auth.onAuthStateChange(
+      // síncrono: nada de await de chamada ao Supabase aqui (ver lib/auth/auth-state.ts)
+      createAuthStateHandler({
+        setUser: (u) => setUser(u as User | null),
+        ensureProfile: (u) => {
+          const meta = (u as User).user_metadata ?? {}
+          return ensureProfile(supabase, {
+            id: u.id,
+            full_name: meta.full_name ?? meta.name ?? null,
+            avatar_url: meta.avatar_url ?? meta.picture ?? null,
+          })
+        },
+        refresh: () => router.refresh(),
+        markerDone: (uid) => profileMarkerDone(uid),
+        markDone: (uid) => markProfileDone(uid),
+        clearMarker: () => clearProfileMarker(),
+      })
+    )
 
     return () => subscription.unsubscribe()
   }, [supabase, router])
 
+  // Volta do OAuth: o callback anexa ?auth_error= (falha/cancelamento) ou
+  // ?auth_return=1 (sucesso; marcador técnico). Mostra o aviso do erro, se houver,
+  // e limpa os dois da URL sem refresh, preservando o resto da query.
+  useEffect(() => {
+    const cleaned = cleanAuthMarkers(window.location.pathname + window.location.search + window.location.hash)
+    if (!cleaned) return
+    if (cleaned.error) toast.error(cleaned.error === "cancelled" ? dict.login.googleCancelled : dict.login.googleFailed)
+    window.history.replaceState(window.history.state, "", cleaned.href)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Outras partes do site (página de assinatura, bloqueio por login) pedem o
   // modal de login por evento, sem duplicar o formulário.
   useEffect(() => {
-    const open = () => setShowLogin(true)
+    const open = (e: Event) => {
+      const rt = (e as CustomEvent<{ returnTo?: string } | undefined>).detail?.returnTo
+      setReturnTo(rt ? safeNext(rt, "") || null : null)
+      setShowLogin(true)
+    }
     window.addEventListener("open-login", open)
     return () => window.removeEventListener("open-login", open)
   }, [])
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
+    // só mostra "sessão encerrada" se a sessão sumiu de verdade
+    const ended = await performSignOut(supabase.auth, clearProfileMarker)
+    if (!ended) {
+      toast.error(dict.header.logoutFailed)
+      return
+    }
     toast.success(dict.header.sessionEnded)
     setUser(null)
     router.push("/")
@@ -176,6 +204,7 @@ export default function Header({ initialUser }: HeaderProps) {
 
       <LoginModal
         isOpen={showLogin}
+        returnTo={returnTo}
         onClose={() => setShowLogin(false)}
         onSuccess={() => {
           setShowLogin(false)

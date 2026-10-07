@@ -16,6 +16,7 @@ import { getI18n } from "@/lib/i18n/server"
 import { getUserEntitlement } from "@/lib/billing/entitlement"
 import { attributeVisitorReadings } from "@/lib/billing/usage"
 import { isPreviewOwner, loadPreview, teaserOf, unlockPreview } from "@/lib/billing/preview"
+import { loadReopenableReading } from "@/lib/billing/results"
 import { logEvent } from "@/lib/billing/events"
 import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
 
@@ -39,13 +40,24 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
   const visitorId = isVisitorId(v) ? v : null
   if (user) await attributeVisitorReadings(user.id, visitorId)
 
-  const rec = await loadPreview(seed)
-  if (!rec || !isPreviewOwner(rec, user?.id ?? null, visitorId)) notFound()
+  let rec = await loadPreview(seed)
+  if (rec && !isPreviewOwner(rec, user?.id ?? null, visitorId)) rec = null
+
+  // Leitura normal (não preview) reaberta por quem comprovadamente a gerou,
+  // por exemplo ao voltar do login. Somente leitura: sem cota, sem
+  // desbloqueio, sem evento de preview.
+  let reopened = false
+  if (!rec) {
+    const normal = await loadReopenableReading(seed, user?.id ?? null, visitorId)
+    if (!normal) notFound()
+    rec = { ...normal, unlocked_at: normal.created_at } as unknown as NonNullable<typeof rec>
+    reopened = true
+  }
 
   const ent = await getUserEntitlement(user?.id ?? null)
   const entitled = ent.plan !== "free"
-  const unlocked = Boolean(rec.unlocked_at) || entitled
-  if (unlocked && !rec.unlocked_at) await unlockPreview(seed, user?.id ?? null, visitorId)
+  const unlocked = reopened || Boolean(rec.unlocked_at) || entitled
+  if (!reopened && unlocked && !rec.unlocked_at) await unlockPreview(seed, user?.id ?? null, visitorId)
   if (!unlocked) await logEvent("preview_viewed", { userId: user?.id ?? null, visitorId, seed })
 
   return (
