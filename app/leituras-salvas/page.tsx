@@ -5,6 +5,10 @@ import ConsultationsList from "@/components/consultations-list"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import type { ConsultationNaLista } from "@/lib/types"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 export default async function LeiturasSalvasPage() {
   const supabase = await createClient()

@@ -3,6 +3,10 @@ import ShaderBackground from "@/components/shader-background"
 import MarcosLista from "@/components/marcos-lista"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 /**
  * Os marcos pessoais: contagens que a própria pessoa define.

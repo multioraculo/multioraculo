@@ -4,6 +4,10 @@ import DiaryList from "@/components/diary-list"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import type { JournalEntry } from "@/lib/types"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 /**
  * O Diário. Aceita uma ABERTURA vinda da Home: `?abertura=N` escolhe uma frase

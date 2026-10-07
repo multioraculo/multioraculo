@@ -9,6 +9,49 @@ export const pt = {
       "A mesma pergunta, vista por vários ângulos. Tarô, I Ching, Runas, Búzios e Cartas Lenormand.",
   },
 
+  /**
+   * Metadata por rota (title, description). O sufixo " | Multioráculo" vem do
+   * template em app/layout.tsx; só a Home usa título absoluto. Limites
+   * conferidos em scripts/verify-seo.ts.
+   */
+  seo: {
+    home: {
+      title: "Multioráculo: Tarô, I Ching, Runas, Búzios e Lenormand",
+      description:
+        "Uma pergunta, cinco oráculos, uma síntese. Tarô, I Ching, Runas, Búzios e Lenormand lidos separadamente e colocados em relação. Leitura simbólica, não previsão.",
+    },
+    oraculos: {
+      title: "Os cinco oráculos e como funcionam",
+      description:
+        "Como o Tarô, o I Ching, as Runas, os Búzios e o Lenormand trabalham com símbolos, e como formular uma pergunta que traga uma leitura mais clara.",
+    },
+    faq: {
+      title: "Perguntas frequentes",
+      description:
+        "Dúvidas comuns sobre o Multioráculo: o que cada tiragem entrega, planos e cancelamento, o que fica guardado e os limites de uma leitura simbólica.",
+    },
+    sonhos: {
+      title: "Sonhos: leitura simbólica e arquetípica",
+      description:
+        "Descreva seu sonho e veja seus símbolos, imagens e relações lidos a partir de uma perspectiva simbólica e arquetípica.",
+    },
+    horoscopo: {
+      title: "Horóscopo do dia, signo a signo",
+      description:
+        "O céu de hoje calculado, com planetas, signos e aspectos, e a leitura do dia para cada um dos doze signos.",
+    },
+    assinatura: {
+      title: "Planos e assinatura",
+      description:
+        "Conheça os planos do Multioráculo e escolha quantas tiragens você quer ter para as suas perguntas.",
+    },
+    interconexoes: {
+      title: "Interconexões: o céu de hoje e o seu mapa",
+      description:
+        "Veja onde o céu de hoje encontra o seu mapa: Lua, Ascendente, planetas e casas. Você sabe o que será pedido antes de entrar.",
+    },
+  },
+
   common: {
     appName: "Multioráculo",
     login: "Login",
@@ -360,6 +403,7 @@ export const pt = {
   },
 
   oraclesPage: {
+    title: "Oráculos",
     whatIsTitle: "O que é um oráculo",
     whatIsText:
       "Um oráculo é, em essência, uma tecnologia de percepção. Não é apenas superstição ou acaso, é um mecanismo construído por gerações para transformar padrões invisíveis em símbolos visíveis.",
@@ -426,6 +470,7 @@ export const pt = {
   },
 
   faq: {
+    title: "Perguntas frequentes",
     items: [
       {
         q: "O Multioráculo prevê o futuro?",

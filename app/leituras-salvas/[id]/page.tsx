@@ -12,6 +12,10 @@ import { tarotCardsFromSeed } from "@/lib/oracles/tarot-server"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
 import { formatDate } from "@/lib/i18n"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 const ORACLE_ORDER = ["iching", "tarot", "buzios", "lenormand", "runas"] as const
 

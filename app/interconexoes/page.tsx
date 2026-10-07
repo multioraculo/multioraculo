@@ -7,6 +7,9 @@ import { formatDate } from "@/lib/i18n"
 import { diaDeHoje } from "@/lib/astro/ceu"
 import { getUserEntitlement } from "@/lib/billing/entitlement"
 import { hasAstroPessoal } from "@/lib/billing/plans"
+import { metadataDaRota } from "@/lib/seo/rota"
+
+export const generateMetadata = () => metadataDaRota("interconexoes")
 
 /**
  * Interconexões: o céu de hoje encontrando o mapa da pessoa.

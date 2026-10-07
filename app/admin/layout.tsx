@@ -4,6 +4,10 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import AdminNav from "@/components/admin/nav"
 import { currentAdmin } from "@/lib/admin/auth"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 export const dynamic = "force-dynamic"
 

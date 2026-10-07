@@ -6,6 +6,10 @@ import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
 import { payloadDoCeuDoDiaSeGravado } from "@/lib/astro/ceu-do-dia-payload"
 import { payloadDaTiragemDoDiaSeGravada } from "@/lib/oracles/tiragem-dia-payload"
 import { getLocale } from "@/lib/i18n/server"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 /**
  * A Home: o dia de hoje reunido num lugar só.

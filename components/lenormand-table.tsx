@@ -61,7 +61,7 @@ export function LenormandCard({ index, name, center = false, className = "", sty
         {/* gravura com fundo transparente; se a arte da carta ainda não existir, a lâmina fica só com número e nome */}
         <img
           src={lenormandArtSrc(lenormandId(index))}
-          alt=""
+          alt={name}
           draggable={false}
           onError={(ev) => { ev.currentTarget.style.display = "none" }}
         />

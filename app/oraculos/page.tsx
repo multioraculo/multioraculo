@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import { getI18n } from "@/lib/i18n/server"
+import { metadataDaRota } from "@/lib/seo/rota"
+
+export const generateMetadata = () => metadataDaRota("oraculos")
 
 export default async function OraculosPage() {
   const supabase = await createClient()
@@ -15,6 +18,7 @@ export default async function OraculosPage() {
 
       <div className="relative z-10 container mx-auto px-6 py-12">
         <div className="max-w-3xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl font-light italic instrument text-white mb-8">{t.title}</h1>
           <div className="space-y-6">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-light text-white mb-3">{t.whatIsTitle}</h2>

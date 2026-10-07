@@ -7,6 +7,44 @@ export const en: Dictionary = {
       "The same question, seen from several angles. Tarot, I Ching, Runes, Búzios and Lenormand cards.",
   },
 
+  seo: {
+    home: {
+      title: "Multioráculo: Tarot, I Ching, Runes, Búzios and Lenormand",
+      description:
+        "One question, five oracles, one synthesis. Tarot, I Ching, Runes, Búzios and Lenormand read separately and then set in relation. Symbolic reading, not prediction.",
+    },
+    oraculos: {
+      title: "The five oracles and how they work",
+      description:
+        "How Tarot, I Ching, Runes, Búzios and Lenormand work with symbols, and how to phrase a question that brings a clearer reading.",
+    },
+    faq: {
+      title: "Frequently asked questions",
+      description:
+        "Common questions about Multioráculo: what each reading delivers, plans and cancellation, what is stored, and the limits of a symbolic reading.",
+    },
+    sonhos: {
+      title: "Dreams: symbolic and archetypal reading",
+      description:
+        "Describe your dream and see its symbols, images and relations read from a symbolic and archetypal perspective.",
+    },
+    horoscopo: {
+      title: "Daily horoscope, sign by sign",
+      description:
+        "Today's calculated sky, with planets, signs and aspects, and the reading of the day for each of the twelve signs.",
+    },
+    assinatura: {
+      title: "Plans and subscription",
+      description:
+        "Explore the Multioráculo plans and choose how many readings you want for your questions.",
+    },
+    interconexoes: {
+      title: "Interconnections: today's sky and your chart",
+      description:
+        "See where today's sky meets your chart: Moon, Ascendant, planets and houses. You know what will be asked before you sign in.",
+    },
+  },
+
   common: {
     appName: "Multioráculo",
     login: "Login",
@@ -358,6 +396,7 @@ export const en: Dictionary = {
   },
 
   oraclesPage: {
+    title: "Oracles",
     whatIsTitle: "What an oracle is",
     whatIsText:
       "An oracle is, in essence, a technology of perception. It is not mere superstition or chance; it is a mechanism built over generations to turn invisible patterns into visible symbols.",
@@ -424,6 +463,7 @@ export const en: Dictionary = {
   },
 
   faq: {
+    title: "Frequently asked questions",
     items: [
       {
         q: "Does Multioráculo predict the future?",

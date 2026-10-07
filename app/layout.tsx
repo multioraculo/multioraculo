@@ -7,6 +7,7 @@ import { Toaster } from "sonner"
 import { I18nProvider } from "@/components/i18n-provider"
 import BottomNav from "@/components/bottom-nav"
 import { getI18n } from "@/lib/i18n/server"
+import { siteUrl } from "@/lib/seo/site"
 import "./globals.css"
 
 const figtree = Figtree({
@@ -29,12 +30,16 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#0f0f23",
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   const { dict } = await getI18n()
   return {
-    title: dict.meta.title,
+    // base para canonical e Open Graph virarem URL absoluta
+    metadataBase: new URL(siteUrl()),
+    // o título de cada rota entra no lugar de %s; a Home usa título absoluto
+    title: { default: dict.meta.title, template: "%s | Multioráculo" },
     description: dict.meta.description,
   }
 }

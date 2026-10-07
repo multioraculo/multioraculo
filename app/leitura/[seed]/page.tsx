@@ -19,6 +19,10 @@ import { isPreviewOwner, loadPreview, teaserOf, unlockPreview } from "@/lib/bill
 import { loadReopenableReading } from "@/lib/billing/results"
 import { logEvent } from "@/lib/billing/events"
 import { VISITOR_COOKIE, isVisitorId } from "@/lib/billing/visitor"
+import { paginaPrivada } from "@/lib/seo/metadata"
+
+// pessoal ou painel: fora do índice. Sinal de indexação, não controle de acesso.
+export const metadata = paginaPrivada()
 
 export const dynamic = "force-dynamic"
 

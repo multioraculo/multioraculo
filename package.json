@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:sinastria && npm run verify:sinastria-referencias && npm run verify:sinastria-selecao && npm run verify:sinastria-sintese && npm run verify:sinastria-geracao && npm run verify:sinastria-aplicabilidade && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos && npm run verify:auth-next && npm run verify:reabrir-leitura && npm run verify:profile-marker && npm run verify:oauth-callback && npm run verify:auth-state",
+    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:sinastria && npm run verify:sinastria-referencias && npm run verify:sinastria-selecao && npm run verify:sinastria-sintese && npm run verify:sinastria-geracao && npm run verify:sinastria-aplicabilidade && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos && npm run verify:auth-next && npm run verify:reabrir-leitura && npm run verify:profile-marker && npm run verify:oauth-callback && npm run verify:auth-state && npm run verify:seo",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
@@ -33,7 +33,8 @@
     "verify:reabrir-leitura": "node --import ./scripts/ts-register.mjs scripts/verify-reabrir-leitura.ts",
     "verify:profile-marker": "node --import ./scripts/ts-register.mjs scripts/verify-profile-marker.ts",
     "verify:oauth-callback": "node --import ./scripts/ts-register.mjs scripts/verify-oauth-callback.ts",
-    "verify:auth-state": "node --import ./scripts/ts-register.mjs scripts/verify-auth-state.ts"
+    "verify:auth-state": "node --import ./scripts/ts-register.mjs scripts/verify-auth-state.ts",
+    "verify:seo": "node --import ./scripts/ts-register.mjs scripts/verify-seo.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

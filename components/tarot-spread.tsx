@@ -100,7 +100,7 @@ export function TarotCapsule({ card, name, label, width }: { card: TarotCardRef;
       {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
       <span className="tk-rule tk-rule-top" aria-hidden="true" />
       <div className="tk-art">
-        <img src={tarotArtSrc(card.id)} alt="" width={600} height={992} loading="lazy" draggable={false} />
+        <img src={tarotArtSrc(card.id)} alt={name} width={600} height={992} loading="lazy" draggable={false} />
       </div>
       <span className="tk-rule tk-rule-bot" aria-hidden="true" />
       <span className="tk-nome" aria-hidden="true">{name}</span>

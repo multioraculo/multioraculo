@@ -4,6 +4,9 @@ import HoroscopePage from "@/components/horoscope-page"
 import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
 import { createClient } from "@/lib/supabase/server"
 import { getI18n } from "@/lib/i18n/server"
+import { metadataDaRota } from "@/lib/seo/rota"
+
+export const generateMetadata = () => metadataDaRota("horoscopo")
 
 /**
  * Horóscopo: o texto do dia dos doze signos. Aberto a visitante, sem cota —

@@ -19,6 +19,7 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 import { diaDeHoje } from "@/lib/astro/ceu"
 import { horoscopoDoSigno, lerCache, prepararDia } from "@/lib/astro/horoscopo"
+import { guardaDoHoroscopo } from "@/lib/astro/horoscopo-guarda"
 import { LINHA_SIGNO } from "@/lib/astro/simbolos"
 import { SIGNOS } from "@/lib/astro/nomes"
 import { recordAiUsage } from "@/lib/ai/usage"
@@ -79,7 +80,10 @@ export async function GET(request: Request) {
   const openai = new OpenAI({ apiKey })
 
   try {
-    const resultado = await horoscopoDoSigno({
+    // A guarda compartilha pedidos iguais em andamento e esfria, por alguns
+    // minutos, a chave cuja geração tentou e falhou. Ver horoscopo-guarda.ts:
+    // é o que impede um rastreador ou script de repetir o gasto a cada pedido.
+    const guardado = await guardaDoHoroscopo.executar(`${dia}:${signo}:${locale}`, () => horoscopoDoSigno({
       dia,
       signo,
       locale,
@@ -105,8 +109,9 @@ export async function GET(request: Request) {
           usage: resposta.usage,
         }
       },
-    })
-    return NextResponse.json(semDiagnostico(resultado))
+    }))
+    if (guardado.estado === "esfriando") return NextResponse.json(semLeitura(dia, signo, locale))
+    return NextResponse.json(semDiagnostico(guardado.resultado))
   } catch (erro) {
     console.error("[horoscopo]", erro)
     return NextResponse.json(semLeitura(dia, signo, locale))

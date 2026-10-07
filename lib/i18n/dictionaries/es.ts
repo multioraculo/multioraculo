@@ -7,6 +7,44 @@ export const es: Dictionary = {
       "La misma pregunta, vista desde varios ángulos. Tarot, I Ching, Runas, Búzios y cartas Lenormand.",
   },
 
+  seo: {
+    home: {
+      title: "Multioráculo: Tarot, I Ching, Runas, Búzios y Lenormand",
+      description:
+        "Una pregunta, cinco oráculos, una síntesis. Tarot, I Ching, Runas, Búzios y Lenormand leídos por separado y puestos en relación. Lectura simbólica, no predicción.",
+    },
+    oraculos: {
+      title: "Los cinco oráculos y cómo funcionan",
+      description:
+        "Cómo trabajan con símbolos el Tarot, el I Ching, las Runas, los Búzios y el Lenormand, y cómo formular una pregunta que traiga una lectura más clara.",
+    },
+    faq: {
+      title: "Preguntas frecuentes",
+      description:
+        "Dudas comunes sobre Multioráculo: qué entrega cada tirada, planes y cancelación, qué se guarda y los límites de una lectura simbólica.",
+    },
+    sonhos: {
+      title: "Sueños: lectura simbólica y arquetípica",
+      description:
+        "Describe tu sueño y mira sus símbolos, imágenes y relaciones leídos desde una perspectiva simbólica y arquetípica.",
+    },
+    horoscopo: {
+      title: "Horóscopo del día, signo por signo",
+      description:
+        "El cielo de hoy calculado, con planetas, signos y aspectos, y la lectura del día para cada uno de los doce signos.",
+    },
+    assinatura: {
+      title: "Planes y suscripción",
+      description:
+        "Conoce los planes de Multioráculo y elige cuántas tiradas quieres para tus preguntas.",
+    },
+    interconexoes: {
+      title: "Interconexiones: el cielo de hoy y tu mapa",
+      description:
+        "Mira dónde el cielo de hoy se encuentra con tu mapa: Luna, Ascendente, planetas y casas. Sabes lo que se pedirá antes de entrar.",
+    },
+  },
+
   common: {
     appName: "Multioráculo",
     login: "Iniciar sesión",
@@ -358,6 +396,7 @@ export const es: Dictionary = {
   },
 
   oraclesPage: {
+    title: "Oráculos",
     whatIsTitle: "Qué es un oráculo",
     whatIsText:
       "Un oráculo es, en esencia, una tecnología de percepción. No es solo superstición o azar: es un mecanismo construido por generaciones para transformar patrones invisibles en símbolos visibles.",
@@ -424,6 +463,7 @@ export const es: Dictionary = {
   },
 
   faq: {
+    title: "Preguntas frecuentes",
     items: [
       {
         q: "¿El Multioráculo predice el futuro?",

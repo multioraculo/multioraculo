@@ -2,6 +2,9 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import DreamsPage from "@/components/dreams-page"
 import { createClient } from "@/lib/supabase/server"
+import { metadataDaRota } from "@/lib/seo/rota"
+
+export const generateMetadata = () => metadataDaRota("sonhos")
 
 export default async function SonhosPage() {
   const supabase = await createClient()

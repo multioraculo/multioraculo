@@ -12,6 +12,9 @@ import { isPreviewOwner, loadPreview } from "@/lib/billing/preview"
 import { logEvent } from "@/lib/billing/events"
 import Link from "next/link"
 import type { Plan } from "@/lib/billing/plans"
+import { metadataDaRota } from "@/lib/seo/rota"
+
+export const generateMetadata = () => metadataDaRota("assinatura")
 
 export const dynamic = "force-dynamic"
 
