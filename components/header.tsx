@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import type { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -24,7 +24,7 @@ type HeaderProps = {
 
 export default function Header({ initialUser }: HeaderProps) {
   const router = useRouter()
-  const { dict } = useI18n()
+  const { dict, path } = useI18n()
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
@@ -104,7 +104,7 @@ export default function Header({ initialUser }: HeaderProps) {
     }
     toast.success(dict.header.sessionEnded)
     setUser(null)
-    router.push("/")
+    router.push(path("/"))
     router.refresh()
   }
 
@@ -117,7 +117,7 @@ export default function Header({ initialUser }: HeaderProps) {
   // para ela pelo menu
   function handleConsultaClick() {
     window.dispatchEvent(new CustomEvent("reset-hero"))
-    router.push("/")
+    router.push(path("/"))
   }
 
   // Destinos principais (os mesmos da barra inferior no celular). O

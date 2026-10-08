@@ -1,7 +1,8 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { caminhoEquivalente, localeDaUrl, localizarCaminho } from "@/lib/i18n/rotas"
 import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
@@ -18,6 +19,8 @@ type I18nContextValue = {
   locale: Locale
   dict: Dictionary
   setLocale: (locale: Locale) => void
+  /** "/oraculos" vira "/en/oracles" em inglês. Só mexe nos caminhos públicos; o resto passa. */
+  path: (caminho: string) => string
   formatDate: (iso: string, style?: DateStyle) => string
 }
 
@@ -33,9 +36,15 @@ function readCookie(): string | null {
 }
 
 /**
- * Fonte da verdade no servidor é o cookie (permite renderizar já no idioma
- * certo, sem piscar). O localStorage é uma cópia de segurança: se o cookie
- * sumir, a preferência é restaurada a partir dele.
+ * Nas 21 URLs públicas o idioma é o da URL (o servidor já renderiza assim, via
+ * middleware). Nas demais páginas a fonte da verdade no servidor é o cookie,
+ * o que permite renderizar já no idioma certo, sem piscar. O localStorage é uma
+ * cópia de segurança: se o cookie sumir, a preferência é restaurada a partir
+ * dele, mas só fora das URLs públicas, onde a URL manda.
+ *
+ * O idioma é DERIVADO do pathname: o layout raiz não re-renderiza numa
+ * navegação suave, então initialLocale sozinho ficaria velho ao ir de
+ * /oraculos para /en/oracles.
  */
 export function I18nProvider({
   initialLocale,
@@ -45,7 +54,10 @@ export function I18nProvider({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const [locale, setLocaleState] = useState<Locale>(initialLocale)
+  const pathname = usePathname()
+  const doUrl = localeDaUrl(pathname)
+  const [escolhido, setLocaleState] = useState<Locale>(initialLocale)
+  const locale: Locale = doUrl ?? escolhido
 
   const setLocale = useCallback(
     (next: Locale) => {
@@ -56,16 +68,38 @@ export function I18nProvider({
         localStorage.setItem(LOCALE_STORAGE_KEY, next)
       } catch {}
       document.documentElement.lang = next
-      // Server Components (páginas estáticas de texto) re-renderizam no novo idioma
+      // Página pública: o idioma mora na URL, então vai para a versão
+      // equivalente. Nada de refresh: é outra URL, e o servidor a renderiza no
+      // idioma dela.
+      const equivalente = caminhoEquivalente(window.location.pathname, next)
+      if (equivalente) {
+        router.push(equivalente + window.location.search)
+        return
+      }
+      // Página pessoal: o endereço é o mesmo e o idioma segue o cookie.
+      // Server Components re-renderizam no novo idioma.
       router.refresh()
     },
     [router]
   )
 
+  // A URL pública manda: a escolha acompanha o que a pessoa está lendo, para
+  // as páginas pessoais (que seguem o cookie) falarem o mesmo idioma.
+  useEffect(() => {
+    if (!doUrl) return
+    setLocaleState(doUrl)
+    document.documentElement.lang = doUrl
+    try {
+      if (readCookie() !== doUrl) writeCookie(doUrl)
+      localStorage.setItem(LOCALE_STORAGE_KEY, doUrl)
+    } catch {}
+  }, [doUrl])
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LOCALE_STORAGE_KEY)
-      if (isLocale(stored) && !readCookie() && stored !== locale) {
+      // em URL pública a URL manda: não restaura preferência antiga por cima dela
+      if (!localeDaUrl(window.location.pathname) && isLocale(stored) && !readCookie() && stored !== locale) {
         setLocale(stored)
       } else if (!stored && isLocale(locale)) {
         localStorage.setItem(LOCALE_STORAGE_KEY, locale)
@@ -80,6 +114,7 @@ export function I18nProvider({
       locale,
       dict: getDictionary(locale),
       setLocale,
+      path: (caminho) => localizarCaminho(caminho, locale),
       formatDate: (iso, style) => formatDateBase(iso, locale, style),
     }),
     [locale, setLocale]

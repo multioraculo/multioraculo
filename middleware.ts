@@ -1,8 +1,63 @@
 import { type NextRequest } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
+import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/config"
+import {
+  HEADER_LOCALE,
+  HEADER_LOCALE_URL,
+  caminhoDaRota,
+  rotaDoCaminho,
+  temPrefixoDeIdioma,
+} from "@/lib/i18n/rotas"
 
+/** Caminho que não existe: serve de destino para /en/... e /es/... inválidos, que viram 404. */
+const CAMINHO_INEXISTENTE = "/_idioma-inexistente"
+
+/**
+ * Roteamento por idioma das 21 URLs públicas (lib/i18n/rotas.ts).
+ *
+ *  - /oraculos, /faq...        português, e ficam em português SEMPRE: a URL
+ *                              manda, cookie e Accept-Language não entram.
+ *  - /en/oracles, /es/faq...   REWRITE (nunca redirect) para a mesma página em
+ *                              português, com o idioma no cabeçalho interno.
+ *                              Uma página só, três idiomas, cada um com URL
+ *                              própria e rastreável.
+ *  - /en/qualquer-outra-coisa  404. Não existe versão inventada, então não
+ *                              existe página duplicada.
+ *  - todo o resto              (páginas pessoais, painel, APIs): como antes, o
+ *                              idioma é o cookie.
+ *
+ * Os cabeçalhos x-locale/x-locale-url são SEMPRE reescritos aqui, inclusive
+ * esvaziados: o que o cliente mandar com esse nome nunca chega ao servidor.
+ */
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  const { pathname } = request.nextUrl
+  const rota = rotaDoCaminho(pathname)
+
+  if (rota) {
+    const interno = request.nextUrl.clone()
+    interno.pathname = caminhoDaRota(rota.chave, "pt")
+    const resposta = await updateSession(request, {
+      rewriteTo: rota.locale === "pt" ? undefined : interno,
+      headers: { [HEADER_LOCALE]: rota.locale, [HEADER_LOCALE_URL]: "1" },
+    })
+    // a preferência acompanha a URL visitada: as páginas pessoais, que seguem
+    // o cookie, passam a falar o idioma que a pessoa estava lendo
+    if (request.cookies.get(LOCALE_COOKIE)?.value !== rota.locale) {
+      resposta.cookies.set(LOCALE_COOKIE, rota.locale, { path: "/", maxAge: LOCALE_COOKIE_MAX_AGE, sameSite: "lax" })
+    }
+    return resposta
+  }
+
+  if (temPrefixoDeIdioma(pathname)) {
+    const inexistente = request.nextUrl.clone()
+    inexistente.pathname = CAMINHO_INEXISTENTE
+    return await updateSession(request, {
+      rewriteTo: inexistente,
+      headers: { [HEADER_LOCALE]: "", [HEADER_LOCALE_URL]: "" },
+    })
+  }
+
+  return await updateSession(request, { headers: { [HEADER_LOCALE]: "", [HEADER_LOCALE_URL]: "" } })
 }
 
 /**

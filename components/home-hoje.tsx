@@ -53,7 +53,7 @@
  * horóscopo é a leitura já gerada.
  */
 import { useEffect, useState, type ReactNode } from "react"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import type { User } from "@supabase/supabase-js"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"

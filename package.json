@@ -35,7 +35,8 @@
     "verify:oauth-callback": "node --import ./scripts/ts-register.mjs scripts/verify-oauth-callback.ts",
     "verify:auth-state": "node --import ./scripts/ts-register.mjs scripts/verify-auth-state.ts",
     "verify:seo": "node --import ./scripts/ts-register.mjs scripts/verify-seo.ts",
-    "verify:sonhos": "node --import ./scripts/ts-register.mjs scripts/verify-sonhos.ts"
+    "verify:sonhos": "node --import ./scripts/ts-register.mjs scripts/verify-sonhos.ts",
+    "smoke:seo-i18n": "node --import ./scripts/ts-register.mjs scripts/smoke-seo-i18n.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",

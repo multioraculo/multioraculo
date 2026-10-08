@@ -14,7 +14,12 @@ export function siteUrl(): string {
   return url.replace(/\/+$/, "")
 }
 
-/** "/faq" vira "https://multioraculo.com/faq"; "/" vira "https://multioraculo.com/". */
+/**
+ * "/faq" vira "https://multioraculo.com/faq". A raiz vira o domínio SEM barra
+ * final, que é como o Next escreve o canonical da Home: assim canonical,
+ * hreflang, Open Graph e sitemap citam exatamente o mesmo endereço.
+ */
 export function urlAbsoluta(caminho: string): string {
+  if (caminho === "/") return siteUrl()
   return `${siteUrl()}${caminho.startsWith("/") ? caminho : `/${caminho}`}`
 }

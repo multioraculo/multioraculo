@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
@@ -32,7 +32,7 @@ export default function SavedDreamsList({
   userId: string
 }) {
   const router = useRouter()
-  const { dict, locale, formatDate } = useI18n()
+  const { dict, locale, formatDate, path } = useI18n()
   const t = dict.savedDreams
   const supabase = useMemo(() => createClient(), [])
   const [dreams, setDreams] = useState<Dream[]>(initialDreams)
@@ -348,7 +348,7 @@ export default function SavedDreamsList({
             {t.title}
           </h2>
           <button
-            onClick={() => router.push("/sonhos")}
+            onClick={() => router.push(path("/sonhos"))}
             className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
           >
             {t.newDream}
@@ -365,7 +365,7 @@ export default function SavedDreamsList({
             </div>
             <p className="text-white/40 text-sm mb-4">{t.empty}</p>
             <button
-              onClick={() => router.push("/sonhos")}
+              onClick={() => router.push(path("/sonhos"))}
               className="px-6 py-2.5 rounded-full bg-white/10 border border-white/20 text-white/70 hover:text-white hover:bg-white/15 text-sm transition-all duration-200"
             >
               {t.interpretFirst}

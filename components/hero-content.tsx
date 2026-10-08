@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "sonner"
 import type { User } from "@supabase/supabase-js"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import { useI18n } from "@/components/i18n-provider"
 import { consumirPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import ReadingProgress, { useReadingProgress } from "@/components/reading-progress"

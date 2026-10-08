@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useState } from "react"
 import { buscar as buscarComEstado, CARREGANDO, type Carregamento } from "@/lib/carregamento"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import { useI18n } from "@/components/i18n-provider"
 import { GlifoPlaneta, GlifoSigno } from "@/components/astro-wheel"
 import { DiagramaAngulo, DiagramaPosicao, FaseLua, RodaDoDia } from "@/components/astro-ilustracoes"

@@ -24,7 +24,7 @@
  * quanto falta — e é por isso que o rótulo ao lado diz o que está acontecendo.
  */
 import { useState } from "react"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import ReadingProgress, { useReadingProgress } from "@/components/reading-progress"
 import Seta from "@/components/seta"
 

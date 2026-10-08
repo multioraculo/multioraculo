@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import { useI18n } from "@/components/i18n-provider"
 import Seta from "@/components/seta"
 

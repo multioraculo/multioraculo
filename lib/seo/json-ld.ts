@@ -11,9 +11,9 @@ import { SITE_NAME, urlAbsoluta } from "./site"
  *  - WebApplication: o rich result exige oferta e avaliação, que o produto
  *    não pode declarar com verdade hoje. Sem elas, seria marcação sem uso.
  *
- * `inLanguage` lista os três idiomas porque o produto de fato os serve na
- * mesma URL (por cookie). Quando existirem /en e /es, cada página passa a
- * declarar o seu.
+ * `inLanguage` lista os três idiomas do site. O `description` do WebSite
+ * acompanha o idioma da página (PT em /, EN em /en, ES em /es). Organization e
+ * WebSite têm um @id só, o do site, nas três versões da Home.
  */
 export function organizationLd() {
   return {
@@ -26,13 +26,15 @@ export function organizationLd() {
   }
 }
 
-export function websiteLd() {
+/** `descricao` vem do dicionário, no idioma da página que está sendo lida. */
+export function websiteLd(descricao?: string) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": urlAbsoluta("/#website"),
     name: SITE_NAME,
     url: urlAbsoluta("/"),
+    ...(descricao ? { description: descricao } : {}),
     inLanguage: ["pt-BR", "en", "es"],
     publisher: { "@id": urlAbsoluta("/#organization") },
   }

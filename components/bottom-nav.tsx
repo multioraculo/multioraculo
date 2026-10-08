@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import Link from "@/components/localized-link"
+import { caminhoDaRota, rotaDoCaminho } from "@/lib/i18n/rotas"
 import { usePathname, useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
@@ -23,8 +24,12 @@ import { MoonIcon, MultioraculoIcon, SearchIcon, SolIcon, StarIcon } from "@/com
  * No desktop (sm+) esta barra some: o cabeçalho leva os mesmos destinos.
  */
 export default function BottomNav() {
-  const { dict } = useI18n()
-  const pathname = usePathname()
+  const { dict, path } = useI18n()
+  // nas URLs públicas, compara-se pelo caminho em português (/en/oracles conta como /oraculos),
+  // para a lógica de "aba ativa" não saber de idioma
+  const real = usePathname()
+  const rotaAtual = rotaDoCaminho(real)
+  const pathname = rotaAtual ? caminhoDaRota(rotaAtual.chave, "pt") : real
   const router = useRouter()
   const [explore, setExplore] = useState(false)
   const t = dict.nav
@@ -38,7 +43,7 @@ export default function BottomNav() {
       window.dispatchEvent(new CustomEvent("reset-hero"))
       window.scrollTo({ top: 0, behavior: "smooth" })
     } else {
-      router.push("/")
+      router.push(path("/"))
     }
   }
 

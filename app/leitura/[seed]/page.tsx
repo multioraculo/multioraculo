@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import BuziosCasts from "@/components/buzios-board"

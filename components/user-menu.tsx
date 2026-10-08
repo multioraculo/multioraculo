@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import Link from "next/link"
+import Link from "@/components/localized-link"
 import { recordLinks } from "@/components/records-sheet"
 import { BookIcon } from "@/components/nav-icons"
 import { useRouter } from "next/navigation"

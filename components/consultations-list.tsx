@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "@/components/localized-link"
 import { useState, useRef, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
@@ -46,12 +47,12 @@ export default function ConsultationsList({ consultations: initial }: Consultati
         </div>
         <h3 className="text-white text-lg mb-2">{t.emptyTitle}</h3>
         <p className="text-white/60 text-sm mb-6">{t.emptyText}</p>
-        <a
+        <Link
           href="/"
           className="px-8 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white font-light text-sm transition-all duration-300 hover:bg-white/15 hover:border-white/30 hover:scale-105 inline-block"
         >
           {t.askNow}
-        </a>
+        </Link>
       </div>
     )
   }

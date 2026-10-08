@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { LOCALE_META, type Locale } from "@/lib/i18n/config"
+import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n/config"
+import { caminhoDaRota, type ChaveRota } from "@/lib/i18n/rotas"
 import { SITE_NAME, urlAbsoluta } from "./site"
 
 /**
@@ -22,34 +23,51 @@ function localeOg(locale: Locale): string {
   return LOCALE_META[locale].tag.replace("-", "_")
 }
 
+/** Código hreflang de cada idioma. */
+const HREFLANG: Record<Locale, string> = { pt: "pt-BR", en: "en", es: "es" }
+
 /**
- * Metadata de uma página pública.
+ * Alternativas de idioma de uma página: uma por idioma, mais x-default
+ * (português, a versão sem prefixo). É recíproco por construção: toda versão
+ * declara as mesmas quatro entradas. Usado no <head> e no sitemap.
+ */
+export function alternativasDeIdioma(chave: ChaveRota): Record<string, string> {
+  const languages: Record<string, string> = {}
+  for (const l of LOCALES) languages[HREFLANG[l]] = urlAbsoluta(caminhoDaRota(chave, l))
+  languages["x-default"] = urlAbsoluta(caminhoDaRota(chave, "pt"))
+  return languages
+}
+
+/**
+ * Metadata de uma página pública, no idioma da URL.
  *
- * O canonical é o caminho limpo, sem parâmetros: `?utm_*`, `?checkout=` e
- * afins apontam para a mesma página. Não há `hreflang` porque as versões /en e
- * /es ainda não existem: o idioma vem do cookie, e a URL é uma só.
+ * O canonical é o endereço da própria versão, sem parâmetros: `?utm_*`,
+ * `?checkout=` e afins apontam para a mesma página. As alternativas só listam
+ * versões que existem (as 21 URLs de lib/i18n/rotas.ts).
  *
  * `absoluto` tira o sufixo " | Multioráculo" do título (só a Home usa).
  */
 export function paginaPublica(p: {
-  caminho: string
+  chave: ChaveRota
   titulo: string
   descricao: string
   locale: Locale
   absoluto?: boolean
 }): Metadata {
-  const url = urlAbsoluta(p.caminho)
+  const caminho = caminhoDaRota(p.chave, p.locale)
+  const url = urlAbsoluta(caminho)
   const tituloCompleto = p.absoluto ? p.titulo : `${p.titulo} | ${SITE_NAME}`
   return {
     title: p.absoluto ? { absolute: p.titulo } : p.titulo,
     description: p.descricao,
-    alternates: { canonical: p.caminho },
+    alternates: { canonical: caminho, languages: alternativasDeIdioma(p.chave) },
     // o Next NÃO herda o openGraph do layout quando a página define o seu:
     // por isso a página repete tudo, inclusive a imagem
     openGraph: {
       type: "website",
       siteName: SITE_NAME,
       locale: localeOg(p.locale),
+      alternateLocale: LOCALES.filter((l) => l !== p.locale).map(localeOg),
       url,
       title: tituloCompleto,
       description: p.descricao,
