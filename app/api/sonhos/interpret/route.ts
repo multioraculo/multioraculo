@@ -6,58 +6,10 @@ import { newSeed } from "@/lib/oracles/draw"
 import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
 import { VISITOR_COOKIE } from "@/lib/billing/visitor"
 import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
+import { criarGuardaTracos, montarPromptSonho } from "@/lib/oracles/sonhos-prompt"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
-
-const SYSTEM_PROMPT = `Você é um intérprete ESPECIALIZADO em simbolismo onírico profundo.
-
-ESTRUTURA OBRIGATÓRIA DA RESPOSTA — use exatamente este formato Markdown (os títulos das seções devem ser escritos no idioma da resposta, com o mesmo sentido):
-
-## INTRODUÇÃO
-
-Comece SEMPRE com um parágrafo contextualizando a abordagem. Exemplo:
-"Este sonho revela [tema geral]. Vamos explorar seus símbolos como dramatizações de processos psíquicos internos — a relação entre consciente e inconsciente, padrões arquetípicos e movimentos de transformação."
-
-## SÍMBOLOS PRINCIPAIS
-
-Analise CADA símbolo relevante com numeração e título em negrito:
-
-**1. [Nome específico do símbolo]**
-[3-4 frases de análise profunda]
-
-**2. [Segundo símbolo]**
-[Análise detalhada]
-- Aspecto 1
-- Aspecto 2
-
-**3. [Continue numerando cada símbolo importante]**
-
-## DINÂMICA PSÍQUICA
-
-**[Subtítulo descritivo]**
-[2-3 parágrafos analisando o dilema central, tensões, movimento interno]
-
-## SÍNTESE
-
-**[Subtítulo]**
-[1-2 parágrafos]
-
-O inconsciente está comunicando:
-- [Ponto 1]
-- [Ponto 2]
-- [Ponto 3]
-
-## MENSAGEM DO INCONSCIENTE
-
-**[Subtítulo]**
-- [Pergunta 1]
-- [Pergunta 2]
-- [Pergunta 3]
-
-[Parágrafo de fechamento]
-
-REGRAS: Profundo, específico, 4-6 símbolos, 800-1200 palavras. Não citar Jung/Freud.`
 
 const json = (body: object, status: number) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
@@ -107,7 +59,7 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: `${SYSTEM_PROMPT}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
+          content: `${montarPromptSonho(locale)}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
         },
         { role: "user", content: `Sonho:\n"${dream}"` },
       ],
@@ -123,13 +75,18 @@ export async function POST(request: Request) {
         let ok = false
         let usage: TokenUsage = null
         let model = "gpt-4o-mini"
+        // rede de segurança: o prompt reduz o travessão, a guarda garante
+        const guarda = criarGuardaTracos()
         try {
           for await (const chunk of completion as any) {
             if (chunk.usage) usage = chunk.usage
             if (chunk.model) model = chunk.model
             const text = chunk.choices[0]?.delta?.content || ""
-            if (text) controller.enqueue(encoder.encode(text))
+            const limpo = text ? guarda.empurrar(text) : ""
+            if (limpo) controller.enqueue(encoder.encode(limpo))
           }
+          const resto = guarda.encerrar()
+          if (resto) controller.enqueue(encoder.encode(resto))
           ok = true
           await recordAiUsage({ operation: "dream", model, usage, seed, userId: user?.id ?? null })
         } finally {

@@ -320,7 +320,7 @@ export default function DreamsPage({ isLoggedIn = false }: { isLoggedIn?: boolea
                         ),
                         li: ({ children }) => (
                           <li className="text-white/75 text-sm leading-relaxed flex gap-2">
-                            <span className="text-white/30 shrink-0 mt-0.5">—</span>
+                            <span className="shrink-0 w-3 flex justify-center pt-[9px]"><span className="block h-1 w-1 rounded-full bg-white/30" /></span>
                             <span>{children}</span>
                           </li>
                         ),

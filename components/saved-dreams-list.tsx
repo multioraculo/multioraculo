@@ -277,7 +277,7 @@ export default function SavedDreamsList({
                   <ul className="space-y-3">
                     {journeyData.patterns.map((pattern, i) => (
                       <li key={i} className="flex gap-2 text-sm text-white/70 leading-relaxed">
-                        <span className="text-white/25 shrink-0 mt-0.5">—</span>
+                        <span className="shrink-0 w-3 flex justify-center pt-[9px]"><span className="block h-1 w-1 rounded-full bg-white/25" /></span>
                         <span>{pattern}</span>
                       </li>
                     ))}
@@ -495,7 +495,7 @@ export default function SavedDreamsList({
                                 ),
                                 li: ({ children }) => (
                                   <li className="text-white/65 text-sm leading-relaxed flex gap-2">
-                                    <span className="text-white/25 shrink-0 mt-0.5">—</span>
+                                    <span className="shrink-0 w-3 flex justify-center pt-[9px]"><span className="block h-1 w-1 rounded-full bg-white/25" /></span>
                                     <span>{children}</span>
                                   </li>
                                 ),
