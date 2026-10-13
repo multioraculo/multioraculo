@@ -214,6 +214,9 @@ export const es: Dictionary = {
   sinastria: {
     title: "Sinastría",
     lede: "Lo que una carta toca en la otra.",
+    horoscopeTitle: "¿Y tu relación?",
+    horoscopeCall: "Cruza tu carta con la de otra persona y mira dónde se encuentran los dos cielos: lo que acerca, lo que tensa y lo que cada uno despierta en el otro.",
+    horoscopeCallCta: "Cruzar dos cartas",
 
     lead: "Una carta describe a una persona. La sinastría mira lo que ocurre entre dos.",
     whatItDoes: "Cruzamos tu carta natal con la de otra persona y medimos dónde los planetas de una tocan los planetas de la otra, en qué casa de una cae cada planeta de la otra y qué tienen en común las dos cartas.",

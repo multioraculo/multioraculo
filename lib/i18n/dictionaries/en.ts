@@ -214,6 +214,9 @@ export const en: Dictionary = {
   sinastria: {
     title: "Synastry",
     lede: "What one chart touches in the other.",
+    horoscopeTitle: "And your relationship?",
+    horoscopeCall: "Cross your chart with another person's and see where the two skies meet: what draws you together, what creates tension, and what each awakens in the other.",
+    horoscopeCallCta: "Cross two charts",
 
     lead: "A chart describes one person. Synastry looks at what happens between two.",
     whatItDoes: "We cross your natal chart with another person's and measure where one person's planets touch the other's, which house each planet of one falls in for the other, and what the two charts have in common.",

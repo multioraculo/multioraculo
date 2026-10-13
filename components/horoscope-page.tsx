@@ -27,6 +27,7 @@ import type { Leitura, RelacaoEscrita } from "@/lib/astro/prompt-horoscopo"
 import { ASPECTOS, CORPOS, FASES, LIGACAO_ASPECTO, LUNACOES, SIGNOS } from "@/lib/astro/nomes"
 import { LENTOS, SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
 import Seta from "@/components/seta"
+import SinastriaIlustracao from "@/components/sinastria-ilustracao"
 
 type Resposta = {
   dia: string
@@ -545,7 +546,10 @@ export default function HoroscopePage({ ceu }: { ceu: Ceu }) {
           todo mundo no mesmo lugar */}
       <ChamadaDoMapa t={dict.interconexoes as unknown as Record<string, string>} nomeSigno={signo === null ? null : signos[signo]} />
 
-      <div>
+      {/* a Sinastria é a camada seguinte do mesmo mapa: uma linha, sem anúncio */}
+      <ChamadaDaSinastria title={dict.sinastria.horoscopeTitle} call={dict.sinastria.horoscopeCall} cta={dict.sinastria.horoscopeCallCta} />
+
+      <div className="border-t border-white/10 pt-8">
         <Rotulo>{t.chooseSign}</Rotulo>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mt-3">
           {signos.map((nome, i) => {
@@ -663,6 +667,35 @@ function ChamadaDoMapa({ t, nomeSigno }: { t: Record<string, string>; nomeSigno:
         </Link>
         {/* o tamanho do pedido fica à vista antes do clique */}
         <p className="text-white/25 text-[13px] font-light mt-2.5">{t.callFields}</p>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A porta da Sinastria, logo depois da passagem para o mapa: o mapa pessoal
+ * pode ser comparado com o de outra pessoa. Uma frase e um botão com a seta
+ * desenhada do site apontando para fora da página: era um link de uma linha
+ * e ninguém o via. O que a Sinastria é e o que ela pede ficam na própria
+ * página, então aqui basta dizer que existe e para onde leva.
+ */
+function ChamadaDaSinastria({ title, call, cta }: { title: string; call: string; cta: string }) {
+  return (
+    <div className="-mt-2 sm:flex sm:items-center sm:gap-9">
+      {/* o cruzamento de dois mapas: o que a Sinastria faz, desenhado */}
+      <SinastriaIlustracao className="w-[15.5rem] max-w-full text-white/80 shrink-0 mb-5 sm:mb-0" />
+      <div>
+        <h2 className="text-white instrument italic text-[23px] sm:text-[26px] leading-snug">{title}</h2>
+        <p className="text-white/65 text-[16px] font-light leading-relaxed max-w-md mt-3">{call}</p>
+        <Link
+          href="/sinastria"
+          className="group inline-flex items-center gap-3 mt-6 pl-5 pr-4 py-2.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/20 hover:border-white/35 text-white font-light text-sm transition-all duration-300"
+        >
+          {cta}
+          <span className="text-white/60 group-hover:text-white text-[19px] transition-all duration-300 group-hover:translate-x-1">
+            <Seta tipo="direita" />
+          </span>
+        </Link>
       </div>
     </div>
   )

@@ -221,6 +221,9 @@ export const pt = {
   sinastria: {
     title: "Sinastria",
     lede: "O que um mapa toca no outro.",
+    horoscopeTitle: "E a sua relação?",
+    horoscopeCall: "Cruze o seu mapa com o de outra pessoa e veja onde os dois céus se encontram: o que aproxima, o que tensiona e o que um desperta no outro.",
+    horoscopeCallCta: "Cruzar dois mapas",
 
     // a abertura: o que é, antes de qualquer campo
     lead: "Um mapa descreve uma pessoa. A sinastria olha para o que acontece entre duas.",
