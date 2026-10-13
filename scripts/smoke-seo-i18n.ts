@@ -162,9 +162,24 @@ async function main() {
     ok(r.status === 404, `${c}: status ${r.status} (esperado 404)`)
     ok(/noindex/i.test(inspecionar(r.html).robots ?? ""), `${c}: 404 sem noindex`)
   }
-  // barra final: o Next normaliza (308) para a MESMA URL do mesmo idioma, nunca para outro idioma
-  const barra = await pegar("/en/oracles/")
-  ok(barra.status === 308 && !!barra.location && new URL(barra.location, BASE).pathname === "/en/oracles", `/en/oracles/: ${barra.status} → ${barra.location}`)
+  // barra final: 308 para a MESMA URL sem barra (mesma página, mesmo idioma), com a query intacta, sem laço
+  const comBarra: [string, string][] = [
+    ["/en/oracles/", "/en/oracles"],
+    ["/es/preguntas-frecuentes/", "/es/preguntas-frecuentes"],
+    ["/en/", "/en"],
+    ["/es/", "/es"],
+    ["/oraculos/", "/oraculos"],
+    ["/en/subscription/?checkout=ok&utm_source=x", "/en/subscription?checkout=ok&utm_source=x"],
+  ]
+  for (const [entrada, esperado] of comBarra) {
+    const b = await pegar(entrada)
+    const destino = b.location ? new URL(b.location, BASE) : null
+    ok(b.status === 308 && destino !== null && destino.pathname + destino.search === esperado, `${entrada}: ${b.status} → ${b.location} (esperado 308 → ${esperado})`)
+    if (destino) {
+      const fim = await pegar(destino.pathname + destino.search)
+      ok(fim.status === 200 && !fim.location, `${entrada}: o destino ${esperado} deve responder 200 sem novo redirect (respondeu ${fim.status})`)
+    }
+  }
 
   // ── 5 · privadas mantêm noindex, em qualquer idioma do cookie ──────────────
   for (const loc of LOCALES) {

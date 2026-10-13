@@ -15,7 +15,16 @@ export async function resolve(specifier, context, nextResolve) {
     target = find(path.resolve(path.dirname(fileURLToPath(context.parentURL)), specifier))
   }
   if (target) return { url: pathToFileURL(target).href, shortCircuit: true }
-  return nextResolve(specifier, context)
+  try {
+    return await nextResolve(specifier, context)
+  } catch (erro) {
+    // subcaminho de pacote sem extensão ("next/server"), que o Next resolve pelo bundler e o Node ESM não.
+    // Só entra quando a resolução normal já falhou; nada que funcionava muda.
+    if (erro?.code === "ERR_MODULE_NOT_FOUND" && /^[a-z@][^./]*(\/[^./]+)+$/i.test(specifier)) {
+      return nextResolve(`${specifier}.js`, context)
+    }
+    throw erro
+  }
 }
 
 export async function load(url, context, nextLoad) {

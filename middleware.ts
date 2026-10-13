@@ -1,10 +1,11 @@
-import { type NextRequest } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { updateSession } from "@/lib/supabase/middleware"
 import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE } from "@/lib/i18n/config"
 import {
   HEADER_LOCALE,
   HEADER_LOCALE_URL,
   caminhoDaRota,
+  caminhoSemBarra,
   rotaDoCaminho,
   temPrefixoDeIdioma,
 } from "@/lib/i18n/rotas"
@@ -31,6 +32,18 @@ const CAMINHO_INEXISTENTE = "/_idioma-inexistente"
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // barra final nas URLs de idioma: 308 para a mesma URL sem barra, com a query
+  // intacta. É normalização de endereço, não escolha de idioma.
+  const semBarra = caminhoSemBarra(pathname)
+  if (semBarra) {
+    // URL padrão, e não request.nextUrl.clone(): o NextURL preserva a barra final ao
+    // reescrever o pathname, e o redirect apontaria para a própria URL (laço)
+    const limpa = new URL(request.url)
+    limpa.pathname = semBarra
+    return NextResponse.redirect(limpa, 308)
+  }
+
   const rota = rotaDoCaminho(pathname)
 
   if (rota) {

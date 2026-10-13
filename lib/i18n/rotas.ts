@@ -109,3 +109,20 @@ export function localeDaUrlDepoisDeMontar(pathname: string | null | undefined, m
 export function localeEfetivo(escolhido: Locale, pathname: string | null | undefined, montado: boolean): Locale {
   return localeDaUrlDepoisDeMontar(pathname, montado) ?? escolhido
 }
+
+/**
+ * Normalização da barra final: "/en/oracles/" devolve "/en/oracles"; o que já
+ * está sem barra (ou não é rota de idioma) devolve null. O Next faz isto sozinho
+ * nas páginas, mas a reescrita do middleware escondia a barra em produção e
+ * /en/oracles/ respondia 200: o canonical já apontava para a URL limpa, mas é
+ * uma segunda URL servindo a mesma página. Só vale para as 21 URLs públicas e
+ * para qualquer coisa com prefixo /en ou /es. O destino nunca termina em barra,
+ * então não há laço. Não tem relação com idioma: a URL de destino é a mesma
+ * página, no mesmo idioma.
+ */
+export function caminhoSemBarra(pathname: string): string | null {
+  if (pathname.length <= 1 || !pathname.endsWith("/")) return null
+  if (!rotaDoCaminho(pathname) && !temPrefixoDeIdioma(pathname)) return null
+  const limpo = pathname.replace(/\/+$/, "")
+  return limpo === "" ? "/" : limpo
+}

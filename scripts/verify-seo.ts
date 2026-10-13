@@ -31,6 +31,7 @@ import {
   HEADER_LOCALE_URL,
   ROTAS_PUBLICAS,
   caminhoEquivalente,
+  caminhoSemBarra,
   localeDaUrl,
   localeDaUrlDepoisDeMontar,
   localeEfetivo,
@@ -195,7 +196,10 @@ ok(temPrefixoDeIdioma("/en") && temPrefixoDeIdioma("/es/foo") && !temPrefixoDeId
 const mwSrc = ler("middleware.ts")
 const sessaoSrc = ler("lib/supabase/middleware.ts")
 const srvSrc = ler("lib/i18n/server.ts")
-ok(!/NextResponse\.redirect|redirect\(/.test(mwSrc), "middleware não pode redirecionar por idioma")
+// o ÚNICO redirect do middleware é a normalização da barra final (308, mesma página, mesmo idioma)
+const redirects = semComentarios(mwSrc).match(/NextResponse\.redirect\([^)]*\)/g) ?? []
+ok(redirects.length === 1 && /308/.test(redirects[0]) && /caminhoSemBarra/.test(mwSrc), "middleware: só pode haver o redirect 308 de barra final, nunca por idioma")
+ok(/if \(semBarra\) \{[\s\S]*?\.pathname = semBarra/.test(mwSrc), "middleware: o redirect deve ir para a mesma URL sem barra")
 ok(!/NextResponse\.redirect/.test(sessaoSrc), "updateSession não pode redirecionar")
 ok(!/accept-language/i.test(semComentarios(mwSrc + sessaoSrc + srvSrc)), "Accept-Language não pode decidir idioma")
 ok(srvSrc.includes("HEADER_LOCALE_URL") && srvSrc.includes("HEADER_LOCALE"), "getLocale deve ler o idioma da URL pelo cabeçalho interno")
@@ -204,6 +208,19 @@ const chamadas = mwSrc.match(/updateSession\(request/g) ?? []
 const comCabecalhos = mwSrc.match(/\[HEADER_LOCALE\]:/g) ?? []
 ok(chamadas.length === 3 && comCabecalhos.length === 3, `toda chamada de updateSession deve definir os cabeçalhos de idioma (${chamadas.length} chamadas, ${comCabecalhos.length} definições)`)
 ok(HEADER_LOCALE === "x-locale" && HEADER_LOCALE_URL === "x-locale-url", "nomes dos cabeçalhos internos")
+
+// barra final: 308 para a mesma URL sem barra, sem laço
+for (const rota of ROTAS_PUBLICAS) {
+  for (const l of LOCALES) {
+    if (rota[l] === "/") continue
+    ok(caminhoSemBarra(rota[l] + "/") === rota[l], `caminhoSemBarra(${rota[l]}/) deveria ser ${rota[l]}`)
+    ok(caminhoSemBarra(rota[l]) === null, `${rota[l]} sem barra não pode redirecionar (laço)`)
+    ok(caminhoSemBarra(caminhoSemBarra(rota[l] + "/") ?? "") === null, "o destino do redirect não pode redirecionar de novo")
+  }
+}
+ok(caminhoSemBarra("/en/") === "/en" && caminhoSemBarra("/es/") === "/es" && caminhoSemBarra("/en") === null && caminhoSemBarra("/") === null, "barra final da Home de cada idioma")
+ok(caminhoSemBarra("/en/oracles//") === "/en/oracles", "barras repetidas")
+ok(caminhoSemBarra("/home/") === null && caminhoSemBarra("/api/horoscopo/") === null && caminhoSemBarra("/leitura/abc/") === null, "só mexe em rotas de idioma; o resto fica com o Next")
 
 // ── 5d · seletor e provider usam a tabela de rotas ──────────────────────────
 const provSrc = ler("components/i18n-provider.tsx")
@@ -311,7 +328,29 @@ async function guarda() {
   ok(chamadasGuarda === 2, "leitura boa não esfria (o cache de verdade fica no banco)")
 }
 
-guarda().then(() => {
+// ── 9 · o middleware de verdade: barra final vira 308 para a mesma URL, com a query ─
+// (localmente o Next já normaliza antes do middleware; na Netlify o middleware vem primeiro,
+// então o ramo precisa ser testado chamando a função)
+async function barraNoMiddleware() {
+  const { NextRequest } = await import("next/server")
+  const { middleware } = await import("../middleware")
+  const casos: [string, string][] = [
+    ["https://multioraculo.com/en/oracles/", "https://multioraculo.com/en/oracles"],
+    ["https://multioraculo.com/es/preguntas-frecuentes/", "https://multioraculo.com/es/preguntas-frecuentes"],
+    ["https://multioraculo.com/en/", "https://multioraculo.com/en"],
+    ["https://multioraculo.com/es/", "https://multioraculo.com/es"],
+    ["https://multioraculo.com/oraculos/", "https://multioraculo.com/oraculos"],
+    ["https://multioraculo.com/en/subscription/?checkout=ok&utm_source=x", "https://multioraculo.com/en/subscription?checkout=ok&utm_source=x"],
+    ["https://multioraculo.com/en/foo/", "https://multioraculo.com/en/foo"],
+  ]
+  for (const [entrada, esperado] of casos) {
+    const res = await middleware(new NextRequest(entrada))
+    ok(res.status === 308, `middleware ${entrada}: status ${res.status} (esperado 308)`)
+    ok(res.headers.get("location") === esperado, `middleware ${entrada}: location ${res.headers.get("location")} (esperado ${esperado})`)
+  }
+}
+
+Promise.all([guarda(), barraNoMiddleware()]).then(() => {
   if (falhas) {
     console.error(`verify-seo: ${falhas} falha(s)`)
     process.exit(1)
