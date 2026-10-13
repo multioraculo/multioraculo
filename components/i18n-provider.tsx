@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { caminhoEquivalente, localeDaUrl, localizarCaminho } from "@/lib/i18n/rotas"
+import { caminhoEquivalente, localeDaUrl, localeDaUrlDepoisDeMontar, localeEfetivo, localizarCaminho } from "@/lib/i18n/rotas"
 import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
@@ -44,7 +44,9 @@ function readCookie(): string | null {
  *
  * O idioma é DERIVADO do pathname: o layout raiz não re-renderiza numa
  * navegação suave, então initialLocale sozinho ficaria velho ao ir de
- * /oraculos para /en/oracles.
+ * /oraculos para /en/oracles. Mas só DEPOIS de montar: no servidor e no
+ * primeiro render, o pathname pode ser o da reescrita interna (na Netlify, é),
+ * e quem vale é initialLocale, que o servidor decidiu pela URL de verdade.
  */
 export function I18nProvider({
   initialLocale,
@@ -55,9 +57,12 @@ export function I18nProvider({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const doUrl = localeDaUrl(pathname)
+  const [montado, setMontado] = useState(false)
+  const doUrl = localeDaUrlDepoisDeMontar(pathname, montado)
   const [escolhido, setLocaleState] = useState<Locale>(initialLocale)
-  const locale: Locale = doUrl ?? escolhido
+  const locale: Locale = localeEfetivo(escolhido, pathname, montado)
+
+  useEffect(() => setMontado(true), [])
 
   const setLocale = useCallback(
     (next: Locale) => {

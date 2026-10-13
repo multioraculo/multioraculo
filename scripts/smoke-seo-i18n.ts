@@ -12,14 +12,13 @@
  * mesma fonte do código: se alguém mexer num lado só, o smoke acusa.
  */
 import { dictionaries } from "../lib/i18n/dictionaries"
-import { LOCALES, type Locale } from "../lib/i18n/config"
+import { LOCALES, LOCALE_META, type Locale } from "../lib/i18n/config"
 import { ROTAS_PUBLICAS } from "../lib/i18n/rotas"
 import { alternativasDeIdioma } from "../lib/seo/metadata"
 import { urlAbsoluta } from "../lib/seo/site"
 
 const BASE = (process.env.BASE ?? "http://localhost:3112").replace(/\/+$/, "")
 let falhas = 0
-let avisos = 0
 function ok(cond: boolean, msg: string) {
   if (!cond) {
     falhas++
@@ -107,11 +106,15 @@ async function main() {
       const visivel = texto(r.html)
       if (locale !== "pt") {
         const vazou = visivel.match(new RegExp(SO_PORTUGUES.source, "gi")) ?? []
-        if (vazou.length) {
-          avisos++
-          console.warn(`AVISO ${rotulo}: ${vazou.length} palavra(s) só do português no HTML inicial: ${[...new Set(vazou)].slice(0, 8).join(", ")}`)
-        }
+        // texto em português numa página EN/ES é falha: o rastreador lê o HTML inicial, sem JavaScript
+        ok(vazou.length === 0, `${rotulo}: ${vazou.length} palavra(s) só do português no HTML inicial: ${[...new Set(vazou)].slice(0, 8).join(", ")}`)
       }
+      // o provider de idioma (cabeçalho, em componente de cliente) também sai no idioma da URL no HTML inicial
+      const navSsr = [...(r.html.match(/<nav[^>]*aria-label="[^"]*"[^>]*>([\s\S]*?)<\/nav>/)?.[1] ?? "").matchAll(/href="([^"]+)"/g)].map((m) => m[1]).slice(0, 4)
+      const navEsperado = ["/home", ...(["home", "sonhos", "horoscopo"] as const).map((k) => ROTAS_PUBLICAS.find((x) => x.chave === k)![locale])]
+      ok(JSON.stringify(navSsr) === JSON.stringify(navEsperado), `${rotulo}: links do cabeçalho no HTML inicial ${JSON.stringify(navSsr)} (esperado ${JSON.stringify(navEsperado)})`)
+      const rotuloIdioma = pri(/aria-haspopup="listbox"[^>]*>[\s\S]*?<\/svg>([^<]+)</, r.html)?.trim()
+      ok(rotuloIdioma === LOCALE_META[locale].short, `${rotulo}: botão de idioma no HTML inicial mostra "${rotuloIdioma}" (esperado "${LOCALE_META[locale].short}")`)
       const h1 = pri(/<h1[^>]*>([\s\S]*?)<\/h1>/, r.html)?.replace(/<[^>]+>/g, "").trim() ?? ""
       const d = dictionaries[locale]
       const h1Esperado: Partial<Record<typeof rota.chave, string>> = {
@@ -192,7 +195,7 @@ async function main() {
   const rb = await pegar("/robots.txt")
   ok(/Disallow: \/api\//.test(rb.html) && !/Disallow: \/(home|en|es)\b/.test(rb.html), "robots.txt alterado de forma indevida")
 
-  console.log(`\n${falhas ? `${falhas} falha(s)` : "tudo certo"}${avisos ? `, ${avisos} aviso(s) de texto` : ""}`)
+  console.log(`\n${falhas ? `${falhas} falha(s)` : "tudo certo"}`)
   if (falhas) process.exit(1)
 }
 

@@ -90,3 +90,22 @@ export function caminhoEquivalente(pathname: string, alvo: Locale): string | nul
   const atual = rotaDoCaminho(pathname)
   return atual ? caminhoDaRota(atual.chave, alvo) : null
 }
+
+/**
+ * Idioma que a URL determina, mas SÓ depois de o componente montar no navegador.
+ *
+ * No servidor, e no primeiro render da hidratação, o pathname que o React vê
+ * pode ser o do endereço INTERNO da reescrita (/sonhos em vez de /en/dreams):
+ * foi o que a Netlify entregou em produção, e o HTML inicial de /en/dreams saiu
+ * em português. Antes de montar, quem vale é o idioma que o servidor decidiu
+ * (initialLocale, vindo do cabeçalho do middleware). Depois de montar, o
+ * pathname é o do navegador, e acompanha as navegações suaves.
+ */
+export function localeDaUrlDepoisDeMontar(pathname: string | null | undefined, montado: boolean): Locale | null {
+  return montado && pathname ? localeDaUrl(pathname) : null
+}
+
+/** O idioma em uso: o da URL quando já montou e a URL fala de idioma; senão, o escolhido (initialLocale ou preferência). */
+export function localeEfetivo(escolhido: Locale, pathname: string | null | undefined, montado: boolean): Locale {
+  return localeDaUrlDepoisDeMontar(pathname, montado) ?? escolhido
+}

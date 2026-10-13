@@ -32,6 +32,8 @@ import {
   ROTAS_PUBLICAS,
   caminhoEquivalente,
   localeDaUrl,
+  localeDaUrlDepoisDeMontar,
+  localeEfetivo,
   localizarCaminho,
   rotaDoCaminho,
   temPrefixoDeIdioma,
@@ -207,6 +209,23 @@ ok(HEADER_LOCALE === "x-locale" && HEADER_LOCALE_URL === "x-locale-url", "nomes 
 const provSrc = ler("components/i18n-provider.tsx")
 ok(provSrc.includes("caminhoEquivalente") && provSrc.includes("localeDaUrl") && provSrc.includes("usePathname"), "provider: o idioma deve derivar da URL e o seletor ir à página equivalente")
 ok(/!localeDaUrl\(window\.location\.pathname\)/.test(provSrc), "provider: restauração de preferência não pode sobrepor a URL pública")
+// REGRESSÃO (produção, Netlify): no SSR o pathname que o React vê pode ser o da reescrita interna
+// (/sonhos em vez de /en/dreams). Antes de montar, o idioma é o que o servidor decidiu (initialLocale).
+for (const rota of ROTAS_PUBLICAS) {
+  for (const l of ["en", "es"] as const) {
+    ok(localeEfetivo(l, rota.pt, false) === l, `antes de montar, pathname interno ${rota.pt} não pode sobrescrever initialLocale ${l}`)
+    ok(localeEfetivo(l, rota[l], false) === l, `antes de montar, ${rota[l]} mantém initialLocale ${l}`)
+    ok(localeDaUrlDepoisDeMontar(rota.pt, false) === null, "antes de montar a URL não decide o idioma")
+    // depois de montar, a navegação suave acompanha a URL do navegador
+    ok(localeEfetivo("pt", rota[l], true) === l, `depois de montar, ${rota[l]} deve valer ${l}`)
+  }
+  ok(localeEfetivo("en", rota.pt, true) === "pt", `depois de montar, ${rota.pt} deve valer pt`)
+}
+ok(localeEfetivo("es", "/home", true) === "es" && localeEfetivo("en", "/leitura/abc", true) === "en", "páginas pessoais seguem o idioma escolhido")
+ok(localeEfetivo("en", null, true) === "en" && localeEfetivo("es", undefined, true) === "es", "pathname ausente não pode quebrar")
+ok(localeEfetivo("en", "/es/faq", true) === "en", "URL inexistente não decide idioma")
+ok(/useState\(false\)/.test(provSrc) && /localeEfetivo\(escolhido, pathname, montado\)/.test(provSrc), "provider deve calcular o idioma com localeEfetivo e só depois de montar")
+ok(!/localeDaUrl\(pathname\)/.test(provSrc), "provider não pode usar o pathname cru no primeiro render")
 ok(!/from "next\/link"/.test(ler("components/header.tsx")) && !/from "next\/link"/.test(ler("components/bottom-nav.tsx")), "navegação principal deve usar o Link localizado")
 
 // ── 6 · JSON-LD ─────────────────────────────────────────────────────────────
