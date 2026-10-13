@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "@/components/localized-link"
+import { NavLink, useNavPending } from "@/components/nav-pending"
 import type { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -25,6 +25,7 @@ type HeaderProps = {
 export default function Header({ initialUser }: HeaderProps) {
   const router = useRouter()
   const { dict, path } = useI18n()
+  const { pendingHref, navigate } = useNavPending()
   const supabase = useMemo(() => createClient(), [])
   const [user, setUser] = useState<User | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
@@ -34,6 +35,18 @@ export default function Header({ initialUser }: HeaderProps) {
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
   const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
   const menusRef = useRef<HTMLDivElement>(null)
+  // destino do menu tocado: o painel fica aberto, com o item pendente, até a
+  // navegação terminar (ver components/nav-pending.tsx)
+  const [menuArmado, setMenuArmado] = useState(false)
+  useEffect(() => {
+    if (!openMenu) setMenuArmado(false)
+  }, [openMenu])
+  useEffect(() => {
+    if (openMenu && menuArmado && pendingHref === null) {
+      setMenuArmado(false)
+      setOpenMenu(null)
+    }
+  }, [openMenu, menuArmado, pendingHref])
   useEffect(() => {
     if (!openMenu) return
     const close = (e: MouseEvent | TouchEvent) => {
@@ -108,16 +121,16 @@ export default function Header({ initialUser }: HeaderProps) {
     router.refresh()
   }
 
-  // o logo passa a levar para a Home
+  // o logo passa a levar para a Home; com estado pendente e sem navegação duplicada
+  const logoPendente = pendingHref === "/home"
   function handleLogoClick() {
-    router.push("/home")
+    navigate("/home")
   }
 
   // a consulta continua em "/", e continua se limpando quando alguém volta
-  // para ela pelo menu
+  // para ela pelo menu; quem navega é o NavLink do item
   function handleConsultaClick() {
     window.dispatchEvent(new CustomEvent("reset-hero"))
-    router.push(path("/"))
   }
 
   // Destinos principais (os mesmos da barra inferior no celular). O
@@ -137,17 +150,17 @@ export default function Header({ initialUser }: HeaderProps) {
   const menuPanelClass = "absolute left-1/2 -translate-x-1/2 top-9 z-50 w-60 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5"
   const menuLinks = (links: { href: string; label: string; hint: string }[]) =>
     links.map((it) => (
-      <Link key={it.href} href={it.href} role="menuitem" onClick={() => setOpenMenu(null)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors">
+      <NavLink key={it.href} href={it.href} role="menuitem" onClick={() => setMenuArmado(true)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors" pendingClassName="nav-pending bg-white/8">
         <span className="block text-white/90 text-sm">{it.label}</span>
         <span className="block text-white/45 text-xs">{it.hint}</span>
-      </Link>
+      </NavLink>
     ))
 
   return (
     <>
       <header className="relative z-50 flex items-center gap-2 p-4 sm:p-6">
         <div className="flex items-center shrink-0">
-          <button onClick={handleLogoClick} className="relative cursor-pointer" aria-label={dict.header.backToStart}>
+          <button onClick={handleLogoClick} className={`relative cursor-pointer ${logoPendente ? "nav-pending" : ""}`} aria-busy={logoPendente || undefined} aria-label={dict.header.backToStart}>
             <BrandLogo size={80} />
           </button>
         </div>
@@ -157,14 +170,14 @@ export default function Header({ initialUser }: HeaderProps) {
         {/* Desktop: os mesmos destinos da barra inferior, centralizados */}
         <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label={dict.nav.mainNav}>
           {navItems.map((item) => (
-            <Link
+            <NavLink
               key={item.href}
               href={item.href}
               onClick={item.onClick}
               className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
           <div className="contents" ref={menusRef}>
             <div className="relative">

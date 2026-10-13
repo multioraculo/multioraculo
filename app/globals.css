@@ -467,6 +467,18 @@
 .bnav-item.is-center.is-active .bnav-icon {
   background: rgba(190,160,255,0.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 6px rgba(190,160,255,0.06);
 }
+/* Navegação pendente (components/nav-pending.tsx): o destino tocado responde
+   na hora, antes de o servidor devolver a página. Pulso discreto de opacidade,
+   sem deslocamento. Na barra inferior quem pulsa é só o ícone, e o rótulo fica
+   firme. Sem camada, de propósito: precisa vencer `text-white/80` e afins. */
+@keyframes nav-pending-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.nav-pending { color: #ffffff; animation: nav-pending-pulse 900ms ease-in-out infinite; }
+.bnav-item.nav-pending { color: #ffffff; animation: none; }
+.bnav-item.nav-pending .bnav-icon { animation: nav-pending-pulse 900ms ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-pending, .bnav-item.nav-pending .bnav-icon { animation: none; opacity: 0.65; }
+  .bnav-item.nav-pending { opacity: 1; }
+}
 @keyframes explore-sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 .explore-sheet-enter { animation: explore-sheet-in 220ms ease-out both; }
 @media (min-width: 640px) { .explore-sheet-enter { animation-name: none; transform: translateX(-50%); } }

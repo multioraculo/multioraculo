@@ -6,6 +6,7 @@ import { Instrument_Serif } from "next/font/google"
 import { Toaster } from "sonner"
 import { I18nProvider } from "@/components/i18n-provider"
 import BottomNav from "@/components/bottom-nav"
+import { NavPendingProvider } from "@/components/nav-pending"
 import { getI18n } from "@/lib/i18n/server"
 import { siteUrl } from "@/lib/seo/site"
 import "./globals.css"
@@ -65,9 +66,12 @@ html {
       </head>
       <body className={`${figtree.variable} ${instrumentSerif.variable}`}>
         <I18nProvider initialLocale={locale}>
-          {children}
-          <BottomNav />
-          <Toaster theme="dark" position="bottom-right" richColors duration={5000} />
+          {/* estado pendente de navegação (barra inferior, cabeçalho e menus): ver components/nav-pending.tsx */}
+          <NavPendingProvider>
+            {children}
+            <BottomNav />
+            <Toaster theme="dark" position="bottom-right" richColors duration={5000} />
+          </NavPendingProvider>
         </I18nProvider>
       </body>
     </html>

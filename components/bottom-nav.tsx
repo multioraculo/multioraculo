@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import Link from "@/components/localized-link"
+import { NavLink } from "@/components/nav-pending"
 import { caminhoDaRota, rotaDoCaminho } from "@/lib/i18n/rotas"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import ExploreSheet from "@/components/explore-sheet"
 import { MoonIcon, MultioraculoIcon, SearchIcon, SolIcon, StarIcon } from "@/components/nav-icons"
@@ -22,35 +22,38 @@ import { MoonIcon, MultioraculoIcon, SearchIcon, SolIcon, StarIcon } from "@/com
  * aos cinco que sobraram, que no celular estreito já estavam truncando.
  *
  * No desktop (sm+) esta barra some: o cabeçalho leva os mesmos destinos.
+ *
+ * Os itens são NavLink (components/nav-pending.tsx): ao tocar, o destino já
+ * responde com estado pendente antes de a página chegar, e um segundo toque
+ * no mesmo destino não dispara outra navegação.
  */
 export default function BottomNav() {
-  const { dict, path } = useI18n()
+  const { dict } = useI18n()
   // nas URLs públicas, compara-se pelo caminho em português (/en/oracles conta como /oraculos),
   // para a lógica de "aba ativa" não saber de idioma
   const real = usePathname()
   const rotaAtual = rotaDoCaminho(real)
   const pathname = rotaAtual ? caminhoDaRota(rotaAtual.chave, "pt") : real
-  const router = useRouter()
   const [explore, setExplore] = useState(false)
   const t = dict.nav
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/leitura") : pathname.startsWith(href))
   const exploreActive = pathname.startsWith("/oraculos") || pathname.startsWith("/faq")
 
+  // já na consulta: só limpa e sobe, sem navegar (o preventDefault também
+  // avisa o NavLink para não iniciar navegação); fora dela, o próprio NavLink leva
   const goHome = (e: React.MouseEvent) => {
     if (pathname === "/") {
       e.preventDefault()
       window.dispatchEvent(new CustomEvent("reset-hero"))
       window.scrollTo({ top: 0, behavior: "smooth" })
-    } else {
-      router.push(path("/"))
     }
   }
 
   const item = (href: string, label: string, Icon: typeof MoonIcon, opts?: { center?: boolean; onClick?: (e: React.MouseEvent) => void }) => {
     const active = isActive(href)
     return (
-      <Link
+      <NavLink
         href={href}
         onClick={opts?.onClick}
         // SEM PREFETCH AUTOMÁTICO AQUI, e o motivo é medido.
@@ -73,7 +76,7 @@ export default function BottomNav() {
           <Icon className={opts?.center ? "w-7 h-7" : "w-[22px] h-[22px]"} />
         </span>
         <span className="bnav-label">{label}</span>
-      </Link>
+      </NavLink>
     )
   }
 

@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import Link from "@/components/localized-link"
+import { NavLink, useNavPending } from "@/components/nav-pending"
 import { recordLinks } from "@/components/records-sheet"
 import { BookIcon } from "@/components/nav-icons"
-import { useRouter } from "next/navigation"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import MoonToday from "@/components/moon-today"
@@ -46,7 +45,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
   // null = ainda não perguntou ao servidor; consulta uma vez, ao abrir o menu
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [status, setStatus] = useState<Status | null | "error">(null)
-  const router = useRouter()
+  const { pendingHref, navigate } = useNavPending()
   const { dict } = useI18n()
   const t = dict.account
   const menuRef = useRef<HTMLDivElement>(null)
@@ -87,10 +86,23 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
     }
   }, [isOpen])
 
+  // destino tocado no painel: o item fica pendente, com o painel aberto, até a
+  // navegação terminar; um segundo toque no mesmo item não navega de novo
+  const [alvo, setAlvo] = useState<string | null>(null)
+  useEffect(() => {
+    if (!isOpen) setAlvo(null)
+  }, [isOpen])
+  useEffect(() => {
+    if (isOpen && alvo !== null && pendingHref === null) {
+      setAlvo(null)
+      setIsOpen(false)
+    }
+  }, [isOpen, alvo, pendingHref])
   const go = (path: string) => {
-    setIsOpen(false)
-    router.push(path)
+    setAlvo(path)
+    navigate(path)
   }
+  const pendente = (path: string) => (pendingHref === path ? "nav-pending" : "")
 
   const planBlock = () => {
     if (status === null) return <p className="text-white/40 text-xs">{t.loading}</p>
@@ -108,9 +120,9 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
         {internal ? (
           <p className="text-white/40 text-xs mt-1.5">{t.internalAccess}</p>
         ) : (
-          <Link href="/assinatura" onClick={() => setIsOpen(false)} className="inline-block text-white/80 hover:text-white text-xs mt-1.5 underline underline-offset-4 decoration-white/30">
+          <NavLink href="/assinatura" onClick={() => setAlvo("/assinatura")} className="inline-block text-white/80 hover:text-white text-xs mt-1.5 underline underline-offset-4 decoration-white/30">
             {status.plan === "free" ? t.knowPlans : t.managePlan}
-          </Link>
+          </NavLink>
         )}
       </>
     )
@@ -154,7 +166,8 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
               <button
                 key={it.href}
                 onClick={() => go(it.href)}
-                className="group flex w-full items-center gap-2.5 text-left py-1.5 text-white/80 hover:text-white text-sm transition-colors"
+                aria-busy={pendingHref === it.href || undefined}
+                className={`group flex w-full items-center gap-2.5 text-left py-1.5 text-white/80 hover:text-white text-sm transition-colors ${pendente(it.href)}`}
               >
                 <span className="text-white/35 group-hover:text-white/55 transition-colors shrink-0">
                   <BookIcon className="w-[15px] h-[15px]" />
@@ -168,7 +181,7 @@ export default function UserMenu({ user, onLogout }: UserMenuProps) {
 
           <SectionLabel>{t.accountSection}</SectionLabel>
           {isAdmin && (
-            <button onClick={() => go("/admin")} className="block w-full text-left py-1.5 text-white/80 hover:text-white text-sm transition-colors">
+            <button onClick={() => go("/admin")} aria-busy={pendingHref === "/admin" || undefined} className={`block w-full text-left py-1.5 text-white/80 hover:text-white text-sm transition-colors ${pendente("/admin")}`}>
               {dict.nav.admin}
             </button>
           )}

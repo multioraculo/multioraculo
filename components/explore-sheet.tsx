@@ -1,18 +1,34 @@
 "use client"
 
-import { useEffect } from "react"
-import Link from "@/components/localized-link"
+import { useEffect, useState } from "react"
+import { NavLink, useNavPending } from "@/components/nav-pending"
 import { useI18n } from "@/components/i18n-provider"
 import Seta from "@/components/seta"
 
 /**
  * Painel "Explorar": bottom sheet leve com os destinos de descoberta do
  * produto (Oráculos, Planos e FAQ), visível também para quem não fez login.
- * Sem busca textual. Fecha ao tocar fora, no Esc ou ao escolher um destino.
+ * Sem busca textual. Fecha ao tocar fora, no Esc ou quando o destino escolhido
+ * termina de abrir: enquanto a página não chega, o item tocado fica em estado
+ * pendente, visível, em vez de o painel sumir e a tela ficar parada.
  */
 export default function ExploreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { dict } = useI18n()
   const t = dict.nav
+  const { pendingHref } = useNavPending()
+  // true depois de tocar num destino; o painel fecha quando a navegação termina
+  const [armado, setArmado] = useState(false)
+
+  useEffect(() => {
+    if (!open) setArmado(false)
+  }, [open])
+
+  useEffect(() => {
+    if (open && armado && pendingHref === null) {
+      setArmado(false)
+      onClose()
+    }
+  }, [open, armado, pendingHref, onClose])
 
   useEffect(() => {
     if (!open) return
@@ -40,9 +56,9 @@ export default function ExploreSheet({ open, onClose }: { open: boolean; onClose
         <ul className="space-y-1">
           {items.map((it) => (
             <li key={it.href}>
-              <Link
+              <NavLink
                 href={it.href}
-                onClick={onClose}
+                onClick={() => setArmado(true)}
                 className="flex items-center justify-between gap-4 rounded-xl px-3 py-3 text-white/90 hover:bg-white/8 active:bg-white/10 transition-colors"
               >
                 <span>
@@ -50,7 +66,7 @@ export default function ExploreSheet({ open, onClose }: { open: boolean; onClose
                   <span className="block text-white/45 text-xs mt-0.5">{it.hint}</span>
                 </span>
                 <span className="text-white/35 text-[15px]" aria-hidden="true"><Seta tipo="direita" /></span>
-              </Link>
+              </NavLink>
             </li>
           ))}
         </ul>
