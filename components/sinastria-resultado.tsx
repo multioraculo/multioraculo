@@ -44,21 +44,19 @@ const DESTAQUE = 3
 const PRIMEIROS = 6
 
 function Rotulo({ children }: { children: ReactNode }) {
-  return <p className="text-white/25 text-[12px] uppercase tracking-[0.22em] font-light">{children}</p>
+  return <p className="text-white/45 text-[12px] uppercase tracking-[0.22em] font-light">{children}</p>
 }
 
 /** A seção: marginália à esquerda, conteúdo à direita, um fio em cima. Sem moldura. */
 function Secao({ id, rotulo, titulo, lead, children }: { id: string; rotulo: string; titulo: string; lead?: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24 border-t border-white/[0.07] pt-9 sm:pt-11 mt-12 sm:mt-14 lg:grid lg:grid-cols-12 lg:gap-x-12">
-      <div className="lg:col-span-4 mb-7 lg:mb-0">
-        <div className="lg:sticky lg:top-24">
-          <Rotulo>{rotulo}</Rotulo>
-          <h3 className="text-white/95 instrument italic text-[24px] sm:text-[27px] leading-snug mt-2.5">{titulo}</h3>
-          {lead && <p className="text-white/40 text-[14.5px] leading-relaxed font-light mt-3 max-w-sm">{lead}</p>}
-        </div>
+    <section id={id} className="scroll-mt-24 mt-8 sm:mt-10 rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-sm p-5 sm:p-8">
+      <div className="pb-6 mb-6 border-b border-white/15">
+        <Rotulo>{rotulo}</Rotulo>
+        <h3 className="text-white instrument italic text-[25px] sm:text-[29px] leading-snug mt-2">{titulo}</h3>
+        {lead && <p className="text-white/55 text-[15px] leading-relaxed font-light mt-2.5 max-w-xl">{lead}</p>}
       </div>
-      <div className="lg:col-span-8 min-w-0">{children}</div>
+      <div className="min-w-0">{children}</div>
     </section>
   )
 }
@@ -98,7 +96,9 @@ export default function SinastriaResultado({
   const limites = limitesDe(dados, s, nomes, nomeB)
   const temLimites = limites.length > 0
 
+  const resumo = resumoDe(dados, ordenados, overlaysAB, overlaysBA, s, corpo, aspectos, nomeB, decimal, temLimites)
   const secoes = [
+    { id: "resumo", rotulo: s.navSummary },
     { id: "contatos", rotulo: s.navContacts },
     { id: "casas", rotulo: s.navHouses },
     { id: "emcomum", rotulo: s.navCommon },
@@ -124,6 +124,11 @@ export default function SinastriaResultado({
         </nav>
       </header>
 
+      {/* ── resumo ──────────────────────────────────────────────────────── */}
+      <Secao id="resumo" rotulo={s.navSummary} titulo={s.summaryTitle} lead={s.summaryLead}>
+        <Resumo r={resumo} s={s} />
+      </Secao>
+
       {/* ── contatos ────────────────────────────────────────────────────── */}
       <Secao id="contatos" rotulo={s.navContacts} titulo={s.contactsTitle} lead={s.contactsLead}>
         <Contatos
@@ -141,7 +146,7 @@ export default function SinastriaResultado({
         {overlaysAB.length + overlaysBA.length === 0 ? (
           <p className="text-white/45 text-[15px] leading-relaxed font-light max-w-lg">{s.noHouses}</p>
         ) : (
-          <div className="grid gap-10 sm:grid-cols-2 sm:gap-8">
+          <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
             {overlaysAB.length > 0 && (
               <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} />
             )}
@@ -172,8 +177,8 @@ export default function SinastriaResultado({
       )}
 
       {/* ── o que fazer com isto ────────────────────────────────────────── */}
-      <div className="border-t border-white/[0.07] mt-12 sm:mt-14 pt-8 lg:grid lg:grid-cols-12 lg:gap-x-12">
-        <div className="lg:col-start-5 lg:col-span-8">
+      <div className="mt-8 sm:mt-10">
+        <div>
           {alvo.origem === "avulsa" && temPlano && !mostrado.guardadaId && (
             <Guardar alvo={alvo} cheia={(guardadas?.length ?? 0) >= 50} aoGuardar={aoGuardar} s={s} />
           )}
@@ -264,11 +269,18 @@ function Contatos({
       {lista.length === 0 ? (
         <p className="text-white/40 text-[15px] font-light py-6">{s.noContactsFilter}</p>
       ) : (
+        <div>
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-3 sm:gap-6 pb-3 border-b border-white/20 text-[12px] uppercase tracking-[0.18em] font-light text-white/60">
+            <span className="truncate">{s.colYou}</span>
+            <span className="w-14 sm:w-20" aria-hidden="true" />
+            <span className="truncate text-right">{nomeB}</span>
+          </div>
         <ol>
           {visiveis.map((f, i) => (
             <Contato key={f.id} f={f} destaque={i < DESTAQUE} nomeB={nomeB} corpo={corpo} aspectos={aspectos} decimal={decimal} s={s} />
           ))}
         </ol>
+        </div>
       )}
 
       {lista.length > PRIMEIROS && (
@@ -314,16 +326,16 @@ function Contato({
   ].join(" · ")
 
   return (
-    <li className={`border-b border-white/[0.06] ${destaque ? "py-6 sm:py-7" : "py-4"}`}>
+    <li className={`border-b border-white/10 ${destaque ? "py-6 sm:py-7" : "py-4"}`}>
       <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-6">
-        <Ponta id={f.corpoA} nome={corpo(f.corpoA)} dono={s.whoYou} retro={f.retroA === "retrogrado"} destaque={destaque} lado="esquerda" s={s} />
-        <div className="text-center pt-0.5">
+        <Ponta id={f.corpoA} nome={corpo(f.corpoA)} dono="" retro={f.retroA === "retrogrado"} destaque={destaque} lado="esquerda" s={s} />
+        <div className="text-center pt-0.5 w-14 sm:w-20">
           <span className={`block text-white/65 leading-none ${destaque ? "text-[26px]" : "text-[20px]"}`} aria-hidden="true">
             {SIMBOLO_ASPECTO[f.aspecto]}
           </span>
-          <span className="block text-white/30 text-[11px] sm:text-[12px] uppercase tracking-[0.16em] font-light mt-2">{aspectos[f.aspecto]}</span>
+          <span className="block text-white/45 text-[10px] sm:text-[12px] uppercase tracking-[0.12em] sm:tracking-[0.16em] font-light mt-2">{aspectos[f.aspecto]}</span>
         </div>
-        <Ponta id={f.corpoB} nome={corpo(f.corpoB)} dono={nomeB} retro={f.retroB === "retrogrado"} destaque={destaque} lado="direita" s={s} />
+        <Ponta id={f.corpoB} nome={corpo(f.corpoB)} dono="" retro={f.retroB === "retrogrado"} destaque={destaque} lado="direita" s={s} />
       </div>
       <p className="text-white/35 text-[13px] font-light mt-3 text-center tabular-nums">{detalhe}</p>
     </li>
@@ -346,7 +358,7 @@ function Ponta({ id, nome, dono, retro, destaque, lado, s }: { id: string; nome:
           )}
         </span>
       </div>
-      <p className="text-white/30 text-[13px] font-light mt-1 truncate">{dono}</p>
+      {dono && <p className="text-white/30 text-[13px] font-light mt-1 truncate">{dono}</p>}
     </div>
   )
 }
@@ -355,11 +367,11 @@ function Ponta({ id, nome, dono, retro, destaque, lado, s }: { id: string; nome:
 
 function GrupoDeCasas({ titulo, fatos, corpo, s }: { titulo: string; fatos: FatoOverlay[]; corpo: (id: string) => string; s: S }) {
   return (
-    <div>
-      <p className="text-white/50 text-[14px] font-light pb-3 border-b border-white/[0.07]">{titulo}</p>
+    <div className="rounded-xl border border-white/10 bg-black/10 p-4 sm:p-5">
+      <p className="text-white/70 text-[14px] font-light pb-3 border-b border-white/20">{titulo}</p>
       <ul>
         {fatos.map((f) => (
-          <li key={f.id} className="flex items-center gap-3 py-3 border-b border-white/[0.05]">
+          <li key={f.id} className="flex items-center gap-3 py-3 border-b border-white/10 last:border-b-0">
             <span className="text-white/40 w-4 shrink-0">
               <GlifoPlaneta id={f.planeta} tamanho={14} />
             </span>
@@ -573,6 +585,106 @@ function ApagarGuardada({ id, apelido, aoApagar, s }: { id: string; apelido: str
           {s.errDelete}
         </p>
       )}
+    </div>
+  )
+}
+
+// ── resumo ──────────────────────────────────────────────────────────────────
+
+type Resumo = {
+  contagem: string
+  equilibrio: string | null
+  topo: Array<{ id: string; a: string; aspecto: string; b: string; orbe: string }>
+  linhas: string[]
+}
+
+/**
+ * O resumo é só aritmética sobre os fatos que a rota já devolveu: quantos
+ * contatos, de que tipo, quais os mais exatos, onde os planetas se
+ * concentram. Não pondera, não pontua e não conclui sobre a relação.
+ */
+function resumoDe(
+  dados: Comparacao,
+  ordenados: FatoAspecto[],
+  ab: FatoOverlay[],
+  ba: FatoOverlay[],
+  s: S,
+  corpo: (id: string) => string,
+  aspectos: Record<string, string>,
+  nomeB: string,
+  decimal: (n: number) => string,
+  temLimites: boolean,
+): Resumo {
+  const h = ordenados.filter((f) => f.categoria === "harmonico").length
+  const d = ordenados.filter((f) => f.categoria === "discordante").length
+  const v = ordenados.filter((f) => f.categoria === "variavel").length
+  const n = ordenados.length
+
+  const contagem = n === 0 ? fmt(s.summaryNone, { nome: nomeB }) : n === 1 ? fmt(s.summaryCountOne, { nome: nomeB }) : fmt(s.summaryCountMany, { n, h, d, v, nome: nomeB })
+  const equilibrio = h + d === 0 ? null : h > d ? s.summaryMoreHarmonic : d > h ? s.summaryMoreDiscordant : s.summaryBalanced
+
+  const topo = ordenados.slice(0, 3).map((f) => ({
+    id: f.id,
+    a: `${corpo(f.corpoA)} (${s.whoYou})`,
+    aspecto: aspectos[f.aspecto],
+    b: `${corpo(f.corpoB)} (${nomeB})`,
+    orbe: fmt(s.orb, { orbe: decimal(f.orbe), limite: decimal(f.orbeLimite) }),
+  }))
+
+  const linhas: string[] = []
+  const concentracao = (fatos: FatoOverlay[], modelo: string) => {
+    if (fatos.length < 3) return
+    const por = new Map<number, number>()
+    for (const f of fatos) por.set(f.casa, (por.get(f.casa) ?? 0) + 1)
+    const [casa, k] = [...por.entries()].sort((x, y) => y[1] - x[1] || x[0] - y[0])[0]
+    if (k >= 3 && k / fatos.length >= 0.3) linhas.push(fmt(modelo, { n: casa, k, t: fatos.length, nome: nomeB }))
+  }
+  concentracao(ab, s.summaryHousesAB)
+  concentracao(ba, s.summaryHousesBA)
+
+  const comum = dados.semelhancas.length
+  if (comum > 0) linhas.push(comum === 1 ? s.summaryCommonOne : fmt(s.summaryCommonMany, { n: comum }))
+  if (temLimites) linhas.push(s.summaryLimits)
+
+  return { contagem, equilibrio, topo, linhas }
+}
+
+function Resumo({ r, s }: { r: Resumo; s: S }) {
+  return (
+    <div className="max-w-2xl">
+      <p className="text-white/90 text-[17px] leading-relaxed font-light">
+        {r.contagem}
+        {r.equilibrio && <> {r.equilibrio}</>}
+      </p>
+
+      {r.topo.length > 0 && (
+        <div className="mt-6">
+          <Rotulo>{s.summaryTop}</Rotulo>
+          <ol className="mt-1">
+            {r.topo.map((t) => (
+              <li key={t.id} className="py-3 border-b border-white/10 last:border-b-0">
+                <p className="text-white/90 text-[16px] font-light">
+                  {t.a} <span className="text-white/45">·</span> {t.aspecto} <span className="text-white/45">·</span> {t.b}
+                </p>
+                <p className="text-white/40 text-[13px] font-light mt-0.5 tabular-nums">{t.orbe}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {r.linhas.length > 0 && (
+        <ul className="mt-5 space-y-2">
+          {r.linhas.map((l) => (
+            <li key={l} className="flex gap-3 text-white/65 text-[15px] leading-relaxed font-light">
+              <span className="text-white/30 shrink-0">·</span>
+              {l}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="text-white/30 text-[13px] leading-relaxed font-light mt-6">{s.categoryNote}</p>
     </div>
   )
 }
