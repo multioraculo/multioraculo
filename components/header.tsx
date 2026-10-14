@@ -26,7 +26,12 @@ import BrandLogo from "@/components/brand-logo"
 export type HeaderUser = Pick<User, "id" | "email" | "user_metadata">
 
 type HeaderProps = {
-  initialUser: HeaderUser | null
+  /**
+   * null = visitante; objeto = logado; AUSENTE = página estática, que não lê
+   * a sessão no servidor: o cabeçalho mostra um espaço reservado e decide no
+   * cliente, no INITIAL_SESSION do Supabase, lido do cookie sem ida à rede.
+   */
+  initialUser?: HeaderUser | null
 }
 
 export default function Header({ initialUser }: HeaderProps) {
@@ -34,7 +39,7 @@ export default function Header({ initialUser }: HeaderProps) {
   const { dict, path } = useI18n()
   const { pendingHref, navigate } = useNavPending()
   const supabase = useMemo(() => createClient(), [])
-  const [user, setUser] = useState<HeaderUser | null>(initialUser)
+  const [user, setUser] = useState<HeaderUser | null | undefined>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
   // destino de retorno do OAuth quando quem pediu o login informou um (ex.: a leitura recém-gerada)
   const [returnTo, setReturnTo] = useState<string | null>(null)
@@ -203,7 +208,11 @@ export default function Header({ initialUser }: HeaderProps) {
 
         <div className="ml-auto shrink-0 flex items-center gap-2">
           <LocaleSwitcher />
-          {user ? (
+          {user === undefined ? (
+            // espaço reservado com a forma do botão de entrar (a maioria nas páginas
+            // públicas é visitante), até o cliente saber quem está logado
+            <span className="inline-block h-11 w-[5.5rem] rounded-full bg-white/10 border border-white/20" aria-hidden="true" />
+          ) : user ? (
             <UserMenu
               user={{
                 email: user.email ?? "",

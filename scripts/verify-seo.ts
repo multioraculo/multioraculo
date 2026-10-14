@@ -13,7 +13,10 @@
  *  - title/description nos três idiomas, dentro dos limites;
  *  - JSON-LD sem propriedade inventada;
  *  - a guarda de custo do horóscopo (compartilha pedido, esfria falha);
- *  - o middleware não toca em robots/sitemap/manifest/imagem OG.
+ *  - o middleware não toca em robots/sitemap/manifest/imagem OG;
+ *  - toda página mora em app/l/[locale] (idioma por segmento), o caminho
+ *    interno nunca é endereço, as páginas estáticas não leem a requisição, e
+ *    todo handler fora de /api está na lista de rotas de serviço.
  *
  * O que exige servidor no ar (status e idioma do HTML de verdade, 404 das URLs
  * inválidas) está em scripts/smoke-seo-i18n.ts.
@@ -22,16 +25,21 @@ import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import { dictionaries } from "../lib/i18n/dictionaries"
 import { LOCALES, LOCALE_META } from "../lib/i18n/config"
-import { ARQUIVOS_NOINDEX, PAGINAS_INDEXAVEIS } from "../lib/seo/paginas"
+import { ARQUIVOS_NOINDEX, PAGINAS_INDEXAVEIS, PASTA_DAS_PAGINAS, arquivoDaPagina } from "../lib/seo/paginas"
 import { alternativasDeIdioma, paginaPrivada, paginaPublica } from "../lib/seo/metadata"
 import { organizationLd, serializarLd, websiteLd } from "../lib/seo/json-ld"
 import { urlAbsoluta } from "../lib/seo/site"
 import {
   HEADER_LOCALE,
   HEADER_LOCALE_URL,
+  ROTAS_DE_SERVICO,
   ROTAS_PUBLICAS,
   caminhoEquivalente,
+  caminhoInterno,
   caminhoSemBarra,
+  desfazerCaminhoInterno,
+  ehCaminhoInterno,
+  ehRotaDeServico,
   localeDaUrl,
   localeDaUrlDepoisDeMontar,
   localeEfetivo,
@@ -61,10 +69,10 @@ for (const arq of ARQUIVOS_NOINDEX) {
   ok(/export const metadata = paginaPrivada\(\)/.test(src), `${arq}: falta "export const metadata = paginaPrivada()"`)
 }
 for (const p of PAGINAS_INDEXAVEIS) {
-  const arq = p.caminho === "/" ? "app/page.tsx" : `app${p.caminho}/page.tsx`
+  const arq = arquivoDaPagina(p.caminho)
   const src = ler(arq)
   ok(!/paginaPrivada/.test(src), `${arq}: página indexável não pode ser privada`)
-  ok(src.includes(`metadataDaRota("${p.chave}")`), `${arq}: falta metadataDaRota("${p.chave}")`)
+  ok(src.includes(`metadataDaRota("${p.chave}")`) || src.includes(`metadataDaRotaEstatica("${p.chave}",`), `${arq}: falta metadataDaRota("${p.chave}") ou metadataDaRotaEstatica("${p.chave}", locale)`)
 }
 const priv = paginaPrivada().robots as { index?: boolean; follow?: boolean }
 ok(priv.index === false && priv.follow === true, "paginaPrivada deve ser noindex, follow")
@@ -123,7 +131,7 @@ for (const p of PAGINAS_INDEXAVEIS) {
   ok(new Set(ts).size === 3, `seo.${p.chave}: title igual em dois idiomas`)
   ok(new Set(ds).size === 3, `seo.${p.chave}: description igual em dois idiomas`)
 }
-for (const arq of ["app/faq/page.tsx", "app/oraculos/page.tsx"]) {
+for (const arq of [arquivoDaPagina("/faq"), arquivoDaPagina("/oraculos")]) {
   ok(/<h1[\s>]/.test(ler(arq)), `${arq}: sem <h1>`)
 }
 
@@ -159,14 +167,59 @@ ok(todos.length === 21 && new Set(todos).size === 21, "as 21 URLs devem ser dist
 ok(ROTAS_PUBLICAS.every((rota) => rota.pt === "/" || !temPrefixoDeIdioma(rota.pt)), "português não pode ter prefixo")
 ok(ROTAS_PUBLICAS.every((rota) => rota.en === "/en" || rota.en.startsWith("/en/")), "inglês deve ter o prefixo /en")
 ok(ROTAS_PUBLICAS.every((rota) => rota.es === "/es" || rota.es.startsWith("/es/")), "espanhol deve ter o prefixo /es")
-// colisão com o App Router: nenhuma pasta app/en ou app/es, e cada página-base existe
-ok(!existe("app/en") && !existe("app/es"), "colisão: existe app/en ou app/es")
+// colisão com o App Router: nenhuma pasta en/es nem em app/ nem na pasta das páginas, e cada página-base existe
+ok(!existe("app/en") && !existe("app/es") && !existe(`${PASTA_DAS_PAGINAS}/en`) && !existe(`${PASTA_DAS_PAGINAS}/es`), "colisão: existe pasta en ou es")
 for (const rota of ROTAS_PUBLICAS) {
-  const arq = rota.pt === "/" ? "app/page.tsx" : `app${rota.pt}/page.tsx`
+  const arq = arquivoDaPagina(rota.pt)
   ok(existe(arq), `página-base de ${rota.chave} não existe: ${arq}`)
 }
+// nenhuma página ficou fora da pasta das páginas: só handlers e arquivos de metadata moram em app/
 const pastasDeApp = readdirSync(resolve(process.cwd(), "app"), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
 ok(!pastasDeApp.includes("en") && !pastasDeApp.includes("es"), "pasta de rota colide com prefixo de idioma")
+ok(!existe("app/page.tsx") && !existe("app/layout.tsx"), "app/page.tsx e app/layout.tsx não podem existir: o layout raiz é app/l/[locale]/layout.tsx")
+const paginasForaDaPasta = (function achar(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+    const p = `${dir}/${d.name}`
+    if (d.isDirectory()) return d.name === "l" && dir === "app" ? [] : achar(p)
+    return /^(page|layout)\.tsx$/.test(d.name) ? [p] : []
+  })
+})("app")
+ok(paginasForaDaPasta.length === 0, `páginas fora de ${PASTA_DAS_PAGINAS}: ${paginasForaDaPasta.join(", ")}`)
+// o caminho interno: reconhecido como a rota pública equivalente, e nunca um endereço público
+for (const rota of ROTAS_PUBLICAS) {
+  for (const l of LOCALES) {
+    const interno = caminhoInterno(l, rota.pt)
+    ok(interno === `/l/${l}${rota.pt === "/" ? "" : rota.pt}` && ehCaminhoInterno(interno), `caminhoInterno(${l}, ${rota.pt})`)
+    ok(rotaDoCaminho(interno)?.chave === rota.chave && rotaDoCaminho(interno)?.locale === l, `rotaDoCaminho(${interno}) deve ser ${rota.chave}/${l}`)
+    ok(JSON.stringify(desfazerCaminhoInterno(interno)) === JSON.stringify({ locale: l, caminhoPt: rota.pt }), `desfazerCaminhoInterno(${interno})`)
+    ok(!(todos as string[]).includes(interno), `${interno} não pode ser uma URL pública`)
+  }
+}
+ok(rotaDoCaminho("/l/en/oracles") === null && rotaDoCaminho("/l/fr/oraculos") === null && rotaDoCaminho("/l") === null && rotaDoCaminho("/l/en/home") === null, "caminho interno só vale com idioma e caminho em português conhecidos")
+ok(ehCaminhoInterno("/l") && ehCaminhoInterno("/l/pt/home") && !ehCaminhoInterno("/leitura/abc") && !ehCaminhoInterno("/lx"), "ehCaminhoInterno casa o segmento inteiro")
+ok(!ehRotaDeServico("/") && !ehRotaDeServico("/home") && !ehRotaDeServico("/sonhos") && !ehRotaDeServico("/consultasx") && ehRotaDeServico("/api/horoscopo") && ehRotaDeServico("/auth/callback") && ehRotaDeServico("/consultas/sintese") && ehRotaDeServico("/sonhos/journey"), "ehRotaDeServico casa segmento inteiro")
+// todo handler fora de /api está coberto pela lista de rotas de serviço (senão a reescrita por idioma o engoliria)
+const handlersForaDeApi = (function achar(dir: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+    const p = `${dir}/${d.name}`
+    if (d.isDirectory()) return p === "app/api" ? [] : achar(p)
+    return d.name === "route.ts" ? [dir.replace(/^app/, "")] : []
+  })
+})("app")
+for (const h of handlersForaDeApi) ok(ehRotaDeServico(h), `handler ${h} não está em ROTAS_DE_SERVICO (${ROTAS_DE_SERVICO.join(", ")})`)
+// páginas estáticas: idioma por params, nada da requisição, metadata estática; layout raiz gera os três idiomas
+for (const arq of [arquivoDaPagina("/oraculos"), arquivoDaPagina("/faq")]) {
+  const src = semComentarios(ler(arq))
+  ok(!/cookies\(|headers\(|getI18n\(|getLocale\(|createClient\(|usuarioDaRequisicao\(/.test(src), `${arq}: página estática não pode ler a requisição`)
+  ok(/metadataDaRotaEstatica\(/.test(src) && /generateStaticParams|params/.test(src), `${arq}: deve usar metadataDaRotaEstatica e o idioma de params`)
+  ok(!/force-dynamic/.test(src), `${arq}: não pode ser force-dynamic`)
+}
+{
+  const layoutSrc = semComentarios(ler(`${PASTA_DAS_PAGINAS}/layout.tsx`))
+  ok(/export function generateStaticParams/.test(layoutSrc) && /export const dynamicParams = false/.test(layoutSrc), "layout raiz: generateStaticParams + dynamicParams = false")
+  ok(!/cookies\(|headers\(|getI18n\(|getLocale\(/.test(layoutSrc), "layout raiz não pode ler a requisição (tornaria toda página dinâmica)")
+  ok(/<html lang=\{locale\}/.test(layoutSrc), "layout raiz: <html lang> vem do segmento de idioma")
+}
 // resolução e equivalência (o que o seletor de idioma usa)
 for (const rota of ROTAS_PUBLICAS) {
   for (const l of LOCALES) {
@@ -204,9 +257,11 @@ ok(!/NextResponse\.redirect/.test(sessaoSrc), "updateSession não pode redirecio
 ok(!/accept-language/i.test(semComentarios(mwSrc + sessaoSrc + srvSrc)), "Accept-Language não pode decidir idioma")
 ok(srvSrc.includes("HEADER_LOCALE_URL") && srvSrc.includes("HEADER_LOCALE"), "getLocale deve ler o idioma da URL pelo cabeçalho interno")
 // toda chamada de updateSession define (ou esvazia) os cabeçalhos de idioma: o cliente não os forja
-const chamadas = mwSrc.match(/updateSession\(request/g) ?? []
-const comCabecalhos = mwSrc.match(/\[HEADER_LOCALE\]:/g) ?? []
-ok(chamadas.length === 3 && comCabecalhos.length === 3, `toda chamada de updateSession deve definir os cabeçalhos de idioma (${chamadas.length} chamadas, ${comCabecalhos.length} definições)`)
+const chamadas = semComentarios(mwSrc).match(/updateSession\(request,\s*\{[^}]*\}\)/g) ?? []
+const todasAsChamadas = semComentarios(mwSrc).match(/updateSession\(request/g) ?? []
+ok(todasAsChamadas.length >= 2 && chamadas.length === todasAsChamadas.length && chamadas.every((c) => /headers/.test(c)), `toda chamada de updateSession deve definir os cabeçalhos de idioma (${todasAsChamadas.length} chamadas, ${chamadas.filter((c) => /headers/.test(c)).length} com headers)`)
+ok(/ehCaminhoInterno\(pathname\)/.test(mwSrc) && /ehRotaDeServico\(pathname\)/.test(mwSrc) && /caminhoInterno\(/.test(mwSrc), "middleware: bloqueia o caminho interno, poupa as rotas de serviço e reescreve para caminhoInterno()")
+ok(!/NextResponse\.rewrite/.test(semComentarios(mwSrc)), "middleware: toda reescrita passa por updateSession (que renova a sessão)")
 ok(HEADER_LOCALE === "x-locale" && HEADER_LOCALE_URL === "x-locale-url", "nomes dos cabeçalhos internos")
 
 // barra final: 308 para a mesma URL sem barra, sem laço
@@ -220,7 +275,10 @@ for (const rota of ROTAS_PUBLICAS) {
 }
 ok(caminhoSemBarra("/en/") === "/en" && caminhoSemBarra("/es/") === "/es" && caminhoSemBarra("/en") === null && caminhoSemBarra("/") === null, "barra final da Home de cada idioma")
 ok(caminhoSemBarra("/en/oracles//") === "/en/oracles", "barras repetidas")
-ok(caminhoSemBarra("/home/") === null && caminhoSemBarra("/api/horoscopo/") === null && caminhoSemBarra("/leitura/abc/") === null, "só mexe em rotas de idioma; o resto fica com o Next")
+// vale para QUALQUER caminho: toda página é reescrita para /l/<idioma>/..., e uma barra que chegasse
+// à reescrita faria o Next redirecionar para o caminho interno e expô-lo
+ok(caminhoSemBarra("/home/") === "/home" && caminhoSemBarra("/api/horoscopo/") === "/api/horoscopo" && caminhoSemBarra("/leitura/abc/") === "/leitura/abc", "barra final é normalizada em qualquer caminho")
+ok(caminhoSemBarra("/home") === null && caminhoSemBarra("/l/pt/home/") === "/l/pt/home", "sem barra não redireciona; o caminho interno com barra também normaliza (e cai no 404 do middleware)")
 
 // ── 5d · seletor e provider usam a tabela de rotas ──────────────────────────
 const provSrc = ler("components/i18n-provider.tsx")
@@ -241,6 +299,7 @@ for (const rota of ROTAS_PUBLICAS) {
 ok(localeEfetivo("es", "/home", true) === "es" && localeEfetivo("en", "/leitura/abc", true) === "en", "páginas pessoais seguem o idioma escolhido")
 ok(localeEfetivo("en", null, true) === "en" && localeEfetivo("es", undefined, true) === "es", "pathname ausente não pode quebrar")
 ok(localeEfetivo("en", "/es/faq", true) === "en", "URL inexistente não decide idioma")
+ok(localeEfetivo("pt", "/l/en/oraculos", true) === "en" && localeEfetivo("en", "/l/pt/faq", true) === "pt" && localeEfetivo("en", "/l/en/home", true) === "en", "o pathname interno da reescrita também decide o idioma depois de montar")
 ok(/useState\(false\)/.test(provSrc) && /localeEfetivo\(escolhido, pathname, montado\)/.test(provSrc), "provider deve calcular o idioma com localeEfetivo e só depois de montar")
 ok(!/localeDaUrl\(pathname\)/.test(provSrc), "provider não pode usar o pathname cru no primeiro render")
 ok(!/from "next\/link"/.test(ler("components/header.tsx")) && !/from "next\/link"/.test(ler("components/bottom-nav.tsx")), "navegação principal deve usar o Link localizado")
@@ -267,7 +326,7 @@ if (bruto) {
   for (const caminho of ["/robots.txt", "/sitemap.xml", "/manifest.webmanifest", "/opengraph-image", "/favicon.ico"]) {
     ok(!re.test(caminho), `middleware: ${caminho} não deve passar pelo getUser()`)
   }
-  for (const caminho of ["/", "/faq", "/leitura/abc", "/auth/callback", "/api/horoscopo", "/home", ...todos, "/en/foo", "/es/qualquer"]) {
+  for (const caminho of ["/", "/faq", "/leitura/abc", "/auth/callback", "/api/horoscopo", "/home", ...todos, "/en/foo", "/es/qualquer", "/l/en/oraculos", "/l"]) {
     ok(re.test(caminho), `middleware: ${caminho} deve passar pelo middleware (idioma e sessão)`)
   }
 }

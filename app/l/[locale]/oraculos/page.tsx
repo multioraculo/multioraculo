@@ -1,21 +1,33 @@
-import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
+import { notFound } from "next/navigation"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
-import { getI18n } from "@/lib/i18n/server"
-import { metadataDaRota } from "@/lib/seo/rota"
+import { getDictionary } from "@/lib/i18n"
+import { isLocale } from "@/lib/i18n/config"
+import { metadataDaRotaEstatica } from "@/lib/seo/rota"
 
-export const generateMetadata = () => metadataDaRota("oraculos")
+type Params = Promise<{ locale: string }>
 
-export default async function OraculosPage() {
-  // quem está logado vem do getUser() que o middleware já fez nesta requisição:
-  // a página não repete a ida ao servidor de auth só para montar o cabeçalho
-  const user = await usuarioDaRequisicao()
-  const { dict } = await getI18n()
-  const t = dict.oraclesPage
+/**
+ * PÁGINA ESTÁTICA: gerada no build nos três idiomas e servida pelo CDN, sem
+ * função. Para continuar assim, ela não pode ler cookies nem cabeçalhos: o
+ * idioma vem de `params`, e o cabeçalho descobre quem está logado no cliente,
+ * a partir do cookie de sessão, depois de hidratar (initialUser indefinido).
+ * Qualquer `cookies()`, `headers()` ou `getI18n()` aqui a devolve à função.
+ */
+export async function generateMetadata({ params }: { params: Params }) {
+  const { locale } = await params
+  if (!isLocale(locale)) notFound()
+  return metadataDaRotaEstatica("oraculos", locale)
+}
+
+export default async function OraculosPage({ params }: { params: Params }) {
+  const { locale } = await params
+  if (!isLocale(locale)) notFound()
+  const t = getDictionary(locale).oraclesPage
 
   return (
     <ShaderBackground>
-      <Header initialUser={user} />
+      <Header />
 
       <div className="relative z-10 container mx-auto px-6 py-12">
         <div className="max-w-3xl mx-auto">
