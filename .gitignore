@@ -16,3 +16,6 @@ scripts/prova-*.ts
 # pasta e o corpus aprovado da sintese C-base-min, e um PDF a mais la dentro
 # muda o indice, que e conferido por SHA-256 e derruba a sintese em producao.
 data/fontes/
+
+# arte candidata do Tarô ainda não ingerida: 14 PNG de 3 MB, fora do repositório até decisão
+/public/tarot/newcbd/
