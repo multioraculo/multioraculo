@@ -218,6 +218,15 @@ function mencoesDe(frase: string, locale: Locale, donos: Donos): Mencao[] {
 
 const frases = (t: string) => t.split(/(?<=[.!?])\s+/).map((f) => f.trim()).filter(Boolean)
 
+/**
+ * Uma oração por vez, quando a frase junta dois contatos por um conectivo adversativo ("o sextil entre seu Marte e a
+ * Vênus da outra pessoa sugere X, mas a quadratura entre sua Vênus e Marte dela indica Y"). Sem isto, a conferência de
+ * aspecto e dono vê quatro corpos e dois aspectos numa frase só e não sabe qual liga com qual. Só os conectivos que
+ * abrem uma nova afirmação; vírgula e "e" simples não dividem, para não perder a leitura de um contato escrito em duas partes.
+ */
+const ADVERSATIVO = /,?\s+(?:mas|por[ée]m|contudo|todavia|enquanto)\s+/iu
+const porOracoes = (frase: string) => frase.split(ADVERSATIVO).map((f) => f.trim()).filter(Boolean)
+
 export function verificarSinastria(params: {
   texto: TextoSinastria
   resultado: ResultadoSinastria
@@ -227,6 +236,8 @@ export function verificarSinastria(params: {
   evidencia?: string
   /** `false` quando quem chama faz a checagem de tensão e facilidade sobre a evidência selecionada (o verificador da resposta) */
   verificarContradicao?: boolean
+  /** confere aspecto e dono por oração, e não por frase inteira: para textos que juntam dois contatos numa frase */
+  porOracao?: boolean
 }): VereditoSinastria {
   const { texto, resultado, locale } = params
   const donos = params.donos ?? { A: [], B: [] }
@@ -257,7 +268,7 @@ export function verificarSinastria(params: {
 
   // ── 2 · aspecto inexistente e dono trocado ────────────────────────────────
   const nomesAspecto = Object.entries(ASPECTOS[locale])
-  for (const frase of frases(corrido)) {
+  for (const frase of params.porOracao ? frases(corrido).flatMap(porOracoes) : frases(corrido)) {
     const aspectosNaFrase = nomesAspecto.filter(([, nome]) => acha(frase, nome).length > 0).map(([id]) => id)
     const mencoes = mencoesDe(frase, locale, donos)
     const distintos = [...new Set(mencoes.map((m) => m.id))]

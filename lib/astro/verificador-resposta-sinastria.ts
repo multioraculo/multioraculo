@@ -59,7 +59,7 @@ export const TOLERANCIA_DE_TAMANHO = 1.1
  * Conteúdo de bastidor: o texto fala do sistema (do repertório, dos fatos calculados, do livro), e não da relação.
  * HARD FAIL.
  */
-const BASTIDOR = /(^|[^\p{L}])(repert[óo]rio|payload|davison|synastry|json|o livro|segundo o material|a lista acima|fatos calculados|o seletor|o prompt|evid[êe]ncias? (selecionadas?|citadas?)|pontos? em comum com material)($|[^\p{L}])/iu
+export const BASTIDOR = /(^|[^\p{L}])(repert[óo]rio|payload|davison|synastry|json|o livro|segundo o material|a lista acima|fatos calculados|o seletor|o prompt|evid[êe]ncias? (selecionadas?|citadas?)|pontos? em comum com material)($|[^\p{L}])/iu
 
 /**
  * FECHAMENTO PRESCRITIVO DA SÍNTESE FINAL. A síntese final descreve a configuração em aberto; não condiciona o
@@ -74,7 +74,7 @@ const BASTIDOR = /(^|[^\p{L}])(repert[óo]rio|payload|davison|synastry|json|o li
  * prescrevem. Medidos, não reprovados.
  */
 const FECHAMENTO_VERBO = String.raw`(exige|exigem|exigir|exigindo|requer|requerem|requerer|requerendo|demanda|demandam|demandar|demandando|pede|pedem)`
-const FECHAMENTO_DURO = new RegExp(
+export const FECHAMENTO_DURO = new RegExp(
   [
     String.raw`desde que`,
     String.raw`contanto que`,
@@ -99,13 +99,13 @@ const FECHAMENTO_DURO = new RegExp(
   ].map((x) => `(${x})`).join("|"),
   "iu",
 )
-const FECHAMENTO_BRANDO = new RegExp(
+export const FECHAMENTO_BRANDO = new RegExp(
   [`${FECHAMENTO_VERBO} (mais )?atenção`, String.raw`(pode|podem) se beneficiar`].map((x) => `(${x})`).join("|"),
   "iu",
 )
 
-const palavras = (t: string) => t.trim().split(/\s+/).filter(Boolean).length
-const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+export const palavras = (t: string) => t.trim().split(/\s+/).filter(Boolean).length
+export const semAcento = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
 
 /** Termos de cada tipo de relação: só aparecem se o vínculo declarado é aquele ou se a evidência os usa. */
 const TERMOS_DE_VINCULO: Record<string, RegExp> = {
@@ -114,7 +114,7 @@ const TERMOS_DE_VINCULO: Record<string, RegExp> = {
   trabalho: /\b(colegas?|chefe|patrao|empregad\w*|empresa|socios?|profission\w*|coworkers?|boss|employ\w*|business partners?|colegas|jefe|empresa)\b/i,
 }
 
-const ID_DO_VINCULO: Record<string, keyof typeof TERMOS_DE_VINCULO | null> = { romantico: "romantico", familia: "familia", trabalho: "trabalho", amizade: null, outro: null }
+export const ID_DO_VINCULO: Record<string, keyof typeof TERMOS_DE_VINCULO | null> = { romantico: "romantico", familia: "familia", trabalho: "trabalho", amizade: null, outro: null }
 
 /** O resultado que o modelo "viu": os fatos da seleção, e nada mais. */
 export function resultadoDaSelecao(sel: SelecaoSinastria): ResultadoSinastria {
@@ -133,7 +133,7 @@ export function resultadoDaSelecao(sel: SelecaoSinastria): ResultadoSinastria {
  * Que dinâmica cada id citável aponta (o id da dinâmica ou o de um dos seus fatos), COMO O MODELO A RECEBEU:
  * com as frases que o vínculo deixou e as dimensões que elas ainda sustentam.
  */
-function dinamicaPorId(payload: PayloadSinastria): Map<string, DinamicaNoPayload> {
+export function dinamicaPorId(payload: PayloadSinastria): Map<string, DinamicaNoPayload> {
   const m = new Map<string, DinamicaNoPayload>()
   for (const d of [...payload.aspectos, ...payload.overlays]) {
     m.set(d.id, d)
@@ -143,7 +143,7 @@ function dinamicaPorId(payload: PayloadSinastria): Map<string, DinamicaNoPayload
 }
 
 /** A seleção que o modelo viu: sem as dinâmicas cuja evidência inteira não se aplicava ao vínculo. */
-function selecaoVista(sel: SelecaoSinastria, payload: PayloadSinastria): SelecaoSinastria {
+export function selecaoVista(sel: SelecaoSinastria, payload: PayloadSinastria): SelecaoSinastria {
   const omitidas = new Set(payload.omitidasPorVinculo)
   return { ...sel, aspectos: sel.aspectos.filter((d) => !omitidas.has(d.id)), overlays: sel.overlays.filter((d) => !omitidas.has(d.id)) }
 }
@@ -208,6 +208,43 @@ export function afinidadeNaturalAfirmada(texto: string, locale: Locale = "pt"): 
     if (AFINIDADE_NATURAL[locale].test(frase) && !CAUTELA[locale].test(frase)) return frase.trim().slice(0, 140)
   }
   return null
+}
+
+/**
+ * 7 e 8, para qualquer texto de sinastria: elemento, modo e "mesmo signo" só com ponto em comum que os sustente, e o
+ * vínculo não cria relação (termos de outro vínculo só se a própria evidência os usa). Compartilhada pelo verificador
+ * dos nove blocos e pelo da leitura relacional.
+ */
+export function violacoesDeSemelhancaEVinculo(params: { texto: string; selecao: SelecaoSinastria; payload: PayloadSinastria; locale: Locale }): string[] {
+  const { texto, selecao, payload, locale } = params
+  const v: string[] = []
+  // ── 7 · elemento, modo e mesmo signo só com ponto em comum ──────────────────
+  const todo = semAcento(texto)
+  const sem: FatoSemelhanca[] = selecao.semelhancas.map((s) => s.fato)
+  const temElemento = sem.some((s) => s.dimensao === "elemento" || s.dimensao === "elemento_do_sol")
+  const temModo = sem.some((s) => s.dimensao === "modo")
+  const temSigno = sem.some((s) => s.dimensao === "signo_do_corpo")
+  // elemento e modo só com o valor que o ponto em comum traz: "elemento água" sem água nos fatos é invenção
+  const valoresDe = (dims: string[]) => new Set(sem.filter((s) => dims.includes(s.dimensao)).flatMap((s) => [s.padraoA, s.padraoB]))
+  const palavra = (tabela: Record<string, string>, valores: Set<string>) => new Set([...valores].map((x) => semAcento(tabela[x] ?? x)))
+  const elementosOk = palavra(ELEMENTOS[locale], valoresDe(["elemento", "elemento_do_sol"]))
+  const modosOk = palavra(MODOS[locale], valoresDe(["modo"]))
+  const reElemento = new RegExp(String.raw`\b(?:elemento|element)\s+(?:de\s+|of\s+)?(${Object.values(ELEMENTOS[locale]).map(semAcento).join("|")})\b`, "g")
+  for (const m of todo.matchAll(reElemento)) if (!elementosOk.has(m[1])) v.push(`fala do elemento ${m[1]}, e os pontos em comum da evidência não o trazem`)
+  const reModo = new RegExp(String.raw`\b(?:modo|mode)\s+(${Object.values(MODOS[locale]).map(semAcento).join("|")})\b`, "g")
+  for (const m of todo.matchAll(reModo)) if (!modosOk.has(m[1])) v.push(`fala do modo ${m[1]}, e os pontos em comum da evidência não o trazem`)
+  if (/(mesmo signo|same sign|mismo signo)/.test(todo) && !temSigno) v.push("fala de mesmo signo, e não há ponto em comum de signo na evidência")
+  if (/(mesmo elemento|same element|mismo elemento)/.test(todo) && !temElemento) v.push("fala de mesmo elemento, e não há ponto em comum de elemento na evidência")
+
+  // ── 8 · o vínculo não cria relação ──────────────────────────────────────────
+  const evidenciaTexto = semAcento([...payload.aspectos, ...payload.overlays].flatMap((d) => d.evidencia).concat(payload.semelhancas.flatMap((s) => s.nucleo)).join(" "))
+  const declarado = ID_DO_VINCULO[payload.vinculo]
+  for (const [tipo, regex] of Object.entries(TERMOS_DE_VINCULO)) {
+    if (tipo === declarado) continue
+    const m = todo.match(regex)
+    if (m && !regex.test(evidenciaTexto)) v.push(`usa "${m[0]}", termo de relação ${tipo} que o vínculo declarado (${payload.vinculo}) e a evidência não trazem`)
+  }
+  return v
 }
 
 export function verificarRespostaSinastria(params: { bruto: unknown; payload: PayloadSinastria; selecao: SelecaoSinastria; locale: Locale }): VereditoResposta {
@@ -352,32 +389,8 @@ export function verificarRespostaSinastria(params: { bruto: unknown; payload: Pa
     }
   }
 
-  // ── 7 · elemento, modo e mesmo signo só com ponto em comum ──────────────────
-  const todo = semAcento(sintese)
-  const sem: FatoSemelhanca[] = selecao.semelhancas.map((s) => s.fato)
-  const temElemento = sem.some((s) => s.dimensao === "elemento" || s.dimensao === "elemento_do_sol")
-  const temModo = sem.some((s) => s.dimensao === "modo")
-  const temSigno = sem.some((s) => s.dimensao === "signo_do_corpo")
-  // elemento e modo só com o valor que o ponto em comum traz: "elemento água" sem água nos fatos é invenção
-  const valoresDe = (dims: string[]) => new Set(sem.filter((s) => dims.includes(s.dimensao)).flatMap((s) => [s.padraoA, s.padraoB]))
-  const palavra = (tabela: Record<string, string>, valores: Set<string>) => new Set([...valores].map((x) => semAcento(tabela[x] ?? x)))
-  const elementosOk = palavra(ELEMENTOS[locale], valoresDe(["elemento", "elemento_do_sol"]))
-  const modosOk = palavra(MODOS[locale], valoresDe(["modo"]))
-  const reElemento = new RegExp(String.raw`\b(?:elemento|element)\s+(?:de\s+|of\s+)?(${Object.values(ELEMENTOS[locale]).map(semAcento).join("|")})\b`, "g")
-  for (const m of todo.matchAll(reElemento)) if (!elementosOk.has(m[1])) v.push(`fala do elemento ${m[1]}, e os pontos em comum da evidência não o trazem`)
-  const reModo = new RegExp(String.raw`\b(?:modo|mode)\s+(${Object.values(MODOS[locale]).map(semAcento).join("|")})\b`, "g")
-  for (const m of todo.matchAll(reModo)) if (!modosOk.has(m[1])) v.push(`fala do modo ${m[1]}, e os pontos em comum da evidência não o trazem`)
-  if (/(mesmo signo|same sign|mismo signo)/.test(todo) && !temSigno) v.push("fala de mesmo signo, e não há ponto em comum de signo na evidência")
-  if (/(mesmo elemento|same element|mismo elemento)/.test(todo) && !temElemento) v.push("fala de mesmo elemento, e não há ponto em comum de elemento na evidência")
-
-  // ── 8 · o vínculo não cria relação ──────────────────────────────────────────
-  const evidenciaTexto = semAcento([...payload.aspectos, ...payload.overlays].flatMap((d) => d.evidencia).concat(payload.semelhancas.flatMap((s) => s.nucleo)).join(" "))
-  const declarado = ID_DO_VINCULO[payload.vinculo]
-  for (const [tipo, regex] of Object.entries(TERMOS_DE_VINCULO)) {
-    if (tipo === declarado) continue
-    const m = todo.match(regex)
-    if (m && !regex.test(evidenciaTexto)) v.push(`usa "${m[0]}", termo de relação ${tipo} que o vínculo declarado (${payload.vinculo}) e a evidência não trazem`)
-  }
+  // ── 7 e 8 · semelhança só com ponto em comum, e o vínculo não cria relação ───
+  v.push(...violacoesDeSemelhancaEVinculo({ texto: sintese, selecao, payload, locale }))
 
   const unicos = (l: string[]) => [...new Set(l)]
   if (v.length) return { ok: false, violacoes: unicos(v), avisos: unicos(avisos) }

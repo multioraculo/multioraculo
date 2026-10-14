@@ -73,7 +73,7 @@ export function sistemaSinastria(locale: Locale): string {
 
 // ── o texto do usuário ───────────────────────────────────────────────────────
 
-const NOME_DO_VINCULO: Record<string, string> = {
+export const NOME_DO_VINCULO: Record<string, string> = {
   romantico: "romântico",
   amizade: "amizade",
   familia: "família",
@@ -81,7 +81,7 @@ const NOME_DO_VINCULO: Record<string, string> = {
   outro: "outro",
 }
 
-function listarDinamicas(ds: DinamicaNoPayload[]): string {
+export function listarDinamicas(ds: DinamicaNoPayload[]): string {
   return ds
     .map((d) => {
       const fatos = d.fatos.map((f) => `    fato ${f.id}: ${f.texto}`).join("\n")
@@ -97,7 +97,7 @@ function listarDinamicas(ds: DinamicaNoPayload[]): string {
  * português, e para en e es o modelo a diz no idioma de saída sem acrescentar nada. O verificador confere
  * os fatos pelos ids, e não pelas palavras.
  */
-const REGRA_DE_IDIOMA: Record<Locale, string> = {
+export const REGRA_DE_IDIOMA: Record<Locale, string> = {
   pt: "IDIOMA: escreva em português do Brasil. A evidência já está em português: use-a normalmente.",
   en: "IDIOMA: escreva todo o texto destinado ao leitor em inglês. A evidência acima está em português: diga o que ela diz em inglês, sem ampliar o sentido, sem acrescentar nada que ela não diga e sem trazer terminologia de fora dela. Os nomes de planetas, signos e aspectos vão em inglês. As chaves do JSON e os ids em `evidencias` não mudam.",
   es: "IDIOMA: escreva todo o texto destinado ao leitor em espanhol. A evidência acima está em português: diga o que ela diz em espanhol, sem ampliar o sentido, sem acrescentar nada que ela não diga e sem trazer terminologia de fora dela. Os nomes de planetas, signos e aspectos vão em espanhol. As chaves do JSON e os ids em `evidencias` não mudam.",

@@ -24,11 +24,14 @@ import { useState, type ReactNode } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import { GlifoPlaneta } from "@/components/astro-wheel"
 import Seta from "@/components/seta"
-import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
+import { ASPECTOS, CORPOS, LIGACAO_ASPECTO, SIGNOS } from "@/lib/astro/nomes"
+import { temaDoContato } from "@/lib/astro/temas-sinastria"
 import { SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
 import { fmt } from "@/lib/i18n"
+import type { Locale } from "@/lib/i18n/config"
 import type { FatoAspecto, FatoOverlay, FatoSemelhanca } from "@/lib/astro/sinastria"
 import type { Comparacao } from "@/lib/astro/sinastria-servico"
+import type { LeituraRelacional } from "@/lib/astro/prompt-leitura-sinastria"
 
 export type { Comparacao }
 
@@ -37,7 +40,8 @@ type Nascimento = { born_on: string; born_at: string | null; lat: number; lon: n
 type Alvo =
   | { origem: "avulsa"; nascimento: Nascimento; apelido: string }
   | { origem: "guardada"; id: string; apelido: string }
-type Mostrado = { alvo: Alvo; vinculo: Vinculo; dados: Comparacao; guardadaId?: string }
+/** `leitura` é a interpretação do encontro, quando existe: sem ela a tela é a dos fatos e do resumo, como sempre foi. */
+type Mostrado = { alvo: Alvo; vinculo: Vinculo; dados: Comparacao; guardadaId?: string; leitura?: LeituraRelacional | null }
 type Guardada = { id: string; nickname: string; place_label: string; born_on: string }
 
 const DESTAQUE = 3
@@ -96,7 +100,7 @@ export default function SinastriaResultado({
   const limites = limitesDe(dados, s, nomes, nomeB)
   const temLimites = limites.length > 0
 
-  const resumo = resumoDe(dados, ordenados, overlaysAB, overlaysBA, s, corpo, aspectos, nomeB, decimal, temLimites)
+  const resumo = resumoDe(dados, ordenados, overlaysAB, overlaysBA, s, corpo, aspectos, nomeB, decimal, temLimites, locale)
   const secoes = [
     { id: "resumo", rotulo: s.navSummary },
     { id: "contatos", rotulo: s.navContacts },
@@ -124,9 +128,9 @@ export default function SinastriaResultado({
         </nav>
       </header>
 
-      {/* ── resumo ──────────────────────────────────────────────────────── */}
+      {/* ── resumo: começa pelo que foi calculado ───────────────────────── */}
       <Secao id="resumo" rotulo={s.navSummary} titulo={s.summaryTitle} lead={s.summaryLead}>
-        <Resumo r={resumo} s={s} />
+        <Resumo r={resumo} leitura={mostrado.leitura ?? null} s={s} />
       </Secao>
 
       {/* ── contatos ────────────────────────────────────────────────────── */}
@@ -146,7 +150,8 @@ export default function SinastriaResultado({
         {overlaysAB.length + overlaysBA.length === 0 ? (
           <p className="text-white/45 text-[15px] leading-relaxed font-light max-w-lg">{s.noHouses}</p>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
+          <>
+          <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
             {overlaysAB.length > 0 && (
               <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} />
             )}
@@ -154,6 +159,8 @@ export default function SinastriaResultado({
               <GrupoDeCasas titulo={fmt(s.housesBA, { nome: nomeB })} fatos={[...overlaysBA].sort(porCorpo)} corpo={corpo} s={s} />
             )}
           </div>
+          <p className="text-white/35 text-[13px] font-light mt-4">{s.housesTap}</p>
+          </>
         )}
       </Secao>
 
@@ -338,6 +345,7 @@ function Contato({
         <Ponta id={f.corpoB} nome={corpo(f.corpoB)} dono="" retro={f.retroB === "retrogrado"} destaque={destaque} lado="direita" s={s} />
       </div>
       <p className="text-white/35 text-[13px] font-light mt-3 text-center tabular-nums">{detalhe}</p>
+      {destaque && <p className="text-white/55 text-[14px] font-light leading-relaxed mt-1.5 text-center max-w-lg mx-auto">{glosaDoContato(f, s)}</p>}
     </li>
   )
 }
@@ -366,19 +374,40 @@ function Ponta({ id, nome, dono, retro, destaque, lado, s }: { id: string; nome:
 // ── casas ───────────────────────────────────────────────────────────────────
 
 function GrupoDeCasas({ titulo, fatos, corpo, s }: { titulo: string; fatos: FatoOverlay[]; corpo: (id: string) => string; s: S }) {
+  const [aberta, setAberta] = useState<string | null>(null)
+  const significados = s.houseMeaning as Record<string, { area: string; effect: string }>
   return (
     <div className="rounded-xl border border-white/10 bg-black/10 p-4 sm:p-5">
       <p className="text-white/70 text-[14px] font-light pb-3 border-b border-white/20">{titulo}</p>
       <ul>
-        {fatos.map((f) => (
-          <li key={f.id} className="flex items-center gap-3 py-3 border-b border-white/10 last:border-b-0">
-            <span className="text-white/40 w-4 shrink-0">
-              <GlifoPlaneta id={f.planeta} tamanho={14} />
-            </span>
-            <span className="text-white/85 text-[16px] font-light flex-1">{corpo(f.planeta)}</span>
-            <span className="text-white/70 instrument italic text-[18px] tabular-nums">{fmt(s.houseOf, { n: f.casa })}</span>
-          </li>
-        ))}
+        {fatos.map((f) => {
+          const m = significados[String(f.casa)]
+          const aberto = aberta === f.id
+          return (
+            <li key={f.id} className="border-b border-white/10 last:border-b-0">
+              {/* a casa se abre ao toque: a área da vida aparece sempre, e o que o planeta faz ali, ao abrir */}
+              <button
+                type="button"
+                aria-expanded={aberto}
+                onClick={() => setAberta(aberto ? null : f.id)}
+                className="group w-full flex items-center gap-3 py-3 text-left cursor-pointer"
+              >
+                <span className="text-white/40 w-4 shrink-0">
+                  <GlifoPlaneta id={f.planeta} tamanho={14} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-white/85 text-[16px] font-light">{corpo(f.planeta)}</span>
+                  {m && <span className="block text-white/45 text-[13px] font-light leading-snug mt-0.5">{m.area}</span>}
+                </span>
+                <span className="text-white/70 instrument italic text-[18px] tabular-nums shrink-0">{fmt(s.houseOf, { n: f.casa })}</span>
+                <span className={`text-white/35 group-hover:text-white/70 text-[13px] shrink-0 transition-transform duration-200 ${aberto ? "rotate-180" : ""}`}>
+                  <Seta tipo="chevron" />
+                </span>
+              </button>
+              {aberto && m && <p className="text-white/65 text-[14.5px] font-light leading-relaxed pb-4 pl-7 pr-2">{m.effect}</p>}
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
@@ -591,11 +620,32 @@ function ApagarGuardada({ id, apelido, aoApagar, s }: { id: string; apelido: str
 
 // ── resumo ──────────────────────────────────────────────────────────────────
 
+/** Um grupo do resumo, curto: onde o tipo se concentra e o contato mais exato dele. */
+type Grupo = { id: "harmonico" | "discordante" | "variavel"; titulo: string; lead: string; foco: string; melhor: string }
 type Resumo = {
-  contagem: string
-  equilibrio: string | null
-  topo: Array<{ id: string; a: string; aspecto: string; b: string; orbe: string }>
+  /** a resposta em uma frase quando não há leitura escrita */
+  manchete: string
+  /** a proporção de contatos por tipo, em inteiros que somam 100 */
+  partes: Array<{ id: "harmonico" | "discordante" | "variavel"; rotulo: string; n: number; pct: number }>
+  /** os mais exatos de cada tipo, com o mesmo espaço: pontos fortes, pontos de tensão e pontos em aberto */
+  grupos: Grupo[]
   linhas: string[]
+}
+
+/** Percentuais inteiros que somam 100 (maiores restos): a proporção de contatos por tipo, e não uma nota. */
+function percentuais(ns: number[]): number[] {
+  const total = ns.reduce((a, b) => a + b, 0)
+  if (total === 0) return ns.map(() => 0)
+  const brutos = ns.map((n) => (n / total) * 100)
+  const base = brutos.map(Math.floor)
+  let falta = 100 - base.reduce((a, b) => a + b, 0)
+  const ordem = brutos.map((b, i) => ({ i, resto: b - Math.floor(b) })).sort((x, y) => y.resto - x.resto || x.i - y.i)
+  for (const { i } of ordem) {
+    if (falta <= 0) break
+    base[i] += 1
+    falta -= 1
+  }
+  return base
 }
 
 /**
@@ -603,6 +653,15 @@ type Resumo = {
  * contatos, de que tipo, quais os mais exatos, onde os planetas se
  * concentram. Não pondera, não pontua e não conclui sobre a relação.
  */
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
+
+/** Uma linha que diz o que o contato quer dizer: o que cada corpo representa e como o aspecto os põe em relação. */
+function glosaDoContato(f: FatoAspecto, s: S): string {
+  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
+  const asp = (s.aspectGloss as Record<string, string>)[f.aspecto] ?? ""
+  return `${maiuscula(papel(f.corpoA))} × ${papel(f.corpoB)}: ${asp}`
+}
+
 function resumoDe(
   dados: Comparacao,
   ordenados: FatoAspecto[],
@@ -614,6 +673,7 @@ function resumoDe(
   nomeB: string,
   decimal: (n: number) => string,
   temLimites: boolean,
+  locale: Locale,
 ): Resumo {
   const h = ordenados.filter((f) => f.categoria === "harmonico").length
   const d = ordenados.filter((f) => f.categoria === "discordante").length
@@ -623,13 +683,42 @@ function resumoDe(
   const contagem = n === 0 ? fmt(s.summaryNone, { nome: nomeB }) : n === 1 ? fmt(s.summaryCountOne, { nome: nomeB }) : fmt(s.summaryCountMany, { n, h, d, v, nome: nomeB })
   const equilibrio = h + d === 0 ? null : h > d ? s.summaryMoreHarmonic : d > h ? s.summaryMoreDiscordant : s.summaryBalanced
 
-  const topo = ordenados.slice(0, 3).map((f) => ({
-    id: f.id,
-    a: `${corpo(f.corpoA)} (${s.whoYou})`,
-    aspecto: aspectos[f.aspecto],
-    b: `${corpo(f.corpoB)} (${nomeB})`,
-    orbe: fmt(s.orb, { orbe: decimal(f.orbe), limite: decimal(f.orbeLimite) }),
-  }))
+  const pct = percentuais([h, d, v])
+  const partes: Resumo["partes"] = [
+    { id: "harmonico", rotulo: s.harmonic, n: h, pct: pct[0] },
+    { id: "discordante", rotulo: s.discordant, n: d, pct: pct[1] },
+    { id: "variavel", rotulo: s.variable, n: v, pct: pct[2] },
+  ]
+  const temas = s.themes as Record<string, { name: string; meaning: string }>
+  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
+  const contato = (f: FatoAspecto) =>
+    fmt(s.contactPhrase, { a: corpo(f.corpoA), quem: s.whoYou, aspecto: aspectos[f.aspecto], liga: LIGACAO_ASPECTO[locale][f.aspecto] ?? "", b: corpo(f.corpoB), nome: nomeB })
+  const trecho = (f: FatoAspecto, modelo: string) =>
+    fmt(modelo, { contato: contato(f), a: papel(f.corpoA), b: papel(f.corpoB), gloss: (s.aspectGloss as Record<string, string>)[f.aspecto] ?? "" })
+  /** Os temas de um tipo de contato, do que tem o contato mais exato ao que tem o menos exato. */
+  const temasDe = (categoria: Grupo["id"]) => {
+    const porTema = new Map<string, FatoAspecto[]>()
+    for (const f of ordenados.filter((x) => x.categoria === categoria)) {
+      const t = temaDoContato([f.corpoA, f.corpoB])
+      porTema.set(t, [...(porTema.get(t) ?? []), f])
+    }
+    return [...porTema.entries()]
+  }
+  /** Curto, de propósito: os temas onde o tipo se concentra, e o contato mais exato dele, com o que ele quer dizer. */
+  const grupo = (id: Grupo["id"], titulo: string, lead: string): Grupo => {
+    const temasDoTipo = temasDe(id)
+    const melhor = ordenados.find((f) => f.categoria === id)
+    return {
+      id,
+      titulo,
+      lead,
+      foco: temasDoTipo.length ? fmt(s.proseFocus, { temas: temasDoTipo.slice(0, 3).map(([t]) => temas[t].name.toLowerCase()).join("; ") }) : "",
+      melhor: melhor ? trecho(melhor, s.proseBest) : "",
+    }
+  }
+  const grupos = [grupo("harmonico", s.summaryStrong, s.summaryStrongLead), grupo("discordante", s.summaryWeak, s.summaryWeakLead), grupo("variavel", s.summaryOpen, s.summaryOpenLead)].filter((g) => g.melhor)
+  const topo = ordenados[0] ? temas[temaDoContato([ordenados[0].corpoA, ordenados[0].corpoB])].name.toLowerCase() : null
+  const manchete = n === 0 ? contagem : [equilibrio, topo ? fmt(s.encounterTopTheme, { tema: topo }) : null].filter(Boolean).join(" ")
 
   const linhas: string[] = []
   const concentracao = (fatos: FatoOverlay[], modelo: string) => {
@@ -646,37 +735,60 @@ function resumoDe(
   if (comum > 0) linhas.push(comum === 1 ? s.summaryCommonOne : fmt(s.summaryCommonMany, { n: comum }))
   if (temLimites) linhas.push(s.summaryLimits)
 
-  return { contagem, equilibrio, topo, linhas }
+  return { manchete, partes, grupos, linhas }
 }
 
-function Resumo({ r, s }: { r: Resumo; s: S }) {
+/**
+ * O encontro: uma resposta só, em camadas. Em cima, a frase que responde "como é este encontro" (a do parecer da leitura
+ * quando existe, ou a que o cálculo sustenta); depois a proporção de contatos por tipo; depois os pontos fortes, de
+ * tensão e em aberto, cada um em duas frases; e, por último, a interpretação completa, recolhida. Resumo e leitura
+ * respondem à mesma pergunta, e por isso não são duas seções.
+ */
+function Resumo({ r, leitura, s }: { r: Resumo; leitura: LeituraRelacional | null; s: S }) {
+  const [aberta, setAberta] = useState(false)
   return (
     <div className="max-w-2xl">
-      <p className="text-white/90 text-[17px] leading-relaxed font-light">
-        {r.contagem}
-        {r.equilibrio && <> {r.equilibrio}</>}
-      </p>
+      <p className="text-white instrument italic text-[23px] sm:text-[27px] leading-snug">{leitura ? leitura.parecer.texto : r.manchete}</p>
 
-      {r.topo.length > 0 && (
-        <div className="mt-6">
-          <Rotulo>{s.summaryTop}</Rotulo>
-          <ol className="mt-1">
-            {r.topo.map((t) => (
-              <li key={t.id} className="py-3 border-b border-white/10 last:border-b-0">
-                <p className="text-white/90 text-[16px] font-light">
-                  {t.a} <span className="text-white/45">·</span> {t.aspecto} <span className="text-white/45">·</span> {t.b}
-                </p>
-                <p className="text-white/40 text-[13px] font-light mt-0.5 tabular-nums">{t.orbe}</p>
+      {r.partes.some((p) => p.n > 0) && (
+        <div className="mt-7">
+          {/* a barra mostra a proporção; o tipo é dito em palavra, e a diferença entre eles é de preenchimento, e não de cor */}
+          <div className="flex h-2.5 rounded-full overflow-hidden border border-white/20" role="img" aria-label={r.partes.map((p) => `${p.rotulo} ${p.pct}%`).join(", ")}>
+            {r.partes.map((p) => (
+              <span
+                key={p.id}
+                style={{ width: `${p.pct}%` }}
+                className={p.id === "harmonico" ? "bg-white/75" : p.id === "discordante" ? "bg-white/30" : "bg-white/10"}
+              />
+            ))}
+          </div>
+          <ul className="grid grid-cols-3 gap-3 mt-3">
+            {r.partes.map((p) => (
+              <li key={p.id}>
+                <span className="block text-white/90 text-[22px] instrument italic tabular-nums leading-none">{p.pct}%</span>
+                <span className="block text-white/50 text-[13px] font-light mt-1.5">
+                  {p.rotulo} <span className="text-white/30 tabular-nums">({p.n})</span>
+                </span>
               </li>
             ))}
-          </ol>
+          </ul>
+          <p className="text-white/30 text-[13px] leading-relaxed font-light mt-3">{s.summaryShareNote}</p>
         </div>
       )}
 
+      {r.grupos.map((g) => (
+        <div key={g.id} className="mt-6 pt-5 border-t border-white/15">
+          <h4 className="text-white instrument italic text-[20px] leading-snug">{g.titulo}</h4>
+          <p className="text-white/80 text-[15.5px] leading-[1.7] font-light mt-2">
+            {g.foco} {g.melhor}
+          </p>
+        </div>
+      ))}
+
       {r.linhas.length > 0 && (
-        <ul className="mt-5 space-y-2">
+        <ul className="mt-6 space-y-2">
           {r.linhas.map((l) => (
-            <li key={l} className="flex gap-3 text-white/65 text-[15px] leading-relaxed font-light">
+            <li key={l} className="flex gap-3 text-white/60 text-[14.5px] leading-relaxed font-light">
               <span className="text-white/30 shrink-0">·</span>
               {l}
             </li>
@@ -684,7 +796,52 @@ function Resumo({ r, s }: { r: Resumo; s: S }) {
         </ul>
       )}
 
-      <p className="text-white/30 text-[13px] leading-relaxed font-light mt-6">{s.categoryNote}</p>
+      {leitura && (
+        <div className="mt-7 pt-5 border-t border-white/15">
+          <button
+            type="button"
+            aria-expanded={aberta}
+            onClick={() => setAberta((v) => !v)}
+            className="group flex items-center gap-2 py-2 text-white/80 hover:text-white text-[15px] font-light cursor-pointer transition-colors"
+          >
+            {aberta ? s.readingLess : s.readingMore}
+            <span className={`text-white/45 group-hover:text-white/80 text-[14px] transition-transform duration-200 ${aberta ? "rotate-180" : ""}`}>
+              <Seta tipo="chevron" />
+            </span>
+          </button>
+          {aberta && <Leitura l={leitura} s={s} />}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── leitura ─────────────────────────────────────────────────────────────────
+
+/**
+ * A interpretação do encontro. O parecer abre, em corpo grande: é a resposta à pergunta de quem veio. O resto
+ * desenvolve, cada parte com o seu rótulo, e `na_relacao` só aparece quando existe. Texto puro: nada aqui é
+ * calculado nem reformatado, e nenhum parágrafo mostra os ids de evidência, que servem ao verificador.
+ */
+function Leitura({ l, s }: { l: LeituraRelacional; s: S }) {
+  const Bloco = ({ rotulo, paragrafos }: { rotulo: string; paragrafos: string[] }) => (
+    <div className="mt-8">
+      <Rotulo>{rotulo}</Rotulo>
+      <div className="mt-3 space-y-4 max-w-2xl">
+        {paragrafos.map((t) => (
+          <p key={t} className="text-white/80 text-[16px] leading-[1.75] font-light">
+            {t}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+  return (
+    <div>
+      <Bloco rotulo={s.readingBring} paragrafos={l.aproxima_e_tensiona.map((p) => p.texto)} />
+      <Bloco rotulo={s.readingMeaning} paragrafos={[l.significado.texto]} />
+      {l.na_relacao && <Bloco rotulo={s.readingAppear} paragrafos={[l.na_relacao.texto]} />}
+      <p className="text-white/30 text-[13px] leading-relaxed font-light mt-8 max-w-xl">{s.readingNote}</p>
     </div>
   )
 }
