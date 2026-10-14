@@ -648,8 +648,9 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                   <PreviewPaywall teaser={preview.teaser || synthesis || ""} ready={preview.ready} />
                 ) : synthesis ? (
                   <div className="space-y-4">
+                    {/* o primeiro parágrafo é a resposta, e aparece como tal */}
                     {synthesis.split(/\n{2,}/).map((para, i, all) => (
-                      <p key={i} className="text-white/80 text-sm leading-relaxed">
+                      <p key={i} className={i === 0 ? "text-white text-base leading-relaxed" : "text-white/75 text-sm leading-relaxed"}>
                         {para.trim()}
                         {isStreaming && i === all.length - 1 && (
                           <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-white/60 animate-pulse" />

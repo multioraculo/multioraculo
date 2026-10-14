@@ -97,8 +97,11 @@ const MARKER_RE = /[ \t]*\r?\n?[ \t]*\[\[\s*[Pp]\s*\]\][ \t]*\r?\n?[ \t]*/g
  */
 const BASTIDOR_PREPOSICOES = [
   "no", "na", "nos", "nas", "do", "da", "dos", "das",
-  "in the", "from the",
-  "en el", "en la", "en los", "en las", "del", "de la", "de los", "de las",
+  // "pelo material" apareceu numa saída real ("a ideia não se sustenta pelo
+  // material"): a preposição muda, a locução é a mesma
+  "pelo", "pela", "pelos", "pelas",
+  "in the", "from the", "by the",
+  "en el", "en la", "en los", "en las", "del", "de la", "de los", "de las", "por el", "por la",
 ]
 /** pedem complemento para serem legítimas */
 const BASTIDOR_AMBIGUOS = [
@@ -326,6 +329,8 @@ export function createSynthesisFilter() {
     const keep = fim ? 0 : holdBack(bruto)
     const pronto = bruto.slice(0, bruto.length - keep)
     const texto = stripBackstage(pronto).replace(MARKER_RE, "\n\n")
+    // o que já saiu não volta: na dúvida o navegador fica com o texto maior
+    if (texto.length < enviado.length && enviado.startsWith(texto)) return ""
     let comum = 0
     while (comum < texto.length && comum < enviado.length && texto[comum] === enviado[comum]) comum++
     const delta = texto.slice(Math.max(comum, Math.min(enviado.length, texto.length)))
@@ -355,22 +360,32 @@ export const ORACLE_ORDER: OracleKey[] = ["tarot", "iching", "runas", "buzios", 
  * Entrada do primeiro trecho (M1): por onde o texto entra na dinâmica que o
  * conjunto sustenta. Nenhuma opção diz QUAL é ela — isso vem da tiragem.
  */
+/**
+ * Como a RESPOSTA é formulada. Varia a frase, nunca o fato de ela existir nem o
+ * que ela conclui: todas estas entradas respondem à pergunta na primeira frase.
+ *
+ * NENHUMA USA VOCABULÁRIO DE BASTIDOR. A entrada "pelo que se repete no
+ * material" produziu, numa leitura real, a abertura "O que se repete no material
+ * é um movimento de busca" — a dica entregou ao texto final a palavra que a
+ * checagem 10 proíbe. O filtro de saída remove a locução, mas a causa estava
+ * aqui.
+ */
 const ENTRIES = [
-  "Entre pelo movimento em si, nomeado de forma direta, antes de qualquer explicação.",
-  "Entre por uma imagem concreta e sensorial que dê forma ao movimento, sem explicá-la de imediato.",
-  "Entre pelo detalhe mais específico do material sobre esse movimento, e deixe-o abrir o resto.",
-  "Entre pelo ponto em que a pergunta encontra o movimento em curso, ainda que de lado.",
-  "Entre por uma frase curta e afirmativa, e desdobre a partir dela.",
-  "Entre pelo que já estava em curso antes desta consulta, em tom baixo e descritivo.",
-  "Entre pelo que se repete no material, dito sem ênfase, como constatação.",
-  "Entre pelo aspecto em que o material é mais preciso, e só depois amplie.",
+  "Responda nomeando a tendência que predomina, de forma direta, antes de qualquer explicação.",
+  "Responda pela comparação: diga o que pesa mais e em relação a quê, numa frase só.",
+  "Responda pelo obstáculo: diga qual é o entrave principal e, se couber, qual não é.",
+  "Responda por uma frase curta e afirmativa, e desdobre a partir dela.",
+  "Responda dizendo primeiro o que NÃO se sustenta, e em seguida o que se sustenta no lugar.",
+  "Responda pelo que já estava em curso antes desta consulta, em tom baixo, mas respondendo.",
+  "Responda com a constatação mais direta possível, sem ênfase e sem imagem.",
+  "Responda pelo ponto em que o conjunto é mais preciso, e só depois amplie.",
 ]
 
 /** Textura dos quatro parágrafos: ritmo e tamanho relativo. Nunca reordena. */
 const TEXTURES = [
-  "Parágrafos de tamanhos desiguais: o primeiro e o terceiro mais longos, o segundo e o quarto mais contidos.",
-  "Parágrafos de tamanhos desiguais: o segundo mais longo, os outros três mais curtos.",
-  "Frases longas no primeiro e no terceiro parágrafo, curtas no segundo e no quarto.",
+  "A resposta curta e seca; o que a sustenta, mais desenvolvido.",
+  "A resposta em duas frases largas; os parágrafos seguintes mais contidos.",
+  "Frases longas onde se fundamenta, curtas onde se responde e onde se fecha.",
   "Cada parágrafo abre com uma frase curta e depois se alonga.",
   "Tom baixo e descritivo do começo ao fim, sem elevação de registro em nenhum parágrafo.",
   "Alterne o andamento: um parágrafo denso e lento, o seguinte mais rápido e cortante.",
@@ -431,9 +446,9 @@ export function synthesisOrder(seed: string): OracleKey[] {
 const SPACING = [
   "dê o espaço extra a M3, abrindo a divergência num parágrafo próprio",
   "dê o espaço extra a M3, separando as duas forças simultâneas em parágrafos distintos",
-  "dê o espaço extra a M1, distinguindo o sinal principal do secundário",
+  "dê o espaço extra a M2, distinguindo o fator principal do secundário",
   "dê o espaço extra a M2, separando o que se rearranja do que apenas continua",
-  "dê o espaço extra a M4, distinguindo o fecho do conflito que o antecede",
+  "dê o espaço extra a M4, distinguindo a implicação do conflito que a antecede",
 ]
 
 /**
@@ -517,15 +532,25 @@ COMO PESAR OS SINAIS
 OS QUATRO TRECHOS: M1, M2, M3, M4
 Quatro trechos obrigatórios, sempre nesta ordem. M1 a M4 são códigos de trabalho, não têm tradução em português e não existem para quem lê: o texto entra direto no conteúdo de cada um, sem anunciar nada.
 
-M1. Que dinâmica o conjunto sustenta com mais força agora. Pode ser algo ganhando força, perdendo força, permanecendo como está, se firmando, sendo tensionado, mudando de posição, sendo revisto, chegando ao fim — ou uma ambivalência sem predominância clara. Não presuma que algo termina, cresce, entra em crise ou muda de natureza. Se a evidência não sustenta uma predominância, escreva a ambivalência em vez de inventar uma direção.
-M2. O que acontece em relação a M1: algo aparecendo, uma qualidade que já existia ocupando mais espaço, uma postura se firmando, um rearranjo do que já havia, algo antigo assumindo outra função, continuidade, manutenção — ou nada de novo, se o conjunto não indicar isso. Não force começo, recomeço nem amadurecimento.
-M3. Como essas forças convivem: convergências, divergências, resistência, ambivalência, conflito, ritmos diferentes, estabilidade, cansaço, firmeza, contradições que importam. Não force nenhuma dessas categorias e não resolva uma tensão só para o texto ficar elegante.
-M4. No trecho final, o que fica mais nítido: uma direção, um reconhecimento, uma mudança de posição, uma continuidade ou uma questão que segue aberta. Nunca vire conselho, recomendação, ordem, previsão, promessa nem fecho otimista automático. Se o conjunto termina dividido, o texto termina assim.
+M1. A RESPOSTA. Duas a quatro frases que respondem à pergunta que foi feita, logo na primeira frase, sem preâmbulo. Diga qual tendência o conjunto sustenta com mais força: se uma predomina, diga qual e em relação a quê; se a pergunta compara duas possibilidades, diga qual encontra mais sustentação; se o que aparece é um obstáculo dominante, nomeie qual é — e, quando for o caso, qual NÃO é. Se os sinais ficam equilibrados ou são insuficientes, essa é a resposta e ela se escreve com todas as letras, uma vez, sem rodeio: há sinais nas duas direções e eles não sustentam conclusão firme agora. O que não cabe aqui é devolver a pergunta em forma de descrição de clima. Responder não é concluir mais do que o material permite: é dizer, no grau de certeza que ele permite, o que ele responde. E a resposta é sobre a SITUAÇÃO, nunca sobre o trabalho que a produziu: "você se aproxima mais do que se afasta", não "a leitura aponta para uma reaproximação" — a segunda forma conta de onde a frase veio, e isso a checagem proíbe.
+M2. O QUE SUSTENTA ESSA RESPOSTA. Dois ou três fatores, não mais: o que pesa a favor, o que pesa contra, e por que o conjunto se inclina como se inclina. Cada fator é uma dinâmica concreta da situação, não um sinônimo do que M1 já disse. Se um fator enfraquece a resposta de M1, ele entra aqui com o peso que tem.
+M3. COMO AS FORÇAS SE COMBINAM. Só o que acrescenta informação nova: quais temas se reforçam, quais se tensionam, qual depende de outro para se sustentar, quais correm em ritmos diferentes. Aqui mora a tensão real, se houver, e ela não se resolve só para o texto ficar elegante. Se não há combinação relevante além do que M2 já disse, este trecho não existe.
+M4. O QUE ISSO MUDA PARA VOCÊ. Uma implicação concreta para a situação perguntada, dita a quem perguntou. Quando houver, aquilo que, se aparecesse, distinguiria uma possibilidade da outra. Nunca vire conselho, recomendação, ordem, previsão, promessa nem fecho otimista automático. Se o conjunto termina dividido, o texto termina assim.
+
+RESPONDA PRIMEIRO, EXPLIQUE DEPOIS. M1 é a resposta, não a introdução dela. Nada de abertura genérica, de preparação do terreno, nem de anunciar que há um clima, uma dinâmica ou um momento antes de dizer o que o conjunto responde. Se a primeira frase serviria para qualquer pergunta, ela não é M1.
+
+FALE COM A PESSOA. Segunda pessoa, "você" onde fizer sentido. Carta íntima e sóbria de quem viu algo real e o diz com precisão — não laudo impessoal sobre "a situação atual".
+
+CADA TRECHO FAZ UM TRABALHO DIFERENTE. M1 responde, M2 fundamenta, M3 combina, M4 implica. Nenhum deles é uma reformulação do outro com palavras novas. Se dois trechos dizem a mesma coisa de formas diferentes, um dos dois não deveria existir.
+
+A INCERTEZA SE DIZ UMA VEZ. Onde o material não sustenta conclusão, isso é dito uma vez, no ponto específico em que importa, nomeando o que exatamente ficou em aberto. Ressalva repetida em todo parágrafo não é rigor: é ruído que esconde o que o material de fato sustenta. "Parece", "sugere", "pode", "talvez", "indícios" são graus de certeza, não enfeite — cada um que aparecer precisa estar marcando uma incerteza real daquele ponto.
 
 QUANTOS PARÁGRAFOS, E COMO SEPARÁ-LOS
-M1 a M4 são obrigatórios; a divisão em parágrafos não é rígida. Normalmente quatro parágrafos, um por trecho. Cinco ou seis apenas quando a complexidade real da tiragem exigir espaço: uma divergência importante entre sistemas, um sinal secundário que importe, uma ambivalência que precise ser preservada, duas forças simultâneas que não devam ser comprimidas, uma tensão que mereça desenvolvimento, ou um fecho que precise ser distinguido do conflito anterior. Os parágrafos extras desenvolvem melhor UM dos quatro trechos; nunca criam um quinto trecho, nunca repetem a mesma ideia e nunca existem só para escrever mais. Se a leitura é clara e coesa, quatro parágrafos. Menos de quatro nunca.
+M1, M2 e M4 são obrigatórios. M3 só existe se tiver conteúdo próprio: quando a combinação entre os temas não acrescenta nada ao que M2 já disse, o texto tem três parágrafos, e isso é melhor que quatro. Cinco apenas quando a complexidade real da tiragem exigir espaço — uma divergência importante, uma ambivalência que precise ser preservada, duas forças simultâneas que não devam ser comprimidas. O parágrafo extra desenvolve melhor UM dos trechos; nunca cria um trecho novo, nunca repete a mesma ideia e nunca existe só para escrever mais.
 
-SEPARAÇÃO: escreva exatamente ${PARAGRAPH_MARKER} entre um parágrafo e o outro, e em nenhum outro lugar. Não é título nem rótulo: é só a marca da quebra, e ela é removida antes de o texto chegar a quem lê. M1, M2, M3 e M4 nunca dividem o mesmo parágrafo: entre dois trechos há sempre uma marca, então o texto tem no mínimo três. Quatro parágrafos = três marcas. Cinco = quatro marcas. Seis = cinco marcas. Não use a marca no começo nem no fim do texto.
+TAMANHO. O texto acaba quando acabou o que há para dizer. Encher parágrafo com reformulação do anterior é pior que um texto curto: quem lê precisa percorrer tudo de novo para descobrir que não havia nada novo ali.
+
+SEPARAÇÃO: escreva exatamente ${PARAGRAPH_MARKER} entre um parágrafo e o outro, e em nenhum outro lugar. Não é título nem rótulo: é só a marca da quebra, e ela é removida antes de o texto chegar a quem lê. Dois trechos nunca dividem o mesmo parágrafo: entre eles há sempre uma marca. Três parágrafos = duas marcas. Quatro = três marcas. Cinco = quatro marcas. Não use a marca no começo nem no fim do texto.
 
 A ESTRUTURA NÃO DECIDE O CONTEÚDO
 M1 a M4 organizam a leitura; eles não impõem narrativa. Não presuma que algo termina, cresce, entra em crise, muda de natureza, melhora, piora, se perde ou se resolve. Nada disso entra sem que o conjunto sustente. Se o conjunto aponta continuidade, estabilidade, manutenção, firmeza ou ambivalência, diga isso com clareza.
@@ -542,7 +567,7 @@ O QUE PRESERVAR
 - As convergências reais entre os cinco sentidos, ditas sem exagero.
 - As divergências. Quando os cinco discordam entre si, a divergência é o conteúdo, não um problema a resolver: nomeie a tensão em vez de escolher um lado ou fabricar um acordo.
 - As advertências e os pontos de risco que aparecerem em qualquer uma das cinco, mesmo que só uma os aponte.
-- A especificidade da pergunta: o texto deve responder a ela, ainda que de lado, ainda que recusando seus termos.
+- A especificidade da pergunta: o texto responde a ela, explicitamente e logo no começo, ainda que recusando seus termos. Recusar os termos também é responder, e se diz com clareza: o que foi perguntado não é o que o material trata, e o que ele trata é isto. O que não vale é descrever o assunto da pergunta sem responder nada.
 - PROPORÇÃO. Se o material mostra perigo, perda, estagnação ou contradição sem saída fácil, diga com precisão e cuidado — conforto vago é traição da tiragem. Mas não dramatize além do que ele sustenta: não invente catástrofe onde há apenas atrito, nem urgência onde há apenas lentidão. A intensidade do texto acompanha a intensidade real do que foi lido, para cima e para baixo.
 
 O QUE É PROIBIDO
@@ -562,9 +587,15 @@ ${readings}
 
 CHECAGEM ANTES DE ENVIAR — releia o texto pronto e conserte o que falhar. Esta é a única lista de restrições editoriais; percorra-a inteira.
 
-1. QUEBRAS. Há a marca ${PARAGRAPH_MARKER} entre cada dois parágrafos? De 3 a 5 marcas, ou seja, de 4 a 6 parágrafos. Nenhuma no começo, nenhuma no fim, nenhuma dentro de um parágrafo. Texto em bloco único é erro.
+1. QUEBRAS. Há a marca ${PARAGRAPH_MARKER} entre cada dois parágrafos? De 2 a 4 marcas, ou seja, de 3 a 5 parágrafos. Nenhuma no começo, nenhuma no fim, nenhuma dentro de um parágrafo. Texto em bloco único é erro.
+
+1A. A PERGUNTA FOI RESPONDIDA? Leia só o primeiro parágrafo. Ele responde ao que foi perguntado, ou descreve um clima? Alguém que lesse apenas ele sairia sabendo o que o conjunto responde — inclusive quando a resposta é que não há base para concluir? Se não, reescreva o primeiro parágrafo até que responda, e só depois confira o resto.
+
+1B. CADA PARÁGRAFO ACRESCENTA? Para cada parágrafo a partir do segundo: o que ele diz que nenhum anterior já disse? Se a resposta for "o mesmo, com outras palavras", apague o parágrafo — texto menor é melhor que texto que se repete. Dois parágrafos que fazem o mesmo movimento ("há isto, mas também aquilo") com vocabulário diferente são repetição, não desenvolvimento.
+
+1C. RESSALVA DEMAIS. Conte quantas vezes o texto diz parece, sugere, pode, talvez, indícios, de certa forma, ao mesmo tempo, por outro lado. Cada uma marca uma incerteza real e específica daquele ponto, ou algumas estão ali por hábito defensivo? As que não marcam nada saem, e o que o material sustenta passa a ser dito no grau que ele permite.
 2. ABSTRAÇÃO GENÉRICA. Frase a frase: esta diz concretamente alguma coisa, ou usa uma abstração para parecer profunda? Onde for abstração, pergunte o que exatamente está acontecendo ali e escreva isso. Não procure sinônimo: a formulação nasce da dinâmica, nunca da palavra. Última proteção, em qualquer idioma: transformação, novo ciclo, renascimento, processo, universo, cosmos, jornada, fluxo, padrões limitantes, liberte-se, confie, o que não serve mais, abraçar o novo, energia como substantivo vago, vibração, alinhar-se.
-3. FONTE E MÉTODO. O texto nunca conta de onde saiu nem como foi feito. Nenhuma ocorrência de tarô, I Ching, runas, búzios, Lenormand, hexagrama, odu, "as cartas", "os símbolos", "os oráculos", "os sistemas", "as leituras", "essas leituras", "no cruzamento", "a leitura sugere", "a análise indica", nem equivalente. Ele fala da situação, e só.
+3. FONTE E MÉTODO. O texto nunca conta de onde saiu nem como foi feito. Nenhuma ocorrência de tarô, I Ching, runas, búzios, Lenormand, hexagrama, odu, "as cartas", "os símbolos", "os oráculos", "os sistemas", "as leituras", "essas leituras", "no cruzamento", "a leitura sugere", "a leitura aponta", "a análise indica", "o cenário aponta", "o conjunto sugere", "o conjunto aponta", "o material sustenta", "o panorama indica", nem equivalente. CUIDADO REDOBRADO NA PRIMEIRA FRASE: responder dá vontade de dizer de onde veio a resposta, e é exatamente ali que essas construções aparecem. A frase afirma a situação — "você se aproxima mais do que se afasta" —, nunca a origem da afirmação.
 4. METALINGUAGEM. Nenhum parágrafo abre anunciando a própria função, e nenhuma frase descreve o trabalho que você fez. Nada de M1 a M4 nem de qualquer rótulo deste briefing. Cada parágrafo entra direto no conteúdo.
 5. PRESCRIÇÃO. Alguma frase diz o que fazer, direta ou impessoalmente, inclusive dizendo que a situação pede, exige ou requer algo? Troque pela descrição do estado que a originou.
 6. PRESSUPOSTO. A pergunta define o assunto e nunca fornece prova. Toda ideia que veio dela e reaparece no texto passa pelo teste: o material sustentaria isso sozinho? Se não sustentaria, ela não entra de forma nenhuma, e atenuá-la não resolve. Escreva só as dinâmicas efetivamente encontradas.

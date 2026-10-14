@@ -84,8 +84,13 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
             </div>
             {unlocked ? (
               <div className="space-y-4">
+                {/* O PRIMEIRO PARÁGRAFO É A RESPOSTA, e aparece como tal: nada
+                    adiantava mandar o texto responder primeiro se todos os
+                    parágrafos continuassem com o mesmo cinza e o mesmo corpo. */}
                 {rec.synthesis.split(/\n{2,}/).map((para, i) => (
-                  <p key={i} className="text-white/80 text-sm leading-relaxed">{para.trim()}</p>
+                  <p key={i} className={i === 0 ? "text-white text-base leading-relaxed" : "text-white/75 text-sm leading-relaxed"}>
+                    {para.trim()}
+                  </p>
                 ))}
               </div>
             ) : (

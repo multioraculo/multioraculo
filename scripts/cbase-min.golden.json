@@ -62,49 +62,49 @@
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "pt",
-      "sha256": "160838407b0f78daef82890a1feca0eaea67585ce03b3fcaa9b5fe8f1c262099"
+      "sha256": "8ae1af0e47165881bf7d2a46516a175207f7a189d50b36019a83a996d9bae718"
     },
     {
       "pergunta": "O que envolve a decisão de voltar a estudar?",
       "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
       "locale": "pt",
-      "sha256": "f8f5fb3e7b66121aa535dd6a0e7c043ed37ae023be0d742b5712772d74ff5063"
+      "sha256": "66417a6323261c010052b57c6a6ce47b91cc0e27a96e41dbe76ba2775aca3768"
     },
     {
       "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
       "seed": "08da4d419fd87deca7fe7d2b2ae54506",
       "locale": "pt",
-      "sha256": "7b717239dd2828ec2ecf9e5521147dfc32ce3d088cfed99569de0be16847bf4f"
+      "sha256": "a5dccb2f0e918f3ee13878a2009edef4e26677991d396dcea3076fbd28ee73c7"
     },
     {
       "pergunta": "Minha família está contra mim nessa decisão?",
       "seed": "f37215242ebd664846b7938bc612315a",
       "locale": "pt",
-      "sha256": "5204fefc8db2a96390035f3d7f06976be08651ccea779db91ac8f2e1c0b6e989"
+      "sha256": "b0c6d3e5e61e33ad1d01827c0ca560618f58b4250668e583b861b6a240870096"
     },
     {
       "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
       "seed": "7a65af7a922aa250325478cccf4925d6",
       "locale": "pt",
-      "sha256": "32e172f36bd1ad4012084268cb5b66f27f05b383b45490a887575397c1cf933e"
+      "sha256": "abf414cc7c4000023fe7ba5ba944581cbaede17c3139bcf8b51c1bb24f3e6512"
     },
     {
       "pergunta": "Estou sendo sabotado no trabalho?",
       "seed": "f85789b89b26e67d455b69f1907d7d64",
       "locale": "pt",
-      "sha256": "06c3eaefb3103a6e4ec34ff7f309f92890a700a70c2341ce17b925d01417dbd3"
+      "sha256": "2d4b1f7899722661e28dc453e95c3eb2ffdbc74a38033d82072a2137526ff0ba"
     },
     {
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "en",
-      "sha256": "ffaa5dfe0d960381068a55fa022c469b02da0a5e70a4af7703c5a1d4e65eca72"
+      "sha256": "20390204c0494db3b6a9fd7452b3150f1d2e8ff0db5e1d864763ef5cb27ad3e6"
     },
     {
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "es",
-      "sha256": "0c1eef7204c7d3aa6aaad707231ad91088cbf5eb08df0bcf2215f67d99b0e34e"
+      "sha256": "9edf1d64618ee7625a6a7f5e11ae63a822dec051ec2e09a8f2b8dc5f6a024040"
     }
   ],
   "casosAprovados": [
@@ -112,49 +112,52 @@
       "id": 5,
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
-      "sha256": "2d88fb785eff46c7ed35a6ca6bdb9428beee097c935511967d4d0bce193a82ce"
+      "sha256": "5c1c4592bfeea621b6133a8cb4601f4336e91acca626bbb2e26a0d412c600bea"
     },
     {
       "id": 21,
       "pergunta": "O que envolve a decisão de voltar a estudar?",
       "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
-      "sha256": "48094c75707afcf5d5085f5fd0b6216b270f98e6a8355febf9645c5bc9064973"
+      "sha256": "0fbed35e04c8f61c1823e5f26ea21f5f04b5cb8240940ec3625ad7c933f574b3"
     },
     {
       "id": 36,
       "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
       "seed": "08da4d419fd87deca7fe7d2b2ae54506",
-      "sha256": "49c068b49f9d6ced5c5379df1b13512385fdeaa4754f9d34ca4289885d5f06d7"
+      "sha256": "650ca1c22538ecae66b4388bf47bb64ab894df4ede5610594a58a8fb36b7daa9"
     },
     {
       "id": 6,
       "pergunta": "Minha família está contra mim nessa decisão?",
       "seed": "f37215242ebd664846b7938bc612315a",
-      "sha256": "911297b46cc3600328bacda1853363dc557020a49c58bcf54acd6c5eb601e321"
+      "sha256": "1062091f27b7ed16d90d4ba8d7ca71bbede8c848d023fd2571bb517b9e047f32"
     },
     {
       "id": 30,
       "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
       "seed": "7a65af7a922aa250325478cccf4925d6",
-      "sha256": "4bb5dcbb7af079ac19441665728de4a18528c81916ef2844997b80fe278ae017"
+      "sha256": "1db8b9ddfdee0f04fa1167d946347f930d8463674c1ad1ebb31faea5f654d206"
     },
     {
       "id": 9,
       "pergunta": "Estou sendo sabotado no trabalho?",
       "seed": "f85789b89b26e67d455b69f1907d7d64",
-      "sha256": "df8032533e30e7b048f403362dee41ff84613851d76cb8e64e57fafd45f1b4c6"
+      "sha256": "a8b0d9056ef7855ce3a2e6d80db437efa821d2f0d4d505440f93ae19a055b394"
     }
   ],
   "revisao": {
-    "data": "2026-10-05",
-    "motivo": "Reaprovacao unica ao fim da revisao metodologica dos cinco oraculos. O envelope do prompt C-base-min nao mudou (identico byte a byte nos 14 prompts); mudaram o material e dois rotulos.",
-    "causas": {
-      "tarot": "fichas Ben-Dov + reversao especifica por carta, truncamento por campo, Jung mantido como camada complementar nos Maiores; sorteio intacto",
-      "buzios": "fichas estruturadas por Odu substituindo a janela lexical contaminada; sorteio intacto",
-      "runas": "Brekke como referencia operacional (15 com reversao / 9 sem, Nauthiz sem reversao na fonte), Thorsson complementar, variante E preservando o consumo de RNG; a unica mudanca de sorteio e Nauthiz invertida -> de pe",
-      "iching": "64/64 hexagramas e 384/384 linhas, hierarquia hexagrama inicial + somente linhas moveis sorteadas + resultante, substituindo a concordancia contaminada; sorteio intacto",
-      "lenormand": "36/36 fichas individuais, metodo Portrait (28 relacoes), pares dirigidos quando a fonte tem glosa, bloco relacional compacto, rotulos de posicao da fonte; sorteio intacto"
-    },
-    "naoMudou": "pdfsIndexSha256, o texto do prompt C-base-min, o teto de 10 (16 so para o taro), as 25 conferencias do verificador"
+    "data": "2026-10-14",
+    "motivo": "Revisao editorial: a sintese passa a RESPONDER a pergunta no primeiro paragrafo, em segunda pessoa, antes de explicar.",
+    "causa": "Nada no recorte que chegava ao C-base-min mandava responder. A linha 'em segunda pessoa' existia em synthesisPrompt mas caia FORA do recorte, e a unica regra sobre a pergunta dizia que o texto deveria responder 'ainda que de lado'.",
+    "mudou": [
+      "M1 passa a ser A RESPOSTA (2 a 4 frases, respondendo na primeira); M2 fundamenta, M3 combina e e opcional, M4 implica",
+      "quatro regras novas no recorte: RESPONDA PRIMEIRO, FALE COM A PESSOA, CADA TRECHO FAZ UM TRABALHO DIFERENTE, A INCERTEZA SE DIZ UMA VEZ",
+      "tres checagens novas: 1A (o primeiro paragrafo responde), 1B (cada paragrafo acrescenta), 1C (ressalva demais)",
+      "saiu o piso de quatro paragrafos e a licenca de responder 'ainda que de lado'",
+      "as oito dicas de entrada reescritas: todas respondem, nenhuma usa vocabulario de bastidor",
+      "checagem 3 passa a listar as formas de autorreferencia observadas (a leitura aponta, o cenario aponta, o conjunto sugere)"
+    ],
+    "naoMudou": "sorteio, renderizacao, selecao de evidencia, orcamento por oraculo, pdfsIndexSha256 e as checagens 2 e 5 a 9. Os digests de itens passaram sem alteracao: so synthesis.ts mudou, 55 linhas a mais e 24 a menos.",
+    "medido": "12 leituras pagas, mesmos seeds da bateria congelada: responde no primeiro paragrafo 3/12 -> 11/12 (leitura humana), ressalvas 2,5 -> 1,3 por 100 palavras, paragrafos 'dos dois lados' 2,5 -> 1,3, tratamento direto 0,5 -> 4,6, abertura generica 5/12 -> 0/12. Regressao conhecida: autorreferencia 1/12 -> 3/12, endereçada na checagem 3 e nao remedida."
   }
 }

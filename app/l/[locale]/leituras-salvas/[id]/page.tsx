@@ -117,7 +117,7 @@ export default async function LeituraDetailPage({
                   {consultation.synthesis
                     .split(/\n{2,}/)
                     .map((para: string, i: number) => (
-                      <p key={i} className="text-white/80 text-sm leading-relaxed">
+                      <p key={i} className={i === 0 ? "text-white text-base leading-relaxed" : "text-white/75 text-sm leading-relaxed"}>
                         {para.trim()}
                       </p>
                     ))}
