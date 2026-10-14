@@ -573,7 +573,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           onClick={() => focoTarot.open(0)}
           aria-label={`${tarot.nome}. ${dict.focus.open}`}
         >
-          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} />
+          {/* primeira dobra: baixa a gravura já, sem esperar o layout */}
+          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} prioridade />
         </button>
       </div>
 

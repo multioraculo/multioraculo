@@ -303,6 +303,16 @@
   filter: brightness(1.08) contrast(1.08) drop-shadow(0 0 0.6px rgba(255,240,220,0.32));
   user-select: none;
 }
+/* luz de espera enquanto a gravura não chegou (components/tarot-spread.tsx tira a
+   classe no onLoad). É um pseudo-elemento, e não um fundo no img: a gravura tem
+   transparência, e um fundo ficaria visível atrás dela depois de carregada. */
+.tk-art.is-loading::before {
+  content: ""; position: absolute; inset: 8% 12%; border-radius: 45%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255,240,220,0.13), rgba(255,240,220,0) 70%);
+  animation: tk-espera 1.4s ease-in-out infinite;
+}
+@keyframes tk-espera { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tk-art.is-loading::before { animation: none; } }
 @media (hover: hover) and (pointer: fine) {
   .tc-slot:hover .tk-card {
     transform: translateY(-3px) rotateX(2deg) rotateY(-2deg);

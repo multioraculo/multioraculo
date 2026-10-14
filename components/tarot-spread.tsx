@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { tarotArtSrc, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { tarotArtSrc, tarotArtSrcSet, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -93,14 +94,51 @@ function stripReversed(name: string, word: string): string {
  * Número e nome vêm do motor, então acompanham o idioma; a carta impressa não
  * entra com sua tipografia em francês.
  */
-export function TarotCapsule({ card, name, label, width }: { card: TarotCardRef; name: string; label: string; width?: number }) {
+export function TarotCapsule({
+  card,
+  name,
+  label,
+  width,
+  prioridade = false,
+}: {
+  card: TarotCardRef
+  name: string
+  label: string
+  width?: number
+  /** carta da primeira dobra: baixa já, sem esperar o layout (loading=eager) */
+  prioridade?: boolean
+}) {
   const numeral = tarotNumeral(card)
+  // A gravura chega depois da lâmina. Enquanto não chega, a janela mostra uma luz
+  // de espera (.tk-art.is-loading), que some no onLoad. Se a imagem já estiver no
+  // cache quando o componente monta, o efeito a dá por pronta sem piscar.
+  const [carregando, setCarregando] = useState(true)
+  const imgRef = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    const img = imgRef.current
+    if (img && img.complete && img.naturalWidth > 0) setCarregando(false)
+  }, [])
   return (
     <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: `${width ?? 150}px` }}>
       {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
       <span className="tk-rule tk-rule-top" aria-hidden="true" />
-      <div className="tk-art">
-        <img src={tarotArtSrc(card.id)} alt={name} width={600} height={992} loading="lazy" draggable={false} />
+      <div className={"tk-art" + (carregando ? " is-loading" : "")}>
+        <img
+          ref={imgRef}
+          src={tarotArtSrc(card.id)}
+          // duas larguras (300 e 600): o navegador pega a menor que cobre a lâmina
+          // na densidade da tela; a ampliação de 300 px CSS sempre recebe a de 600
+          srcSet={tarotArtSrcSet(card.id)}
+          sizes={(width ?? 150) + "px"}
+          alt={name}
+          width={600}
+          height={992}
+          loading={prioridade ? "eager" : "lazy"}
+          decoding="async"
+          draggable={false}
+          onLoad={() => setCarregando(false)}
+          onError={() => setCarregando(false)}
+        />
       </div>
       <span className="tk-rule tk-rule-bot" aria-hidden="true" />
       <span className="tk-nome" aria-hidden="true">{name}</span>
