@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { toast } from "sonner"
-import type { User } from "@supabase/supabase-js"
+import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import Link from "@/components/localized-link"
 import { useI18n } from "@/components/i18n-provider"
 import { consumirPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
@@ -17,7 +17,7 @@ import VoiceMicButton, { appendTranscript } from "@/components/voice-input"
 import { fmt } from "@/lib/i18n"
 
 type HeroContentProps = {
-  initialUser: User | null
+  initialUser: UsuarioDaSessao | null
 }
 
 // Ordem fixa dos ícones de oráculo na tela de resultados
@@ -49,7 +49,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
   const [blockedBy, setBlockedBy] = useState<"limit" | "login" | null>(null)
   const [isSaved, setIsSaved] = useState(false)
   const [saveLoading, setSaveLoading] = useState(false)
-  const [currentUser, setCurrentUser] = useState<User | null>(initialUser)
+  const [currentUser, setCurrentUser] = useState<UsuarioDaSessao | null>(initialUser)
   // a sugestão da vez, da mesma lista e na mesma cadência que a Home usa; ela
   // para de girar quando o campo tem foco ou texto, porque ali vira exemplo
   const { pergunta: sugestao } = usePerguntaSugerida(isFocused || isTyping || question !== "")

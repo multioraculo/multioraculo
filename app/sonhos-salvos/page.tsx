@@ -2,6 +2,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import SavedDreamsList from "@/components/saved-dreams-list"
 import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import { getI18n } from "@/lib/i18n/server"
 import type { Dream } from "@/lib/types"
 import { paginaPrivada } from "@/lib/seo/metadata"
@@ -13,7 +14,8 @@ export default async function SonhosSalvosPage() {
   const supabase = await createClient()
   const { dict } = await getI18n()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
 
   let dreams: Dream[] = []
   if (user) {

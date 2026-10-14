@@ -2,6 +2,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import HomeHoje, { type RegistroDeHoje } from "@/components/home-hoje"
 import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
 import { payloadDoCeuDoDiaSeGravado } from "@/lib/astro/ceu-do-dia-payload"
 import { payloadDaTiragemDoDiaSeGravada } from "@/lib/oracles/tiragem-dia-payload"
@@ -27,7 +28,8 @@ export const dynamic = "force-dynamic"
 
 export default async function HomePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
   const locale = await getLocale()
 
   // EM PARALELO, E SÓ O QUE JÁ ESTÁ GRAVADO.

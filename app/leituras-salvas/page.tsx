@@ -3,6 +3,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import ConsultationsList from "@/components/consultations-list"
 import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import { getI18n } from "@/lib/i18n/server"
 import type { ConsultationNaLista } from "@/lib/types"
 import { paginaPrivada } from "@/lib/seo/metadata"
@@ -14,12 +15,10 @@ export default async function LeiturasSalvasPage() {
   const supabase = await createClient()
   const { dict } = await getI18n()
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
 
-  if (userError || !user) {
+  if (!user) {
     redirect("/")
   }
 

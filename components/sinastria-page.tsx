@@ -22,7 +22,7 @@
  * Nada aqui toca cálculo, seleção, APIs ou regras de acesso.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
-import type { User } from "@supabase/supabase-js"
+import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import { useI18n } from "@/components/i18n-provider"
 import Link from "@/components/localized-link"
 import Seta from "@/components/seta"
@@ -67,7 +67,7 @@ function Acao({ children, onClick, disabled = false, tipo = "button" }: { childr
   )
 }
 
-export default function SinastriaPage({ initialUser, temPlano }: { initialUser: User | null; temPlano: boolean }) {
+export default function SinastriaPage({ initialUser, temPlano }: { initialUser: UsuarioDaSessao | null; temPlano: boolean }) {
   const { dict, formatDate } = useI18n()
   const s = dict.sinastria
 

@@ -54,7 +54,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react"
 import Link from "@/components/localized-link"
-import type { User } from "@supabase/supabase-js"
+import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import { buscar, CARREGANDO, type Carregamento } from "@/lib/carregamento"
@@ -261,7 +261,7 @@ export default function HomeHoje({
   tiragemInicial = null,
   ceuDoDiaInicial = null,
 }: {
-  initialUser: User | null
+  initialUser: UsuarioDaSessao | null
   registro: RegistroDeHoje
   /** o céu calculado no servidor: função pura, sem requisição e sem custo */
   ceu: Ceu

@@ -1,7 +1,7 @@
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import SinastriaPage from "@/components/sinastria-page"
-import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import { getI18n } from "@/lib/i18n/server"
 import { getUserEntitlement } from "@/lib/billing/entitlement"
 import { hasAstroPessoal } from "@/lib/billing/plans"
@@ -28,10 +28,8 @@ export const metadata = paginaPrivada()
 export const dynamic = "force-dynamic"
 
 export default async function Sinastria() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
   const { dict } = await getI18n()
 
   const entitlement = user ? await getUserEntitlement(user.id) : null

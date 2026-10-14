@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import SubscriptionActions, { type SubscriptionActionMode } from "@/components/subscription-actions"
@@ -21,8 +21,8 @@ export const dynamic = "force-dynamic"
 type SearchParams = Promise<{ checkout?: string }>
 
 export default async function AssinaturaPage({ searchParams }: { searchParams: SearchParams }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
   const { dict, locale } = await getI18n()
   const t = dict.subscription
   const b = dict.billing

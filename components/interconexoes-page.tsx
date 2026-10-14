@@ -27,7 +27,7 @@
  * a leitura escrita deles, e ela só é escrita quando alguém pede.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
-import type { User } from "@supabase/supabase-js"
+import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
@@ -93,7 +93,7 @@ export default function InterconexoesPage({
   initialUser,
   temPlano,
 }: {
-  initialUser: User | null
+  initialUser: UsuarioDaSessao | null
   temPlano: boolean
 }) {
   const { dict, locale, formatDate } = useI18n()

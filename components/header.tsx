@@ -214,7 +214,7 @@ export default function Header({ initialUser }: HeaderProps) {
           ) : (
             <button
               onClick={() => setShowLogin(true)}
-              className="h-10 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="h-11 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               {dict.common.login}
             </button>
