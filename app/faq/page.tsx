@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import { getI18n } from "@/lib/i18n/server"
@@ -7,8 +7,9 @@ import { metadataDaRota } from "@/lib/seo/rota"
 export const generateMetadata = () => metadataDaRota("faq")
 
 export default async function FAQPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição:
+  // a página não repete a ida ao servidor de auth só para montar o cabeçalho
+  const user = await usuarioDaRequisicao()
   const { dict } = await getI18n()
 
   return (

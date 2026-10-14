@@ -18,8 +18,15 @@ import { SearchIcon } from "@/components/nav-icons"
 import { useI18n } from "@/components/i18n-provider"
 import BrandLogo from "@/components/brand-logo"
 
+/**
+ * O que o cabeçalho precisa de quem está logado. Páginas podem passar o User
+ * inteiro (vindo de getUser()) ou só o resumo verificado que o middleware
+ * repassa pelo cabeçalho interno (lib/auth/usuario-da-requisicao.ts).
+ */
+export type HeaderUser = Pick<User, "id" | "email" | "user_metadata">
+
 type HeaderProps = {
-  initialUser: User | null
+  initialUser: HeaderUser | null
 }
 
 export default function Header({ initialUser }: HeaderProps) {
@@ -27,7 +34,7 @@ export default function Header({ initialUser }: HeaderProps) {
   const { dict, path } = useI18n()
   const { pendingHref, navigate } = useNavPending()
   const supabase = useMemo(() => createClient(), [])
-  const [user, setUser] = useState<User | null>(initialUser)
+  const [user, setUser] = useState<HeaderUser | null>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
   // destino de retorno do OAuth quando quem pediu o login informou um (ex.: a leitura recém-gerada)
   const [returnTo, setReturnTo] = useState<string | null>(null)
@@ -66,7 +73,7 @@ export default function Header({ initialUser }: HeaderProps) {
     } = supabase.auth.onAuthStateChange(
       // síncrono: nada de await de chamada ao Supabase aqui (ver lib/auth/auth-state.ts)
       createAuthStateHandler({
-        setUser: (u) => setUser(u as User | null),
+        setUser: (u) => setUser(u as HeaderUser | null),
         ensureProfile: (u) => {
           const meta = (u as User).user_metadata ?? {}
           return ensureProfile(supabase, {
