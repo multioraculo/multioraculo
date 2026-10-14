@@ -1,6 +1,7 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { VISITOR_COOKIE, isVisitorId, newVisitorId, visitorCookieOptions } from "@/lib/billing/visitor"
+import { HEADER_USUARIO, serializarUsuario } from "@/lib/auth/usuario-header"
 
 /**
  * `opcoes` existe para o roteamento por idioma (middleware.ts): um rewrite
@@ -10,18 +11,6 @@ import { VISITOR_COOKIE, isVisitorId, newVisitorId, visitorCookieOptions } from 
 export type OpcoesDeRoteamento = { rewriteTo?: URL; headers?: Record<string, string> }
 
 export async function updateSession(request: NextRequest, opcoes: OpcoesDeRoteamento = {}) {
-  // A resposta que repassa a requisição adiante. É recriada quando a sessão
-  // renova os cookies, então o rewrite e os cabeçalhos precisam sair daqui, e
-  // não de uma única chamada, ou a segunda resposta os perderia.
-  const novaResposta = () => {
-    if (!opcoes.rewriteTo && !opcoes.headers) return NextResponse.next({ request })
-    const headers = new Headers(request.headers)
-    for (const [k, v] of Object.entries(opcoes.headers ?? {})) headers.set(k, v)
-    return opcoes.rewriteTo
-      ? NextResponse.rewrite(opcoes.rewriteTo, { request: { headers } })
-      : NextResponse.next({ request: { headers } })
-  }
-
   // Id de visitante para a tiragem gratuita sem login (ver lib/billing/visitor.ts).
   // Gerado ANTES da resposta e gravado na própria requisição, para que a rota
   // desta mesma chamada já enxergue o id (evita dois ids na primeira visita).
@@ -31,7 +20,11 @@ export async function updateSession(request: NextRequest, opcoes: OpcoesDeRoteam
     request.cookies.set(VISITOR_COOKIE, pendingVisitorId)
   }
 
-  let supabaseResponse = novaResposta()
+  // Cookies que a renovação da sessão pedir para gravar. Antes, cada renovação
+  // recriava a resposta no meio do `getUser()`; agora a resposta é montada UMA
+  // vez, depois, já sabendo quem está logado, e recebe estes cookies. O que
+  // chega à página e ao navegador é o mesmo de antes.
+  const cookiesParaResposta: { name: string; value: string; options: CookieOptions }[] = []
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,13 +35,9 @@ export async function updateSession(request: NextRequest, opcoes: OpcoesDeRoteam
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = novaResposta()
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
+          // na requisição, para a página desta mesma chamada já ler o token novo
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesParaResposta.push(...cookiesToSet)
         },
       },
     }
@@ -56,7 +45,26 @@ export async function updateSession(request: NextRequest, opcoes: OpcoesDeRoteam
 
   // Do not add any logic between createServerClient and getUser().
   // A simple mistake here causes random logged-out issues on route change.
-  await supabase.auth.getUser()
+  // É esta chamada que renova a sessão vencida e valida o token no servidor
+  // de auth; o resultado verificado segue para a página pelo cabeçalho interno.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Cabeçalhos da requisição que a página vai ver: os de idioma (sempre
+  // definidos ou esvaziados por middleware.ts) e o do usuário, SEMPRE
+  // reescrito aqui, inclusive vazio. Nenhum valor que o cliente mande com esses
+  // nomes atravessa este ponto. Montados DEPOIS do getUser(): o cookie
+  // renovado já está em request.headers.
+  const headers = new Headers(request.headers)
+  for (const [k, v] of Object.entries(opcoes.headers ?? {})) headers.set(k, v)
+  headers.set(HEADER_USUARIO, serializarUsuario(user))
+
+  const supabaseResponse = opcoes.rewriteTo
+    ? NextResponse.rewrite(opcoes.rewriteTo, { request: { headers } })
+    : NextResponse.next({ request: { headers } })
+
+  cookiesParaResposta.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
 
   if (pendingVisitorId) {
     supabaseResponse.cookies.set(VISITOR_COOKIE, pendingVisitorId, visitorCookieOptions())

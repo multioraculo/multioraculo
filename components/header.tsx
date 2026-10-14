@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "@/components/localized-link"
+import { NavLink, useNavPending } from "@/components/nav-pending"
 import type { User } from "@supabase/supabase-js"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
@@ -18,15 +18,28 @@ import { SearchIcon } from "@/components/nav-icons"
 import { useI18n } from "@/components/i18n-provider"
 import BrandLogo from "@/components/brand-logo"
 
+/**
+ * O que o cabeçalho precisa de quem está logado. Páginas podem passar o User
+ * inteiro (vindo de getUser()) ou só o resumo verificado que o middleware
+ * repassa pelo cabeçalho interno (lib/auth/usuario-da-requisicao.ts).
+ */
+export type HeaderUser = Pick<User, "id" | "email" | "user_metadata">
+
 type HeaderProps = {
-  initialUser: User | null
+  /**
+   * null = visitante; objeto = logado; AUSENTE = página estática, que não lê
+   * a sessão no servidor: o cabeçalho mostra um espaço reservado e decide no
+   * cliente, no INITIAL_SESSION do Supabase, lido do cookie sem ida à rede.
+   */
+  initialUser?: HeaderUser | null
 }
 
 export default function Header({ initialUser }: HeaderProps) {
   const router = useRouter()
   const { dict, path } = useI18n()
+  const { pendingHref, navigate } = useNavPending()
   const supabase = useMemo(() => createClient(), [])
-  const [user, setUser] = useState<User | null>(initialUser)
+  const [user, setUser] = useState<HeaderUser | null | undefined>(initialUser)
   const [showLogin, setShowLogin] = useState(false)
   // destino de retorno do OAuth quando quem pediu o login informou um (ex.: a leitura recém-gerada)
   const [returnTo, setReturnTo] = useState<string | null>(null)
@@ -34,6 +47,18 @@ export default function Header({ initialUser }: HeaderProps) {
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
   const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
   const menusRef = useRef<HTMLDivElement>(null)
+  // destino do menu tocado: o painel fica aberto, com o item pendente, até a
+  // navegação terminar (ver components/nav-pending.tsx)
+  const [menuArmado, setMenuArmado] = useState(false)
+  useEffect(() => {
+    if (!openMenu) setMenuArmado(false)
+  }, [openMenu])
+  useEffect(() => {
+    if (openMenu && menuArmado && pendingHref === null) {
+      setMenuArmado(false)
+      setOpenMenu(null)
+    }
+  }, [openMenu, menuArmado, pendingHref])
   useEffect(() => {
     if (!openMenu) return
     const close = (e: MouseEvent | TouchEvent) => {
@@ -53,7 +78,7 @@ export default function Header({ initialUser }: HeaderProps) {
     } = supabase.auth.onAuthStateChange(
       // síncrono: nada de await de chamada ao Supabase aqui (ver lib/auth/auth-state.ts)
       createAuthStateHandler({
-        setUser: (u) => setUser(u as User | null),
+        setUser: (u) => setUser(u as HeaderUser | null),
         ensureProfile: (u) => {
           const meta = (u as User).user_metadata ?? {}
           return ensureProfile(supabase, {
@@ -108,16 +133,16 @@ export default function Header({ initialUser }: HeaderProps) {
     router.refresh()
   }
 
-  // o logo passa a levar para a Home
+  // o logo passa a levar para a Home; com estado pendente e sem navegação duplicada
+  const logoPendente = pendingHref === "/home"
   function handleLogoClick() {
-    router.push("/home")
+    navigate("/home")
   }
 
   // a consulta continua em "/", e continua se limpando quando alguém volta
-  // para ela pelo menu
+  // para ela pelo menu; quem navega é o NavLink do item
   function handleConsultaClick() {
     window.dispatchEvent(new CustomEvent("reset-hero"))
-    router.push(path("/"))
   }
 
   // Destinos principais (os mesmos da barra inferior no celular). O
@@ -137,17 +162,17 @@ export default function Header({ initialUser }: HeaderProps) {
   const menuPanelClass = "absolute left-1/2 -translate-x-1/2 top-9 z-50 w-60 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-1.5 space-y-0.5"
   const menuLinks = (links: { href: string; label: string; hint: string }[]) =>
     links.map((it) => (
-      <Link key={it.href} href={it.href} role="menuitem" onClick={() => setOpenMenu(null)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors">
+      <NavLink key={it.href} href={it.href} role="menuitem" onClick={() => setMenuArmado(true)} className="block rounded-lg px-3 py-2 hover:bg-white/8 transition-colors" pendingClassName="nav-pending bg-white/8">
         <span className="block text-white/90 text-sm">{it.label}</span>
         <span className="block text-white/45 text-xs">{it.hint}</span>
-      </Link>
+      </NavLink>
     ))
 
   return (
     <>
       <header className="relative z-50 flex items-center gap-2 p-4 sm:p-6">
         <div className="flex items-center shrink-0">
-          <button onClick={handleLogoClick} className="relative cursor-pointer" aria-label={dict.header.backToStart}>
+          <button onClick={handleLogoClick} className={`relative cursor-pointer ${logoPendente ? "nav-pending" : ""}`} aria-busy={logoPendente || undefined} aria-label={dict.header.backToStart}>
             <BrandLogo size={80} />
           </button>
         </div>
@@ -157,14 +182,14 @@ export default function Header({ initialUser }: HeaderProps) {
         {/* Desktop: os mesmos destinos da barra inferior, centralizados */}
         <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label={dict.nav.mainNav}>
           {navItems.map((item) => (
-            <Link
+            <NavLink
               key={item.href}
               href={item.href}
               onClick={item.onClick}
               className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
           <div className="contents" ref={menusRef}>
             <div className="relative">
@@ -183,7 +208,11 @@ export default function Header({ initialUser }: HeaderProps) {
 
         <div className="ml-auto shrink-0 flex items-center gap-2">
           <LocaleSwitcher />
-          {user ? (
+          {user === undefined ? (
+            // espaço reservado com a forma do botão de entrar (a maioria nas páginas
+            // públicas é visitante), até o cliente saber quem está logado
+            <span className="inline-block h-11 w-[5.5rem] rounded-full bg-white/10 border border-white/20" aria-hidden="true" />
+          ) : user ? (
             <UserMenu
               user={{
                 email: user.email ?? "",
@@ -194,7 +223,7 @@ export default function Header({ initialUser }: HeaderProps) {
           ) : (
             <button
               onClick={() => setShowLogin(true)}
-              className="h-10 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-pointer"
+              className="h-11 px-4 sm:px-6 backdrop-blur-md bg-white/10 border border-white/20 text-white rounded-full font-light text-sm hover:bg-white/15 hover:scale-105 transition-all duration-200 cursor-pointer"
             >
               {dict.common.login}
             </button>

@@ -5,10 +5,12 @@
  *
  * Português fica na raiz, sem prefixo; inglês em /en e espanhol em /es.
  *
- * COMO FUNCIONA, sem duplicar página: o middleware reescreve (rewrite, nunca
- * redirect) /en/oracles para o mesmo componente de /oraculos e avisa o servidor
- * do idioma por cabeçalho interno. Cada URL é rastreável diretamente, e nenhum
- * idioma é escolhido por cookie ou Accept-Language nestas rotas.
+ * COMO FUNCIONA, sem duplicar página: toda página mora em app/l/[locale]/...,
+ * e o middleware reescreve (rewrite, nunca redirect) /oraculos para
+ * /l/pt/oraculos e /en/oracles para /l/en/oraculos: o mesmo componente, com o
+ * idioma vindo do segmento. Cada URL é rastreável diretamente, nenhum idioma é
+ * escolhido por cookie ou Accept-Language nestas rotas, e o caminho interno
+ * nunca é um endereço (pedido de fora, dá 404).
  *
  * Arquivo puro (sem next/headers, sem React): roda no middleware (edge), no
  * servidor, no cliente e nos verificadores.
@@ -34,6 +36,42 @@ export const PREFIXOS: Record<Exclude<Locale, "pt">, string> = { en: "/en", es: 
 export const HEADER_LOCALE = "x-locale"
 export const HEADER_LOCALE_URL = "x-locale-url"
 
+/**
+ * Prefixo do caminho interno onde as páginas moram (app/l/[locale]). Nunca
+ * aparece numa URL pública: o middleware reescreve para ele e devolve 404 a
+ * quem o pede diretamente.
+ */
+export const PREFIXO_INTERNO = "/l"
+
+/** "/l/en" + "/oraculos" → "/l/en/oraculos"; a raiz vira "/l/en". */
+export function caminhoInterno(locale: Locale, caminhoPt: string): string {
+  const p = normalizar(caminhoPt)
+  return `${PREFIXO_INTERNO}/${locale}${p === "/" ? "" : p}`
+}
+
+export function ehCaminhoInterno(pathname: string): boolean {
+  return pathname === PREFIXO_INTERNO || pathname.startsWith(PREFIXO_INTERNO + "/")
+}
+
+/** Desfaz o caminho interno: "/l/en/oraculos" → { locale: "en", caminhoPt: "/oraculos" }; null se não for interno. */
+export function desfazerCaminhoInterno(pathname: string): { locale: Locale; caminhoPt: string } | null {
+  const m = normalizar(pathname).match(/^\/l\/(pt|en|es)(\/.*)?$/)
+  if (!m) return null
+  return { locale: m[1] as Locale, caminhoPt: m[2] ?? "/" }
+}
+
+/**
+ * Rotas que não são página e por isso não entram na reescrita por idioma:
+ * APIs, callback do login e os handlers que geram a consulta e a jornada dos
+ * sonhos. Casamento por segmento inteiro: "/consultas" e "/consultas/sintese"
+ * entram, "/consultasx" não.
+ */
+export const ROTAS_DE_SERVICO = ["/api", "/auth", "/consultas", "/sonhos/journey"] as const
+
+export function ehRotaDeServico(pathname: string): boolean {
+  return ROTAS_DE_SERVICO.some((p) => pathname === p || pathname.startsWith(p + "/"))
+}
+
 export function caminhoDaRota(chave: ChaveRota, locale: Locale): string {
   const rota = ROTAS_PUBLICAS.find((r) => r.chave === chave)
   if (!rota) throw new Error(`rota pública desconhecida: ${chave}`)
@@ -45,13 +83,24 @@ function normalizar(pathname: string): string {
   return pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname
 }
 
-/** A URL é uma das 21 públicas? Casamento exato: nada de prefixo "parecido". */
+/**
+ * A URL é uma das 21 públicas? Casamento exato: nada de prefixo "parecido".
+ * Aceita também o caminho interno equivalente (/l/en/oraculos conta como
+ * /en/oracles): no servidor, e no primeiro render da hidratação, o pathname que
+ * o React vê pode ser o da reescrita, e a barra inferior e o seletor de idioma
+ * precisam reconhecê-lo.
+ */
 export function rotaDoCaminho(pathname: string): { chave: ChaveRota; locale: Locale } | null {
   const p = normalizar(pathname)
   for (const rota of ROTAS_PUBLICAS) {
     for (const locale of LOCALES) {
       if (rota[locale] === p) return { chave: rota.chave, locale }
     }
+  }
+  const interno = desfazerCaminhoInterno(p)
+  if (interno) {
+    const rota = ROTAS_PUBLICAS.find((r) => r.pt === interno.caminhoPt)
+    if (rota) return { chave: rota.chave, locale: interno.locale }
   }
   return null
 }
@@ -112,17 +161,17 @@ export function localeEfetivo(escolhido: Locale, pathname: string | null | undef
 
 /**
  * Normalização da barra final: "/en/oracles/" devolve "/en/oracles"; o que já
- * está sem barra (ou não é rota de idioma) devolve null. O Next faz isto sozinho
- * nas páginas, mas a reescrita do middleware escondia a barra em produção e
- * /en/oracles/ respondia 200: o canonical já apontava para a URL limpa, mas é
- * uma segunda URL servindo a mesma página. Só vale para as 21 URLs públicas e
- * para qualquer coisa com prefixo /en ou /es. O destino nunca termina em barra,
- * então não há laço. Não tem relação com idioma: a URL de destino é a mesma
- * página, no mesmo idioma.
+ * está sem barra devolve null. O Next faz isto sozinho nas páginas, mas a
+ * reescrita do middleware escondia a barra em produção e /en/oracles/ respondia
+ * 200: o canonical já apontava para a URL limpa, mas é uma segunda URL servindo
+ * a mesma página. Vale para QUALQUER caminho: como toda página é reescrita para
+ * /l/<idioma>/..., uma barra que chegasse à reescrita faria o Next redirecionar
+ * para o caminho interno e expô-lo. O destino nunca termina em barra, então não
+ * há laço. Não tem relação com idioma: a URL de destino é a mesma página, no
+ * mesmo idioma.
  */
 export function caminhoSemBarra(pathname: string): string | null {
   if (pathname.length <= 1 || !pathname.endsWith("/")) return null
-  if (!rotaDoCaminho(pathname) && !temPrefixoDeIdioma(pathname)) return null
   const limpo = pathname.replace(/\/+$/, "")
   return limpo === "" ? "/" : limpo
 }

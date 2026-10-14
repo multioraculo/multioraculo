@@ -31,7 +31,7 @@ export default function LocaleSwitcher() {
         aria-haspopup="listbox"
         aria-expanded={open}
         title={dict.locale.label}
-        className="h-10 px-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/85 hover:bg-white/15 hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs font-medium tracking-wide cursor-pointer"
+        className="h-11 px-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/85 hover:bg-white/15 hover:text-white transition-all duration-200 flex items-center gap-1.5 text-xs font-medium tracking-wide cursor-pointer"
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="12" cy="12" r="9" />

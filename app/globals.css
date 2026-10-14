@@ -303,6 +303,16 @@
   filter: brightness(1.08) contrast(1.08) drop-shadow(0 0 0.6px rgba(255,240,220,0.32));
   user-select: none;
 }
+/* luz de espera enquanto a gravura não chegou (components/tarot-spread.tsx tira a
+   classe no onLoad). É um pseudo-elemento, e não um fundo no img: a gravura tem
+   transparência, e um fundo ficaria visível atrás dela depois de carregada. */
+.tk-art.is-loading::before {
+  content: ""; position: absolute; inset: 8% 12%; border-radius: 45%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255,240,220,0.13), rgba(255,240,220,0) 70%);
+  animation: tk-espera 1.4s ease-in-out infinite;
+}
+@keyframes tk-espera { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .tk-art.is-loading::before { animation: none; } }
 @media (hover: hover) and (pointer: fine) {
   .tc-slot:hover .tk-card {
     transform: translateY(-3px) rotateX(2deg) rotateY(-2deg);
@@ -407,6 +417,13 @@
   width: 100%; height: 100%; object-fit: contain; display: block;
   filter: brightness(1.2) contrast(1.14) saturate(1.06) drop-shadow(0 0 0.6px rgba(255,240,220,0.34));
 }
+/* luz de espera até a gravura chegar, igual à do Tarô (.tk-art.is-loading) */
+.ln-art.is-loading::before {
+  content: ""; position: absolute; inset: 8% 12%; border-radius: 45%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255,240,220,0.13), rgba(255,240,220,0) 70%);
+  animation: tk-espera 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .ln-art.is-loading::before { animation: none; } }
 .ln-name {
   position: absolute; bottom: 4.5%; left: 0; right: 0; text-align: center; z-index: 2;
   font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif; font-style: italic; font-size: calc(var(--ln-cw) * 0.105); line-height: 1;
@@ -466,6 +483,18 @@
 }
 .bnav-item.is-center.is-active .bnav-icon {
   background: rgba(190,160,255,0.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22), 0 0 0 6px rgba(190,160,255,0.06);
+}
+/* Navegação pendente (components/nav-pending.tsx): o destino tocado responde
+   na hora, antes de o servidor devolver a página. Pulso discreto de opacidade,
+   sem deslocamento. Na barra inferior quem pulsa é só o ícone, e o rótulo fica
+   firme. Sem camada, de propósito: precisa vencer `text-white/80` e afins. */
+@keyframes nav-pending-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.nav-pending { color: #ffffff; animation: nav-pending-pulse 900ms ease-in-out infinite; }
+.bnav-item.nav-pending { color: #ffffff; animation: none; }
+.bnav-item.nav-pending .bnav-icon { animation: nav-pending-pulse 900ms ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .nav-pending, .bnav-item.nav-pending .bnav-icon { animation: none; opacity: 0.65; }
+  .bnav-item.nav-pending { opacity: 1; }
 }
 @keyframes explore-sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
 .explore-sheet-enter { animation: explore-sheet-in 220ms ease-out both; }

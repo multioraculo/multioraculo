@@ -76,13 +76,27 @@
 #                   publicar outro nome. Seguro travar por um ano. Hoje moram
 #                   ali a marca e as duas lâminas do leque dos cinco oráculos.
 #
-# O QUE NÃO ENTROU, de propósito: `/tarot/art/*` e `/lenormand/*`. São 300 KB
-# cada e seria tentador, mas essas artes JÁ FORAM substituídas mantendo o mesmo
-# nome mais de uma vez neste projeto. Travá-las por um ano deixaria quem visitou
-# antes com a versão velha, sem jeito de corrigir. A política segura para elas é
-# versionar o nome na ingestão; enquanto isso não existe, elas continuam como
-# estão.
+#   /tarot/arte/*   gravuras do Tarô e do Lenormand em WebP com o hash do
+#   /lenormand/arte/*  conteúdo no nome, geradas por scripts/cartas-webp.mjs a
+#                   partir dos PNG aprovados. Trocar a arte de uma carta gera
+#                   outro nome: seguro travar.
+#
+# O QUE NÃO ENTROU, de propósito: os PNG de nome fixo em `/tarot/art/*` e
+# `/lenormand/*.png` (que a interface não serve mais, mas seguem como fonte).
+# Essas artes JÁ FORAM substituídas mantendo o mesmo nome mais de uma vez neste
+# projeto. Travá-las por um ano deixaria quem visitou antes com a versão velha,
+# sem jeito de corrigir.
 [[headers]]
   for = "/brand/fixo/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/tarot/arte/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/lenormand/arte/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

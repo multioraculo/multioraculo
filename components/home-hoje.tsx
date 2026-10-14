@@ -54,7 +54,7 @@
  */
 import { useEffect, useState, type ReactNode } from "react"
 import Link from "@/components/localized-link"
-import type { User } from "@supabase/supabase-js"
+import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import { buscar, CARREGANDO, type Carregamento } from "@/lib/carregamento"
@@ -261,7 +261,7 @@ export default function HomeHoje({
   tiragemInicial = null,
   ceuDoDiaInicial = null,
 }: {
-  initialUser: User | null
+  initialUser: UsuarioDaSessao | null
   registro: RegistroDeHoje
   /** o céu calculado no servidor: função pura, sem requisição e sem custo */
   ceu: Ceu
@@ -573,7 +573,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           onClick={() => focoTarot.open(0)}
           aria-label={`${tarot.nome}. ${dict.focus.open}`}
         >
-          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} />
+          {/* primeira dobra: baixa a gravura já, sem esperar o layout */}
+          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} prioridade />
         </button>
       </div>
 
@@ -587,6 +588,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           <LenormandCard
             index={lenormand.indice}
             name={nomeLenormand}
+            sizes={`${LARGURA_LENORMAND}px`}
+            prioridade
             style={{ ["--ln-cw" as string]: `${LARGURA_LENORMAND}px` }}
           />
         </button>
@@ -615,6 +618,7 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           <LenormandCard
             index={lenormand.indice}
             name={nomeLenormand}
+            sizes="280px"
             style={{ ["--ln-cw" as string]: "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties}
           />
         )}
