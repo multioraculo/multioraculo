@@ -1,7 +1,8 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { lenormandArtSrc, lenormandId, lenormandIndexOfId } from "@/lib/oracles/lenormand-assets"
+import { lenormandArtSrc, lenormandArtSrcSet, lenormandId, lenormandIndexOfId } from "@/lib/oracles/lenormand-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -52,18 +53,54 @@ function displayName(name: string): string {
   return name.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 }
 
-/** A lâmina de uma carta: número, gravura e nome. Tamanho vem de --ln-cw. */
-export function LenormandCard({ index, name, center = false, className = "", style }: { index: number; name: string; center?: boolean; className?: string; style?: React.CSSProperties }) {
+/**
+ * A lâmina de uma carta: número, gravura e nome. Tamanho vem de --ln-cw.
+ * `sizes` é a largura CSS da lâmina, para o navegador escolher a gravura de
+ * 300 ou 600 px; `prioridade` é para a carta da primeira dobra (loading=eager).
+ */
+export function LenormandCard({
+  index,
+  name,
+  center = false,
+  className = "",
+  style,
+  sizes = "100px",
+  prioridade = false,
+}: {
+  index: number
+  name: string
+  center?: boolean
+  className?: string
+  style?: React.CSSProperties
+  sizes?: string
+  prioridade?: boolean
+}) {
+  // luz de espera até a gravura chegar (.ln-art.is-loading), como no Tarô
+  const [carregando, setCarregando] = useState(true)
+  const imgRef = useRef<HTMLImageElement>(null)
+  useEffect(() => {
+    const img = imgRef.current
+    if (img && img.complete && img.naturalWidth > 0) setCarregando(false)
+  }, [])
   return (
     <div className={`ln-card ${center ? "ln-center" : ""} ${className}`} style={style}>
       <span className="ln-num" aria-hidden="true">{index + 1}</span>
-      <div className="ln-art" aria-hidden="true">
+      <div className={"ln-art" + (carregando ? " is-loading" : "")} aria-hidden="true">
         {/* gravura com fundo transparente; se a arte da carta ainda não existir, a lâmina fica só com número e nome */}
         <img
+          ref={imgRef}
           src={lenormandArtSrc(lenormandId(index))}
+          srcSet={lenormandArtSrcSet(lenormandId(index))}
+          sizes={sizes}
           alt={name}
+          loading={prioridade ? "eager" : "lazy"}
+          decoding="async"
           draggable={false}
-          onError={(ev) => { ev.currentTarget.style.display = "none" }}
+          onLoad={() => setCarregando(false)}
+          onError={(ev) => {
+            setCarregando(false)
+            ev.currentTarget.style.display = "none"
+          }}
         />
       </div>
       <span className="ln-name" aria-hidden="true">{name}</span>
@@ -104,7 +141,7 @@ export default function LenormandTable({ items, cards, animate = false }: Props)
         state={focus.state}
         items={entries.map((e) => ({ position: e.position, name: `${e.index! + 1} · ${e.name}`, meaning: e.meaning }))}
         renderFront={(i) => (
-          <LenormandCard index={entries[i].index!} name={entries[i].name} center={i === 4} style={{ "--ln-cw": "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties} />
+          <LenormandCard index={entries[i].index!} name={entries[i].name} center={i === 4} sizes="280px" style={{ "--ln-cw": "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties} />
         )}
         onAdvance={focus.advance}
         onClose={focus.close}

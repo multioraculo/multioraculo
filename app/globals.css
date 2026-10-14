@@ -417,6 +417,13 @@
   width: 100%; height: 100%; object-fit: contain; display: block;
   filter: brightness(1.2) contrast(1.14) saturate(1.06) drop-shadow(0 0 0.6px rgba(255,240,220,0.34));
 }
+/* luz de espera até a gravura chegar, igual à do Tarô (.tk-art.is-loading) */
+.ln-art.is-loading::before {
+  content: ""; position: absolute; inset: 8% 12%; border-radius: 45%;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255,240,220,0.13), rgba(255,240,220,0) 70%);
+  animation: tk-espera 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .ln-art.is-loading::before { animation: none; } }
 .ln-name {
   position: absolute; bottom: 4.5%; left: 0; right: 0; text-align: center; z-index: 2;
   font-family: var(--font-instrument-serif), "Instrument Serif", Georgia, serif; font-style: italic; font-size: calc(var(--ln-cw) * 0.105); line-height: 1;

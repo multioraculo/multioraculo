@@ -76,15 +76,16 @@
 #                   publicar outro nome. Seguro travar por um ano. Hoje moram
 #                   ali a marca e as duas lâminas do leque dos cinco oráculos.
 #
-#   /tarot/arte/*   gravuras do Tarô em WebP com o hash do conteúdo no nome,
-#                   geradas por scripts/tarot-webp.mjs a partir dos PNG aprovados.
-#                   Trocar a arte de uma carta gera outro nome: seguro travar.
+#   /tarot/arte/*   gravuras do Tarô e do Lenormand em WebP com o hash do
+#   /lenormand/arte/*  conteúdo no nome, geradas por scripts/cartas-webp.mjs a
+#                   partir dos PNG aprovados. Trocar a arte de uma carta gera
+#                   outro nome: seguro travar.
 #
-# O QUE NÃO ENTROU, de propósito: `/lenormand/*` e os PNG de nome fixo em
-# `/tarot/art/*` (que a interface não serve mais, mas seguem como fonte). Essas
-# artes JÁ FORAM substituídas mantendo o mesmo nome mais de uma vez neste
+# O QUE NÃO ENTROU, de propósito: os PNG de nome fixo em `/tarot/art/*` e
+# `/lenormand/*.png` (que a interface não serve mais, mas seguem como fonte).
+# Essas artes JÁ FORAM substituídas mantendo o mesmo nome mais de uma vez neste
 # projeto. Travá-las por um ano deixaria quem visitou antes com a versão velha,
-# sem jeito de corrigir. A política segura é a mesma do Tarô: versionar o nome.
+# sem jeito de corrigir.
 [[headers]]
   for = "/brand/fixo/*"
   [headers.values]
@@ -92,5 +93,10 @@
 
 [[headers]]
   for = "/tarot/arte/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/lenormand/arte/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"

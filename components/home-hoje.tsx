@@ -588,6 +588,8 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           <LenormandCard
             index={lenormand.indice}
             name={nomeLenormand}
+            sizes={`${LARGURA_LENORMAND}px`}
+            prioridade
             style={{ ["--ln-cw" as string]: `${LARGURA_LENORMAND}px` }}
           />
         </button>
@@ -616,6 +618,7 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           <LenormandCard
             index={lenormand.indice}
             name={nomeLenormand}
+            sizes="280px"
             style={{ ["--ln-cw" as string]: "min(78vw, 280px, 37vh)", width: "100%" } as React.CSSProperties}
           />
         )}

@@ -43,7 +43,7 @@ export function tarotCardId(index: number): string {
  * sem sobra. A janela em CSS tem a mesma proporção (ver `.tk-art`).
  *
  * O QUE A INTERFACE SERVE não é o PNG: é o WebP gerado dele por
- * scripts/tarot-webp.mjs, em public/tarot/arte, com o hash do conteúdo no
+ * scripts/cartas-webp.mjs, em public/tarot/arte, com o hash do conteúdo no
  * nome (lib/oracles/tarot-art-manifest.ts). O nome muda quando a arte muda, e
  * só por isso a Netlify pode guardar esses arquivos por um ano. O PNG de nome
  * fixo continua sendo a fonte aprovada e o recurso de emergência se faltar
@@ -54,7 +54,7 @@ export const TAROT_ART_BASE = "/tarot/art"
 /** Versão de 600 px (ampliação e telas de densidade 3). Serve também de `src` de reserva. */
 export function tarotArtSrc(cardIdOrIndex: string | number): string {
   const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
-  return TAROT_ARTE[id]?.[600] ?? `${TAROT_ART_BASE}/${id}.png`
+  return TAROT_ARTE[id]?.src ?? `${TAROT_ART_BASE}/${id}.png`
 }
 
 /**
@@ -64,9 +64,7 @@ export function tarotArtSrc(cardIdOrIndex: string | number): string {
  */
 export function tarotArtSrcSet(cardIdOrIndex: string | number): string {
   const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
-  const arte = TAROT_ARTE[id]
-  if (!arte) return `${TAROT_ART_BASE}/${id}.png 600w`
-  return `${arte[300]} 300w, ${arte[600]} 600w`
+  return TAROT_ARTE[id]?.srcSet ?? `${TAROT_ART_BASE}/${id}.png 600w`
 }
 
 const ROMANOS = [

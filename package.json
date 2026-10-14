@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:sinastria && npm run verify:sinastria-referencias && npm run verify:sinastria-selecao && npm run verify:sinastria-sintese && npm run verify:sinastria-geracao && npm run verify:sinastria-aplicabilidade && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos && npm run verify:auth-next && npm run verify:reabrir-leitura && npm run verify:profile-marker && npm run verify:oauth-callback && npm run verify:auth-state && npm run verify:seo && npm run verify:sonhos && npm run verify:tarot-arte",
+    "prebuild": "npm run verify:synthesis && npm run verify:tarot && npm run verify:evidencia && npm run verify:runas && npm run verify:iching && npm run verify:lenormand && npm run verify:astro && npm run verify:sinastria && npm run verify:sinastria-referencias && npm run verify:sinastria-selecao && npm run verify:sinastria-sintese && npm run verify:sinastria-geracao && npm run verify:sinastria-aplicabilidade && npm run verify:horoscopo && npm run verify:cache && npm run verify:ceu && npm run verify:interconexoes && npm run verify:simbolos && npm run verify:tiragem-cartas && npm run verify:arcanos && npm run verify:auth-next && npm run verify:reabrir-leitura && npm run verify:profile-marker && npm run verify:oauth-callback && npm run verify:auth-state && npm run verify:seo && npm run verify:sonhos && npm run verify:cartas-arte",
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
@@ -36,8 +36,8 @@
     "verify:auth-state": "node --import ./scripts/ts-register.mjs scripts/verify-auth-state.ts",
     "verify:seo": "node --import ./scripts/ts-register.mjs scripts/verify-seo.ts",
     "verify:sonhos": "node --import ./scripts/ts-register.mjs scripts/verify-sonhos.ts",
-    "verify:tarot-arte": "node --import ./scripts/ts-register.mjs scripts/verify-tarot-arte.ts",
-    "tarot:webp": "node scripts/tarot-webp.mjs",
+    "verify:cartas-arte": "node --import ./scripts/ts-register.mjs scripts/verify-cartas-arte.ts",
+    "cartas:webp": "node scripts/cartas-webp.mjs",
     "smoke:seo-i18n": "node --import ./scripts/ts-register.mjs scripts/smoke-seo-i18n.ts"
   },
   "dependencies": {
