@@ -369,14 +369,14 @@ function parteG() {
 // Estes casos provam que a regra aceita paráfrase legítima dos FATOS e recusa
 // paráfrase entre os termos e a própria síntese, igual nos três idiomas.
 type Termo = { texto: string; origem: string; fato_id: string }
-type Caso = { termos: Termo[]; sintese: string }
+type CasoDeSintese = { termos: Termo[]; sintese: string }
 
 /** os três fatos de DIA, pelo id estável */
 const F1 = "aspecto:mercury~mars:square"
 const F2 = "aspecto:mars~pluto:opposition"
 const F3 = "aspecto:sun~uranus:trine"
 
-const VALIDO: Record<Locale, Caso> = {
+const VALIDO: Record<Locale, CasoDeSintese> = {
   en: {
     termos: [
       { texto: "examining precision", origem: "Mercury", fato_id: F1 },
@@ -420,7 +420,7 @@ const PARAFRASE: Record<Locale, string[]> = {
   es: ["examen preciso", "insistencia que cruza", "profundidad revisada", "fuerzas cara a cara"],
 }
 
-function violacoesDoCaso(locale: Locale, caso: Caso): string[] {
+function violacoesDoCaso(locale: Locale, caso: CasoDeSintese): string[] {
   const ceu = estadoDoCeu(DIA)
   const { escolhidos } = fatosDoCeu(ceu, locale)
   const v = verificarCeu({ bruto: caso, escolhidos, locale, minimoTermos: minimoDeTermos(escolhidos) })
@@ -798,7 +798,7 @@ const C1 = "aspecto:mercury~mars:square"
 const C2 = "aspecto:sun~saturn:opposition"
 const C3 = "aspecto:mars~pluto:opposition"
 
-function violacoesEm(dia: string, locale: Locale, caso: Caso): string[] {
+function violacoesEm(dia: string, locale: Locale, caso: CasoDeSintese): string[] {
   const ceu = estadoDoCeu(dia)
   const { escolhidos } = fatosDoCeu(ceu, locale)
   const v = verificarCeu({ bruto: caso, escolhidos, locale, minimoTermos: minimoDeTermos(escolhidos) })
@@ -817,7 +817,7 @@ function parteM() {
   }
 
   // ── A · duas oposições distintas, uma origem cada: deve PASSAR ───────────
-  const A: Caso = {
+  const A: CasoDeSintese = {
     termos: [
       { texto: "exame que distingue", origem: "Mercúrio", fato_id: C1 },
       { texto: "limite iluminado", origem: "oposição", fato_id: C2 },
@@ -835,7 +835,7 @@ function parteM() {
   // mas "Marte" e "Leão" foram declarados vindo do fato 3. Nenhum termo de
   // retrogradação aqui, de propósito: ele só existe no fato 3 e puxaria o
   // segundo fato sozinho, escondendo o defeito que este caso mede.
-  const B: Caso = {
+  const B: CasoDeSintese = {
     termos: [
       { texto: "exame que distingue", origem: "Mercúrio", fato_id: C1 },
       { texto: "travessia sem passagem", origem: "quadratura", fato_id: C1 },
@@ -849,7 +849,7 @@ function parteM() {
   confere("M · B. e o conjunto inteiro passa", vB.length === 0, vB.join(" / "))
 
   // ── C · quatro termos do MESMO fato: antes passava, agora reprova ────────
-  const C: Caso = {
+  const C: CasoDeSintese = {
     termos: [
       { texto: "impulso que afirma", origem: "Marte", fato_id: C3 },
       { texto: "fundo que se expõe", origem: "Plutão", fato_id: C3 },
@@ -862,14 +862,14 @@ function parteM() {
   confere("M · C. quatro termos de um fato só reprovam a abrangência", vC.some((v) => v.includes("mesmo fato")), vC.join(" / ") || "(APROVADO, falsamente)")
 
   // ── os casos restantes do contrato ───────────────────────────────────────
-  const semFato: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "" } : t)) }
+  const semFato: CasoDeSintese = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "" } : t)) }
   confere(
     "M · fato_id vazio reprova com nome",
     violacoesEm(DIA_COLISAO, "pt", semFato).some((v) => v.includes('fato_id "(vazio)"')),
     violacoesEm(DIA_COLISAO, "pt", semFato).join(" / "),
   )
 
-  const fatoInventado: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "aspecto:nao~existe:conjunction" } : t)) }
+  const fatoInventado: CasoDeSintese = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, fato_id: "aspecto:nao~existe:conjunction" } : t)) }
   confere(
     "M · fato_id inexistente reprova",
     violacoesEm(DIA_COLISAO, "pt", fatoInventado).some((v) => v.includes("não está entre os fatos de hoje")),
@@ -877,12 +877,12 @@ function parteM() {
   )
 
   // "Sol" existe nos fatos de hoje, mas não nas origens do fato declarado
-  const origemDeOutroFato: Caso = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, origem: "Sol" } : t)) }
+  const origemDeOutroFato: CasoDeSintese = { ...A, termos: A.termos.map((t, i) => (i === 0 ? { ...t, origem: "Sol" } : t)) }
   const vOutro = violacoesEm(DIA_COLISAO, "pt", origemDeOutroFato)
   confere("M · origem que existe, mas não naquele fato, reprova", vOutro.some((v) => v.includes("não é uma das origens de")), vOutro.join(" / "))
 
   // o mesmo par (fato_id, origem) duas vezes continua sendo duplicação real
-  const parRepetido: Caso = {
+  const parRepetido: CasoDeSintese = {
     ...A,
     termos: A.termos.map((t, i) => (i === 2 ? { ...t, origem: "oposição", fato_id: C2 } : t)),
   }
