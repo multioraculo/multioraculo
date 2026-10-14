@@ -2,7 +2,7 @@ import Header from "@/components/header"
 import ShaderBackground from "@/components/shader-background"
 import HoroscopePage from "@/components/horoscope-page"
 import { diaDeHoje, estadoDoCeu } from "@/lib/astro/ceu"
-import { createClient } from "@/lib/supabase/server"
+import { usuarioDaRequisicao } from "@/lib/auth/usuario-da-requisicao"
 import { getI18n } from "@/lib/i18n/server"
 import { metadataDaRota } from "@/lib/seo/rota"
 
@@ -16,8 +16,8 @@ export const generateMetadata = () => metadataDaRota("horoscopo")
 export const dynamic = "force-dynamic"
 
 export default async function HoroscopoPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // quem está logado vem do getUser() que o middleware já fez nesta requisição
+  const user = await usuarioDaRequisicao()
   const { dict } = await getI18n()
   // o céu não depende do signo: pode ser desenhado antes de qualquer escolha,
   // e é o que a página tem para mostrar na primeira tela
