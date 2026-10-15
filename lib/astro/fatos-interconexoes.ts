@@ -31,6 +31,12 @@ export type FatoPessoal = {
   texto: string
   /** relevância do motor; 0 para fatos de contexto */
   nota: number
+  /**
+   * As peças da relação, por identificador, só nas interconexões. O texto acima
+   * diz a medida; isto diz QUAIS forças se encontram, para o prompt dar a cada
+   * uma o seu sentido e o molde escrever sem repetir a técnica.
+   */
+  chaves?: { transito: string; ponto: string; aspecto: string | null; casaNatal: number | null }
 }
 
 const num = (n: number, locale: Locale) => (locale === "en" ? n.toFixed(1) : n.toFixed(1).replace(".", ","))
@@ -159,13 +165,18 @@ export function fatosPessoais(params: {
   const { mapa, escolhidas, locale } = params
   const L = LIGACOES[locale]
   const fatos: FatoPessoal[] = []
-  const põe = (tipo: TipoFatoPessoal, texto: string, nota: number) =>
-    fatos.push({ id: `f${fatos.length + 1}`, tipo, texto, nota })
+  const põe = (tipo: TipoFatoPessoal, texto: string, nota: number, chaves?: FatoPessoal["chaves"]) =>
+    fatos.push({ id: `f${fatos.length + 1}`, tipo, texto, nota, ...(chaves ? { chaves } : {}) })
 
   // as interconexões primeiro, em ordem de relevância: é a ordem que o prompt
   // e o verificador leem como hierarquia
   for (const c of [...escolhidas].sort((a, b) => b.nota - a.nota)) {
-    põe("interconexao", frasearInterconexao(c, locale), c.nota)
+    põe("interconexao", frasearInterconexao(c, locale), c.nota, {
+      transito: c.transito,
+      ponto: c.ponto.id,
+      aspecto: c.tipo === "aspecto" ? c.aspecto : null,
+      casaNatal: c.tipo === "posicao" ? c.casa : c.ponto.tipo === "corpo" ? c.ponto.casa : null,
+    })
   }
 
   // o mapa, só nos pontos que a leitura pode nomear

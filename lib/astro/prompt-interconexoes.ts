@@ -33,7 +33,9 @@
 import type { Locale } from "@/lib/i18n/config"
 import { languageRule } from "@/lib/oracles/language"
 import { EXPRESSOES_EVITAR, MARCAS_HIPOTESE } from "./editorial"
-import type { FatoPessoal } from "./fatos-interconexoes"
+import { nomeDoPonto, type FatoPessoal } from "./fatos-interconexoes"
+import { ASPECTOS, CORPOS } from "./nomes"
+import { GLOSA_ASPECTO, NUCLEO, TERRENO_DA_CASA } from "./simbolos"
 
 export type AfirmacaoEscrita = { texto: string; fato: string; manifestacoes?: string[] }
 export type SintesePessoal = { afirmacoes: AfirmacaoEscrita[]; sintese: string }
@@ -66,27 +68,9 @@ export const MARCAS_MANIFESTACAO = MARCAS_HIPOTESE
  * casa e família, que é o que a tradição de fato sustenta.
  */
 const CASAS: Record<Locale, string> = {
-  pt: [
-    "1 presença, corpo, jeito de se colocar; 2 recursos, o que se tem e se valoriza;",
-    "3 conversa, trajeto curto, irmãos; 4 casa, família, vida privada; 5 criação, prazer, filhos;",
-    "6 rotina, trabalho diário, saúde prática; 7 parceria, vínculo a dois; 8 o que é partilhado,",
-    "intimidade, o que termina; 9 estudo, distância, sentido; 10 trabalho visível, posição;",
-    "11 grupo, amizade, projeto coletivo; 12 recolhimento, o que fica em segundo plano.",
-  ].join(" "),
-  en: [
-    "1 presence, body, how one shows up; 2 resources, what one has and values;",
-    "3 conversation, short trips, siblings; 4 home, family, private life; 5 making things, pleasure, children;",
-    "6 routine, daily work, practical health; 7 partnership, one-to-one bonds; 8 what is shared,",
-    "intimacy, what ends; 9 study, distance, meaning; 10 visible work, standing;",
-    "11 groups, friendship, collective projects; 12 retreat, what stays in the background.",
-  ].join(" "),
-  es: [
-    "1 presencia, cuerpo, manera de colocarse; 2 recursos, lo que se tiene y se valora;",
-    "3 conversación, trayecto corto, hermanos; 4 casa, familia, vida privada; 5 creación, placer, hijos;",
-    "6 rutina, trabajo diario, salud práctica; 7 pareja, vínculo de a dos; 8 lo compartido,",
-    "intimidad, lo que termina; 9 estudio, distancia, sentido; 10 trabajo visible, posición;",
-    "11 grupo, amistad, proyecto colectivo; 12 recogimiento, lo que queda en segundo plano.",
-  ].join(" "),
+  pt: TERRENO_DA_CASA.pt.map((t, i) => `${i + 1} ${t}`).join("; "),
+  en: TERRENO_DA_CASA.en.map((t, i) => `${i + 1} ${t}`).join("; "),
+  es: TERRENO_DA_CASA.es.map((t, i) => `${i + 1} ${t}`).join("; "),
 }
 
 const SISTEMA_BASE: Record<Locale, string> = {
@@ -111,6 +95,43 @@ function listar(fatos: FatoPessoal[]): string {
   return fatos.map((f) => `  ${f.id} (${f.tipo}, relevância ${f.nota.toFixed(2)}): ${f.texto}`).join("\n")
 }
 
+/**
+ * O sentido de cada peça das relações principais. É daqui que o texto corrido
+ * tira o que dizer: o que a força de hoje é, o que o ponto do mapa é, de que
+ * natureza é o encontro e em que terreno da vida ele cai. Os nomes técnicos
+ * aparecem só para o modelo saber de quem se fala; quem lê não os vê.
+ */
+function asForcas(fatos: FatoPessoal[], locale: Locale): string {
+  const nomes = CORPOS[locale] as Record<string, string>
+  return fatos
+    .filter((f) => f.tipo === "interconexao" && f.chaves)
+    .slice(0, 3)
+    .map((f) => {
+      const k = f.chaves!
+      const linhas = [`  ${f.id}:`, `    ${nomes[k.transito] ?? k.transito} de hoje = ${NUCLEO[locale][k.transito] ?? ""}`]
+      if (!k.ponto.startsWith("casa")) {
+        linhas.push(`    ${nomeDoPonto(k.ponto, locale)} = ${NUCLEO[locale][k.ponto] ?? ""}`)
+      }
+      if (k.aspecto) {
+        const asp = (ASPECTOS[locale] as Record<string, string>)[k.aspecto] ?? k.aspecto
+        linhas.push(`    natureza do encontro (${asp}, nome que NÃO entra no texto) = ${GLOSA_ASPECTO[locale][k.aspecto] ?? ""}`)
+      }
+      if (k.casaNatal) linhas.push(`    terreno da vida (sem dizer o número da casa) = ${TERRENO_DA_CASA[locale][k.casaNatal - 1]}`)
+      return linhas.join("\n")
+    })
+    .join("\n")
+}
+
+/** O que o texto corrido não diz, porque os cartões embaixo dele já mostram e explicam. */
+const FORA_DO_TEXTO = [
+  "- o texto é CORRIDO e para quem não sabe astrologia. Os nomes técnicos ficam FORA dele: nada de nome de",
+  "  aspecto (conjunção, oposição, quadratura, trígono, sextil, quincunce), nada de signo, de número ou ordinal",
+  "  de casa, de grau, de orbe, de retrógrado, de aplicativo ou separativo. A tela mostra tudo isso logo abaixo,",
+  "  em cartões que explicam cada termo; repetir aqui só torna a leitura pesada;",
+  "- no lugar do nome do aspecto, diga a NATUREZA do encontro com palavras comuns; no lugar da casa, o TERRENO da vida;",
+  "- cada força nomeada vem acompanhada do que ela representa, para que o leitor entenda sem saber o que é Urano ou Ascendente;",
+]
+
 /** As regras da camada concreta, iguais na geração e no reparo. */
 function regrasDaManifestacao(locale: Locale): string[] {
   const marcas = MARCAS_MANIFESTACAO[locale].map((m) => `"${m}"`).join(", ")
@@ -120,7 +141,7 @@ function regrasDaManifestacao(locale: Locale): string[] {
       "- after interpreting a relation, you may say how it COULD show up in the person's day;",
       `- every example must open with one of these exact marks: ${marcas};`,
       "- the example goes INSIDE the synthesis, in the same sentence that names the relation or the next one;",
-    "- the example comes from the declared fact, and the NATAL HOUSE in it chooses the area of life.",
+    "- the example comes from the declared fact, and the NATAL HOUSE in it chooses the area of life, said in plain words, never the house number.",
       `  House meanings, as reasoning only, never copied as phrasing: ${CASAS.en}`,
       "- no named people, no places, no hours, no dates, no numbers of things;",
       "- if the facts do not support a concrete example, leave it out. Forcing one is guessing.",
@@ -132,7 +153,7 @@ function regrasDaManifestacao(locale: Locale): string[] {
       "- después de interpretar una relación, puedes decir cómo PODRÍA aparecer en el día de la persona;",
       `- todo ejemplo abre con una de estas marcas exactas: ${marcas};`,
       "- el ejemplo va DENTRO de la síntesis, en la misma frase que nombra la relación o en la siguiente;",
-    "- el ejemplo sale del hecho declarado, y la CASA NATAL que está en él elige el terreno de la vida.",
+    "- el ejemplo sale del hecho declarado, y la CASA NATAL que está en él elige el terreno de la vida, dicho con palabras comunes, nunca el número de la casa.",
       `  Sentido de las casas, solo como razonamiento, nunca copiado como frase: ${CASAS.es}`,
       "- sin nombres de personas, sin lugares, sin horas, sin fechas, sin cantidades;",
       "- si los hechos no sostienen un ejemplo concreto, no lo pongas. Forzarlo es adivinar.",
@@ -144,7 +165,8 @@ function regrasDaManifestacao(locale: Locale): string[] {
     "- o exemplo vai DENTRO DA SÍNTESE, que é o texto que a pessoa lê. Na mesma frase que nomeia a",
     "  relação, ou na frase logo seguinte: é essa vizinhança que mostra de qual relação ele saiu;",
     `- todo exemplo abre com uma destas marcas exatas: ${marcas};`,
-    "- o exemplo sai do fato declarado, e a CASA NATAL que está nele escolhe o terreno da vida.",
+    "- o exemplo sai do fato declarado, e a CASA NATAL que está nele escolhe o terreno da vida. Diga o",
+    "  terreno com palavras comuns (vínculos a dois, casa e família), nunca o número da casa;",
     `  Sentido das casas, só como raciocínio, nunca copiado como frase: ${CASAS.pt}`,
     "- em NENHUM lugar do texto: hora, data, dia da semana, mês ou período do dia. O céu de hoje não",
     "  marca hora para a vida de ninguém, e escrever isso é inventar precisão;",
@@ -170,6 +192,12 @@ export function promptInterconexoes(params: { fatos: FatoPessoal[]; locale: Loca
     "",
     `AS MAIS RELEVANTES são ${principais.map((f) => f.id).join(", ")}, nesta ordem. A síntese precisa se apoiar nelas.`,
     "",
+    "O QUE CADA PEÇA SIGNIFICA, como ponto de partida e não como frase pronta:",
+    asForcas(fatos, locale),
+    "",
+    "O QUE ESTE TEXTO É: a descrição precisa das forças que se encontram hoje no mapa desta pessoa. Para cada",
+    "relação principal, o que a força de hoje traz, o que ela encontra na pessoa, e o que nasce desse encontro.",
+    "",
     "REGRAS:",
     "- toda afirmação sai de um fato da lista, e você declara de qual;",
     "- é proibido citar planeta, signo, casa, aspecto, orbe, direção ou evento que não esteja na lista;",
@@ -184,8 +212,9 @@ export function promptInterconexoes(params: { fatos: FatoPessoal[]; locale: Loca
     // único nome dos fatos, o verificador reprovava por genérica, e TODA
     // geração gastava uma chamada de reparo para só então pôr os nomes de
     // volta. Nomear os corpos é obrigatório; o que não se explica é o método.
-    "- fale com a pessoa, em segunda pessoa. NOMEIE os corpos, signos e pontos da lista: são os fatos dela, e uma síntese sem nenhum deles serviria para qualquer pessoa;",
-    "- não ensine a técnica: nada de explicar o que é orbe, aspecto, casa ou trânsito.",
+    "- fale com a pessoa, em segunda pessoa. NOMEIE os corpos e pontos da lista (Urano, sua Lua natal, seu Ascendente): são os fatos dela, e uma síntese sem nenhum deles serviria para qualquer pessoa;",
+    "- não ensine a técnica: nada de explicar o que é orbe, aspecto, casa ou trânsito;",
+    ...FORA_DO_TEXTO,
     "",
     ...regrasDaManifestacao(locale),
     "",
@@ -233,6 +262,7 @@ export function promptReparoInterconexoes(params: {
     "REGRAS: as mesmas de antes. Toda afirmação sai de um fato da lista e declara qual;",
     "é proibido introduzir qualquer coisa fora da lista; sem previsão, sem conselho,",
     `sem frase genérica; de ${FRASES.min} a ${FRASES.max} frases.`,
+    ...FORA_DO_TEXTO,
     "Um exemplo concreto que não se sustente nos fatos deve ser RETIRADO, não reescrito.",
     "",
     ...regrasDaManifestacao(locale),

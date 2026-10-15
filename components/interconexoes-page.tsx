@@ -32,13 +32,18 @@ import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
 import SinteseInterconexoes from "@/components/sintese-interconexoes"
-import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
+import { ASPECTOS, CORPOS, RETROGRADO, SIGNOS } from "@/lib/astro/nomes"
+import { GLOSA_ASPECTO, GLOSA_MOVIMENTO, NUCLEO } from "@/lib/astro/simbolos"
 import type { MapaNatal } from "@/lib/astro/mapa"
 import type { Interconexao } from "@/lib/astro/interconexoes"
 import Seta from "@/components/seta"
 
 type Cidade = { nome: string; regiao: string; pais: string; lat: number; lon: number; rotulo: string }
 type Nascimento = { born_on: string; born_at: string | null; lat: number; lon: number; place_label: string; tz?: string }
+/** O que cada casa é, do dicionário: o mesmo texto que a Sinastria já mostra. */
+type SentidoDaCasa = { area: string; effect: string }
+type Casas = Record<string, SentidoDaCasa>
+
 type Resposta = {
   nascimento: Nascimento | null
   mapa: MapaNatal | null
@@ -50,6 +55,7 @@ type Resposta = {
 const indiceDoSigno = (lon: number) => Math.floor((((lon % 360) + 360) % 360) / 30)
 const grauNoSigno = (lon: number) => (((lon % 30) + 30) % 30)
 const numero = (x: number, casas = 2) => x.toFixed(casas).replace(".", ",")
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
 /** Grau e minuto dentro do signo: 12°31, do jeito que uma efeméride escreve. */
 function grauMinuto(lon: number): string {
@@ -98,6 +104,7 @@ export default function InterconexoesPage({
 }) {
   const { dict, locale, formatDate } = useI18n()
   const t = dict.interconexoes as unknown as Record<string, string>
+  const casas = dict.sinastria.houseMeaning as unknown as Casas
   const [estado, setEstado] = useState<Resposta | null>(null)
   const [carregando, setCarregando] = useState(Boolean(initialUser))
   const [editando, setEditando] = useState(false)
@@ -142,6 +149,7 @@ export default function InterconexoesPage({
           interconexoes={estado.interconexoes ?? []}
           temPlano={temPlano}
           t={t}
+          casas={casas}
           locale={locale}
           formatDate={formatDate}
           aoCorrigir={() => setEditando(true)}
@@ -405,6 +413,7 @@ function Deck({
   interconexoes,
   temPlano,
   t,
+  casas,
   locale,
   formatDate,
   aoCorrigir,
@@ -415,6 +424,7 @@ function Deck({
   interconexoes: Interconexao[]
   temPlano: boolean
   t: Record<string, string>
+  casas: Casas
   locale: string
   formatDate: (iso: string, estilo?: any) => string
   aoCorrigir: () => void
@@ -494,6 +504,7 @@ function Deck({
             nome={nomes.sun}
             valor={posicaoDe(sol.lon, sol.signoDefinido ? sol.signo : null, signos)}
             casa={sol.casa !== null ? fmt(t.house, { n: sol.casa }) : null}
+            area={sol.casa !== null ? casas[sol.casa]?.area : null}
           />
         )}
         {lua && (
@@ -503,6 +514,7 @@ function Deck({
             nome={nomes.moon}
             valor={posicaoDe(lua.lon, lua.signoDefinido ? lua.signo : null, signos)}
             casa={lua.casa !== null ? fmt(t.house, { n: lua.casa }) : null}
+            area={lua.casa !== null ? casas[lua.casa]?.area : null}
             incerto={!lua.signoDefinido}
           />
         )}
@@ -515,7 +527,10 @@ function Deck({
       </div>
 
       {/* as demais posições são referência, não leitura: ficam recolhidas */}
-      <DemaisPosicoes mapa={mapa} t={t} signos={signos} nomes={nomes} />
+      <DemaisPosicoes mapa={mapa} t={t} signos={signos} nomes={nomes} casas={casas} />
+
+      {/* sem saber o que é cada casa, "casa 7" é um número e não uma informação */}
+      {comAngulos && <GuiaDasCasas t={t} casas={casas} />}
 
       {/* ── faixa C · as relações que o motor mediu hoje ──────────────────── */}
       <div className="pt-4">
@@ -536,6 +551,7 @@ function Deck({
               principal={i === 0}
               className={LARGURA[i] ?? "lg:col-span-6"}
               t={t}
+              casas={casas}
               locale={locale}
             />
           ))}
@@ -570,6 +586,7 @@ function Ponto({
   nome,
   valor,
   casa,
+  area,
   incerto = false,
   className = "",
 }: {
@@ -577,6 +594,7 @@ function Ponto({
   nome: string
   valor: string
   casa?: string | null
+  area?: string | null
   incerto?: boolean
   className?: string
 }) {
@@ -590,6 +608,7 @@ function Ponto({
         {valor}
       </p>
       {casa && <p className="text-white/30 text-[13px] font-light mt-1">{casa}</p>}
+      {area && <p className="text-white/40 text-[13px] leading-snug font-light mt-0.5">{area}</p>}
     </Modulo>
   )
 }
@@ -605,11 +624,13 @@ function DemaisPosicoes({
   t,
   signos,
   nomes,
+  casas,
 }: {
   mapa: MapaNatal
   t: Record<string, string>
   signos: readonly string[]
   nomes: Record<string, string>
+  casas: Casas
 }) {
   const resto = mapa.corpos.filter((c) => c.corpo !== "sun" && c.corpo !== "moon")
   if (resto.length === 0) return null
@@ -642,6 +663,9 @@ function DemaisPosicoes({
               </span>
               {c.retrogrado && <span className="text-white/30 text-[13px]">℞</span>}
               {c.casa !== null && <span className="text-white/30 text-[13px]">{fmt(t.house, { n: c.casa })}</span>}
+              {c.casa !== null && casas[c.casa] && (
+                <span className="hidden sm:inline text-white/25 text-[13px] font-light truncate">{casas[c.casa].area}</span>
+              )}
               {!c.signoDefinido && (
                 <span className="text-white/30 text-[13px]">
                   {fmt(t.uncertain, {
@@ -652,6 +676,49 @@ function DemaisPosicoes({
               )}
             </div>
           ))}
+        </div>
+      </details>
+    </Modulo>
+  )
+}
+
+/**
+ * As doze casas, recolhidas como as demais posições.
+ *
+ * O mapa e os cartões falam em "casa 4" e "casa 7", e para quem não sabe
+ * astrologia isso é um número. Aqui cada uma diz que área da vida ela é.
+ */
+function GuiaDasCasas({ t, casas }: { t: Record<string, string>; casas: Casas }) {
+  return (
+    <Modulo className="px-6 sm:px-7">
+      <details className="group">
+        <summary className="flex items-center gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+          <span className="shrink-0 text-white/25 group-hover:text-white/45 text-[12px] uppercase tracking-[0.22em] font-light transition-colors">
+            {t.housesGuide}
+          </span>
+          <span className="hidden sm:block flex-1 truncate text-white/25 text-[14px] font-light group-open:invisible">
+            {t.housesGuideHint}
+          </span>
+          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[14px] transition-transform duration-200 group-open:rotate-180">
+            <Seta tipo="chevron" />
+          </span>
+        </summary>
+
+        <div className="pb-6">
+          <p className="text-white/50 text-[15px] leading-relaxed font-light max-w-2xl">{t.housesGuideLead}</p>
+          <dl className="mt-5 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+            {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((n) =>
+              casas[n] ? (
+                <div key={n}>
+                  <dt className="text-[15px]">
+                    <span className="text-white/35 tabular-nums">{maiuscula(fmt(t.house, { n }))}</span>
+                    <span className="text-white/80 font-light"> · {casas[n].area}</span>
+                  </dt>
+                  <dd className="text-white/40 text-[14px] leading-relaxed font-light mt-1">{casas[n].effect}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
         </div>
       </details>
     </Modulo>
@@ -671,17 +738,20 @@ function Relacao({
   principal,
   className,
   t,
+  casas,
   locale,
 }: {
   c: Interconexao
   principal: boolean
   className: string
   t: Record<string, string>
+  casas: Casas
   locale: string
 }) {
-  const signos = SIGNOS[locale as keyof typeof SIGNOS]
-  const nomes = CORPOS[locale as keyof typeof CORPOS]
-  const aspectos = ASPECTOS[locale as keyof typeof ASPECTOS]
+  const loc = locale as keyof typeof SIGNOS
+  const signos = SIGNOS[loc]
+  const nomes = CORPOS[loc]
+  const aspectos = ASPECTOS[loc]
 
   const posicao = (lon: number) => `${grauMinuto(lon)} ${signos[indiceDoSigno(lon)]}`
   const nomeDoPonto = (id: string) => {
@@ -716,6 +786,33 @@ function Relacao({
           c.aplicativo ? t.applying : t.separating,
         ]
 
+  // O QUE CADA TERMO QUER DIZER. A síntese fala das forças sem a técnica; é
+  // aqui, ao lado dos números, que o nome do aspecto, a casa e o movimento
+  // ganham tradução. As definições são fixas e vêm do código, nunca do modelo.
+  const casaTocada = c.tipo === "posicao" ? c.casa : c.ponto.tipo === "corpo" ? c.ponto.casa : null
+  const glossario: Array<{ termo: string; sentido: string }> = []
+  if (c.tipo === "aspecto" && GLOSA_ASPECTO[loc][c.aspecto]) {
+    glossario.push({ termo: maiuscula(aspectos[c.aspecto]), sentido: maiuscula(GLOSA_ASPECTO[loc][c.aspecto]) })
+  }
+  if (c.ponto.tipo === "angulo" && !c.ponto.id.startsWith("casa") && NUCLEO[loc][c.ponto.id]) {
+    glossario.push({ termo: nomeDoPonto(c.ponto.id), sentido: maiuscula(NUCLEO[loc][c.ponto.id]) })
+  }
+  if (casaTocada !== null && casas[casaTocada]) {
+    glossario.push({
+      termo: `${maiuscula(fmt(t.house, { n: casaTocada }))} · ${casas[casaTocada].area}`,
+      sentido: casas[casaTocada].effect,
+    })
+  }
+  if (c.tipo === "aspecto") {
+    glossario.push({
+      termo: maiuscula(c.aplicativo ? t.applying : t.separating),
+      sentido: maiuscula(c.aplicativo ? GLOSA_MOVIMENTO[loc].aplicativo : GLOSA_MOVIMENTO[loc].separativo),
+    })
+  }
+  if (c.retroTransito) {
+    glossario.push({ termo: `℞ ${maiuscula(RETROGRADO[loc].retrograde)}`, sentido: maiuscula(GLOSA_MOVIMENTO[loc].retrogrado) })
+  }
+
   return (
     <Modulo className={`p-6 sm:p-7 ${className}`}>
       <h3
@@ -732,6 +829,21 @@ function Relacao({
       >
         {fatos.join(" · ")}
       </p>
+
+      {glossario.length > 0 && (
+        <dl
+          className={`mt-5 pt-5 border-t border-white/[0.07] grid gap-x-8 gap-y-3.5 ${
+            principal ? "lg:grid-cols-2" : ""
+          }`}
+        >
+          {glossario.map((g) => (
+            <div key={g.termo}>
+              <dt className="text-white/70 text-[14px]">{g.termo}</dt>
+              <dd className="text-white/45 text-[14px] leading-relaxed font-light mt-0.5">{g.sentido}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </Modulo>
   )
 }

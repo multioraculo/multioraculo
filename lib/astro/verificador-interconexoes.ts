@@ -36,6 +36,13 @@
  *     é decoração que o leitor nunca vê; e não traz falsa precisão, que é
  *     hora, data ou dia da semana que nenhum cálculo produziu.
  *
+ *  9. JARGÃO NO TEXTO CORRIDO. A síntese fala das forças, não da técnica:
+ *     nome de aspecto, signo, número de casa, grau, orbe e retrógrado ficam
+ *     nos cartões embaixo dela, que mostram e explicam cada termo. Uma síntese
+ *     que lista "Urano retrógrado em Gêmeos em conjunção com o Ascendente na
+ *     casa 1" repete o cartão e fica ilegível para quem não sabe astrologia.
+ *     Vale só para a síntese, que é o que se lê; as afirmações são bastidor.
+ *
  * O que ele NÃO faz: julgar se a interpretação é boa. Isso não é verificável, e
  * fingir que é seria pior do que não tentar.
  */
@@ -88,6 +95,48 @@ function chegouNaSintese(trecho: string, sintese: string): boolean {
   return palavras.filter((p) => alvo.includes(p)).length / palavras.length >= PISO_DE_PRESENCA
 }
 
+/** Os termos que ficam nos cartões e não entram no texto corrido. */
+const JARGAO: Record<Locale, RegExp[]> = {
+  pt: [
+    /\bcasas?\s+\d+/i,
+    /\d+\s*ª\s*casa\b/i,
+    /(^|[^\p{L}])(primeira|segunda|terceira|quarta|quinta|sexta|sétima|oitava|nona|décima|décima primeira|décima segunda)\s+casa\b/iu,
+    /\bretrógrad\w*/i,
+    /\borbes?\b/i,
+    /\d+\s*°/,
+    /\bgraus?\b/i,
+    /\b(aplicativ|separativ)\w*/i,
+  ],
+  en: [
+    /\bhouses?\s+\d+/i,
+    /\b(\d+(st|nd|rd|th)|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth)\s+house\b/i,
+    /\bretrograde\b/i,
+    /\borbs?\b/i,
+    /\d+\s*°/,
+    /\bdegrees?\b/i,
+  ],
+  es: [
+    /\bcasas?\s+\d+/i,
+    /(^|[^\p{L}])(primera|segunda|tercera|cuarta|quinta|sexta|séptima|octava|novena|décima|undécima|duodécima)\s+casa\b/iu,
+    /\bretrógrad\w*/i,
+    /\borbes?\b/i,
+    /\d+\s*°/,
+    /\bgrados?\b/i,
+    /\b(aplicativ|separativ)\w*/i,
+  ],
+}
+
+/** Os ângulos do mapa, que nomeiam um ponto da pessoa tanto quanto um planeta. */
+const ANGULOS: Record<Locale, string[]> = {
+  pt: ["Ascendente", "Meio do Céu"],
+  en: ["Ascendant", "Midheaven"],
+  es: ["Ascendente", "Medio Cielo"],
+}
+
+/** Nome próprio com a maiúscula: "Leo" é signo, "leo" é verbo em espanhol. */
+const nomeia = (texto: string, nome: string) =>
+  new RegExp(`(^|[^\\p{L}])${nome}($|[^\\p{L}])`, "u").test(texto)
+
 const palavras = (t: string) => t.trim().split(/\s+/).filter(Boolean).length
 const frases = (t: string) => t.split(/(?<=[.!?])\s+/).map((f) => f.trim()).filter(Boolean).length
 
@@ -138,11 +187,24 @@ export function verificarSintesePessoal(params: {
 
   // os nomes que ESTES fatos contêm: é a única lista de coisas que o texto pode
   // nomear, e serve tanto para a regra do genérico quanto para ancorar exemplos
-  const nomesDosFatos = [
-    ...Object.values(CORPOS[locale]),
-    ...SIGNOS[locale],
-    ...Object.values(ASPECTOS[locale]),
-  ].filter((n) => citaNosFatos(n))
+  // Signo e aspecto saíram desta lista: o texto corrido não os diz mais (regra
+  // 9), então quem ancora um exemplo ou prova que a síntese não é genérica são
+  // as forças e os pontos da pessoa.
+  const nomesDosFatos = [...Object.values(CORPOS[locale]), ...ANGULOS[locale]].filter((n) => citaNosFatos(n))
+
+  // ── 9 · jargão fora do texto corrido ──────────────────────────────────────
+  for (const nome of Object.values(ASPECTOS[locale])) {
+    if (contem(sintese, nome)) {
+      violacoes.push(`a síntese nomeia o aspecto "${nome}": o nome fica no cartão, o texto diz a natureza do encontro`)
+    }
+  }
+  for (const nome of SIGNOS[locale]) {
+    if (nomeia(sintese, nome)) violacoes.push(`a síntese nomeia o signo ${nome}: o signo fica no cartão`)
+  }
+  for (const r of JARGAO[locale]) {
+    const achou = sintese.match(r)
+    if (achou) violacoes.push(`a síntese usa o termo técnico "${achou[0].trim()}": ele fica no cartão, não no texto corrido`)
+  }
 
   // ── 2 · toda afirmação declara um fato que existe ─────────────────────────
   if (afirmacoes.length < AFIRMACOES.min || afirmacoes.length > AFIRMACOES.max) {

@@ -81,6 +81,32 @@ function parteA() {
     const v = verificarSintesePessoal({ bruto, fatos, locale: "pt" })
     confere(`recusa: ${nome}`, !v.ok, "foi aceita")
   }
+
+  // O TEXTO CORRIDO FALA DAS FORÇAS; o nome técnico fica no cartão. A base é
+  // uma síntese que passa, e cada caso acrescenta só o termo, para a recusa
+  // vir dele e não de outra regra qualquer.
+  const nomeReal = principal?.texto.split(/[ ,]/)[0] ?? ""
+  const limpa = {
+    afirmacoes: [
+      { texto: `${nomeReal} chega perto de um ponto seu`, fato: principal?.id ?? "f1" },
+      { texto: "e outra coisa se afasta", fato: fatos[1]?.id ?? "f1" },
+    ],
+    sintese: `${nomeReal} chega perto de um ponto seu hoje. E outra coisa se afasta.`,
+  }
+  const vl = verificarSintesePessoal({ bruto: limpa, fatos, locale: "pt" })
+  confere("jargão: a base sem termo técnico passa", vl.ok, vl.ok ? "" : vl.violacoes.join(" | "))
+  for (const jargao of ["em conjunção", "na sua casa 7", "na sétima casa", "em Virgem", "retrógrado", "a 5,2°", "com orbe de 2"]) {
+    const v = verificarSintesePessoal({
+      bruto: { ...limpa, sintese: `${nomeReal} chega perto de um ponto seu hoje, ${jargao}. E outra coisa se afasta.` },
+      fatos,
+      locale: "pt",
+    })
+    confere(
+      `recusa: jargão na síntese "${jargao}"`,
+      !v.ok && v.violacoes.some((x) => /termo técnico|nomeia o (aspecto|signo)/.test(x)),
+      v.ok ? "foi aceita" : v.violacoes.join(" | "),
+    )
+  }
 }
 
 // ── B · o molde passa no próprio verificador ────────────────────────────────
@@ -227,6 +253,10 @@ function parteE() {
     !/sem nomear a t[ée]cnica/i.test(user),
     "voltou a frase que o modelo lê como 'não cite planeta'",
   )
+  // e o outro lado: o prompt não pode mandar nomear o que o verificador recusa
+  confere("prompt: não manda nomear signos", !/NOMEIE[^\n]*signos/.test(user), "o prompt pede signo e o verificador recusa")
+  confere("prompt: tira os nomes técnicos do texto corrido", /nomes técnicos ficam FORA/.test(user), "a instrução sumiu")
+  confere("prompt: dá o sentido de cada força", /O QUE CADA PEÇA SIGNIFICA/.test(user), "o bloco das forças sumiu")
 }
 
 // ── C · o fluxo inteiro ─────────────────────────────────────────────────────

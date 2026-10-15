@@ -224,6 +224,110 @@ export const FUNCAO_VERBOS: Record<Locale, Record<Corpo, string[]>> = {
   },
 }
 
+/**
+ * O que cada força É, numa frase que se lê sem saber astrologia.
+ *
+ * Serve à síntese das Interconexões, que fala das forças e não da técnica: o
+ * modelo recebe estas palavras como ponto de partida, e o molde determinístico
+ * as usa como estão. Por isso cada uma encaixa nas duas posições do molde:
+ * "Hoje, Urano traz {…}" e "encontra seu Ascendente, que é {…}".
+ */
+export const NUCLEO: Record<Locale, Record<string, string>> = {
+  pt: {
+    sun: "o centro, a direção e a consciência de si",
+    moon: "o afeto, a memória e a necessidade de se sentir seguro",
+    mercury: "o pensamento, a palavra e a capacidade de distinguir",
+    venus: "o valor, o gosto e o jeito de criar vínculo",
+    mars: "a ação, o desejo e a coragem de se afirmar",
+    jupiter: "a ampliação, o sentido e a confiança",
+    saturn: "o limite, a estrutura e o compromisso com o que é real",
+    uranus: "a ruptura, o imprevisto e a liberdade",
+    neptune: "a imaginação, a sensibilidade e o que perde o contorno",
+    pluto: "a profundidade, a intensidade e a transformação",
+    asc: "o jeito como você se apresenta e chega ao mundo",
+    mc: "a direção pública, o trabalho visível e o lugar que você quer ocupar",
+  },
+  en: {
+    sun: "the centre, direction and awareness of oneself",
+    moon: "feeling, memory and the need to feel safe",
+    mercury: "thought, words and the ability to tell things apart",
+    venus: "worth, taste and the way bonds are made",
+    mars: "action, desire and the courage to assert oneself",
+    jupiter: "widening, meaning and trust",
+    saturn: "limits, structure and commitment to what is real",
+    uranus: "rupture, the unexpected and freedom",
+    neptune: "imagination, sensitivity and what loses its outline",
+    pluto: "depth, intensity and transformation",
+    asc: "the way you present yourself and arrive in the world",
+    mc: "your public direction, visible work and the place you want to hold",
+  },
+  es: {
+    sun: "el centro, la dirección y la conciencia de sí",
+    moon: "el afecto, la memoria y la necesidad de sentirse a salvo",
+    mercury: "el pensamiento, la palabra y la capacidad de distinguir",
+    venus: "el valor, el gusto y la manera de crear vínculo",
+    mars: "la acción, el deseo y el coraje de afirmarse",
+    jupiter: "la ampliación, el sentido y la confianza",
+    saturn: "el límite, la estructura y el compromiso con lo real",
+    uranus: "la ruptura, lo imprevisto y la libertad",
+    neptune: "la imaginación, la sensibilidad y lo que pierde el contorno",
+    pluto: "la profundidad, la intensidad y la transformación",
+    asc: "la manera como te presentas y llegas al mundo",
+    mc: "la dirección pública, el trabajo visible y el lugar que quieres ocupar",
+  },
+}
+
+/**
+ * O terreno da vida de cada casa, em poucas palavras e sem o número.
+ *
+ * É o que a síntese pode dizer no lugar de "casa 7": o texto corrido fala de
+ * parceria, e o cartão embaixo mostra que isso vem da casa 7.
+ */
+export const TERRENO_DA_CASA: Record<Locale, string[]> = {
+  pt: [
+    "presença, corpo e jeito de se colocar",
+    "recursos e o que se valoriza",
+    "conversa, aprendizado e dia a dia",
+    "casa, família e vida privada",
+    "criação, prazer e namoro",
+    "rotina, trabalho do dia a dia e saúde prática",
+    "parceria e vínculos a dois",
+    "intimidade, o que é partilhado e o que termina",
+    "estudo, viagens e busca de sentido",
+    "trabalho visível, posição e metas",
+    "amigos, grupos e projetos coletivos",
+    "recolhimento e o que fica nos bastidores",
+  ],
+  en: [
+    "presence, body and how one shows up",
+    "resources and what one values",
+    "conversation, learning and daily life",
+    "home, family and private life",
+    "creation, pleasure and romance",
+    "routine, daily work and practical health",
+    "partnership and one-to-one bonds",
+    "intimacy, what is shared and what ends",
+    "study, travel and the search for meaning",
+    "visible work, standing and goals",
+    "friends, groups and shared projects",
+    "retreat and what stays behind the scenes",
+  ],
+  es: [
+    "presencia, cuerpo y manera de colocarse",
+    "recursos y lo que se valora",
+    "conversación, aprendizaje y día a día",
+    "casa, familia y vida privada",
+    "creación, placer y romance",
+    "rutina, trabajo diario y salud práctica",
+    "pareja y vínculos de a dos",
+    "intimidad, lo compartido y lo que termina",
+    "estudio, viajes y búsqueda de sentido",
+    "trabajo visible, posición y metas",
+    "amigos, grupos y proyectos colectivos",
+    "recogimiento y lo que queda entre bastidores",
+  ],
+}
+
 export const SIMBOLO_ASPECTO: Record<string, string> = {
   conjunction: "☌",
   opposition: "☍",
