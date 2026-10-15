@@ -32,8 +32,8 @@ import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
 import SinteseInterconexoes from "@/components/sintese-interconexoes"
-import { ASPECTOS, CORPOS, RETROGRADO, SIGNOS } from "@/lib/astro/nomes"
-import { GLOSA_ASPECTO, GLOSA_MOVIMENTO, NUCLEO } from "@/lib/astro/simbolos"
+import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
+import { explicarInterconexao } from "@/lib/astro/explicar-interconexao"
 import type { MapaNatal } from "@/lib/astro/mapa"
 import type { Interconexao } from "@/lib/astro/interconexoes"
 import Seta from "@/components/seta"
@@ -786,32 +786,10 @@ function Relacao({
           c.aplicativo ? t.applying : t.separating,
         ]
 
-  // O QUE CADA TERMO QUER DIZER. A síntese fala das forças sem a técnica; é
-  // aqui, ao lado dos números, que o nome do aspecto, a casa e o movimento
-  // ganham tradução. As definições são fixas e vêm do código, nunca do modelo.
-  const casaTocada = c.tipo === "posicao" ? c.casa : c.ponto.tipo === "corpo" ? c.ponto.casa : null
-  const glossario: Array<{ termo: string; sentido: string }> = []
-  if (c.tipo === "aspecto" && GLOSA_ASPECTO[loc][c.aspecto]) {
-    glossario.push({ termo: maiuscula(aspectos[c.aspecto]), sentido: maiuscula(GLOSA_ASPECTO[loc][c.aspecto]) })
-  }
-  if (c.ponto.tipo === "angulo" && !c.ponto.id.startsWith("casa") && NUCLEO[loc][c.ponto.id]) {
-    glossario.push({ termo: nomeDoPonto(c.ponto.id), sentido: maiuscula(NUCLEO[loc][c.ponto.id]) })
-  }
-  if (casaTocada !== null && casas[casaTocada]) {
-    glossario.push({
-      termo: `${maiuscula(fmt(t.house, { n: casaTocada }))} · ${casas[casaTocada].area}`,
-      sentido: casas[casaTocada].effect,
-    })
-  }
-  if (c.tipo === "aspecto") {
-    glossario.push({
-      termo: maiuscula(c.aplicativo ? t.applying : t.separating),
-      sentido: maiuscula(c.aplicativo ? GLOSA_MOVIMENTO[loc].aplicativo : GLOSA_MOVIMENTO[loc].separativo),
-    })
-  }
-  if (c.retroTransito) {
-    glossario.push({ termo: `℞ ${maiuscula(RETROGRADO[loc].retrograde)}`, sentido: maiuscula(GLOSA_MOVIMENTO[loc].retrogrado) })
-  }
+  // O QUE ISSO QUER DIZER PARA VOCÊ. A definição solta do ângulo ("duas forças
+  // sem nada em comum") não dizia nada a quem lê: a frase liga o que o céu traz
+  // ao que aquilo é na pessoa, e diz em que área da vida tende a aparecer.
+  const explicacao = explicarInterconexao(c, loc, (n) => casas[n]?.area)
 
   return (
     <Modulo className={`p-6 sm:p-7 ${className}`}>
@@ -822,28 +800,24 @@ function Relacao({
       >
         {titulo}
       </h3>
+      {explicacao.sentido && (
+        <div className={principal ? "max-w-3xl" : ""}>
+          <p className="text-white/25 text-[12px] uppercase tracking-[0.18em] font-light mt-4">{t.cardMeaning}</p>
+          <p className="text-white/80 text-[15.5px] leading-relaxed font-light mt-2">{explicacao.sentido}</p>
+          {explicacao.momento && (
+            <p className="text-white/50 text-[14.5px] leading-relaxed font-light mt-3">{explicacao.momento}</p>
+          )}
+        </div>
+      )}
+
+      {/* os números ficam embaixo: sustentam a leitura, mas não são ela */}
       <p
-        className={`text-white/40 text-[14px] leading-relaxed font-light mt-3 tabular-nums ${
+        className={`text-white/35 text-[13.5px] leading-relaxed font-light mt-5 pt-4 border-t border-white/[0.07] tabular-nums ${
           principal ? "" : "max-w-sm"
         }`}
       >
         {fatos.join(" · ")}
       </p>
-
-      {glossario.length > 0 && (
-        <dl
-          className={`mt-5 pt-5 border-t border-white/[0.07] grid gap-x-8 gap-y-3.5 ${
-            principal ? "lg:grid-cols-2" : ""
-          }`}
-        >
-          {glossario.map((g) => (
-            <div key={g.termo}>
-              <dt className="text-white/70 text-[14px]">{g.termo}</dt>
-              <dd className="text-white/45 text-[14px] leading-relaxed font-light mt-0.5">{g.sentido}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
     </Modulo>
   )
 }

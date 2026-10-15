@@ -544,6 +544,7 @@ export const es: Dictionary = {
     housesGuide: "Qué es cada casa",
     housesGuideHint: "Las doce áreas de la vida en que se divide la carta",
     housesGuideLead: "La carta se divide en doce casas, y cada una es un área de la vida. La casa en que está un planeta dice en qué terreno actúa; cuando el cielo de hoy toca ese planeta, es en ese terreno donde ocurre el encuentro.",
+    cardMeaning: "Qué significa esto para ti",
   },
 
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por

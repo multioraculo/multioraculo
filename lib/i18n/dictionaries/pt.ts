@@ -556,6 +556,7 @@ export const pt = {
     housesGuide: "O que é cada casa",
     housesGuideHint: "As doze áreas da vida em que o mapa se divide",
     housesGuideLead: "O mapa é dividido em doze casas, e cada uma é uma área da vida. A casa em que um planeta está diz em que terreno ele age; quando o céu de hoje toca esse planeta, é nesse terreno que o encontro acontece.",
+    cardMeaning: "O que isso quer dizer para você",
   },
 
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por

@@ -544,6 +544,7 @@ export const en: Dictionary = {
     housesGuide: "What each house means",
     housesGuideHint: "The twelve areas of life the chart is divided into",
     housesGuideLead: "The chart is divided into twelve houses, and each one is an area of life. The house a planet sits in tells you where it acts; when today's sky touches that planet, that is where the meeting happens.",
+    cardMeaning: "What this means for you",
   },
 
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por
