@@ -22,7 +22,8 @@
  */
 import { useState, type ReactNode } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { GlifoPlaneta } from "@/components/astro-wheel"
+import { GlifoPlaneta, GlifoSigno } from "@/components/astro-wheel"
+import { Elemento, Modo } from "@/components/elementos-ilustracao"
 import Seta from "@/components/seta"
 import { ASPECTOS, CORPOS, LIGACAO_ASPECTO, SIGNOS } from "@/lib/astro/nomes"
 import { temaDoContato } from "@/lib/astro/temas-sinastria"
@@ -154,10 +155,10 @@ export default function SinastriaResultado({
           <>
           <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
             {overlaysAB.length > 0 && (
-              <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="AB" locale={locale} />
+              <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} subtitulo={fmt(s.housesABSub, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="AB" locale={locale} />
             )}
             {overlaysBA.length > 0 && (
-              <GrupoDeCasas titulo={fmt(s.housesBA, { nome: nomeB })} fatos={[...overlaysBA].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="BA" locale={locale} />
+              <GrupoDeCasas titulo={fmt(s.housesBA, { nome: nomeB })} subtitulo={fmt(s.housesBASub, { nome: nomeB })} fatos={[...overlaysBA].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="BA" locale={locale} />
             )}
           </div>
           <p className="text-white/35 text-[13px] font-light mt-4">{s.housesTap}</p>
@@ -328,6 +329,7 @@ function Contato({
   s: S
 }) {
   const categoria = f.categoria === "harmonico" ? s.catHarmonic : f.categoria === "discordante" ? s.catDiscordant : s.catVariable
+  const [aberto, setAberto] = useState(destaque)
   const detalhe = [
     fmt(s.orb, { orbe: decimal(f.orbe), limite: decimal(f.orbeLimite) }),
     f.categoria !== "variavel" && f.tambemVariavel ? `${categoria}, ${s.alsoVariable}` : categoria,
@@ -346,7 +348,20 @@ function Contato({
         <Ponta id={f.corpoB} nome={corpo(f.corpoB)} dono="" retro={f.retroB === "retrogrado"} destaque={destaque} lado="direita" s={s} />
       </div>
       <p className="text-white/35 text-[13px] font-light mt-3 text-center tabular-nums">{detalhe}</p>
-      <Significado f={f} corpo={corpo} aspectos={aspectos} s={s} />
+      <div className="mt-3 text-center">
+        <button
+          type="button"
+          aria-expanded={aberto}
+          onClick={() => setAberto((v) => !v)}
+          className="group inline-flex items-center gap-1.5 py-1 text-white/50 hover:text-white/85 text-[13px] font-light cursor-pointer transition-colors"
+        >
+          {s.contactMeaning}
+          <span className={`text-[12px] transition-transform duration-200 ${aberto ? "rotate-180" : ""}`}>
+            <Seta tipo="chevron" />
+          </span>
+        </button>
+      </div>
+      {aberto && <Significado f={f} corpo={corpo} aspectos={aspectos} s={s} />}
     </li>
   )
 }
@@ -359,20 +374,19 @@ function Significado({ f, corpo, aspectos, s }: { f: FatoAspecto; corpo: (id: st
   const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
   const asp = (s.aspectGloss as Record<string, string>)[f.aspecto] ?? ""
   return (
-    <div className="mt-4 rounded-lg border border-white/12 bg-white/[0.04] px-4 sm:px-5 py-3.5">
-      <p className="text-white/35 text-[11px] uppercase tracking-[0.2em] font-light text-center">{s.contactMeaning}</p>
-      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-6 mt-3">
-        <div className="min-w-0 text-left">
+    <div className="mt-2 max-w-md mx-auto rounded-lg border border-white/12 bg-white/[0.04] px-4 py-3">
+      {/* os dois lados bem juntos, separados por uma linha fina: o corpo e o que ele representa, um ao lado do outro */}
+      <div className="grid grid-cols-2 divide-x divide-white/15">
+        <div className="min-w-0 pr-4">
           <p className="text-white/90 text-[15px] font-medium">{corpo(f.corpoA)}</p>
           <p className="text-white/55 text-[13.5px] font-light leading-snug mt-0.5">{maiuscula(papel(f.corpoA))}</p>
         </div>
-        <span className="self-stretch w-px bg-white/15" aria-hidden="true" />
-        <div className="min-w-0 text-right">
+        <div className="min-w-0 pl-4">
           <p className="text-white/90 text-[15px] font-medium">{corpo(f.corpoB)}</p>
           <p className="text-white/55 text-[13.5px] font-light leading-snug mt-0.5">{maiuscula(papel(f.corpoB))}</p>
         </div>
       </div>
-      <p className="text-white/65 text-[14px] font-light leading-relaxed mt-3 pt-3 border-t border-white/10 text-center">
+      <p className="text-white/65 text-[14px] font-light leading-relaxed mt-3 pt-3 border-t border-white/10">
         <strong className="text-white/90 font-medium">{maiuscula(aspectos[f.aspecto])}:</strong> {asp}
       </p>
     </div>
@@ -402,27 +416,27 @@ function Ponta({ id, nome, dono, retro, destaque, lado, s }: { id: string; nome:
 
 // ── casas ───────────────────────────────────────────────────────────────────
 
-const FEMININOS = new Set(["moon", "venus"])
-const ARTIGO_PT: Record<string, string> = { sun: "o", moon: "a", mercury: "o", venus: "a" }
-
 /**
- * A frase do repertório para um planeta numa casa ("Quem tem o Sol reflete a essência de si em sintonia com a forma
- * como quem tem a casa se apresenta ao mundo") dita para as DUAS PESSOAS: "Seu Sol reflete ... como Camila se apresenta
- * ao mundo". O repertório está só em português, e para os outros idiomas a tela mostra o que o planeta representa.
+ * A frase do repertório para um planeta numa casa, com a escrita do próprio repertório ("Quem tem o Sol reflete a
+ * essência de si em sintonia com a forma como quem tem a casa se apresenta ao mundo") e os dois papéis em destaque.
+ * Não reescreve a frase (reescrever para "você" e para o nome quebrava a gramática em dezenas delas): quem é quem vem
+ * dito logo abaixo, na legenda. O repertório está só em português.
  */
-function fraseDoOverlay(base: string, f: FatoOverlay, direcao: "AB" | "BA", nome: string, corpo: (id: string) => string): string {
-  const casaDe = direcao === "AB" ? nome : "você"
-  const nomeDoPlaneta = corpo(f.planeta)
-  const t = base
-    .replace(/[Qq]uem tem (?:o |a )?(?:Sol|Lua|Mercúrio|Vênus|Marte|Júpiter|Saturno|Urano|Netuno|Plutão)/, (_m: string, pos: number) => {
-      const quem =
-        direcao === "AB"
-          ? `${FEMININOS.has(f.planeta) ? "sua" : "seu"} ${nomeDoPlaneta}`
-          : `${ARTIGO_PT[f.planeta] ? `${ARTIGO_PT[f.planeta]} ` : ""}${nomeDoPlaneta} de ${nome}`
-      return pos === 0 ? maiuscula(quem) : quem
-    })
-    .replace(/quem tem a casa/gi, casaDe)
-  return maiuscula(t)
+function FraseDoOverlay({ base }: { base: string }) {
+  const partes = base.split(/(quem tem (?:o |a )?(?:Sol|Lua|Mercúrio|Vênus|Marte|Júpiter|Saturno|Urano|Netuno|Plutão)|quem tem a casa)/i)
+  return (
+    <>
+      {partes.map((t, i) =>
+        i % 2 === 1 ? (
+          <strong key={i} className="text-white/90 font-medium">
+            {i === 1 && partes[0] === "" ? maiuscula(t) : t}
+          </strong>
+        ) : (
+          t
+        ),
+      )}
+    </>
+  )
 }
 
 /**
@@ -431,6 +445,7 @@ function fraseDoOverlay(base: string, f: FatoOverlay, direcao: "AB" | "BA", nome
  */
 function GrupoDeCasas({
   titulo,
+  subtitulo,
   fatos,
   corpo,
   s,
@@ -439,6 +454,7 @@ function GrupoDeCasas({
   locale,
 }: {
   titulo: string
+  subtitulo: string
   fatos: FatoOverlay[]
   corpo: (id: string) => string
   s: S
@@ -454,7 +470,10 @@ function GrupoDeCasas({
   const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
   return (
     <div className="rounded-xl border border-white/10 bg-black/10 p-4 sm:p-5">
-      <p className="text-white/70 text-[14px] font-light pb-3 border-b border-white/20">{titulo}</p>
+      <div className="pb-3 border-b border-white/20">
+        <p className="text-white/90 text-[15px] font-medium">{titulo}</p>
+        <p className="text-white/50 text-[13.5px] font-light leading-snug mt-1">{subtitulo}</p>
+      </div>
       <ul>
         {casas.map(([casa, planetas]) => {
           const m = significados[String(casa)]
@@ -479,9 +498,19 @@ function GrupoDeCasas({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-white/90 text-[15px] font-medium">{corpo(f.planeta)}</span>
-                        <span className="block text-white/60 text-[14px] font-light leading-relaxed mt-0.5">
-                          {locale === "pt" && base ? fraseDoOverlay(base, f, direcao, nomeB, corpo) : maiuscula(papel(f.planeta))}
+                        <span className="block text-white/65 text-[14px] font-light leading-relaxed mt-0.5">
+                          {locale === "pt" && base ? <FraseDoOverlay base={base} /> : maiuscula(papel(f.planeta))}
                         </span>
+                        {locale === "pt" && base && (
+                          <span className="block text-white/60 text-[13px] font-light leading-snug mt-2 pt-2 border-t border-white/10">
+                            {fmt(s.houseWho, {
+                              corpo: corpo(f.planeta),
+                              a: direcao === "AB" ? s.whoYou : nomeB,
+                              n: f.casa,
+                              b: direcao === "AB" ? nomeB : s.whoYou,
+                            })}
+                          </span>
+                        )}
                       </span>
                     </li>
                   )
@@ -497,48 +526,58 @@ function GrupoDeCasas({
 
 // ── em comum ────────────────────────────────────────────────────────────────
 
+const ELEMENTO_DO_SIGNO = ["fire", "earth", "air", "water"]
+const MODO_DO_SIGNO = ["cardinal", "fixed", "mutable"]
+
 function EmComum({ fatos, nomeB, nomes, signos, s }: { fatos: FatoSemelhanca[]; nomeB: string; nomes: Record<string, string>; signos: string[]; s: S }) {
   if (fatos.length === 0) return <p className="text-white/45 text-[15px] leading-relaxed font-light max-w-lg">{s.commonNone}</p>
 
-  const elemento = (k: string) => maiuscula((s.elements as Record<string, string>)[k] ?? k)
-  const modo = (k: string) => maiuscula((s.modes as Record<string, string>)[k] ?? k)
+  const nomeElemento = (k: string) => maiuscula((s.elements as Record<string, string>)[k] ?? k)
+  const nomeModo = (k: string) => maiuscula((s.modes as Record<string, string>)[k] ?? k)
+  const sentidoElemento = (k: string) => (s.elementMeaning as Record<string, string>)[k] ?? ""
+  const sentidoModo = (k: string) => (s.modeMeaning as Record<string, string>)[k] ?? ""
   const tipo = (k: string) => (s.kinds as Record<string, string>)[k] ?? k
   const algumaIgual = fatos.some((f) => f.ressalvaDaFonte !== null)
 
-  /** `a` e `b` são os dois lados; `junto` é o valor único, quando os dois têm o mesmo (o mesmo signo). */
-  const linhas = fatos.map((f): { f: FatoSemelhanca; rotulo: string; a?: string; b?: string; junto?: string } => {
-    if (f.dimensao === "elemento") return { f, rotulo: s.dimElement, a: elemento(f.padraoA), b: elemento(f.padraoB) }
-    if (f.dimensao === "modo") return { f, rotulo: s.dimMode, a: modo(f.padraoA), b: modo(f.padraoB) }
-    if (f.dimensao === "elemento_do_sol") return { f, rotulo: s.dimSunElement, a: elemento(f.padraoA), b: elemento(f.padraoB) }
-    const [c, i] = f.padraoA.split(":")
-    return { f, rotulo: fmt(s.dimSign, { corpo: nomes[c] ?? c }), junto: signos[Number(i)] ?? "" }
-  })
+  type Lado = { quem: string; nome: string; sentido: string; gravura: ReactNode }
+  const elemento = (quem: string, k: string): Lado => ({ quem, nome: nomeElemento(k), sentido: sentidoElemento(k), gravura: <Elemento id={k} tamanho={46} /> })
+  const modo = (quem: string, k: string): Lado => ({ quem, nome: nomeModo(k), sentido: sentidoModo(k), gravura: <Modo id={k} tamanho={46} /> })
 
-  const Lado = ({ quem, valor, alinhar }: { quem: string; valor: string; alinhar: "left" | "right" | "center" }) => (
-    <div className={`px-4 sm:px-5 py-3.5 ${alinhar === "right" ? "text-right" : alinhar === "center" ? "text-center" : "text-left"}`}>
-      <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] font-light">{quem}</p>
-      <p className="text-white instrument italic text-[22px] leading-tight mt-1">{valor}</p>
-    </div>
-  )
+  const linhas = fatos.map((f): { f: FatoSemelhanca; rotulo: string; lados: Lado[] } => {
+    if (f.dimensao === "elemento") return { f, rotulo: s.dimElement, lados: [elemento(s.whoYou, f.padraoA), elemento(nomeB, f.padraoB)] }
+    if (f.dimensao === "modo") return { f, rotulo: s.dimMode, lados: [modo(s.whoYou, f.padraoA), modo(nomeB, f.padraoB)] }
+    if (f.dimensao === "elemento_do_sol") return { f, rotulo: s.dimSunElement, lados: [elemento(s.whoYou, f.padraoA), elemento(nomeB, f.padraoB)] }
+    // o mesmo signo: o glifo do signo, e o elemento a que ele pertence, que é o que o torna comum
+    const [c, i] = f.padraoA.split(":")
+    const idx = Number(i)
+    const el = ELEMENTO_DO_SIGNO[idx % 4]
+    return {
+      f,
+      rotulo: fmt(s.dimSign, { corpo: nomes[c] ?? c }),
+      lados: [{ quem: s.bothShare, nome: signos[idx] ?? "", sentido: sentidoElemento(el), gravura: <GlifoSigno indice={idx} tamanho={40} /> }],
+    }
+  })
 
   return (
     <div>
-      <ul className="space-y-6">
-        {linhas.map(({ f, rotulo, a, b, junto }) => (
-          <li key={f.id}>
+      <ul className="space-y-7">
+        {linhas.map(({ f, rotulo, lados }) => (
+          <li key={f.id} className="max-w-xl">
             <p className="text-white/55 text-[12px] uppercase tracking-[0.18em] font-light">{rotulo}</p>
-            {/* dois lados, com uma divisória no meio: quem é quem fica claro sem ler a frase */}
-            <div className="mt-2.5 rounded-xl border border-white/15 bg-white/[0.04] overflow-hidden">
-              {junto !== undefined ? (
-                <Lado quem={s.bothShare} valor={junto} alinhar="center" />
-              ) : (
-                <div className="grid grid-cols-2 divide-x divide-white/15">
-                  <Lado quem={s.whoYou} valor={a ?? ""} alinhar="left" />
-                  <Lado quem={nomeB} valor={b ?? ""} alinhar="right" />
+            {/* os dois lados juntos, com uma divisória: a gravura, o nome e o que ele simboliza */}
+            <div className={`mt-2.5 rounded-xl border border-white/15 bg-white/[0.04] ${lados.length > 1 ? "grid sm:grid-cols-2 sm:divide-x divide-y sm:divide-y-0 divide-white/15" : ""}`}>
+              {lados.map((l) => (
+                <div key={l.quem} className="flex items-start gap-3.5 px-4 py-4">
+                  <span className="text-white/80 shrink-0">{l.gravura}</span>
+                  <div className="min-w-0">
+                    <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] font-light">{l.quem}</p>
+                    <p className="text-white instrument italic text-[22px] leading-tight mt-0.5">{l.nome}</p>
+                    <p className="text-white/55 text-[13.5px] font-light leading-snug mt-1.5">{l.sentido}</p>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-            <p className="text-white/35 text-[13px] font-light mt-2">
+            <p className="text-white/40 text-[13px] font-light mt-2">
               {[tipo(f.tipoDeSemelhanca), f.classe === "geracional" ? s.generational : null, f.condicional ? s.conditional : null].filter(Boolean).join(" · ")}
             </p>
           </li>
@@ -781,11 +820,6 @@ function resumoDe(
     { id: "variavel", rotulo: s.variable, n: v, pct: pct[2] },
   ]
   const temas = s.themes as Record<string, { name: string; meaning: string }>
-  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
-  const contato = (f: FatoAspecto) =>
-    fmt(s.contactPhrase, { a: corpo(f.corpoA), quem: s.whoYou, aspecto: aspectos[f.aspecto], liga: LIGACAO_ASPECTO[locale][f.aspecto] ?? "", b: corpo(f.corpoB), nome: nomeB })
-  const trecho = (f: FatoAspecto, modelo: string) =>
-    fmt(modelo, { contato: contato(f), a: papel(f.corpoA), b: papel(f.corpoB), gloss: (s.aspectGloss as Record<string, string>)[f.aspecto] ?? "" })
   /** Os temas de um tipo de contato, do que tem o contato mais exato ao que tem o menos exato. */
   const temasDe = (categoria: Grupo["id"]) => {
     const porTema = new Map<string, FatoAspecto[]>()
@@ -795,16 +829,19 @@ function resumoDe(
     }
     return [...porTema.entries()]
   }
-  /** Curto, de propósito: os temas onde o tipo se concentra, e o contato mais exato dele, com o que ele quer dizer. */
+  /**
+   * Curto, de propósito, e SEM repetir os contatos (a seção Contatos os mostra, com o que significam): os temas onde o
+   * tipo se concentra, e o que o primeiro deles quer dizer.
+   */
   const grupo = (id: Grupo["id"], titulo: string, lead: string): Grupo => {
     const temasDoTipo = temasDe(id)
-    const melhor = ordenados.find((f) => f.categoria === id)
+    const primeiro = temasDoTipo[0]
     return {
       id,
       titulo,
       lead,
-      foco: temasDoTipo.length ? fmt(s.proseFocus, { temas: temasDoTipo.slice(0, 3).map(([t]) => temas[t].name.toLowerCase()).join("; ") }) : "",
-      melhor: melhor ? trecho(melhor, s.proseBest) : "",
+      foco: temasDoTipo.length > 1 ? fmt(s.proseFocus, { temas: temasDoTipo.slice(0, 3).map(([t]) => temas[t].name.toLowerCase()).join("; ") }) : "",
+      melhor: primeiro ? fmt(s.proseTheme, { nome: temas[primeiro[0]].name, significado: temas[primeiro[0]].meaning }) : "",
     }
   }
   const grupos = [grupo("harmonico", s.summaryStrong, s.summaryStrongLead), grupo("discordante", s.summaryWeak, s.summaryWeakLead), grupo("variavel", s.summaryOpen, s.summaryOpenLead)].filter((g) => g.melhor)
