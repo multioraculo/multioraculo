@@ -17,6 +17,8 @@ import { DONOS } from "../lib/astro/payload-sinastria"
 import { gerarLeituraSinastria, haLeituraParaEscrever, pedidoDeReparoDaLeitura, prepararLeitura } from "../lib/astro/gerar-leitura-sinastria"
 import { VINCULOS } from "../lib/astro/sinastria-servico"
 import { amostra } from "./simular-selecao-sinastria"
+import { OVERLAYS_DAVISON } from "../lib/astro/davison/overlays"
+import { RESUMO_DO_OVERLAY } from "../lib/astro/davison/overlays-resumo"
 
 const falhas: string[] = []
 let conferidos = 0
@@ -31,6 +33,17 @@ const prepara = (i: number, vinculo: (typeof VINCULOS)[number] = "amizade", loca
   return { resultado, ...prepararLeitura(resultado, { locale, vinculo }) }
 }
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x))
+
+// ── 0 · o recorte dos overlays que a tela usa ───────────────────────────────
+confere("o resumo dos overlays tem uma frase por glosa", Object.keys(RESUMO_DO_OVERLAY).length === OVERLAYS_DAVISON.length)
+confere("o resumo dos overlays acompanha o repertório (a única exceção é a frase ajustada à mão)", OVERLAYS_DAVISON.every((g) => RESUMO_DO_OVERLAY[g.id] === g.funcaoIntroduzida || g.id === "mercury@casa5"))
+const SEM_DONO_DA_CASA = new Set(["neptune@casa2", "neptune@casa8"]) // o repertório não nomeia quem tem a casa nestas duas
+confere(
+  "toda frase de overlay diz quem tem o planeta, e quem tem a casa (menos duas), para a tela poder dar nome às duas pessoas",
+  Object.entries(RESUMO_DO_OVERLAY).every(
+    ([id, t]) => /[Qq]uem tem (?:o |a )?(Sol|Lua|Mercúrio|Vênus|Marte|Júpiter|Saturno|Urano|Netuno|Plutão)/.test(t) && (SEM_DONO_DA_CASA.has(id) || /quem tem a casa/i.test(t)),
+  ),
+)
 
 // ── 1 · o tema de um contato ────────────────────────────────────────────────
 confere("tema: Plutão manda sobre Sol", temaDoContato(["sun", "pluto"]) === "intensidade")

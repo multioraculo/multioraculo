@@ -363,7 +363,7 @@ export const en: Dictionary = {
         meaning: "where the bond touches what is deepest and most vulnerable, and how power between the two is shared",
       },
     },
-    housesTap: "Tap a house to see what it means.",
+    housesTap: "Tap a house number to see what it means.",
     bodyRole: {
       sun: "identity and will",
       moon: "feeling and need for security",
@@ -390,54 +390,18 @@ export const en: Dictionary = {
       quincunx: "they do not fit well and tend to call for adjustment.",
     },
     houseMeaning: {
-      "1": {
-        area: "Presence, body and how one shows up",
-        effect: "A planet here is felt right away, as part of who the person is.",
-      },
-      "2": {
-        area: "Resources and what one values",
-        effect: "A planet here touches what the person has, earns and considers theirs.",
-      },
-      "3": {
-        area: "Conversation, learning and everyday life",
-        effect: "A planet here shows up in daily exchange: in what is said, heard and learned together.",
-      },
-      "4": {
-        area: "Home, family and private life",
-        effect: "A planet here touches what is intimate and inner, the place where the person retreats.",
-      },
-      "5": {
-        area: "Creativity, pleasure and romance",
-        effect: "A planet here touches what the person does for the joy of it: creating, playing, enjoying, loving.",
-      },
-      "6": {
-        area: "Routine, daily work and practical health",
-        effect: "A planet here shows up in tasks and daily rhythm, more than in big moments.",
-      },
-      "7": {
-        area: "Partnership and one-to-one bonds",
-        effect: "A planet here touches the very space of the relationship: how the person unites and what they expect of the other.",
-      },
-      "8": {
-        area: "What is shared: intimacy and transformation",
-        effect: "A planet here touches what is most delicate: trust, shared resources, and what ends or changes inside.",
-      },
-      "9": {
-        area: "Study, travel and the search for meaning",
-        effect: "A planet here widens the view and the convictions, and pulls toward what is distant or new.",
-      },
-      "10": {
-        area: "Visible work, standing and goals",
-        effect: "A planet here touches the person's public life: what they want to achieve and how they are seen.",
-      },
-      "11": {
-        area: "Friends, groups and collective projects",
-        effect: "A planet here shows up in social life and in the ideals the person shares with others.",
-      },
-      "12": {
-        area: "Retreat and what stays behind the scenes",
-        effect: "A planet here acts discreetly, tied to what is not said or shown, and so is harder to see.",
-      },
+      "1": { area: "Presence, body and how one shows up", effect: "This is the house of who a person is at first sight: the body, the appearance and the way of arriving. What lands here is noticed by others at once and shapes the first impression." },
+      "2": { area: "Resources and what one values", effect: "This is the house of what a person has and values: money, belongings, talents and the sense of material security. What lands here touches what they consider theirs." },
+      "3": { area: "Conversation, learning and everyday life", effect: "This is the house of everyday communication: conversations, messages, basic study, the neighborhood and siblings. What lands here shows up in what is said and heard." },
+      "4": { area: "Home, family and private life", effect: "This is the house of home and roots: family, childhood, private life and the place where a person feels at home. What lands here touches what is intimate and little exposed." },
+      "5": { area: "Creativity, pleasure and romance", effect: "This is the house of pleasure and creation: what a person does for the joy of it, romances, fun and children. What lands here lights up spontaneity and light affection." },
+      "6": { area: "Routine, daily work and practical health", effect: "This is the house of routine and care: everyday work, habits, health and service to others. What lands here shows up in the tasks and rhythm of each day." },
+      "7": { area: "Partnership and one-to-one bonds", effect: "This is the house of the other: partnership, marriage, business partners and any one-to-one relationship. What lands here touches what a person seeks and expects from a bond." },
+      "8": { area: "What is shared: intimacy and transformation", effect: "This is the house of what is shared deeply: intimacy, trust, joint resources and the crises that transform. What lands here touches what is most delicate and deep." },
+      "9": { area: "Study, travel and the search for meaning", effect: "This is the house of the horizon: long journeys, higher studies, beliefs and the search for meaning. What lands here widens the view and pulls toward what is distant or new." },
+      "10": { area: "Visible work, standing and goals", effect: "This is the house of public life: career, reputation and long-term goals. What lands here shows in how a person wants to be seen and in what they want to achieve." },
+      "11": { area: "Friends, groups and collective projects", effect: "This is the house of friends and groups: social life, causes and projects made with others. What lands here touches ideals and the sense of belonging." },
+      "12": { area: "Retreat and what stays behind the scenes", effect: "This is the house of what stays behind the scenes: solitude, sleep, the unconscious and what is neither said nor shown. What lands here acts discreetly and is harder to see." },
     },
     summaryHousesAB: "Your planets gather in {nome}'s house {n} ({k} of {t}).",
     summaryHousesBA: "{nome}'s planets gather in your house {n} ({k} of {t}).",
@@ -499,6 +463,9 @@ export const en: Dictionary = {
     proseBest: "The most exact contact is {contato}, which sets {a} facing {b}: {gloss}",
     readingMore: "Read the full interpretation",
     readingLess: "Collapse the interpretation",
+    bodyIs: "is",
+    contactMeaning: "What it means",
+    bothShare: "Both",
   },
 
   interconexoes: {
@@ -574,6 +541,9 @@ export const en: Dictionary = {
     cancel: "Cancel",
     edit: "Correct my data",
     remove: "Delete my chart",
+    housesGuide: "What each house means",
+    housesGuideHint: "The twelve areas of life the chart is divided into",
+    housesGuideLead: "The chart is divided into twelve houses, and each one is an area of life. The house a planet sits in tells you where it acts; when today's sky touches that planet, that is where the meeting happens.",
   },
 
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por

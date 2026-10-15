@@ -375,7 +375,7 @@ export const pt = {
         meaning: "onde o vínculo toca o que é mais profundo e vulnerável, e como o poder entre os dois se distribui",
       },
     },
-    housesTap: "Toque numa casa para ver o que ela significa.",
+    housesTap: "Toque no número de uma casa para ver o que ela significa.",
     bodyRole: {
       sun: "identidade e vontade",
       moon: "sentimento e necessidade de segurança",
@@ -402,54 +402,18 @@ export const pt = {
       quincunx: "não se encaixam bem e tendem a pedir adaptação.",
     },
     houseMeaning: {
-      "1": {
-        area: "Presença, corpo e jeito de se colocar",
-        effect: "Um planeta aqui é sentido de imediato, como parte de quem a pessoa é.",
-      },
-      "2": {
-        area: "Recursos e o que se valoriza",
-        effect: "Um planeta aqui toca o que a pessoa tem, ganha e considera seu.",
-      },
-      "3": {
-        area: "Conversa, aprendizado e dia a dia",
-        effect: "Um planeta aqui aparece na troca cotidiana: no que se diz, se ouve e se aprende junto.",
-      },
-      "4": {
-        area: "Casa, família e vida privada",
-        effect: "Um planeta aqui toca o que é íntimo e de dentro, o lugar onde a pessoa se recolhe.",
-      },
-      "5": {
-        area: "Criação, prazer e namoro",
-        effect: "Um planeta aqui toca o que a pessoa faz por gosto: criar, brincar, se divertir, amar.",
-      },
-      "6": {
-        area: "Rotina, trabalho do dia a dia e saúde prática",
-        effect: "Um planeta aqui aparece nas tarefas e no ritmo diário, mais do que nos grandes momentos.",
-      },
-      "7": {
-        area: "Parceria e vínculos a dois",
-        effect: "Um planeta aqui toca justamente o espaço da relação: como a pessoa se une e o que espera do outro.",
-      },
-      "8": {
-        area: "O que é partilhado: intimidade e transformação",
-        effect: "Um planeta aqui toca o que é mais delicado: confiança, bens em comum, e o que termina ou muda por dentro.",
-      },
-      "9": {
-        area: "Estudo, viagens e busca de sentido",
-        effect: "Um planeta aqui amplia o olhar e as convicções, e puxa para o que é distante ou novo.",
-      },
-      "10": {
-        area: "Trabalho visível, posição e metas",
-        effect: "Um planeta aqui toca a vida pública da pessoa: o que ela quer conquistar e como é vista.",
-      },
-      "11": {
-        area: "Amigos, grupos e projetos coletivos",
-        effect: "Um planeta aqui aparece na vida social e nos ideais que a pessoa divide com outros.",
-      },
-      "12": {
-        area: "Recolhimento e o que fica nos bastidores",
-        effect: "Um planeta aqui age de forma discreta, ligado ao que não se diz ou não se mostra, e por isso é mais difícil de enxergar.",
-      },
+      "1": { area: "Presença, corpo e jeito de se colocar", effect: "É a casa de quem a pessoa é à primeira vista: o corpo, a aparência e o jeito de chegar. O que cai aqui é percebido de imediato pelos outros e molda a primeira impressão." },
+      "2": { area: "Recursos e o que se valoriza", effect: "É a casa do que a pessoa tem e do que valoriza: dinheiro, bens, talentos e o senso de segurança material. O que cai aqui mexe com o que ela considera seu." },
+      "3": { area: "Conversa, aprendizado e dia a dia", effect: "É a casa da comunicação cotidiana: conversas, recados, estudo básico, vizinhança e irmãos. O que cai aqui aparece no que se diz e no que se escuta." },
+      "4": { area: "Casa, família e vida privada", effect: "É a casa do lar e das raízes: a família, a infância, a vida privada e o lugar onde a pessoa se sente em casa. O que cai aqui toca o que é íntimo e pouco exposto." },
+      "5": { area: "Criação, prazer e namoro", effect: "É a casa do prazer e da criação: o que a pessoa faz por gosto, os romances, a diversão e os filhos. O que cai aqui acende a espontaneidade e o afeto leve." },
+      "6": { area: "Rotina, trabalho do dia a dia e saúde prática", effect: "É a casa da rotina e do cuidado: o trabalho cotidiano, os hábitos, a saúde e o serviço aos outros. O que cai aqui aparece nas tarefas e no ritmo de cada dia." },
+      "7": { area: "Parceria e vínculos a dois", effect: "É a casa do outro: parceria, casamento, sócios e qualquer relação a dois. O que cai aqui toca o que a pessoa busca e espera de um vínculo." },
+      "8": { area: "O que é partilhado: intimidade e transformação", effect: "É a casa do que se partilha a fundo: intimidade, confiança, recursos em comum e as crises que transformam. O que cai aqui toca o que há de mais delicado e profundo." },
+      "9": { area: "Estudo, viagens e busca de sentido", effect: "É a casa do horizonte: viagens longas, estudos superiores, crenças e a busca de sentido. O que cai aqui amplia a visão e puxa para o que é distante ou novo." },
+      "10": { area: "Trabalho visível, posição e metas", effect: "É a casa da vida pública: carreira, reputação e metas de longo prazo. O que cai aqui aparece em como a pessoa quer ser vista e no que quer conquistar." },
+      "11": { area: "Amigos, grupos e projetos coletivos", effect: "É a casa dos amigos e dos grupos: a vida social, as causas e os projetos que se fazem com outros. O que cai aqui toca os ideais e o sentimento de pertencer." },
+      "12": { area: "Recolhimento e o que fica nos bastidores", effect: "É a casa do que fica nos bastidores: a solidão, o sono, o inconsciente e aquilo que não se diz nem se mostra. O que cai aqui age de forma discreta e é mais difícil de enxergar." },
     },
     summaryHousesAB: "Seus planetas se concentram na casa {n} de {nome} ({k} de {t}).",
     summaryHousesBA: "Os planetas de {nome} se concentram na sua casa {n} ({k} de {t}).",
@@ -511,6 +475,9 @@ export const pt = {
     proseBest: "O contato mais exato é {contato}, que põe {a} diante de {b}: {gloss}",
     readingMore: "Ler a interpretação completa",
     readingLess: "Recolher a interpretação",
+    bodyIs: "é",
+    contactMeaning: "O que significa",
+    bothShare: "Os dois",
   },
 
   interconexoes: {
@@ -586,6 +553,9 @@ export const pt = {
     cancel: "Cancelar",
     edit: "Corrigir meus dados",
     remove: "Apagar meu mapa",
+    housesGuide: "O que é cada casa",
+    housesGuideHint: "As doze áreas da vida em que o mapa se divide",
+    housesGuideLead: "O mapa é dividido em doze casas, e cada uma é uma área da vida. A casa em que um planeta está diz em que terreno ele age; quando o céu de hoje toca esse planeta, é nesse terreno que o encontro acontece.",
   },
 
   // Fases da Lua: nome, três palavras-chave e uma frase simbólica fixa por

@@ -26,6 +26,7 @@ import { GlifoPlaneta } from "@/components/astro-wheel"
 import Seta from "@/components/seta"
 import { ASPECTOS, CORPOS, LIGACAO_ASPECTO, SIGNOS } from "@/lib/astro/nomes"
 import { temaDoContato } from "@/lib/astro/temas-sinastria"
+import { RESUMO_DO_OVERLAY } from "@/lib/astro/davison/overlays-resumo"
 import { SIMBOLO_ASPECTO } from "@/lib/astro/simbolos"
 import { fmt } from "@/lib/i18n"
 import type { Locale } from "@/lib/i18n/config"
@@ -153,10 +154,10 @@ export default function SinastriaResultado({
           <>
           <div className="grid gap-5 lg:grid-cols-2 lg:gap-6">
             {overlaysAB.length > 0 && (
-              <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} />
+              <GrupoDeCasas titulo={fmt(s.housesAB, { nome: nomeB })} fatos={[...overlaysAB].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="AB" locale={locale} />
             )}
             {overlaysBA.length > 0 && (
-              <GrupoDeCasas titulo={fmt(s.housesBA, { nome: nomeB })} fatos={[...overlaysBA].sort(porCorpo)} corpo={corpo} s={s} />
+              <GrupoDeCasas titulo={fmt(s.housesBA, { nome: nomeB })} fatos={[...overlaysBA].sort(porCorpo)} corpo={corpo} s={s} nomeB={nomeB} direcao="BA" locale={locale} />
             )}
           </div>
           <p className="text-white/35 text-[13px] font-light mt-4">{s.housesTap}</p>
@@ -345,8 +346,36 @@ function Contato({
         <Ponta id={f.corpoB} nome={corpo(f.corpoB)} dono="" retro={f.retroB === "retrogrado"} destaque={destaque} lado="direita" s={s} />
       </div>
       <p className="text-white/35 text-[13px] font-light mt-3 text-center tabular-nums">{detalhe}</p>
-      {destaque && <p className="text-white/55 text-[14px] font-light leading-relaxed mt-1.5 text-center max-w-lg mx-auto">{glosaDoContato(f, s)}</p>}
+      <Significado f={f} corpo={corpo} aspectos={aspectos} s={s} />
     </li>
+  )
+}
+
+/**
+ * O que o contato quer dizer, em caixa própria e LADO A LADO: o corpo da esquerda e o da direita, cada um com o que
+ * representa logo abaixo do nome, alinhados com o par que a abre; e, embaixo, o que o aspecto faz com os dois.
+ */
+function Significado({ f, corpo, aspectos, s }: { f: FatoAspecto; corpo: (id: string) => string; aspectos: Record<string, string>; s: S }) {
+  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
+  const asp = (s.aspectGloss as Record<string, string>)[f.aspecto] ?? ""
+  return (
+    <div className="mt-4 rounded-lg border border-white/12 bg-white/[0.04] px-4 sm:px-5 py-3.5">
+      <p className="text-white/35 text-[11px] uppercase tracking-[0.2em] font-light text-center">{s.contactMeaning}</p>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3 sm:gap-6 mt-3">
+        <div className="min-w-0 text-left">
+          <p className="text-white/90 text-[15px] font-medium">{corpo(f.corpoA)}</p>
+          <p className="text-white/55 text-[13.5px] font-light leading-snug mt-0.5">{maiuscula(papel(f.corpoA))}</p>
+        </div>
+        <span className="self-stretch w-px bg-white/15" aria-hidden="true" />
+        <div className="min-w-0 text-right">
+          <p className="text-white/90 text-[15px] font-medium">{corpo(f.corpoB)}</p>
+          <p className="text-white/55 text-[13.5px] font-light leading-snug mt-0.5">{maiuscula(papel(f.corpoB))}</p>
+        </div>
+      </div>
+      <p className="text-white/65 text-[14px] font-light leading-relaxed mt-3 pt-3 border-t border-white/10 text-center">
+        <strong className="text-white/90 font-medium">{maiuscula(aspectos[f.aspecto])}:</strong> {asp}
+      </p>
+    </div>
   )
 }
 
@@ -373,38 +402,91 @@ function Ponta({ id, nome, dono, retro, destaque, lado, s }: { id: string; nome:
 
 // ── casas ───────────────────────────────────────────────────────────────────
 
-function GrupoDeCasas({ titulo, fatos, corpo, s }: { titulo: string; fatos: FatoOverlay[]; corpo: (id: string) => string; s: S }) {
-  const [aberta, setAberta] = useState<string | null>(null)
+const FEMININOS = new Set(["moon", "venus"])
+const ARTIGO_PT: Record<string, string> = { sun: "o", moon: "a", mercury: "o", venus: "a" }
+
+/**
+ * A frase do repertório para um planeta numa casa ("Quem tem o Sol reflete a essência de si em sintonia com a forma
+ * como quem tem a casa se apresenta ao mundo") dita para as DUAS PESSOAS: "Seu Sol reflete ... como Camila se apresenta
+ * ao mundo". O repertório está só em português, e para os outros idiomas a tela mostra o que o planeta representa.
+ */
+function fraseDoOverlay(base: string, f: FatoOverlay, direcao: "AB" | "BA", nome: string, corpo: (id: string) => string): string {
+  const casaDe = direcao === "AB" ? nome : "você"
+  const nomeDoPlaneta = corpo(f.planeta)
+  const t = base
+    .replace(/[Qq]uem tem (?:o |a )?(?:Sol|Lua|Mercúrio|Vênus|Marte|Júpiter|Saturno|Urano|Netuno|Plutão)/, (_m: string, pos: number) => {
+      const quem =
+        direcao === "AB"
+          ? `${FEMININOS.has(f.planeta) ? "sua" : "seu"} ${nomeDoPlaneta}`
+          : `${ARTIGO_PT[f.planeta] ? `${ARTIGO_PT[f.planeta]} ` : ""}${nomeDoPlaneta} de ${nome}`
+      return pos === 0 ? maiuscula(quem) : quem
+    })
+    .replace(/quem tem a casa/gi, casaDe)
+  return maiuscula(t)
+}
+
+/**
+ * As casas, agrupadas por casa: o cabeçalho (o número e a área da vida) abre o que a casa é, UMA vez, e embaixo vêm os
+ * planetas que caem nela, cada um com a frase do que isso quer dizer entre as duas pessoas.
+ */
+function GrupoDeCasas({
+  titulo,
+  fatos,
+  corpo,
+  s,
+  nomeB,
+  direcao,
+  locale,
+}: {
+  titulo: string
+  fatos: FatoOverlay[]
+  corpo: (id: string) => string
+  s: S
+  nomeB: string
+  direcao: "AB" | "BA"
+  locale: Locale
+}) {
+  const [aberta, setAberta] = useState<number | null>(null)
   const significados = s.houseMeaning as Record<string, { area: string; effect: string }>
+  const porCasa = new Map<number, FatoOverlay[]>()
+  for (const f of fatos) porCasa.set(f.casa, [...(porCasa.get(f.casa) ?? []), f])
+  const casas = [...porCasa.entries()].sort((a, b) => a[0] - b[0])
+  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
   return (
     <div className="rounded-xl border border-white/10 bg-black/10 p-4 sm:p-5">
       <p className="text-white/70 text-[14px] font-light pb-3 border-b border-white/20">{titulo}</p>
       <ul>
-        {fatos.map((f) => {
-          const m = significados[String(f.casa)]
-          const aberto = aberta === f.id
+        {casas.map(([casa, planetas]) => {
+          const m = significados[String(casa)]
+          const aberto = aberta === casa
           return (
-            <li key={f.id} className="border-b border-white/10 last:border-b-0">
-              {/* a casa se abre ao toque: a área da vida aparece sempre, e o que o planeta faz ali, ao abrir */}
-              <button
-                type="button"
-                aria-expanded={aberto}
-                onClick={() => setAberta(aberto ? null : f.id)}
-                className="group w-full flex items-center gap-3 py-3 text-left cursor-pointer"
-              >
-                <span className="text-white/40 w-4 shrink-0">
-                  <GlifoPlaneta id={f.planeta} tamanho={14} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-white/85 text-[16px] font-light">{corpo(f.planeta)}</span>
-                  {m && <span className="block text-white/45 text-[13px] font-light leading-snug mt-0.5">{m.area}</span>}
-                </span>
-                <span className="text-white/70 instrument italic text-[18px] tabular-nums shrink-0">{fmt(s.houseOf, { n: f.casa })}</span>
-                <span className={`text-white/35 group-hover:text-white/70 text-[13px] shrink-0 transition-transform duration-200 ${aberto ? "rotate-180" : ""}`}>
+            <li key={casa} className="py-4 border-b border-white/10 last:border-b-0">
+              <button type="button" aria-expanded={aberto} onClick={() => setAberta(aberto ? null : casa)} className="group w-full flex items-start gap-3 text-left cursor-pointer">
+                <span className="text-white instrument italic text-[21px] leading-none tabular-nums shrink-0">{fmt(s.houseOf, { n: casa })}</span>
+                <span className="min-w-0 flex-1 text-white/55 text-[13.5px] font-light leading-snug pt-0.5">{m?.area}</span>
+                <span className={`text-white/35 group-hover:text-white/70 text-[13px] shrink-0 pt-0.5 transition-transform duration-200 ${aberto ? "rotate-180" : ""}`}>
                   <Seta tipo="chevron" />
                 </span>
               </button>
-              {aberto && m && <p className="text-white/65 text-[14.5px] font-light leading-relaxed pb-4 pl-7 pr-2">{m.effect}</p>}
+              {aberto && m && <p className="text-white/70 text-[14.5px] font-light leading-relaxed mt-3">{m.effect}</p>}
+              <ul className="mt-3 space-y-3">
+                {planetas.map((f) => {
+                  const base = RESUMO_DO_OVERLAY[`${f.planeta}@casa${f.casa}`]
+                  return (
+                    <li key={f.id} className="flex gap-3 rounded-lg bg-white/[0.04] px-3 py-2.5">
+                      <span className="text-white/45 w-4 shrink-0 pt-0.5">
+                        <GlifoPlaneta id={f.planeta} tamanho={14} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-white/90 text-[15px] font-medium">{corpo(f.planeta)}</span>
+                        <span className="block text-white/60 text-[14px] font-light leading-relaxed mt-0.5">
+                          {locale === "pt" && base ? fraseDoOverlay(base, f, direcao, nomeB, corpo) : maiuscula(papel(f.planeta))}
+                        </span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
             </li>
           )
         })}
@@ -418,31 +500,47 @@ function GrupoDeCasas({ titulo, fatos, corpo, s }: { titulo: string; fatos: Fato
 function EmComum({ fatos, nomeB, nomes, signos, s }: { fatos: FatoSemelhanca[]; nomeB: string; nomes: Record<string, string>; signos: string[]; s: S }) {
   if (fatos.length === 0) return <p className="text-white/45 text-[15px] leading-relaxed font-light max-w-lg">{s.commonNone}</p>
 
-  const elemento = (k: string) => (s.elements as Record<string, string>)[k] ?? k
-  const modo = (k: string) => (s.modes as Record<string, string>)[k] ?? k
+  const elemento = (k: string) => maiuscula((s.elements as Record<string, string>)[k] ?? k)
+  const modo = (k: string) => maiuscula((s.modes as Record<string, string>)[k] ?? k)
   const tipo = (k: string) => (s.kinds as Record<string, string>)[k] ?? k
   const algumaIgual = fatos.some((f) => f.ressalvaDaFonte !== null)
 
-  const linhas = fatos.map((f) => {
-    if (f.dimensao === "elemento") return { f, rotulo: s.dimElement, valor: `${s.whoYou}: ${elemento(f.padraoA)} · ${nomeB}: ${elemento(f.padraoB)}` }
-    if (f.dimensao === "modo") return { f, rotulo: s.dimMode, valor: `${s.whoYou}: ${modo(f.padraoA)} · ${nomeB}: ${modo(f.padraoB)}` }
-    if (f.dimensao === "elemento_do_sol") return { f, rotulo: s.dimSunElement, valor: `${s.whoYou}: ${elemento(f.padraoA)} · ${nomeB}: ${elemento(f.padraoB)}` }
+  /** `a` e `b` são os dois lados; `junto` é o valor único, quando os dois têm o mesmo (o mesmo signo). */
+  const linhas = fatos.map((f): { f: FatoSemelhanca; rotulo: string; a?: string; b?: string; junto?: string } => {
+    if (f.dimensao === "elemento") return { f, rotulo: s.dimElement, a: elemento(f.padraoA), b: elemento(f.padraoB) }
+    if (f.dimensao === "modo") return { f, rotulo: s.dimMode, a: modo(f.padraoA), b: modo(f.padraoB) }
+    if (f.dimensao === "elemento_do_sol") return { f, rotulo: s.dimSunElement, a: elemento(f.padraoA), b: elemento(f.padraoB) }
     const [c, i] = f.padraoA.split(":")
-    return { f, rotulo: fmt(s.dimSign, { corpo: nomes[c] ?? c }), valor: signos[Number(i)] ?? "" }
+    return { f, rotulo: fmt(s.dimSign, { corpo: nomes[c] ?? c }), junto: signos[Number(i)] ?? "" }
   })
+
+  const Lado = ({ quem, valor, alinhar }: { quem: string; valor: string; alinhar: "left" | "right" | "center" }) => (
+    <div className={`px-4 sm:px-5 py-3.5 ${alinhar === "right" ? "text-right" : alinhar === "center" ? "text-center" : "text-left"}`}>
+      <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] font-light">{quem}</p>
+      <p className="text-white instrument italic text-[22px] leading-tight mt-1">{valor}</p>
+    </div>
+  )
 
   return (
     <div>
-      <ul>
-        {linhas.map(({ f, rotulo, valor }) => (
-          <li key={f.id} className="py-4 border-b border-white/[0.06] first:pt-0 sm:flex sm:items-baseline sm:gap-6">
-            <span className="block sm:w-48 shrink-0 text-white/35 text-[12px] uppercase tracking-[0.18em] font-light">{rotulo}</span>
-            <span className="block flex-1 mt-1.5 sm:mt-0">
-              <span className="block text-white/90 text-[16px] font-light">{valor}</span>
-              <span className="block text-white/30 text-[13px] font-light mt-1">
-                {[tipo(f.tipoDeSemelhanca), f.classe === "geracional" ? s.generational : null, f.condicional ? s.conditional : null].filter(Boolean).join(" · ")}
-              </span>
-            </span>
+      <ul className="space-y-6">
+        {linhas.map(({ f, rotulo, a, b, junto }) => (
+          <li key={f.id}>
+            <p className="text-white/55 text-[12px] uppercase tracking-[0.18em] font-light">{rotulo}</p>
+            {/* dois lados, com uma divisória no meio: quem é quem fica claro sem ler a frase */}
+            <div className="mt-2.5 rounded-xl border border-white/15 bg-white/[0.04] overflow-hidden">
+              {junto !== undefined ? (
+                <Lado quem={s.bothShare} valor={junto} alinhar="center" />
+              ) : (
+                <div className="grid grid-cols-2 divide-x divide-white/15">
+                  <Lado quem={s.whoYou} valor={a ?? ""} alinhar="left" />
+                  <Lado quem={nomeB} valor={b ?? ""} alinhar="right" />
+                </div>
+              )}
+            </div>
+            <p className="text-white/35 text-[13px] font-light mt-2">
+              {[tipo(f.tipoDeSemelhanca), f.classe === "geracional" ? s.generational : null, f.condicional ? s.conditional : null].filter(Boolean).join(" · ")}
+            </p>
           </li>
         ))}
       </ul>
@@ -654,13 +752,6 @@ function percentuais(ns: number[]): number[] {
  * concentram. Não pondera, não pontua e não conclui sobre a relação.
  */
 const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
-
-/** Uma linha que diz o que o contato quer dizer: o que cada corpo representa e como o aspecto os põe em relação. */
-function glosaDoContato(f: FatoAspecto, s: S): string {
-  const papel = (id: string) => (s.bodyRole as Record<string, string>)[id] ?? id
-  const asp = (s.aspectGloss as Record<string, string>)[f.aspecto] ?? ""
-  return `${maiuscula(papel(f.corpoA))} × ${papel(f.corpoB)}: ${asp}`
-}
 
 function resumoDe(
   dados: Comparacao,
