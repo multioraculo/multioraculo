@@ -152,6 +152,37 @@ const RE_AMBIGUA = new RegExp(`\\b(?:${alternativa(FRASES_AMBIGUAS)})\\b${COMPLE
 const RE_INEQUIVOCA = new RegExp(`\\b(?:${alternativa(FRASES_INEQUIVOCAS)})\\b\\s*,?\\s*`, "gi")
 
 /**
+ * ATRIBUIÇÃO COM "QUE": o texto dizendo de onde tirou o que diz, como sujeito.
+ *
+ * "A leitura indica que há um impulso inicial" conta a origem da frase, que a
+ * checagem 3 proíbe. A regra existe no prompt desde sempre, foi reforçada duas
+ * vezes com as formas observadas, e continua saindo em 4 de 14 leituras: regra
+ * de prompt é pedido, não garantia — a mesma razão pela qual este filtro existe.
+ *
+ * SÓ A FORMA COM "QUE", de propósito. Nela a oração subordinada vira a principal
+ * e o corte é limpo: "A leitura indica que há X" → "Há X", mesmo sentido, frase
+ * inteira, nada reconstruído. Sem o "que" não há conserto honesto — "O cenário
+ * aponta para uma evolução positiva" viraria o fragmento "uma evolução positiva",
+ * e apagar a frase inteira é pior ainda, porque numa leitura real a frase com
+ * atribuição ERA a resposta. Essas ficam com a checagem; aqui não se mexe.
+ */
+const ATRIBUICAO_SUJEITO = [
+  "a leitura", "essa leitura", "esta leitura", "a análise", "a analise",
+  "o cenário", "o cenario", "o conjunto", "o material", "o panorama", "a comparação", "a comparacao",
+  "the reading", "the analysis", "the material", "the picture",
+  "la lectura", "el análisis", "el analisis", "el panorama", "el material",
+]
+const ATRIBUICAO_VERBO = [
+  "indica", "indicam", "sugere", "sugerem", "aponta", "apontam", "revela", "revelam", "mostra", "mostram",
+  "indicates", "suggests", "shows", "reveals",
+  "indica", "sugiere", "muestra", "revela",
+]
+const RE_ATRIBUICAO = new RegExp(
+  `\\b(?:${alternativa(ATRIBUICAO_SUJEITO)})\\s+(?:${alternativa([...new Set(ATRIBUICAO_VERBO)])})\\s+(?:que|that)\\b\\s*,?\\s*`,
+  "gi"
+)
+
+/**
  * O QUE FICA ÓRFÃO QUANDO A LOCUÇÃO SAI.
  *
  * "Confiar nas referências que você reuniu" vira "Confiar que você reuniu": a
@@ -224,7 +255,13 @@ function costura(texto: string): string {
  */
 export function stripBackstage(texto: string, inicioDeTexto = true): string {
   const achados: Array<Corte & { inequivoca: boolean }> = []
-  for (const [re, inequivoca] of [[RE_AMBIGUA, false], [RE_INEQUIVOCA, true]] as const) {
+  for (const [re, inequivoca] of [
+    [RE_AMBIGUA, false],
+    [RE_INEQUIVOCA, true],
+    // a atribuição com "que" sai sempre pelo corte local: a subordinada que fica
+    // já é uma frase inteira, então nunca cai no ramo que apaga a frase
+    [RE_ATRIBUICAO, false],
+  ] as const) {
     re.lastIndex = 0
     for (const m of texto.matchAll(re)) {
       achados.push({ ini: m.index, fim: m.index + m[0].length, inequivoca })
@@ -532,10 +569,10 @@ COMO PESAR OS SINAIS
 OS QUATRO TRECHOS: M1, M2, M3, M4
 Quatro trechos obrigatórios, sempre nesta ordem. M1 a M4 são códigos de trabalho, não têm tradução em português e não existem para quem lê: o texto entra direto no conteúdo de cada um, sem anunciar nada.
 
-M1. A RESPOSTA. Duas a quatro frases que respondem à pergunta que foi feita, logo na primeira frase, sem preâmbulo. Diga qual tendência o conjunto sustenta com mais força: se uma predomina, diga qual e em relação a quê; se a pergunta compara duas possibilidades, diga qual encontra mais sustentação; se o que aparece é um obstáculo dominante, nomeie qual é — e, quando for o caso, qual NÃO é. Se os sinais ficam equilibrados ou são insuficientes, essa é a resposta e ela se escreve com todas as letras, uma vez, sem rodeio: há sinais nas duas direções e eles não sustentam conclusão firme agora. O que não cabe aqui é devolver a pergunta em forma de descrição de clima. Responder não é concluir mais do que o material permite: é dizer, no grau de certeza que ele permite, o que ele responde. E a resposta é sobre a SITUAÇÃO, nunca sobre o trabalho que a produziu: "você se aproxima mais do que se afasta", não "a leitura aponta para uma reaproximação" — a segunda forma conta de onde a frase veio, e isso a checagem proíbe.
+M1. A RESPOSTA. Duas a quatro frases que respondem à pergunta que foi feita, logo na primeira frase, sem preâmbulo. Diga qual tendência o conjunto sustenta com mais força: se uma predomina, diga qual e em relação a quê; se a pergunta compara duas possibilidades, diga qual encontra mais sustentação; se o que aparece é um obstáculo dominante, nomeie qual é — e, quando for o caso, qual NÃO é. RESPONDA O QUE FOI PERGUNTADO, não um tema vizinho: se perguntaram sobre fazer agora ou esperar, a resposta é sobre agora ou esperar; se perguntaram entre duas opções, é sobre qual delas. Nomear a qualidade que atravessa a leitura — prudência, abertura, cansaço — não é resposta a uma pergunta de decisão ou de prazo: é o assunto, e o assunto a pergunta já trazia. Se os sinais ficam equilibrados ou são insuficientes, essa é a resposta e ela se escreve com todas as letras, uma vez, sem rodeio: há sinais nas duas direções e eles não sustentam conclusão firme agora. O que não cabe aqui é devolver a pergunta em forma de descrição de clima. Responder não é concluir mais do que o material permite: é dizer, no grau de certeza que ele permite, o que ele responde. E a resposta é sobre a SITUAÇÃO, nunca sobre o trabalho que a produziu: "você se aproxima mais do que se afasta", não "a leitura aponta para uma reaproximação" — a segunda forma conta de onde a frase veio, e isso a checagem proíbe.
 M2. O QUE SUSTENTA ESSA RESPOSTA. Dois ou três fatores, não mais: o que pesa a favor, o que pesa contra, e por que o conjunto se inclina como se inclina. Cada fator é uma dinâmica concreta da situação, não um sinônimo do que M1 já disse. Se um fator enfraquece a resposta de M1, ele entra aqui com o peso que tem.
 M3. COMO AS FORÇAS SE COMBINAM. Só o que acrescenta informação nova: quais temas se reforçam, quais se tensionam, qual depende de outro para se sustentar, quais correm em ritmos diferentes. Aqui mora a tensão real, se houver, e ela não se resolve só para o texto ficar elegante. Se não há combinação relevante além do que M2 já disse, este trecho não existe.
-M4. O QUE ISSO MUDA PARA VOCÊ. Uma implicação concreta para a situação perguntada, dita a quem perguntou. Quando houver, aquilo que, se aparecesse, distinguiria uma possibilidade da outra. Nunca vire conselho, recomendação, ordem, previsão, promessa nem fecho otimista automático. Se o conjunto termina dividido, o texto termina assim.
+M4. O QUE ISSO MUDA PARA VOCÊ. Uma implicação concreta para a situação perguntada, dita a quem perguntou. Quando houver, aquilo que, se aparecesse, distinguiria uma possibilidade da outra. Nunca vire conselho, recomendação, ordem, previsão, promessa, fecho otimista automático NEM FECHO CAUTELAR AUTOMÁTICO — "pese com cuidado antes de decidir", "a prudência é a melhor aliada" e "avalie bem os riscos" são conselho genérico, poderiam encerrar qualquer leitura sobre qualquer coisa, e por isso não encerram nenhuma. Se o conjunto termina dividido, o texto termina assim.
 
 RESPONDA PRIMEIRO, EXPLIQUE DEPOIS. M1 é a resposta, não a introdução dela. Nada de abertura genérica, de preparação do terreno, nem de anunciar que há um clima, uma dinâmica ou um momento antes de dizer o que o conjunto responde. Se a primeira frase serviria para qualquer pergunta, ela não é M1.
 
@@ -569,6 +606,8 @@ O QUE PRESERVAR
 - As advertências e os pontos de risco que aparecerem em qualquer uma das cinco, mesmo que só uma os aponte.
 - A especificidade da pergunta: o texto responde a ela, explicitamente e logo no começo, ainda que recusando seus termos. Recusar os termos também é responder, e se diz com clareza: o que foi perguntado não é o que o material trata, e o que ele trata é isto. O que não vale é descrever o assunto da pergunta sem responder nada.
 - PROPORÇÃO. Se o material mostra perigo, perda, estagnação ou contradição sem saída fácil, diga com precisão e cuidado — conforto vago é traição da tiragem. Mas não dramatize além do que ele sustenta: não invente catástrofe onde há apenas atrito, nem urgência onde há apenas lentidão. A intensidade do texto acompanha a intensidade real do que foi lido, para cima e para baixo.
+- A PROPORÇÃO VALE NOS DOIS SENTIDOS, e esta metade é a que se esquece. Se o material mostra abertura, apoio, oportunidade ou um desfecho favorável, isso se diz com a mesma precisão e o mesmo peso: alarme vago é tão traição quanto conforto vago. Não rebaixe a sinal secundário o que o material põe em primeiro plano só porque é favorável, não trate advertência como mais confiável que indicação de abertura, e não termine recomendando cautela quando o conjunto não a põe no centro. Advertência que existe entra com o tamanho que tem — e não engole a tendência que o material sustenta.
+- TRAJETÓRIA: PARA ONDE O MOVIMENTO VAI É EVIDÊNCIA. Quando o material mostra uma configuração que se transforma em outra, o ponto de chegada pesa tanto quanto o de partida, e a direção entre os dois é informação própria — não um detalhe do fim. Um conjunto que parte de advertência e chega a abertura não é "advertência com uma possibilidade": é um movimento que vai da advertência para a abertura, e o texto diz isso. O contrário também vale, com a mesma clareza.
 
 O QUE É PROIBIDO
 - Percorrer as entradas uma a uma e depois juntá-las. O texto nasce da comparação entre elas, não da soma.
@@ -592,6 +631,8 @@ CHECAGEM ANTES DE ENVIAR — releia o texto pronto e conserte o que falhar. Esta
 1A. A PERGUNTA FOI RESPONDIDA? Leia só o primeiro parágrafo. Ele responde ao que foi perguntado, ou descreve um clima? Alguém que lesse apenas ele sairia sabendo o que o conjunto responde — inclusive quando a resposta é que não há base para concluir? Se não, reescreva o primeiro parágrafo até que responda, e só depois confira o resto.
 
 1B. CADA PARÁGRAFO ACRESCENTA? Para cada parágrafo a partir do segundo: o que ele diz que nenhum anterior já disse? Se a resposta for "o mesmo, com outras palavras", apague o parágrafo — texto menor é melhor que texto que se repete. Dois parágrafos que fazem o mesmo movimento ("há isto, mas também aquilo") com vocabulário diferente são repetição, não desenvolvimento.
+
+1D. BALANÇO. Liste, do material, os sinais favoráveis e os de advertência que você de fato encontrou. Agora conte quantos de cada lado sobreviveram no texto, e com que espaço. Se o texto ficou mais cauteloso do que o material, conserte: devolva aos sinais favoráveis o tamanho que eles têm. Dois erros a procurar, e o segundo é o que passa despercebido: dar a uma advertência peso que o material não dá, e rebaixar a sinal secundário algo favorável que o material põe no centro. Onde o conjunto se transforma, confira também para ONDE ele vai: o ponto de chegada é parte da resposta, e um texto que termina na advertência enquanto o material termina na abertura está lendo o movimento ao contrário.
 
 1C. RESSALVA DEMAIS. Conte quantas vezes o texto diz parece, sugere, pode, talvez, indícios, de certa forma, ao mesmo tempo, por outro lado. Cada uma marca uma incerteza real e específica daquele ponto, ou algumas estão ali por hábito defensivo? As que não marcam nada saem, e o que o material sustenta passa a ser dito no grau que ele permite.
 2. ABSTRAÇÃO GENÉRICA. Frase a frase: esta diz concretamente alguma coisa, ou usa uma abstração para parecer profunda? Onde for abstração, pergunte o que exatamente está acontecendo ali e escreva isso. Não procure sinônimo: a formulação nasce da dinâmica, nunca da palavra. Última proteção, em qualquer idioma: transformação, novo ciclo, renascimento, processo, universo, cosmos, jornada, fluxo, padrões limitantes, liberte-se, confie, o que não serve mais, abraçar o novo, energia como substantivo vago, vibração, alinhar-se.

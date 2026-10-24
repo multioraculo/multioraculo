@@ -110,6 +110,34 @@ function parteFiltro() {
     }
   }
 
+  // ATRIBUIÇÃO COM "QUE": o texto dizendo de onde tirou o que diz. A checagem 3
+  // proíbe desde sempre e continuou saindo em 4 de 14 leituras pagas; os dois
+  // primeiros casos abaixo são reais, copiados dessa bateria.
+  for (const [rotulo, entrada, esperado] of [
+    ["real · a leitura indica que", "A leitura indica que há um impulso inicial e vitalidade para avançar.", "Há um impulso inicial e vitalidade para avançar."],
+    ["real · a análise sugere que", "A análise sugere que, apesar de algumas hesitações, há uma promessa de crescimento.", "Apesar de algumas hesitações, há uma promessa de crescimento."],
+    ["em segunda frase", "Você tende a aceitar. A leitura aponta que o apoio existe.", "Você tende a aceitar. O apoio existe."],
+    ["o conjunto sugere que", "O conjunto sugere que o cansaço vem de fora.", "O cansaço vem de fora."],
+    ["en", "The reading indicates that there is an opening here.", "There is an opening here."],
+    ["es", "La lectura indica que hay una apertura.", "Hay una apertura."],
+    // SEM o "que" não há conserto limpo, e o filtro não inventa um: suprimir
+    // deixaria fragmento, e apagar a frase apagaria o parecer — numa leitura
+    // real a frase com atribuição ERA a resposta. Ficam para a checagem.
+    ["sem que: intacto", "O cenário aponta para uma evolução positiva.", "O cenário aponta para uma evolução positiva."],
+    ["sem que: intacto 2", "A resposta à sua pergunta revela uma tendência para aceitar.", "A resposta à sua pergunta revela uma tendência para aceitar."],
+    // usos legítimos: o sujeito não é de bastidor, ou o verbo não é de atribuição
+    ["leitura de um contrato", "A leitura do contrato que você assinou pesa.", "A leitura do contrato que você assinou pesa."],
+    ["sujeito é uma pessoa", "Ela indica que prefere esperar.", "Ela indica que prefere esperar."],
+  ] as Array<[string, string, string]>) {
+    conferir(`atribuição · ${rotulo}`, stripBackstage(entrada), esperado)
+    for (const passo of [1, 5, 13]) {
+      const f = createSynthesisFilter()
+      let saida = ""
+      for (let i = 0; i < entrada.length; i += passo) saida += f.push(entrada.slice(i, i + passo))
+      conferir(`atribuição em stream (passo ${passo}) · ${rotulo}`, saida + f.flush(), esperado)
+    }
+  }
+
   // o marcador de parágrafo continua funcionando como antes
   conferir("filtro · marcador de parágrafo", normalizeSynthesisText("Uma frase.[[P]]Outra frase."), "Uma frase.\n\nOutra frase.")
   const fm = createSynthesisFilter()

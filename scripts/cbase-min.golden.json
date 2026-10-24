@@ -62,49 +62,49 @@
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "pt",
-      "sha256": "8ae1af0e47165881bf7d2a46516a175207f7a189d50b36019a83a996d9bae718"
+      "sha256": "c1f85cb79cb53889ac21f5c3429fb246ea2fc9ea00a247317c799bb35e482e82"
     },
     {
       "pergunta": "O que envolve a decisão de voltar a estudar?",
       "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
       "locale": "pt",
-      "sha256": "66417a6323261c010052b57c6a6ce47b91cc0e27a96e41dbe76ba2775aca3768"
+      "sha256": "8a39e77d749cdce0b720c38bde3b4cf97253402daee16a37a39fded551bef2ac"
     },
     {
       "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
       "seed": "08da4d419fd87deca7fe7d2b2ae54506",
       "locale": "pt",
-      "sha256": "a5dccb2f0e918f3ee13878a2009edef4e26677991d396dcea3076fbd28ee73c7"
+      "sha256": "d49d54735ee0c482b31f02621d5733401adbb5ffeee16197c1be86c6e1a64317"
     },
     {
       "pergunta": "Minha família está contra mim nessa decisão?",
       "seed": "f37215242ebd664846b7938bc612315a",
       "locale": "pt",
-      "sha256": "b0c6d3e5e61e33ad1d01827c0ca560618f58b4250668e583b861b6a240870096"
+      "sha256": "d1f30d1365cd48631154c47803ec9aa664fe47c2b6a532690b3fd2fc599d3d5b"
     },
     {
       "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
       "seed": "7a65af7a922aa250325478cccf4925d6",
       "locale": "pt",
-      "sha256": "abf414cc7c4000023fe7ba5ba944581cbaede17c3139bcf8b51c1bb24f3e6512"
+      "sha256": "d1472c6c41024e07e47291ca2fe19bee3bcd001ba5a03581cd1e5de2784a414c"
     },
     {
       "pergunta": "Estou sendo sabotado no trabalho?",
       "seed": "f85789b89b26e67d455b69f1907d7d64",
       "locale": "pt",
-      "sha256": "2d4b1f7899722661e28dc453e95c3eb2ffdbc74a38033d82072a2137526ff0ba"
+      "sha256": "064026cbaf64f66832fb616b660b05fcb9a609959fb86dc507e3429547b39d9a"
     },
     {
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "en",
-      "sha256": "20390204c0494db3b6a9fd7452b3150f1d2e8ff0db5e1d864763ef5cb27ad3e6"
+      "sha256": "cfa32a6edfd21637a221eef9255acd1a1ee4cbd727c1aa930cebe017a996e176"
     },
     {
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
       "locale": "es",
-      "sha256": "9edf1d64618ee7625a6a7f5e11ae63a822dec051ec2e09a8f2b8dc5f6a024040"
+      "sha256": "0a52035203d7afc2badc0a79fc057c633e60316681b16f125218a922c075bcff"
     }
   ],
   "casosAprovados": [
@@ -112,52 +112,53 @@
       "id": 5,
       "pergunta": "O que fazer agora que perdi minha chance na carreira?",
       "seed": "907b5dd13a58cb6bc28628def33eb705",
-      "sha256": "5c1c4592bfeea621b6133a8cb4601f4336e91acca626bbb2e26a0d412c600bea"
+      "sha256": "9df2a3b5ba9a82fa8b2cd1f0ef7f0228447e8cda7605c63a24c92c28200ea08d"
     },
     {
       "id": 21,
       "pergunta": "O que envolve a decisão de voltar a estudar?",
       "seed": "40d98ba1fc9b41f7a3d7edc2ca2173d7",
-      "sha256": "0fbed35e04c8f61c1823e5f26ea21f5f04b5cb8240940ec3625ad7c933f574b3"
+      "sha256": "103049444b7187c4e616b723a2fe80dc83f890bbe368d60c095d599407f2b9b8"
     },
     {
       "id": 36,
       "pergunta": "Não aguento mais essa solidão. Isso vai mudar?",
       "seed": "08da4d419fd87deca7fe7d2b2ae54506",
-      "sha256": "650ca1c22538ecae66b4388bf47bb64ab894df4ede5610594a58a8fb36b7daa9"
+      "sha256": "1a4148b745a42162f2278a0660e9cd24cccd28fb1048aa0a9991b281bcf34f16"
     },
     {
       "id": 6,
       "pergunta": "Minha família está contra mim nessa decisão?",
       "seed": "f37215242ebd664846b7938bc612315a",
-      "sha256": "1062091f27b7ed16d90d4ba8d7ca71bbede8c848d023fd2571bb517b9e047f32"
+      "sha256": "6d768fbe2164bd5b0a7fe9f0dd19f1541e27a8059540ad3dbf5daa1136cb081f"
     },
     {
       "id": 30,
       "pergunta": "Tenho vergonha do que fiz com minha mãe. Existe perdão possível?",
       "seed": "7a65af7a922aa250325478cccf4925d6",
-      "sha256": "1db8b9ddfdee0f04fa1167d946347f930d8463674c1ad1ebb31faea5f654d206"
+      "sha256": "6e344fdc36fd5c1b34639dd6fa1183fed00ab95fafb061e6c423aa5201f91d01"
     },
     {
       "id": 9,
       "pergunta": "Estou sendo sabotado no trabalho?",
       "seed": "f85789b89b26e67d455b69f1907d7d64",
-      "sha256": "a8b0d9056ef7855ce3a2e6d80db437efa821d2f0d4d505440f93ae19a055b394"
+      "sha256": "1bcf738b8d0229657e680b16683e8cf9d566412bd61c19710b664f104a26924c"
     }
   ],
   "revisao": {
-    "data": "2026-10-14",
-    "motivo": "Revisao editorial: a sintese passa a RESPONDER a pergunta no primeiro paragrafo, em segunda pessoa, antes de explicar.",
-    "causa": "Nada no recorte que chegava ao C-base-min mandava responder. A linha 'em segunda pessoa' existia em synthesisPrompt mas caia FORA do recorte, e a unica regra sobre a pergunta dizia que o texto deveria responder 'ainda que de lado'.",
+    "data": "2026-10-24",
+    "motivo": "A sintese dava mais peso as advertencias que as possibilidades, qualquer que fosse a tiragem.",
+    "causa": "Tres assimetrias no proprio prompt. (1) PROPORCAO estava escrita so para o lado ruim: existia a frase 'se o material mostra perigo, perda, estagnacao' e nao existia a equivalente para abertura, apoio ou desfecho favoravel. (2) M4 proibia fecho otimista automatico e nao proibia o cautelar. (3) Nao havia nenhuma regra sobre TRAJETORIA: o prompt pesava convergencia, divergencia, centralidade e recorrencia, e nada dizia que o ponto de chegada de um movimento e evidencia.",
+    "provaNaFonte": "Na leitura relatada o I Ching foi 44 -> 58. O hexagrama 58 e 'The open. Growing, Harvesting, Trial' — a formula de julgamento favoravel do Yijing — e e onde o movimento chega. A linha 6 de 44 termina em 'Without fault'. Nada em 44 nem em 58 fala de dinheiro, e a sintese falou de perdas financeiras.",
     "mudou": [
-      "M1 passa a ser A RESPOSTA (2 a 4 frases, respondendo na primeira); M2 fundamenta, M3 combina e e opcional, M4 implica",
-      "quatro regras novas no recorte: RESPONDA PRIMEIRO, FALE COM A PESSOA, CADA TRECHO FAZ UM TRABALHO DIFERENTE, A INCERTEZA SE DIZ UMA VEZ",
-      "tres checagens novas: 1A (o primeiro paragrafo responde), 1B (cada paragrafo acrescenta), 1C (ressalva demais)",
-      "saiu o piso de quatro paragrafos e a licenca de responder 'ainda que de lado'",
-      "as oito dicas de entrada reescritas: todas respondem, nenhuma usa vocabulario de bastidor",
-      "checagem 3 passa a listar as formas de autorreferencia observadas (a leitura aponta, o cenario aponta, o conjunto sugere)"
+      "A PROPORCAO VALE NOS DOIS SENTIDOS: alarme vago e tao traicao quanto conforto vago; advertencia entra com o tamanho que tem e nao engole a tendencia",
+      "TRAJETORIA: o ponto de chegada pesa tanto quanto o de partida e a direcao entre os dois e informacao propria",
+      "M4 passa a barrar tambem o fecho cautelar automatico, com os exemplos observados",
+      "M1 responde o que foi perguntado: decisao pede direcao, prazo pede prazo; nomear a qualidade e devolver o assunto",
+      "checagem 1D BALANCO: conte os sinais favoraveis e os de advertencia do material e veja quantos sobreviveram no texto",
+      "filtro de saida passa a suprimir a atribuicao com 'que' (a leitura indica que X -> Ha X), que a checagem 3 proibia e nao impedia"
     ],
-    "naoMudou": "sorteio, renderizacao, selecao de evidencia, orcamento por oraculo, pdfsIndexSha256 e as checagens 2 e 5 a 9. Os digests de itens passaram sem alteracao: so synthesis.ts mudou, 55 linhas a mais e 24 a menos.",
-    "medido": "12 leituras pagas, mesmos seeds da bateria congelada: responde no primeiro paragrafo 3/12 -> 11/12 (leitura humana), ressalvas 2,5 -> 1,3 por 100 palavras, paragrafos 'dos dois lados' 2,5 -> 1,3, tratamento direto 0,5 -> 4,6, abertura generica 5/12 -> 0/12. Regressao conhecida: autorreferencia 1/12 -> 3/12, endereçada na checagem 3 e nao remedida."
+    "naoMudou": "sorteio, renderizacao, selecao de evidencia, orcamento por oraculo, pdfsIndexSha256 e as checagens 2, 5, 7 e 9 e a frase 'conforto vago e traicao'. Os digests de itens passaram sem alteracao; so synthesis.ts mudou no caminho do prompt.",
+    "medido": "14 leituras pagas (os 12 seeds congelados + 2 casos novos de decisao com prazo). Razao advertencia/possibilidade: 2,29 na leitura de producao relatada -> 0,87 nas 14, com faixa de 0,3 a 1,8. Fecho cautelar generico 0/14. Os dois casos de prazo responderam o prazo. Autorreferencia 4/14 antes do filtro novo -> 2 ocorrencias depois dele (as formas sem 'que', que ficam com a checagem). Prescricao 1/14 e metalinguagem 1/14 seguem sem remedicao."
   }
 }
