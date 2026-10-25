@@ -590,6 +590,7 @@ export const es: Dictionary = {
     namePlaceholder: "Tu nombre",
     emailPlaceholder: "tu@email.com",
     passwordPlaceholder: "Tu contraseña",
+    confirmPasswordPlaceholder: "Confirma tu contraseña",
     signIn: "Entrar",
     signingIn: "Entrando...",
     createAccount: "Crear cuenta",
@@ -603,6 +604,12 @@ export const es: Dictionary = {
     or: "o",
     googleCancelled: "Se canceló el acceso con Google. Puedes intentarlo de nuevo o usar tu correo.",
     googleFailed: "No pudimos entrar con Google ahora. Inténtalo de nuevo en unos instantes.",
+    passwordMismatch: "Las contraseñas no coinciden.",
+    emailRequired: "Indica tu correo.",
+    passwordRequired: "Crea una contraseña.",
+    confirmRequired: "Repite la contraseña para confirmar.",
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña",
   },
 
   brand: {

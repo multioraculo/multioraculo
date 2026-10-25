@@ -590,6 +590,7 @@ export const en: Dictionary = {
     namePlaceholder: "Your name",
     emailPlaceholder: "you@email.com",
     passwordPlaceholder: "Your password",
+    confirmPasswordPlaceholder: "Confirm your password",
     signIn: "Sign in",
     signingIn: "Signing in...",
     createAccount: "Create account",
@@ -603,6 +604,12 @@ export const en: Dictionary = {
     or: "or",
     googleCancelled: "Google sign-in was cancelled. You can try again or use your email.",
     googleFailed: "We couldn't sign you in with Google right now. Please try again in a moment.",
+    passwordMismatch: "The passwords don't match.",
+    emailRequired: "Enter your email.",
+    passwordRequired: "Create a password.",
+    confirmRequired: "Repeat the password to confirm.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
   },
 
   brand: {

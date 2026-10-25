@@ -121,3 +121,25 @@ export function SearchIcon(p: P) {
     </svg>
   )
 }
+
+/** Mostrar senha: olho aberto */
+export function EyeIcon(p: P) {
+  return (
+    <svg {...base(p)}>
+      <path d="M2.8 12S6.9 5.9 12 5.9 21.2 12 21.2 12 17.1 18.1 12 18.1 2.8 12 2.8 12z" />
+      <circle cx="12" cy="12" r="2.9" />
+    </svg>
+  )
+}
+
+/** Ocultar senha: o mesmo olho, riscado */
+export function EyeOffIcon(p: P) {
+  return (
+    <svg {...base(p)}>
+      <path d="M9.9 6.3A8.8 8.8 0 0 1 12 5.9c5.1 0 9.2 6.1 9.2 6.1a17.9 17.9 0 0 1-2.9 3.5" />
+      <path d="M6.3 8.1A17.7 17.7 0 0 0 2.8 12S6.9 18.1 12 18.1a8.8 8.8 0 0 0 3.6-.8" />
+      <path d="M10 10a2.9 2.9 0 0 0 4 4" />
+      <path d="M4 4l16 16" />
+    </svg>
+  )
+}

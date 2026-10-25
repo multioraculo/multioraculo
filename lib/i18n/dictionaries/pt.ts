@@ -602,6 +602,7 @@ export const pt = {
     namePlaceholder: "Seu nome",
     emailPlaceholder: "seu@email.com",
     passwordPlaceholder: "Sua senha",
+    confirmPasswordPlaceholder: "Confirme sua senha",
     signIn: "Entrar",
     signingIn: "Entrando...",
     createAccount: "Criar conta",
@@ -615,6 +616,12 @@ export const pt = {
     or: "ou",
     googleCancelled: "Login com Google cancelado. Você pode tentar de novo ou usar seu email.",
     googleFailed: "Não foi possível entrar com o Google agora. Tente novamente em instantes.",
+    passwordMismatch: "As senhas não coincidem.",
+    emailRequired: "Informe seu email.",
+    passwordRequired: "Crie uma senha.",
+    confirmRequired: "Repita a senha para confirmar.",
+    showPassword: "Mostrar senha",
+    hidePassword: "Ocultar senha",
   },
 
   brand: {
