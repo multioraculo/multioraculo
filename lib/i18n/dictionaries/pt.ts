@@ -693,67 +693,76 @@ export const pt = {
     title: "Oráculos",
     whatIsTitle: "O que é um oráculo",
     whatIsText:
-      "Um oráculo é, em essência, uma tecnologia de percepção. Não é apenas superstição ou acaso, é um mecanismo construído por gerações para transformar padrões invisíveis em símbolos visíveis.",
-    howTitle: "Como funciona tecnicamente",
+      "Um oráculo é um sistema de interpretação: um conjunto fechado de símbolos, uma regra para sorteá-los e uma tradição que ensinou, ao longo de gerações, a ler o que sai. Cartas, hexagramas, runas e conchas não respondem sozinhos. Respondem porque alguém, antes de nós, deu a cada figura um campo de sentido e uma forma de relacioná-la às outras. O acaso do sorteio faz parte do método: ele tira a escolha dos símbolos das mãos de quem pergunta e de quem lê, e é essa distância que torna a leitura possível. Você chega com uma questão, encontra figuras que não escolheu e passa a pensá-la através delas. Chamar essa coincidência de sincronicidade, como fez Jung, é uma perspectiva filosófica, não uma lei demonstrada. O que se pode dizer com segurança é mais simples: um bom símbolo, bem lido, muda o ângulo de quem olha.",
+    howTitle: "Como funciona uma consulta",
     how: [
       {
-        title: "1. Sistema fechado de símbolos",
-        text: "Cada oráculo tem um conjunto limitado e bem definido de signos (hexagramas, cartas, runas, conchas).",
+        title: "1. A pergunta",
+        text: "Você escreve o que quer saber, nas suas palavras. A pergunta define o assunto da leitura e é lida por cada etapa como contexto.",
       },
       {
-        title: "2. Aleatoriedade ritualizada",
-        text: "O sorteio ou lançamento cria a ponte. Ele desarma a mente racional e permite que o inconsciente e o campo de sincronicidade entrem.",
+        title: "2. Cinco sorteios independentes",
+        text: "Cada oráculo faz o seu próprio sorteio, pelas regras da sua tradição: dez cartas de um baralho de 78, seis lançamentos de três moedas, nove runas de um saco de 24, duas quedas de dezesseis conchas, nove cartas de um baralho de 36. Os cinco acontecem em separado, antes de qualquer interpretação, e o resultado de um não influencia o dos outros. A pergunta não interfere no que sai.",
       },
       {
-        title: "3. Repertório interpretativo",
-        text: "Cada símbolo foi cultivado em uma tradição. Ele carrega camadas de sentido acumuladas ao longo de séculos.",
+        title: "3. Uma interpretação por tradição",
+        text: "Os símbolos sorteados são lidos um sistema de cada vez, com apoio nas referências de cada tradição: o que a carta significa naquela posição, o que a linha mutante altera, o que a runa diz de pé ou invertida. A leitura procura seguir o que saiu, com a intensidade que o símbolo tem, descrevendo a situação em vez de dar ordens.",
       },
       {
-        title: "4. Sincronicidade",
-        text: "A correspondência entre sua pergunta e o resultado não é causal, é simbólica. É como se o universo mostrasse um espelho específico naquele instante.",
+        title: "4. Os cinco resultados, um a um",
+        text: "Cada tiragem fica à vista: a mesa com os símbolos como saíram e a leitura daquela tradição.",
+      },
+      {
+        title: "5. A síntese",
+        text: "Por fim, o Multioráculo escreve uma leitura integrada do conjunto. Ela parte do resultado bruto dos cinco sorteios e das referências de cada símbolo, compara o que cada sistema sustenta e responde à pergunta feita. Não é uma votação entre cinco sistemas: é uma leitura do que converge, do que diverge e do que fica em aberto.",
       },
     ],
     askTitle: "Como perguntar",
     askIntro:
-      "A clareza da resposta depende da clareza da pergunta. Mais do que palavras certas, importa a postura interior. Perguntas feitas com abertura e atenção tendem a trazer respostas mais nítidas.",
+      "Pergunte o que você quer saber, do jeito que a dúvida aparece. A leitura procura responder à questão apresentada: quando o conjunto sustenta uma tendência, ela vem dita com clareza, logo no início; quando os sinais se dividem, isso também é dito. Perguntas diretas são bem-vindas, inclusive as que pedem uma decisão.",
     askExamples: [
-      { label: "Pergunte por direção:", example: "\"Para onde mover energia agora?\"" },
-      { label: "Pergunte por gesto:", example: "\"Qual ação transforma este ciclo?\"" },
-      { label: "Pergunte por compreensão:", example: "\"O que ainda não estou vendo?\"" },
+      { label: "Para decidir:", example: "\"Devo tomar essa decisão?\"" },
+      { label: "Para o momento:", example: "\"Este é um bom momento para começar?\"" },
+      { label: "Para um caminho:", example: "\"O que tende a acontecer se eu seguir este caminho?\"" },
+      { label: "Para compreender:", example: "\"O que preciso compreender sobre essa relação?\"" },
     ],
     askOutro:
-      "Evite perguntas fechadas do tipo \"sim ou não\". Prefira enunciados que revelam o movimento do momento. O oráculo não entrega uma ordem, mas um espelho. Ele aponta para onde olhar e com que espírito agir.",
-    deliversTitle: "O que o oráculo entrega",
+      "O que melhora a leitura não é a forma da frase, é a relação entre a pergunta e os símbolos: uma questão situada, sobre uma escolha, uma relação ou um momento concretos, dá aos símbolos algo sobre o que falar. A pergunta define o assunto, mas não prova nada: se ela dá por certo algo que os símbolos não sustentam, a leitura não confirma por cortesia. Uma pergunta de sim ou não pode receber uma resposta inclinada para um lado, ou a constatação honesta de que o conjunto está dividido. O que você não vai receber é uma certeza que os símbolos não dão.",
+    deliversTitle: "O que a leitura oferece",
     deliversText:
-      "O oráculo não prediz o futuro como uma máquina. Ele mostra a qualidade do momento. Quais forças estão atuando. Quais riscos e possibilidades já estão em movimento. Assim como uma bússola não te empurra, mas mostra o norte, o oráculo não decide, mas revela direção.",
+      "Tendências, não veredictos. A leitura diz para onde o conjunto se inclina, o que sustenta essa inclinação, o que pesa contra e o que isso muda na situação perguntada, dito a você e sobre a sua questão. Advertências entram com o tamanho que têm; aberturas também. Ela não prevê acontecimentos, não dá prazos, não prescreve o que fazer e não substitui aconselhamento médico, jurídico ou financeiro. O que oferece é um retrato de uma situação lido por cinco tradições, e um bom motivo para pensar a própria pergunta de novo.",
     traditionsTitle: "As cinco tradições do Multioráculo",
     traditionsIntro:
-      "Para traduzir sua pergunta com precisão, reunimos um conjunto essencial de tradições: cinco linguagens simbólicas que compõem a leitura simultânea do Multioráculo. Cada uma ilumina um plano do momento; juntas, oferecem uma visão coerente e acionável.",
+      "Cinco sistemas simbólicos, de origens e lógicas diferentes, leem a mesma pergunta. Nenhum tem função fixa: cada um fala a sua língua inteira, e é a comparação entre as cinco que interessa.",
     traditions: [
       {
         title: "Tarô",
-        text: "Linguagem de 78 imagens que espelham a jornada psíquica. Na leitura junguiana, os Arcanos Maiores mapeiam a individuação: por exemplo, o Louco como impulso de vida, a Morte como transformação inevitável, a Torre como queda das estruturas rígidas, a Temperança como integração de opostos e o Mundo como totalidade. Esses são exemplos, não uma lista completa. O Tarô não prediz; revela qual arquétipo está em cena e que atitude ele pede agora. Funciona muito bem para dar nome à força interna e ao conflito que moldam a pergunta.",
+        text: "O Multioráculo usa o Tarô de Marselha, com 78 arcanos, lido pelos significados que esse baralho tem, na referência de Yoav Ben-Dov, e não pelos de outros baralhos que compartilham os nomes. A tiragem é a Cruz Celta, de dez posições: a situação, o que a cruza, o fundamento, o passado recente, o coroamento possível, o futuro próximo, como a pessoa se vê, as influências externas, as esperanças ou medos e o resultado. As cartas podem sair de pé ou invertidas, e invertida não é a versão negativa da carta: a inversão desloca o peso entre sentidos que ela já tem, e em algumas não muda nada. A leitura nasce da relação entre cartas, posições e pergunta.",
       },
       {
         title: "I Ching",
-        text: "Clássico chinês da mudança com 64 hexagramas. Cada consulta traz Julgamento, Imagem e, quando surgem, Linhas Mutáveis. Ele descreve a qualidade do tempo, orientando quando avançar, quando recolher e como alinhar caráter e ação. A ética é central: clareza, modéstia, firmeza, suavidade. Em vez de sim ou não, o I Ching oferece ritmo e postura. É excelente para decisões que dependem de timing e de ajuste fino.",
+        text: "O Livro das Mutações descreve situações por meio de 64 hexagramas, figuras de seis linhas. A consulta usa o método das três moedas: seis lançamentos compõem o hexagrama, de baixo para cima, e algumas linhas podem sair mutantes. Quando isso acontece, a leitura ganha três tempos: o hexagrama inicial, o texto das linhas que se movem e o hexagrama em que a figura se transforma. É essa dinâmica, de onde a situação está para onde ela tende a ir, que o I Ching lê como nenhum outro. O texto segue uma tradução de referência do clássico, com seus trigramas, julgamentos e imagens.",
       },
       {
         title: "Runas",
-        text: "Sistema do Elder Futhark em que cada runa é letra, força e princípio de natureza. Elas falam de vontade em ato: iniciar, cortar, proteger, revelar, colher. São diretas e operacionais, favorecendo leituras curtas que viram prática rápida. A chave é cadência: criar ciclos curtos de gesto e revisão, evitando confundir velocidade com progresso. Úteis para destravar movimento e dar disciplina ao impulso.",
+        text: "As 24 runas do Futhark Antigo são sinais que são ao mesmo tempo som, nome e conceito: riqueza, gelo, colheita, dádiva, viagem, dia. A tiragem é um mapa de nove runas, cada uma numa posição: raiz, obstáculo, fundamento oculto, passado próximo, futuro próximo, caminho, sombra, proteção e resultado. As runas para as quais a referência oferece um sentido invertido podem sair invertidas; as nove que ela declara sem reversão são sempre lidas de pé. Reduzir as runas a ação e disciplina é empobrecê-las: elas falam também de herança, vínculo, espera, segredo e alegria.",
       },
       {
         title: "Búzios",
-        text: "Oráculo afro-atlântico que lê a queda de conchas para indicar odus e qualidades dos Orixás, isto é, princípios vivos como justiça, coragem, doçura, movimento e paz. Mostra fluxo e bloqueio do axé na situação e chama responsabilidade: palavra certa, tempo certo, respeito ao limite. No app, tratamos como orientação de princípios e postura. Para ritos e prescrições religiosas, sempre encaminhar a uma casa de culto e liderança qualificada.",
+        text: "O jogo de búzios é um oráculo das religiões de matriz africana no Brasil: dezesseis conchas são lançadas, e o número de conchas abertas indica um Odu, um signo com nome, qualidades e correspondências próprias. O Multioráculo oferece uma versão digital e simplificada desse método, com duas quedas de dezesseis conchas: a primeira dá o Odu principal, a segunda confirma ou complementa, e a leitura se apoia nas correspondências de cada Odu registradas nas referências. É uma experiência simbólica, feita com respeito. Não é uma consulta religiosa: o jogo tradicional é conduzido por uma autoridade formada numa casa de culto, com fundamentos e responsabilidades que nenhum aplicativo reproduz. Para isso, procure essa autoridade.",
       },
       {
         title: "Lenormand",
-        text: "Baralho de 36 cartas, linguagem prática do cotidiano: carta, chave, caminhos, casa, jardim, navio. Lê-se em pares e cadeias como frases curtas, gerando sinais verificáveis no curto prazo. É a ponte entre símbolo e agenda: confirmações, convites, obstáculos logísticos, desdobramentos de 24 a 72 horas. Ótimo para validar um pressentimento com evidência concreta.",
+        text: "O baralho de Lenormand tem 36 cartas com figuras do mundo comum: a casa, o navio, a chave, o jardim, a carta, os caminhos. A tiragem é a mesa de nove cartas, em três linhas de três, lida como um retrato da questão: a carta central é o foco, a primeira é o que provocou a pergunta, e as colunas organizam passado, presente e futuro. Lê-se por relações: linhas, colunas, cantos, pares em que a ordem muda o sentido. É um sistema de precisão, bom para nomear o concreto de uma situação, mas não é um relógio: não promete acontecimentos em horas ou dias, e fala também de pessoas, vínculos e estados.",
       },
     ],
     whyTogetherTitle: "Por que ler os cinco juntos",
-    whyTogetherText:
-      "Cada sistema ilumina um plano do mesmo instante. O Tarô nomeia a dinâmica psíquica. O I Ching alinha ao tempo. As Runas dão gesto e cadência. Os Búzios oferecem eixo ético e relação com o sagrado. O Lenormand ancora tudo no sinal prático. Em conjunto, você não recebe cinco respostas soltas, mas uma visão coerente que vai do arquétipo ao calendário, da intenção à ação.",
+    // três parágrafos: a seção mais importante da página pede respiro
+    whyTogether: [
+      "Cada oráculo interpreta a mesma pergunta numa língua simbólica própria. Lado a lado, os cinco resultados podem convergir, divergir ou iluminar dimensões diferentes da mesma questão: um fala do que se decide, outro do que se herda, outro do que ainda não amadureceu. Nada obriga cinco sistemas independentes a concordar, e o Multioráculo não finge que concordam.",
+      "A síntese é a tentativa de ler esse conjunto como um todo. Ela parte do que cada sorteio sustenta por si, com apoio nas referências de cada símbolo, e só então compara: procura os sinais que se reforçam entre sistemas, as tensões que importam, o que é central e o que é secundário, e relaciona tudo isso à pergunta concreta. Não é uma contagem de votos. Um sinal pesa pela centralidade do símbolo, pela posição que ocupa, pela relevância para o que foi perguntado e pela coerência com o resto, e as contradições relevantes entram na leitura com o peso que têm, em vez de serem apagadas.",
+      "O que se busca é uma resposta compreensível, que preserve a complexidade quando ela é real: firme onde a sustentação é firme, matizada onde é parcial, e dividida quando o conjunto está dividido, porque isso também é uma resposta. O diferencial não está em cinco confirmações da mesma frase, mas em cinco leituras independentes que se tornam uma interpretação, com suas convergências e suas tensões à vista.",
+    ],
   },
 
   faq: {
@@ -761,11 +770,11 @@ export const pt = {
     items: [
       {
         q: "O Multioráculo prevê o futuro?",
-        a: "Não. Ele revela a qualidade do momento e a postura eficaz agora. Você continua no comando das suas escolhas.",
+        a: "Não. Ele lê tendências da situação a partir dos símbolos sorteados, com o grau de certeza que eles permitem. As escolhas continuam suas.",
       },
       {
         q: "O que recebo em cada tiragem?",
-        a: "Uma leitura simultânea de Tarô, I Ching, Runas, Búzios e Lenormand com síntese unificada e os cinco oráculos em abas para consulta completa. Inclui um sinal prático para as próximas 24 a 72 horas. Os planos incluem também interpretação de sonhos, a Jornada onírica e o Diário.",
+        a: "Uma leitura de Tarô, I Ching, Runas, Búzios e Lenormand sobre a mesma pergunta: os cinco oráculos em abas, cada um com a sua tiragem e a sua interpretação, e a síntese integrada do conjunto.",
       },
       {
         q: "Quantas tiragens tenho em cada plano?",
@@ -785,7 +794,7 @@ export const pt = {
       },
       {
         q: "O que faço se as respostas parecerem se contradizer?",
-        a: "Use a síntese unificada como referência principal. Ela alinha os cinco ângulos em uma orientação coerente. Depois, aprofunde nas abas para ver nuances de timing, atitude e verificação prática.",
+        a: "Leia a síntese: é nela que as cinco leituras são comparadas, e as contradições relevantes aparecem ali com o peso que têm, em vez de serem apagadas. Depois, volte às abas para ver de onde vem cada sinal. Quando o conjunto está dividido, a síntese diz isso, e esse é o resultado da consulta.",
       },
       {
         q: "Com que frequência devo perguntar?",
@@ -804,12 +813,12 @@ export const pt = {
         a: "Com respeito à tradição afro-brasileira. Usamos linguagem de princípios e postura. Para ritos, prescrições específicas e orientação religiosa, procure uma casa e um sacerdote qualificado.",
       },
       {
-        q: "O que significa sinal prático de 24 a 72 horas?",
-        a: "É um indicador verificável no cotidiano, como mensagem, convite, confirmação ou limiar concreto. Se o sinal vier, avance. Se não vier, refine a pergunta e ajuste a postura.",
+        q: "A leitura dá prazos?",
+        a: "Não. A síntese descreve tendências da situação e não prevê acontecimentos nem datas. Nenhum dos cinco métodos, como são usados aqui, sustenta janelas de tempo.",
       },
       {
         q: "Como tornar minhas perguntas mais claras?",
-        a: "Prefira perguntas abertas e situadas no presente. Exemplos: Qual gesto destrava este ciclo? O que preciso deixar para trás agora? Onde está o fio guia desta decisão?",
+        a: "Pergunte o que você quer saber, de forma situada: sobre uma decisão, uma relação ou um momento concretos. Perguntas diretas, inclusive de sim ou não, são bem-vindas. A síntese responde com a tendência que o conjunto sustenta, ou diz que ele está dividido.",
       },
       {
         q: "O Ilimitado tem algum limite oculto?",

@@ -681,67 +681,76 @@ export const en: Dictionary = {
     title: "Oracles",
     whatIsTitle: "What an oracle is",
     whatIsText:
-      "An oracle is, in essence, a technology of perception. It is not mere superstition or chance; it is a mechanism built over generations to turn invisible patterns into visible symbols.",
-    howTitle: "How it works, technically",
+      "An oracle is a system of interpretation: a closed set of symbols, a rule for drawing them, and a tradition that has taught, over generations, how to read what comes up. Cards, hexagrams, runes and shells do not answer on their own. They answer because someone, before us, gave each figure a field of meaning and a way of relating it to the others. The chance of the draw is part of the method: it takes the choice of symbols out of the hands of the one who asks and the one who reads, and that distance is what makes a reading possible. You arrive with a question, meet figures you did not choose, and begin to think the question through them. Calling that coincidence synchronicity, as Jung did, is a philosophical perspective, not a demonstrated law. What can be said with confidence is simpler: a good symbol, well read, changes the angle of the one who looks.",
+    howTitle: "How a consultation works",
     how: [
       {
-        title: "1. A closed system of symbols",
-        text: "Each oracle has a limited, well-defined set of signs (hexagrams, cards, runes, shells).",
+        title: "1. The question",
+        text: "You write what you want to know, in your own words. The question sets the subject of the reading and is read by every step as context.",
       },
       {
-        title: "2. Ritualized randomness",
-        text: "The draw or the cast builds the bridge. It disarms the rational mind and lets the unconscious and the field of synchronicity come in.",
+        title: "2. Five independent draws",
+        text: "Each oracle makes its own draw, by the rules of its tradition: ten cards from a deck of 78, six casts of three coins, nine runes from a bag of 24, two throws of sixteen shells, nine cards from a deck of 36. The five happen separately, before any interpretation, and the result of one never influences the others. The question has no effect on what comes up.",
       },
       {
-        title: "3. An interpretive repertoire",
-        text: "Each symbol was cultivated within a tradition. It carries layers of meaning accumulated over centuries.",
+        title: "3. One interpretation per tradition",
+        text: "The drawn symbols are read one system at a time, supported by the references of each tradition: what the card means in that position, what the moving line changes, what the rune says upright or reversed. The reading seeks to follow what came up, with the intensity the symbol carries, describing the situation rather than giving orders.",
       },
       {
-        title: "4. Synchronicity",
-        text: "The correspondence between your question and the result is not causal; it is symbolic. It is as if the universe held up a specific mirror at that very instant.",
+        title: "4. The five results, one by one",
+        text: "Each draw stays in view: the spread with the symbols exactly as they fell, and the reading from that tradition.",
+      },
+      {
+        title: "5. The synthesis",
+        text: "Finally, Multioráculo writes an integrated reading of the whole. It starts from the raw result of the five draws and the references for each symbol, compares what each system supports, and answers the question that was asked. It is not a vote among five systems: it is a reading of what converges, what diverges, and what remains open.",
       },
     ],
     askTitle: "How to ask",
     askIntro:
-      "The clarity of the answer depends on the clarity of the question. More than the right words, what matters is the inner posture. Questions asked with openness and attention tend to bring sharper answers.",
+      "Ask what you want to know, the way the doubt presents itself. The reading seeks to answer the question put to it: when the whole supports a tendency, it is stated clearly, right at the start; when the signs are split, that is stated too. Direct questions are welcome, including the ones that ask for a decision.",
     askExamples: [
-      { label: "Ask for direction:", example: "\"Where should I move my energy now?\"" },
-      { label: "Ask for a gesture:", example: "\"Which action transforms this cycle?\"" },
-      { label: "Ask for understanding:", example: "\"What am I still not seeing?\"" },
+      { label: "To decide:", example: "\"Should I make this decision?\"" },
+      { label: "About timing:", example: "\"Is this a good moment to begin?\"" },
+      { label: "About a path:", example: "\"What tends to happen if I follow this path?\"" },
+      { label: "To understand:", example: "\"What do I need to understand about this relationship?\"" },
     ],
     askOutro:
-      "Avoid closed \"yes or no\" questions. Prefer statements that reveal the movement of the moment. The oracle does not hand down an order, but a mirror. It points to where to look and in what spirit to act.",
-    deliversTitle: "What the oracle delivers",
+      "What improves a reading is not the shape of the sentence but the relationship between the question and the symbols: a situated question, about a concrete choice, relationship or moment, gives the symbols something to speak to. The question sets the subject, but it proves nothing: if it takes for granted something the symbols do not support, the reading will not confirm it out of courtesy. A yes-or-no question may receive an answer that leans one way, or the honest finding that the whole is divided. What you will not receive is a certainty the symbols do not give.",
+    deliversTitle: "What the reading offers",
     deliversText:
-      "The oracle does not predict the future like a machine. It shows the quality of the moment. Which forces are at work. Which risks and possibilities are already in motion. Just as a compass does not push you but shows north, the oracle does not decide, it reveals direction.",
+      "Tendencies, not verdicts. The reading says which way the whole leans, what supports that lean, what weighs against it, and what it changes in the situation you asked about, said to you and about your question. Warnings come in at the size they have; openings do too. It does not predict events, does not set deadlines, does not prescribe what to do, and does not replace medical, legal or financial advice. What it offers is a portrait of a situation read by five traditions, and a good reason to think your own question through again.",
     traditionsTitle: "The five traditions of Multioráculo",
     traditionsIntro:
-      "To translate your question precisely, we gathered an essential set of traditions: five symbolic languages that make up the simultaneous reading of Multioráculo. Each one illuminates one plane of the moment; together, they offer a coherent, actionable view.",
+      "Five symbolic systems, of different origins and logics, read the same question. None has a fixed role: each speaks its whole language, and it is the comparison between the five that matters.",
     traditions: [
       {
         title: "Tarot",
-        text: "A language of 78 images that mirror the psychic journey. In a Jungian reading, the Major Arcana map individuation: for instance, the Fool as life impulse, Death as inevitable transformation, the Tower as the fall of rigid structures, Temperance as the integration of opposites and the World as wholeness. These are examples, not a complete list. Tarot does not predict; it reveals which archetype is on stage and what attitude it asks for now. It works very well for naming the inner force and the conflict shaping the question.",
+        text: "Multioráculo uses the Tarot de Marseille, with its 78 cards, read by the meanings this deck carries, following Yoav Ben-Dov, and not by those of other decks that share the names. The spread is the Celtic Cross, with ten positions: the situation, what crosses it, the foundation, the recent past, the possible crowning, the near future, how the person sees themselves, outside influences, hopes or fears, and the outcome. Cards may come up upright or reversed, and reversed is not the negative version of the card: reversal shifts the weight among meanings the card already carries, and in some cards it changes nothing. The reading grows out of the relationship between cards, positions and question.",
       },
       {
         title: "I Ching",
-        text: "The Chinese classic of change, with 64 hexagrams. Each consultation brings the Judgment, the Image and, when they appear, Moving Lines. It describes the quality of time, guiding when to advance, when to withdraw and how to align character and action. Ethics is central: clarity, modesty, firmness, gentleness. Instead of yes or no, the I Ching offers rhythm and posture. It is excellent for decisions that depend on timing and fine adjustment.",
+        text: "The Book of Changes describes situations through 64 hexagrams, figures of six lines. The consultation uses the three-coin method: six casts build the hexagram, from the bottom up, and some lines may come up moving. When that happens, the reading gains three moments: the initial hexagram, the text of the lines that move, and the hexagram the figure turns into. It is this dynamic, from where the situation stands to where it tends to go, that the I Ching reads like no other system. The text follows a reference translation of the classic, with its trigrams, judgments and images.",
       },
       {
         title: "Runes",
-        text: "The Elder Futhark system, in which each rune is a letter, a force and a principle of nature. They speak of will in action: to begin, to cut, to protect, to reveal, to harvest. They are direct and operational, favoring short readings that turn into quick practice. The key is cadence: creating short cycles of gesture and review, without confusing speed with progress. Useful for unlocking movement and disciplining impulse.",
+        text: "The 24 runes of the Elder Futhark are signs that are at once a sound, a name and a concept: wealth, ice, harvest, gift, journey, day. The spread is a map of nine runes, each in its own position: root, obstacle, hidden foundation, recent past, near future, path, shadow, protection and outcome. Runes for which the reference offers a reversed meaning may come up reversed; the nine it declares without reversal are always read upright. Reducing the runes to action and discipline impoverishes them: they also speak of inheritance, bonds, waiting, secrets and joy.",
       },
       {
         title: "Búzios",
-        text: "An Afro-Atlantic oracle that reads the fall of cowrie shells to indicate odus and the qualities of the Orishas, that is, living principles such as justice, courage, sweetness, movement and peace. It shows the flow and blockage of axé in the situation and calls for responsibility: the right word, the right time, respect for limits. In the app we treat it as guidance on principles and posture. For rites and religious prescriptions, always turn to a house of worship and qualified leadership.",
+        text: "The cowrie-shell oracle belongs to the African-derived religions of Brazil: sixteen shells are cast, and the number that land open points to an Odu, a sign with its own name, qualities and correspondences. Multioráculo offers a digital, simplified version of this method, with two throws of sixteen shells: the first gives the main Odu, the second confirms or complements it, and the reading rests on the correspondences of each Odu recorded in the references. It is a symbolic experience, made with respect. It is not a religious consultation: the traditional game is conducted by an authority trained in a house of worship, with foundations and responsibilities no app can reproduce. For that, seek out such an authority.",
       },
       {
         title: "Lenormand",
-        text: "A 36-card deck, the practical language of everyday life: letter, key, crossroads, house, garden, ship. It is read in pairs and chains like short sentences, producing verifiable short-term signs. It is the bridge between symbol and calendar: confirmations, invitations, logistical obstacles, developments within 24 to 72 hours. Great for validating a hunch with concrete evidence.",
+        text: "The Lenormand deck has 36 cards with figures from everyday life: the house, the ship, the key, the garden, the letter, the crossroads. The spread is the nine-card table, in three rows of three, read as a portrait of the question: the central card is the focus, the first is what prompted the question, and the columns organize past, present and future. It is read through relationships: rows, columns, corners, pairs in which the order changes the meaning. It is a system of precision, good at naming the concrete side of a situation, but it is not a clock: it does not promise events within hours or days, and it also speaks of people, bonds and states.",
       },
     ],
     whyTogetherTitle: "Why read all five together",
-    whyTogetherText:
-      "Each system illuminates one plane of the same instant. Tarot names the psychic dynamic. The I Ching aligns with time. The Runes give gesture and cadence. Búzios offers an ethical axis and a relationship with the sacred. Lenormand anchors everything in the practical sign. Together, you do not receive five loose answers, but a coherent view that goes from archetype to calendar, from intention to action.",
+    // três parágrafos: a seção mais importante da página pede respiro
+    whyTogether: [
+      "Each oracle interprets the same question in a symbolic language of its own. Side by side, the five results may converge, diverge, or light up different dimensions of the same question: one speaks of what is being decided, another of what is inherited, another of what has not yet ripened. Nothing obliges five independent systems to agree, and Multioráculo does not pretend they do.",
+      "The synthesis is the attempt to read that whole as one. It starts from what each draw supports on its own, with the references for each symbol, and only then compares: it looks for the signs that reinforce one another across systems, the tensions that matter, what is central and what is secondary, and relates all of it to the concrete question. It is not a count of votes. A sign weighs by the centrality of the symbol, the position it occupies, its relevance to what was asked and its coherence with the rest, and relevant contradictions enter the reading with the weight they have, rather than being erased.",
+      "What is sought is an understandable answer that preserves complexity when it is real: firm where the support is firm, nuanced where it is partial, and divided when the whole is divided, because that too is an answer. The difference lies not in five confirmations of the same sentence, but in five independent readings becoming one interpretation, with their convergences and their tensions in plain view.",
+    ],
   },
 
   faq: {
@@ -749,11 +758,11 @@ export const en: Dictionary = {
     items: [
       {
         q: "Does Multioráculo predict the future?",
-        a: "No. It reveals the quality of the moment and the effective posture right now. You remain in charge of your choices.",
+        a: "No. It reads tendencies in the situation from the symbols that were drawn, with the degree of certainty they allow. The choices remain yours.",
       },
       {
         q: "What do I get in each reading?",
-        a: "A simultaneous reading of Tarot, I Ching, Runes, Búzios and Lenormand with a unified synthesis and the five oracles in tabs for full consultation. It includes a practical sign for the next 24 to 72 hours. The plans also include dream interpretation, the Dream Journey and the Journal.",
+        a: "A reading of Tarot, I Ching, Runes, Búzios and Lenormand on the same question: the five oracles in tabs, each with its own draw and interpretation, and the integrated synthesis of the whole.",
       },
       {
         q: "How many readings do I get on each plan?",
@@ -773,7 +782,7 @@ export const en: Dictionary = {
       },
       {
         q: "What if the answers seem to contradict each other?",
-        a: "Use the unified synthesis as your main reference. It aligns the five angles into a coherent orientation. Then go deeper in the tabs to see nuances of timing, attitude and practical verification.",
+        a: "Read the synthesis: that is where the five readings are compared, and relevant contradictions appear there with the weight they have, rather than being erased. Then go back to the tabs to see where each sign comes from. When the whole is divided, the synthesis says so, and that is the result of the consultation.",
       },
       {
         q: "How often should I ask?",
@@ -792,12 +801,12 @@ export const en: Dictionary = {
         a: "With respect for the Afro-Brazilian tradition. We use the language of principles and posture. For rites, specific prescriptions and religious guidance, seek a house of worship and a qualified priest.",
       },
       {
-        q: "What does a practical sign within 24 to 72 hours mean?",
-        a: "It is a verifiable indicator in everyday life, such as a message, an invitation, a confirmation or a concrete threshold. If the sign comes, move forward. If it does not, refine the question and adjust your posture.",
+        q: "Does the reading give timeframes?",
+        a: "No. The synthesis describes tendencies in the situation and does not predict events or dates. None of the five methods, as used here, supports time windows.",
       },
       {
         q: "How can I make my questions clearer?",
-        a: "Prefer open questions set in the present. Examples: Which gesture unlocks this cycle? What do I need to leave behind now? Where is the guiding thread of this decision?",
+        a: "Ask what you want to know, in a situated way: about a concrete decision, relationship or moment. Direct questions, including yes-or-no questions, are welcome. The synthesis answers with the tendency the whole supports, or says that it is divided.",
       },
       {
         q: "Does Unlimited have any hidden limit?",

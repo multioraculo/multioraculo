@@ -84,7 +84,11 @@ export default async function OraculosPage({ params }: { params: Params }) {
 
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mt-6">
                   <h3 className="text-lg font-medium text-white mb-2">{t.whyTogetherTitle}</h3>
-                  <p className="text-white/80 leading-relaxed text-sm">{t.whyTogetherText}</p>
+                  <div className="space-y-3">
+                    {t.whyTogether.map((paragrafo, i) => (
+                      <p key={i} className="text-white/80 leading-relaxed text-sm">{paragrafo}</p>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
