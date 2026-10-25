@@ -337,8 +337,14 @@
    cruza é girada por transform, mas a caixa dela continua em pé, por cima da
    central, e engolia as faixas visíveis dela. Só a lâmina (girada) recebe o
    ponteiro; o evento sobe até o botão como em qualquer carta. */
-.tc-hit { pointer-events: none; }
+.tc-hit { pointer-events: none; container-type: inline-size; }
 .tc-hit .tc-slot { pointer-events: auto; }
+/* a mesa encolhe inteira no celular: a lâmina mede a tipografia pela largura
+   real da carta (--tk-cw: 100cqw, container = .tc-hit), e o número da posição
+   ganha um pouco de corpo onde a carta é pequena */
+@media (max-width: 639px) {
+  .tc-num { font-size: 11px; }
+}
 /* número da posição: editorial, pequeno, na calha entre as cartas; a camada
    fica acima de todas as cartas e nunca recebe clique */
 .tc-num {

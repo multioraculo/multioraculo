@@ -15,11 +15,14 @@ import FocusCard, { useFocusCard } from "@/components/focus-card"
  * atrás, sombra de contato e projetada) em volta da imagem intacta. Nenhum
  * filtro toca a ilustração.
  *
- * Desktop: geometria tradicional da Cruz Celta (cruz + bastão), com o número
- * da posição em cada carta; a lista textual logo abaixo dá posição, nome e
- * orientação. Celular: grade de duas colunas na ordem das posições, com
- * rótulo, nome e orientação em cada carta. Carta invertida termina
- * fisicamente de cabeça para baixo; a que cruza deita sobre a central.
+ * A geometria é a tradicional da Cruz Celta (cruz + bastão), com o número da
+ * posição em cada carta, EM QUALQUER TELA: a mesa é desenhada em porcentagens
+ * de uma caixa de proporção fixa que ocupa a largura disponível até o tamanho
+ * do desktop, e a tipografia da lâmina acompanha a largura real da carta
+ * (unidades de container). No celular ela encolhe inteira, em vez de virar uma
+ * lista carta a carta; a lista textual logo abaixo continua dando posição,
+ * nome e orientação. Carta invertida termina fisicamente de cabeça para baixo;
+ * a que cruza deita sobre a central.
  *
  * Toque numa carta: ela sai da mesa e aparece maior; segundo toque vira e
  * mostra o significado; terceiro toque devolve à mesa (FocusCard).
@@ -99,12 +102,16 @@ export function TarotCapsule({
   name,
   label,
   width,
+  sizes,
   prioridade = false,
 }: {
   card: TarotCardRef
   name: string
   label: string
+  /** largura em px; ausente = fluida (100% do container, tipografia em unidades de container) */
   width?: number
+  /** `sizes` do <img> quando a largura é fluida */
+  sizes?: string
   /** carta da primeira dobra: baixa já, sem esperar o layout (loading=eager) */
   prioridade?: boolean
 }) {
@@ -119,7 +126,7 @@ export function TarotCapsule({
     if (img && img.complete && img.naturalWidth > 0) setCarregando(false)
   }, [])
   return (
-    <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: `${width ?? 150}px` }}>
+    <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: width ? `${width}px` : "100cqw" }}>
       {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
       <span className="tk-rule tk-rule-top" aria-hidden="true" />
       <div className={"tk-art" + (carregando ? " is-loading" : "")}>
@@ -129,7 +136,7 @@ export function TarotCapsule({
           // duas larguras (300 e 600): o navegador pega a menor que cobre a lâmina
           // na densidade da tela; a ampliação de 300 px CSS sempre recebe a de 600
           srcSet={tarotArtSrcSet(card.id)}
-          sizes={(width ?? 150) + "px"}
+          sizes={width ? width + "px" : (sizes ?? "150px")}
           alt={name}
           width={600}
           height={992}
@@ -163,18 +170,24 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
   const openLabel = (e: (typeof entries)[number]) => `${e.label}. ${dict.focus.open}`
 
   const wobble = (i: number) => (((i * 7) % 5) - 2) * 1.5
+  // geometria em porcentagem da caixa: a mesma cruz em qualquer largura
+  const px = (v: number) => `${(v / BOX_W) * 100}%`
+  const py = (v: number) => `${(v / BOX_H) * 100}%`
+  // a carta ocupa CARD_W/BOX_W da caixa, e a caixa no máximo BOX_W (ou a largura da tela, menos as margens)
+  const sizesCarta = `(min-width: ${BOX_W + 48}px) ${CARD_W}px, ${Math.round((CARD_W / BOX_W) * 100)}vw`
 
   return (
     <>
-      {/* Desktop: geometria da Cruz Celta */}
-      <div className="hidden sm:flex justify-center" role="list" aria-label={t.spreadLabel}>
-        <div className="relative" style={{ width: BOX_W, height: BOX_H }}>
+      {/* A Cruz Celta, em qualquer tela: caixa de proporção fixa, cartas em porcentagem */}
+      <div className="flex justify-center" role="list" aria-label={t.spreadLabel}>
+        <div className="relative w-full" style={{ maxWidth: BOX_W, aspectRatio: `${BOX_W} / ${BOX_H}` }}>
           {entries.map((e, i) => {
             const s = SLOTS[i]
             const rot = s.rot + (e.card.reversed ? 180 : 0)
             return (
-              // tc-hit: o clique segue a lâmina girada, não a caixa em pé (ver globals.css)
-              <div key={i} role="listitem" aria-label={e.label} className={`absolute tc-hit ${focus.focusedIndex === i ? "fc-away" : ""}`} style={{ left: s.x, top: s.y, width: CARD_W, zIndex: s.z }}>
+              // tc-hit: o clique segue a lâmina girada, não a caixa em pé; é também o
+              // container de que a lâmina tira a medida da tipografia (ver globals.css)
+              <div key={i} role="listitem" aria-label={e.label} className={`absolute tc-hit ${focus.focusedIndex === i ? "fc-away" : ""}`} style={{ left: px(s.x), top: py(s.y), width: px(CARD_W), zIndex: s.z }}>
                 <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
                 <div
                   className={`tc-slot ${animate ? "tc-deal-enter" : ""}`}
@@ -188,7 +201,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
                     } as React.CSSProperties
                   }
                 >
-                  <TarotCapsule card={e.card} name={e.name} label={e.label} width={CARD_W} />
+                  <TarotCapsule card={e.card} name={e.name} label={e.label} sizes={sizesCarta} />
                 </div>
                 </button>
               </div>
@@ -199,7 +212,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
             <span
               key={`n${i}`}
               className={`tc-num ${NUM[i].lado === "dir" ? "tc-num-dir" : ""} ${focus.focusedIndex === i ? "fc-away" : ""}`}
-              style={{ left: NUM[i].x, top: NUM[i].y }}
+              style={{ left: px(NUM[i].x), top: py(NUM[i].y) }}
               aria-hidden="true"
             >
               <span className={animate ? "tc-num-enter" : undefined} style={{ animationDelay: animate ? `${i * STEP_MS + 420}ms` : undefined }}>
@@ -208,39 +221,6 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
             </span>
           ))}
         </div>
-      </div>
-
-      {/* Celular: grade na ordem das posições, com rótulos */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-6 sm:hidden" role="list" aria-label={t.spreadLabel}>
-        {entries.map((e, i) => {
-          const rot = e.card.reversed ? 180 : 0
-          return (
-            <div key={i} role="listitem" aria-label={e.label} className={`flex flex-col items-center text-center ${focus.focusedIndex === i ? "fc-away" : ""}`}>
-              <span className="text-white/40 text-[12px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-end mb-2">
-                {e.position}
-              </span>
-              <button type="button" className="fc-btn" onClick={() => focus.open(i)} aria-label={openLabel(e)}>
-              <div
-                className={`tc-slot ${animate ? "tc-deal-enter" : ""}`}
-                style={
-                  {
-                    width: "min(100%, 150px)",
-                    "--rot": `${rot}deg`,
-                    "--wob": `${wobble(i)}deg`,
-                    "--dx": `${i % 2 === 0 ? -120 : 120}px`,
-                    "--dy": "-140px",
-                    animationDelay: animate ? `${i * STEP_MS}ms` : undefined,
-                  } as React.CSSProperties
-                }
-              >
-                <TarotCapsule card={e.card} name={e.name} label={e.label} width={150} />
-              </div>
-              </button>
-              <span className="text-white/90 text-xs font-medium leading-tight mt-2">{e.name}</span>
-              <span className={`text-[12px] mt-0.5 leading-tight ${e.card.reversed ? "text-amber-200/80" : "text-white/35"}`}>{e.orientation}</span>
-            </div>
-          )
-        })}
       </div>
 
       <FocusCard
