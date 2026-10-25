@@ -36,6 +36,20 @@ type Props = {
   cards?: TarotCardRef[] | null
   /** distribuição carta a carta só na primeira aparição (leitura ao vivo) */
   animate?: boolean
+  /**
+   * A interpretação ainda não chegou: o verso promete que o significado
+   * aparece quando o oráculo terminar de escrever.
+   *
+   * Isto NÃO é o mesmo que `animate`, e era de `animate` que vinha antes. O
+   * sorteio chega ao navegador antes das cinco interpretações (evento "draw"),
+   * e nessa janela a promessa é verdadeira. Depois do evento "oracles" ela
+   * deixa de ser — mas `animate` continua ligado, porque é a flag da
+   * distribuição das cartas. Uma carta sem significado passava a prometer para
+   * sempre um texto que não vem mais, e com o detector de transcrição isso
+   * ficou visível: na tiragem com 9 das 10 cartas invertidas os dez
+   * significados são descartados, e as dez cartas prometiam.
+   */
+  pending?: boolean
 }
 
 // Proporção da arte: 205 × 397
@@ -154,7 +168,7 @@ export function TarotCapsule({
   )
 }
 
-export default function TarotSpread({ items, cards, animate = false }: Props) {
+export default function TarotSpread({ items, cards, animate = false, pending = false }: Props) {
   const { dict } = useI18n()
   const t = dict.tarot
   const focus = useFocusCard()
@@ -235,7 +249,7 @@ export default function TarotSpread({ items, cards, animate = false }: Props) {
         onClose={focus.close}
         width="min(78vw, 300px, 31vh)"
         aspect="92 / 178"
-        live={animate}
+        live={pending}
       />
 
     </>

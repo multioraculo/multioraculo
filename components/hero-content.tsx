@@ -749,7 +749,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                         )}
                         {key === "tarot" && oracle?.draw?.cards && (
                           <div className="mb-5 pb-5 border-b border-white/10">
-                            <TarotSpread items={items} cards={oracle.draw.cards} animate />
+                            <TarotSpread items={items} cards={oracle.draw.cards} animate pending={!oracle?.reading} />
                           </div>
                         )}
                         {key === "lenormand" && (

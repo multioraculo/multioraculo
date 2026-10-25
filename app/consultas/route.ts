@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
-import { drawAll, newSeed, normalizeText, RUNES, type OracleKey } from "@/lib/oracles/draw"
+import { drawAll, newSeed, normalizeText, RUNES, TAROT_DECK, type OracleKey } from "@/lib/oracles/draw"
 import { type Evidence } from "@/lib/oracles/evidence"
 import { buildCBaseMinMaterial, getEvidenceForOracle, ORACLE_SOURCES } from "@/lib/oracles/references"
 import { renderDraw, type RenderedDraw } from "@/lib/oracles/localize"
 import { tarotCardRef, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { fichaDaCarta, referenciaDoTarot, REVERSAO_METODO } from "@/lib/oracles/tarot-referencia"
+import { eTranscricao, fonteDaCarta } from "@/lib/oracles/transcricao"
 import { lenormandId } from "@/lib/oracles/lenormand-assets"
 import {
   languageRule,
@@ -140,9 +142,17 @@ function validateEvidence(candidate: unknown, provided: Evidence[]): Evidence[] 
 
 const SYSTEM_GUIDES: Record<OracleKey, string> = {
   tarot: `TARÔ — Cruz Celta (10 posições).
-meanings[i]: significado tradicional da carta i na posição i (invertida quando indicado), aplicado à pergunta — 1-2 frases técnicas, sem floreio.
+meanings[i]: significado tradicional da carta i na posição i, aplicado à pergunta — 1-2 frases técnicas, sem floreio. Carta invertida: diga o que a inversão desloca NESTA carta, segundo a reversão que o material dá para ela; se o material diz que o sentido permanece semelhante, diga isso. Inversão não é "versão negativa" da carta.
 notes: padrão geral em uma frase (ex.: predominância de um naipe e o que isso indica), coerente com as cartas listadas.
-reading: leitura carta a carta — para cada uma, o que ela diz sobre a pergunta naquela posição, fiel ao simbolismo do Tarô de Marselha.`,
+reading: leitura carta a carta — para cada uma, o que ela diz sobre a pergunta naquela posição, fiel ao simbolismo do Tarô de Marselha.
+
+T1. A FICHA DESTA CARTA MANDA, E ELA É DO MARSELHA. Os trechos marcados "sobre <carta>" são a ficha daquela carta neste baralho, e o significado sai dela. Onde o que você associa à carta por OUTRO baralho divergir da ficha — o Rider-Waite acima de tudo, porque é dele que vêm as associações mais fixas —, vale a ficha, e a associação externa não entra. Um nome igual não é um significado igual: no Marselha, Cinco de Copas é conexões e popularidade, não luto; A Torre é romper um confinamento, não catástrofe; Oito de Ouros é trabalho de rotina e avanço paciente, não falta de dedicação. Não atribua bloqueio, escassez, perda nem fracasso a uma carta porque outro sistema atribui: se o sentido não está na ficha, não está na carta. Relacionar as cartas entre si e aplicá-las à posição e à pergunta continua sendo o trabalho — transcrever a ficha, não.
+
+T1b. CADA "meanings[i]" É SEU TEXTO, NÃO A FICHA. Escreva a interpretação daquela carta NAQUELA posição e em relação à pergunta, com as suas palavras. Seja fiel ao sentido da ficha e não copie trechos extensos dela: não transcreva, não enfileire as frases da ficha, não cite autor nem título. Um termo próprio da tradição pode e deve ser usado; a ficha inteira, repetida, não é interpretação — é cópia, e será descartada antes de chegar à pessoa.
+
+T2. INVERTIDA NÃO É PEDIDO DE CONTRASTE. Quando a ficha diz que o sentido permanece semelhante, a inversão não acrescenta significado: leia o sentido-base naquela posição e diga que a inversão não o desloca. A carta continua podendo pesar, se o sentido-base pesa ou se a posição e as vizinhas sustentam — mas a inversão, sozinha, nunca é a razão para acrescentar bloqueio, atraso, escassez ou fracasso. Não invente diferença para justificar o rótulo.
+
+T3. TENDÊNCIA SUSTENTADA, NÃO ORDEM. Responda o que foi perguntado, com clareza: se perguntaram se é para fazer agora, diga o que as cartas sustentam sobre fazer agora, sem evasão e sem empatar de propósito. Diga como tendência da situação, não como instrução a quem pergunta — "o que pesa nesta posição é o julgamento com base em regras claras", e não "você deve considerar as implicações". Nenhuma forma de ordem dirigida ao consulente: nada de "você deve", "procure", "evite", "espere", "mantenha", "avalie", "busque", "reflita". Possibilidade condicional vale quando o símbolo a sustenta; condição que você acrescentou, não. Isto vale em "meanings" E em "reading", nos dois: não há campo em que a ordem seja permitida. E cuidado com a pergunta que já vem em forma de pedido de conselho — "o que preciso considerar", "o que devo fazer": responda NOMEANDO os fatores que pesam na situação, não dizendo à pessoa que os considere.`,
 
   iching: `I CHING — Hexagrama principal + linhas mutantes + hexagrama resultante.
 meanings[0] (hexagrama principal): "Trigrama inferior: [nome] ([atributo]). Trigrama superior: [nome] ([atributo]). Julgamento: [texto clássico resumido]".
@@ -328,7 +338,36 @@ async function interpretAll(
         throw new ConsultaError("references_unavailable")
       }
 
-      const prompt = oraclePrompt(k, labels[k], meta.method, question, r, evidence, locale)
+      // O TARÔ RECEBE A FICHA ESTRUTURADA, como a síntese já recebe.
+      //
+      // Até aqui esta leitura tinha só a busca lexical em `jung_tarot.pdf`, um
+      // ensaio sobre os Arcanos Maiores que não menciona inversão uma única
+      // vez. Medido nas 14 tiragens congeladas: 2,6 das 10 cartas com algum
+      // trecho, e as 70 invertidas chegando sem uma linha sobre o que inversão
+      // significa — então o modelo preenchia com o senso comum de "invertida =
+      // versão ruim da carta", que não é o que a fonte do produto diz. Em 18
+      // dessas 70 a fonte diz "Similar." (a inversão não muda nada) e o rótulo
+      // era ativamente enganoso.
+      //
+      // `about` É OBRIGATÓRIO AQUI, e é o que separa esta correção de um
+      // paliativo. Este prompt rotula cada trecho com `about` ("Fonte N — sobre
+      // X"), e a regra 6 afirma à pessoa do modelo que cada trecho diz a que
+      // símbolo pertence; `referenciaDoTarot` preenche `itemIndex`, que é o que
+      // a SÍNTESE usa ("[item N]"). Sem o rótulo, as 10 fichas chegam anônimas e
+      // o modelo tem de adivinhar o pareamento. Medido na bateria de 25/10: com
+      // `itemIndex` só, a ancoragem na fonte sobe de 0,56 para 1,11 palavras por
+      // carta; com `about`, vai a 3,12, e a advertência sem amparo na ficha cai
+      // de 0,90 para 0,47 por carta.
+      if (k === "tarot") {
+        const fichas = referenciaDoTarot(draw.items, locale).map((e) => ({
+          ...e,
+          about: r.items[e.itemIndex as number]?.name,
+        }))
+        evidence = [...fichas, ...evidence]
+      }
+
+      const method = k === "tarot" ? `${meta.method}. ${REVERSAO_METODO[locale]}` : meta.method
+      const prompt = oraclePrompt(k, labels[k], method, question, r, evidence, locale)
 
       const attempt = async (): Promise<any> => {
         const timeout = Math.min(ORACLE_TIMEOUT_MS, Math.max(4_000, remaining()))
@@ -370,14 +409,43 @@ async function interpretAll(
 
       // draw.items vem SEMPRE do sorteio; o modelo só contribui o "meaning"
       const meanings: unknown[] = parsed.meanings
+      const copiados: string[] = []
       const items = r.items.map((it, i) => {
         const m = meanings[i]
-        return {
-          position: it.position,
-          name: it.name,
-          meaning: typeof m === "string" && m.trim() ? m.trim() : undefined,
+        let meaning = typeof m === "string" && m.trim() ? m.trim() : undefined
+
+        // TRANSCRIÇÃO DA FICHA: descartada antes de virar o texto da carta.
+        //
+        // T1b proíbe copiar a ficha, e regra de prompt é pedido. Medido em
+        // 25/10: numa tiragem com 9 das 10 cartas invertidas, o modelo devolveu
+        // `meanings` como cópia literal nas dez posições, uma com 26 palavras
+        // seguidas. A pessoa leria texto cru da fonte no lugar da leitura.
+        //
+        // O descarte é POR CARTA e o `reading` é preservado — naquela mesma
+        // tiragem ele estava correto. A carta fica sem legenda, estado que a
+        // interface já trata (`FocusCard` mostra o texto de ausência), e nada é
+        // gerado para ocupar o lugar: nenhuma chamada nova, nenhum texto
+        // inventado, nenhuma leitura descartada.
+        if (meaning && k === "tarot") {
+          const sym = draw.items[i]?.sym as { kind: "tarot"; card: number; reversed: boolean } | undefined
+          const ficha = sym?.kind === "tarot" ? fichaDaCarta(TAROT_DECK[sym.card].name) : undefined
+          if (ficha) {
+            // a reversão só conta quando a carta saiu invertida e a fonte dá
+            // uma reversão própria: a frase de "Similar." é nossa, e o prompt
+            // quer que o modelo a repasse
+            const reversao = sym!.reversed && !ficha.invertida_similar ? ficha.invertida : null
+            if (eTranscricao(meaning, fonteDaCarta(ficha.base, reversao))) {
+              copiados.push(it.name)
+              meaning = undefined
+            }
+          }
         }
+
+        return { position: it.position, name: it.name, meaning }
       })
+      if (copiados.length) {
+        console.warn(`[consultas] ${k}: ${copiados.length} de ${r.items.length} significados descartados por transcrever a ficha — ${copiados.join(", ")}`)
+      }
 
       const modelNotes = typeof parsed?.notes === "string" ? parsed.notes.trim() : ""
       const notes = modelNotes ? `${r.notes} — ${modelNotes}` : r.notes
