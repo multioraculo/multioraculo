@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { tarotArtSrc, tarotArtSrcSet, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
+import { tarotArtPng, tarotArtSrcSet, tarotNumeral, type TarotCardRef } from "@/lib/oracles/tarot-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -139,27 +139,31 @@ export function TarotCapsule({
     const img = imgRef.current
     if (img && img.complete && img.naturalWidth > 0) setCarregando(false)
   }, [])
+  const webp = tarotArtSrcSet(card.id)
   return (
     <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: width ? `${width}px` : "100cqw" }}>
       {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
       <span className="tk-rule tk-rule-top" aria-hidden="true" />
       <div className={"tk-art" + (carregando ? " is-loading" : "")}>
-        <img
-          ref={imgRef}
-          src={tarotArtSrc(card.id)}
-          // duas larguras (300 e 600): o navegador pega a menor que cobre a lâmina
-          // na densidade da tela; a ampliação de 300 px CSS sempre recebe a de 600
-          srcSet={tarotArtSrcSet(card.id)}
-          sizes={width ? width + "px" : (sizes ?? "150px")}
-          alt={name}
-          width={600}
-          height={992}
-          loading={prioridade ? "eager" : "lazy"}
-          decoding="async"
-          draggable={false}
-          onLoad={() => setCarregando(false)}
-          onError={() => setCarregando(false)}
-        />
+        {/* <picture>: o WebP em duas larguras (300 e 600) no <source>, e o navegador
+            pega a menor que cobre a lâmina na densidade da tela (a ampliação de
+            300 px CSS sempre recebe a de 600). No <img> fica o PNG de nome fixo,
+            que só navegador sem WebP pede; quem decodifica WebP nunca o baixa. */}
+        <picture>
+          {webp ? <source type="image/webp" srcSet={webp} sizes={width ? width + "px" : (sizes ?? "150px")} /> : null}
+          <img
+            ref={imgRef}
+            src={tarotArtPng(card.id)}
+            alt={name}
+            width={600}
+            height={992}
+            loading={prioridade ? "eager" : "lazy"}
+            decoding="async"
+            draggable={false}
+            onLoad={() => setCarregando(false)}
+            onError={() => setCarregando(false)}
+          />
+        </picture>
       </div>
       <span className="tk-rule tk-rule-bot" aria-hidden="true" />
       <span className="tk-nome" aria-hidden="true">{name}</span>

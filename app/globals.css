@@ -296,6 +296,9 @@
 /* janela da gravura: mesma proporção da tela de saída (260×430), por isso a
    figura preenche tudo, sem sobra e sem faixa vazia */
 .tk-art { position: absolute; left: 3%; right: 3%; top: 9.2%; bottom: 10.4%; z-index: 2; }
+/* o <picture> (WebP no <source>, PNG no <img>) não pode mudar a caixa: ocupa a
+   janela inteira e deixa o <img> medir como antes */
+.tk-art picture, .ln-art picture { display: block; width: 100%; height: 100%; }
 .tk-art img {
   width: 100%; height: 100%; display: block;
   /* a gravura cheia já sai equalizada e com a cor acertada na ingestão: aqui

@@ -46,25 +46,34 @@ export function tarotCardId(index: number): string {
  * scripts/cartas-webp.mjs, em public/tarot/arte, com o hash do conteúdo no
  * nome (lib/oracles/tarot-art-manifest.ts). O nome muda quando a arte muda, e
  * só por isso a Netlify pode guardar esses arquivos por um ano. O PNG de nome
- * fixo continua sendo a fonte aprovada e o recurso de emergência se faltar
- * uma carta no manifesto.
+ * fixo continua sendo a fonte aprovada, e é o que fica no `src` do <img>,
+ * dentro de um <picture> cujo <source> é o WebP: navegador que decodifica WebP
+ * nunca pede o PNG; navegador antigo sem WebP (Safari até o 13) recebe o PNG
+ * em vez de uma lâmina vazia. Também é o recurso de emergência se faltar uma
+ * carta no manifesto.
  */
 export const TAROT_ART_BASE = "/tarot/art"
 
-/** Versão de 600 px (ampliação e telas de densidade 3). Serve também de `src` de reserva. */
+/** O PNG aprovado, de nome fixo: `src` do <img> (reserva para quem não decodifica WebP). */
+export function tarotArtPng(cardIdOrIndex: string | number): string {
+  const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
+  return `${TAROT_ART_BASE}/${id}.png`
+}
+
+/** Versão de 600 px (ampliação e telas de densidade 3). Sem WebP no manifesto, o PNG. */
 export function tarotArtSrc(cardIdOrIndex: string | number): string {
   const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
-  return TAROT_ARTE[id]?.src ?? `${TAROT_ART_BASE}/${id}.png`
+  return TAROT_ARTE[id]?.src ?? tarotArtPng(id)
 }
 
 /**
- * As duas larguras para o `srcSet`: o navegador escolhe pela largura CSS da
- * lâmina (`sizes`) e pela densidade da tela. Sem entrada no manifesto, devolve
- * só o PNG de reserva.
+ * As duas larguras para o `srcSet` do <source>: o navegador escolhe pela
+ * largura CSS da lâmina (`sizes`) e pela densidade da tela. Sem entrada no
+ * manifesto, devolve vazio, e a lâmina fica só com o PNG do <img>.
  */
 export function tarotArtSrcSet(cardIdOrIndex: string | number): string {
   const id = typeof cardIdOrIndex === "number" ? tarotCardId(cardIdOrIndex) : cardIdOrIndex
-  return TAROT_ARTE[id]?.srcSet ?? `${TAROT_ART_BASE}/${id}.png 600w`
+  return TAROT_ARTE[id]?.srcSet ?? ""
 }
 
 const ROMANOS = [

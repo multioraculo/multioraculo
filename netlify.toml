@@ -16,11 +16,16 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Funções próprias, ao lado das que o adaptador do Next gera sozinho. Hoje só
-# uma: netlify/functions/pregerar-horoscopo.ts, agendada para 03:05 UTC, que é
-# 00:05 em America/Sao_Paulo. Ela pede as doze leituras do dia à própria rota
-# /api/horoscopo, para ninguém esperar a geração de manhã. O horário fica
-# declarado no arquivo, em `export const config`, e não aqui.
+# Funções próprias, ao lado das que o adaptador do Next gera sozinho. Duas,
+# as duas agendadas, com o horário declarado no arquivo (`export const config`)
+# e não aqui:
+#   pregerar-horoscopo.ts  03:05 UTC (00:05 em São Paulo): pede as doze leituras
+#                          do dia a /api/horoscopo, para ninguém esperar a geração
+#                          de manhã. Desligada sem HOROSCOPO_PREGERAR=1.
+#   aquecer-rotas.ts       a cada 5 min: pede as páginas dinâmicas e as duas APIs
+#                          da Home, para a primeira visita depois de um intervalo
+#                          vazio não pagar o arranque frio da função do servidor
+#                          (medido: 5,9 s). Ligada; AQUECER_ROTAS=0 desliga.
 [functions]
   directory = "netlify/functions"
 
@@ -51,6 +56,10 @@
 #                                por dia, então ampliar isto triplica o custo
 #                                do módulo; quem ficar de fora continua sendo
 #                                gerado sob demanda.)
+#   AQUECER_ROTAS               (opcional. Com "0", a função de aquecimento
+#                                roda e não pede nada; as rotas voltam a
+#                                acordar sob demanda. Apagar a variável religa.
+#                                Nenhum dos dois exige deploy.)
 #
 # Webhook da Stripe: POST https://multioraculo.com/api/billing/webhook
 # (fora do middleware do Supabase; responde só com escrita no banco).
@@ -82,7 +91,8 @@
 #                   outro nome: seguro travar.
 #
 # O QUE NÃO ENTROU, de propósito: os PNG de nome fixo em `/tarot/art/*` e
-# `/lenormand/*.png` (que a interface não serve mais, mas seguem como fonte).
+# `/lenormand/*.png` (a fonte aprovada; a interface só os entrega a navegador
+# sem WebP, pelo <img> de reserva dentro do <picture>).
 # Essas artes JÁ FORAM substituídas mantendo o mesmo nome mais de uma vez neste
 # projeto. Travá-las por um ano deixaria quem visitou antes com a versão velha,
 # sem jeito de corrigir.

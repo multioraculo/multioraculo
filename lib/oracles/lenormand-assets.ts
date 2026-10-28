@@ -40,13 +40,27 @@ export function lenormandIndexOfId(id: string): number {
  * scripts/cartas-webp.mjs, em public/lenormand/arte, com o hash do conteúdo no
  * nome (lib/oracles/lenormand-art-manifest.ts). O nome muda quando a arte
  * muda, e só por isso a Netlify pode guardar esses arquivos por um ano. O PNG
- * de nome fixo continua sendo a fonte aprovada e o recurso de emergência.
+ * de nome fixo continua sendo a fonte aprovada, e é o que fica no `src` do
+ * <img>, dentro de um <picture> cujo <source> é o WebP: navegador antigo sem
+ * WebP (Safari até o 13) recebe o PNG em vez de uma lâmina vazia; quem
+ * decodifica WebP nunca o pede. Também é o recurso de emergência.
  */
-export function lenormandArtSrc(id: string): string {
-  return LENORMAND_ARTE[id]?.src ?? `/lenormand/${id}.png`
+
+/** O PNG aprovado, de nome fixo: `src` do <img> (reserva para quem não decodifica WebP). */
+export function lenormandArtPng(id: string): string {
+  return `/lenormand/${id}.png`
 }
 
-/** As larguras disponíveis para o `srcSet` (a fonte de algumas cartas é pequena, e aí há uma só). */
+/** A maior largura em WebP; sem entrada no manifesto, o PNG. */
+export function lenormandArtSrc(id: string): string {
+  return LENORMAND_ARTE[id]?.src ?? lenormandArtPng(id)
+}
+
+/**
+ * As larguras disponíveis para o `srcSet` do <source> (a fonte de algumas
+ * cartas é pequena, e aí há uma só). Sem entrada no manifesto, vazio: a lâmina
+ * fica só com o PNG do <img>.
+ */
 export function lenormandArtSrcSet(id: string): string {
-  return LENORMAND_ARTE[id]?.srcSet ?? `/lenormand/${id}.png 600w`
+  return LENORMAND_ARTE[id]?.srcSet ?? ""
 }

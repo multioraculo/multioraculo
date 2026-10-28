@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
-import { lenormandArtSrc, lenormandArtSrcSet, lenormandId, lenormandIndexOfId } from "@/lib/oracles/lenormand-assets"
+import { lenormandArtPng, lenormandArtSrcSet, lenormandId, lenormandIndexOfId } from "@/lib/oracles/lenormand-assets"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
 
 /**
@@ -82,26 +82,31 @@ export function LenormandCard({
     const img = imgRef.current
     if (img && img.complete && img.naturalWidth > 0) setCarregando(false)
   }, [])
+  const id = lenormandId(index)
+  const webp = lenormandArtSrcSet(id)
   return (
     <div className={`ln-card ${center ? "ln-center" : ""} ${className}`} style={style}>
       <span className="ln-num" aria-hidden="true">{index + 1}</span>
       <div className={"ln-art" + (carregando ? " is-loading" : "")} aria-hidden="true">
-        {/* gravura com fundo transparente; se a arte da carta ainda não existir, a lâmina fica só com número e nome */}
-        <img
-          ref={imgRef}
-          src={lenormandArtSrc(lenormandId(index))}
-          srcSet={lenormandArtSrcSet(lenormandId(index))}
-          sizes={sizes}
-          alt={name}
-          loading={prioridade ? "eager" : "lazy"}
-          decoding="async"
-          draggable={false}
-          onLoad={() => setCarregando(false)}
-          onError={(ev) => {
-            setCarregando(false)
-            ev.currentTarget.style.display = "none"
-          }}
-        />
+        {/* gravura com fundo transparente: WebP no <source>, PNG de nome fixo no <img>
+            para navegador sem WebP (como no Tarô); se a arte da carta ainda não
+            existir, a lâmina fica só com número e nome */}
+        <picture>
+          {webp ? <source type="image/webp" srcSet={webp} sizes={sizes} /> : null}
+          <img
+            ref={imgRef}
+            src={lenormandArtPng(id)}
+            alt={name}
+            loading={prioridade ? "eager" : "lazy"}
+            decoding="async"
+            draggable={false}
+            onLoad={() => setCarregando(false)}
+            onError={(ev) => {
+              setCarregando(false)
+              ev.currentTarget.style.display = "none"
+            }}
+          />
+        </picture>
       </div>
       <span className="ln-name" aria-hidden="true">{name}</span>
     </div>
