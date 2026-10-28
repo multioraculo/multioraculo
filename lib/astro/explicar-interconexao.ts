@@ -55,7 +55,7 @@ const TRAZ: Record<Locale, Record<string, string>> = {
 }
 
 /** O que aquele ponto é EM VOCÊ. */
-const EM_VOCE: Record<Locale, Record<string, string>> = {
+export const EM_VOCE: Record<Locale, Record<string, string>> = {
   pt: {
     sun: "o seu centro e a direção que você dá à vida",
     moon: "os seus afetos e a sua necessidade de se sentir seguro",

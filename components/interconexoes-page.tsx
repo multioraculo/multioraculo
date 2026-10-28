@@ -34,6 +34,7 @@ import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
 import SinteseInterconexoes from "@/components/sintese-interconexoes"
 import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
 import { explicarInterconexao } from "@/lib/astro/explicar-interconexao"
+import { lerPonto, ORDEM_DOS_TEMAS, type LeituraDoPonto } from "@/lib/astro/temas-do-mapa"
 import type { MapaNatal } from "@/lib/astro/mapa"
 import type { Interconexao } from "@/lib/astro/interconexoes"
 import Seta from "@/components/seta"
@@ -432,12 +433,13 @@ function Deck({
   const signos = SIGNOS[locale as keyof typeof SIGNOS]
   const nomes = CORPOS[locale as keyof typeof CORPOS]
 
-  const sol = mapa.corpos.find((c) => c.corpo === "sun")
-  const lua = mapa.corpos.find((c) => c.corpo === "moon")
   const comAngulos = mapa.horaConhecida && mapa.asc !== null && mapa.mc !== null
 
   // ordem da tela = ordem do motor. Nada aqui decide relevância.
   const ordenadas = [...interconexoes].sort((a, b) => b.nota - a.nota)
+  const loc = locale as keyof typeof SIGNOS
+  // os pontos do mapa que o céu de hoje encontrou: o cartão do tema leva a marca
+  const tocadosHoje = new Set(interconexoes.filter((c) => c.tipo === "aspecto").map((c) => c.ponto.id))
   const LARGURA = ["lg:col-span-12", "lg:col-span-6", "lg:col-span-6"]
 
   return (
@@ -495,44 +497,7 @@ function Deck({
         </Modulo>
       </div>
 
-      {/* ── faixa B · quem você é nesse mapa, de relance ──────────────────── */}
-      <div className="grid gap-4 sm:gap-5 grid-cols-2 lg:grid-cols-12">
-        {sol && (
-          <Ponto
-            className={comAngulos ? "lg:col-span-3" : "lg:col-span-6"}
-            glifo={<GlifoPlaneta id="sun" tamanho={14} />}
-            nome={nomes.sun}
-            valor={posicaoDe(sol.lon, sol.signoDefinido ? sol.signo : null, signos)}
-            casa={sol.casa !== null ? fmt(t.house, { n: sol.casa }) : null}
-            area={sol.casa !== null ? casas[sol.casa]?.area : null}
-          />
-        )}
-        {lua && (
-          <Ponto
-            className={comAngulos ? "lg:col-span-3" : "lg:col-span-6"}
-            glifo={<GlifoPlaneta id="moon" tamanho={14} />}
-            nome={nomes.moon}
-            valor={posicaoDe(lua.lon, lua.signoDefinido ? lua.signo : null, signos)}
-            casa={lua.casa !== null ? fmt(t.house, { n: lua.casa }) : null}
-            area={lua.casa !== null ? casas[lua.casa]?.area : null}
-            incerto={!lua.signoDefinido}
-          />
-        )}
-        {comAngulos && (
-          <>
-            <Ponto className="lg:col-span-3" nome={t.asc} valor={posicaoDe(mapa.asc as number, null, signos)} />
-            <Ponto className="lg:col-span-3" nome={t.mc} valor={posicaoDe(mapa.mc as number, null, signos)} />
-          </>
-        )}
-      </div>
-
-      {/* as demais posições são referência, não leitura: ficam recolhidas */}
-      <DemaisPosicoes mapa={mapa} t={t} signos={signos} nomes={nomes} casas={casas} />
-
-      {/* sem saber o que é cada casa, "casa 7" é um número e não uma informação */}
-      {comAngulos && <GuiaDasCasas t={t} casas={casas} />}
-
-      {/* ── faixa C · as relações que o motor mediu hoje ──────────────────── */}
+      {/* ── faixa B · as relações que o motor mediu hoje ──────────────────── */}
       <div className="pt-4">
         <Rotulo>{t.todayTitle}</Rotulo>
         <p className="text-white/40 text-[14px] leading-relaxed font-light mt-1.5">{t.todaySubtitle}</p>
@@ -558,6 +523,68 @@ function Deck({
         </div>
       )}
 
+      {/* ── faixa C · o mapa lido tema por tema ───────────────────────────────
+          A pergunta da vida vem antes do dado: o título é o tema, o planeta é a
+          resposta, e a casa vira a área em que a pessoa vive aquilo. Os pontos
+          que o céu de hoje encontrou ficam marcados, que é a ponte entre a base
+          fixa e a leitura do dia. */}
+      <div className="pt-6">
+        <Rotulo>{t.themesTitle}</Rotulo>
+        <p className="text-white/40 text-[14px] leading-relaxed font-light mt-1.5 max-w-2xl">{t.themesLead}</p>
+      </div>
+
+      <div className="grid gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {ORDEM_DOS_TEMAS.map((id) => {
+          if (id === "asc" || id === "mc") {
+            const lon = id === "asc" ? mapa.asc : mapa.mc
+            if (lon === null || !comAngulos) return null
+            return (
+              <Tema
+                key={id}
+                titulo={t[`theme_${id}`]}
+                dado={`${id === "asc" ? t.asc : t.mc} · ${posicaoDe(lon, null, signos)}`}
+                leitura={lerPonto(id, indiceDoSigno(lon), null, loc)}
+                hoje={tocadosHoje.has(id)}
+                t={t}
+              />
+            )
+          }
+          const corpo = mapa.corpos.find((c) => c.corpo === id)
+          if (!corpo) return null
+          const signo = corpo.signoDefinido ? corpo.signo : null
+          const dado = [
+            `${nomes[id]} · ${
+              signo !== null
+                ? posicaoDe(corpo.lon, signo, signos)
+                : fmt(t.uncertain, {
+                    a: signos[indiceDoSigno(corpo.lon - corpo.incerteza / 2)],
+                    b: signos[indiceDoSigno(corpo.lon + corpo.incerteza / 2)],
+                  })
+            }${corpo.retrogrado ? " ℞" : ""}`,
+            corpo.casa !== null ? fmt(t.house, { n: corpo.casa }) : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")
+          return (
+            <Tema
+              key={id}
+              titulo={t[`theme_${id}`]}
+              glifo={<GlifoPlaneta id={id} tamanho={14} />}
+              dado={dado}
+              leitura={lerPonto(id, signo, corpo.casa, loc)}
+              hoje={tocadosHoje.has(id)}
+              t={t}
+            />
+          )
+        })}
+      </div>
+
+      {/* a tabela inteira, à vista: é o dado de conferir, e conferir não pede clique */}
+      <Tabela mapa={mapa} t={t} signos={signos} nomes={nomes} comAngulos={Boolean(comAngulos)} />
+
+      {/* sem saber o que é cada casa, "casa 7" é um número e não uma informação */}
+      {comAngulos && <GuiaDasCasas t={t} casas={casas} />}
+
       <div className="pt-2">
         <button
           onClick={aoCorrigir}
@@ -576,108 +603,119 @@ function posicaoDe(lon: number, signo: number | null, signos: readonly string[])
 }
 
 /**
- * Microplaca de um ponto do mapa.
+ * Um tema do mapa: a pergunta da vida, o dado e a leitura em três camadas.
  *
- * Quatro dados que a pessoa confere de relance, e é por isso que são pequenos:
- * tamanho de placa aqui significaria que Sol e Lua competem com a síntese.
+ * A ordem é fixa para o padrão ser aprendido: o que aquilo é em você, com que
+ * tom o signo o colore, e em que área da vida você o vive.
  */
-function Ponto({
+function Tema({
+  titulo,
   glifo,
-  nome,
-  valor,
-  casa,
-  area,
-  incerto = false,
-  className = "",
+  dado,
+  leitura,
+  hoje,
+  t,
 }: {
+  titulo: string
   glifo?: ReactNode
-  nome: string
-  valor: string
-  casa?: string | null
-  area?: string | null
-  incerto?: boolean
-  className?: string
+  dado: string
+  leitura: LeituraDoPonto
+  hoje: boolean
+  t: Record<string, string>
 }) {
   return (
-    <Modulo micro className={`p-4 sm:p-5 ${className}`}>
-      <div className="flex items-center gap-2 text-white/35">
-        {glifo}
-        <span className="text-[12px] uppercase tracking-[0.18em] font-light">{nome}</span>
+    <Modulo className="p-5 sm:p-6 flex flex-col">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-white/95 instrument italic text-[19px] sm:text-[20px] leading-snug">{titulo}</h3>
+        {hoje && (
+          <span className="shrink-0 mt-1 rounded-full border border-white/20 px-2.5 py-0.5 text-white/70 text-[11.5px] tracking-wide font-light">
+            {t.touchedToday}
+          </span>
+        )}
       </div>
-      <p className={`text-[15px] sm:text-[16px] tabular-nums mt-2 ${incerto ? "text-white/55" : "text-white/90"}`}>
-        {valor}
-      </p>
-      {casa && <p className="text-white/30 text-[13px] font-light mt-1">{casa}</p>}
-      {area && <p className="text-white/40 text-[13px] leading-snug font-light mt-0.5">{area}</p>}
+      <div className="flex items-center gap-2 text-white/45 text-[13.5px] font-light mt-2 tabular-nums">
+        {glifo && <span className="text-white/40">{glifo}</span>}
+        <span>{dado}</span>
+      </div>
+
+      <p className="text-white/85 text-[15.5px] leading-relaxed font-light mt-4">{leitura.emVoce}.</p>
+      {leitura.tom && <p className="text-white/55 text-[14.5px] leading-relaxed font-light mt-2">{leitura.tom}</p>}
+      {leitura.onde && <p className="text-white/70 text-[14.5px] leading-relaxed font-light mt-2">{leitura.onde}</p>}
     </Modulo>
   )
 }
 
 /**
- * As demais posições, recolhidas.
- *
- * Elas continuam inteiras e continuam sendo da pessoa; o que muda é que não
- * disputam a tela com a leitura do dia. Quem quiser conferir Mercúrio abre.
+ * Todas as posições, em colunas: Planeta, Signo, Casa, Grau. Fica aberta,
+ * porque é o dado de conferir de relance, e um menu recolhido escondia
+ * justamente o que a pessoa queria cruzar com a roda.
  */
-function DemaisPosicoes({
+function Tabela({
   mapa,
   t,
   signos,
   nomes,
-  casas,
+  comAngulos,
 }: {
   mapa: MapaNatal
   t: Record<string, string>
   signos: readonly string[]
   nomes: Record<string, string>
-  casas: Casas
+  comAngulos: boolean
 }) {
-  const resto = mapa.corpos.filter((c) => c.corpo !== "sun" && c.corpo !== "moon")
-  if (resto.length === 0) return null
+  const linhas: Array<{ id: string; glifo?: ReactNode; nome: string; signo: string; casa: string; grau: string; retro: boolean }> =
+    mapa.corpos.map((c) => ({
+      id: c.corpo,
+      glifo: <GlifoPlaneta id={c.corpo} tamanho={13} />,
+      nome: nomes[c.corpo],
+      signo: c.signoDefinido
+        ? signos[c.signo]
+        : fmt(t.uncertain, {
+            a: signos[indiceDoSigno(c.lon - c.incerteza / 2)],
+            b: signos[indiceDoSigno(c.lon + c.incerteza / 2)],
+          }),
+      casa: c.casa !== null ? String(c.casa) : "",
+      grau: c.signoDefinido ? grauMinuto(c.lon) : "",
+      retro: c.retrogrado,
+    }))
+  if (comAngulos && mapa.asc !== null && mapa.mc !== null) {
+    linhas.push(
+      { id: "asc", nome: t.asc, signo: signos[indiceDoSigno(mapa.asc)], casa: "1", grau: grauMinuto(mapa.asc), retro: false },
+      { id: "mc", nome: t.mc, signo: signos[indiceDoSigno(mapa.mc)], casa: "10", grau: grauMinuto(mapa.mc), retro: false },
+    )
+  }
 
   return (
-    <Modulo className="px-6 sm:px-7">
-      <details className="group">
-        <summary className="flex items-center gap-4 py-5 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-          <span className="shrink-0 text-white/25 group-hover:text-white/45 text-[12px] uppercase tracking-[0.22em] font-light transition-colors">
-            {t.morePositions}
-          </span>
-          {/* fechada, a barra ainda diz o que tem dentro: recolher não é esconder */}
-          <span className="hidden sm:block flex-1 truncate text-white/25 text-[14px] font-light group-open:invisible">
-            {resto.map((c) => nomes[c.corpo]).join(" · ")}
-          </span>
-          <span className="ml-auto shrink-0 text-white/30 group-hover:text-white/55 text-[14px] transition-transform duration-200 group-open:rotate-180">
-            <Seta tipo="chevron" />
-          </span>
-        </summary>
-
-        <div className="pb-6 space-y-2.5">
-          {resto.map((c) => (
-            <div key={c.corpo} className="flex items-baseline gap-3 text-[15px]">
-              <span className="text-white/40 w-4 shrink-0">
-                <GlifoPlaneta id={c.corpo} tamanho={13} />
-              </span>
-              <span className="text-white/75 font-light w-[5.5rem] shrink-0">{nomes[c.corpo]}</span>
-              <span className="text-white/90 tabular-nums">
-                {c.signoDefinido ? `${grauMinuto(c.lon)} ${signos[c.signo]}` : signos[indiceDoSigno(c.lon)]}
-              </span>
-              {c.retrogrado && <span className="text-white/30 text-[13px]">℞</span>}
-              {c.casa !== null && <span className="text-white/30 text-[13px]">{fmt(t.house, { n: c.casa })}</span>}
-              {c.casa !== null && casas[c.casa] && (
-                <span className="hidden sm:inline text-white/25 text-[13px] font-light truncate">{casas[c.casa].area}</span>
-              )}
-              {!c.signoDefinido && (
-                <span className="text-white/30 text-[13px]">
-                  {fmt(t.uncertain, {
-                    a: signos[indiceDoSigno(c.lon - c.incerteza / 2)],
-                    b: signos[indiceDoSigno(c.lon + c.incerteza / 2)],
-                  })}
+    <Modulo className="p-5 sm:p-6">
+      <Rotulo>{t.tableTitle}</Rotulo>
+      <table className="w-full mt-4 text-[14.5px]">
+        <thead>
+          <tr className="text-white/30 text-[12px] uppercase tracking-[0.14em] text-left">
+            <th className="font-light pb-2">{t.colBody}</th>
+            <th className="font-light pb-2">{t.colSign}</th>
+            <th className="font-light pb-2 text-center">{t.colHouse}</th>
+            <th className="font-light pb-2 text-right">{t.colDegree}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {linhas.map((l) => (
+            <tr key={l.id} className="border-t border-white/[0.06]">
+              <td className="py-2 pr-2">
+                <span className="inline-flex items-center gap-2.5 text-white/80 font-light">
+                  <span className="text-white/40 w-4 inline-flex justify-center">{l.glifo}</span>
+                  {l.nome}
                 </span>
-              )}
-            </div>
+              </td>
+              <td className="py-2 pr-2 text-white/85 font-light">
+                {l.signo}
+                {l.retro && <span className="text-white/35 text-[13px]"> ℞</span>}
+              </td>
+              <td className="py-2 text-white/70 text-center tabular-nums">{l.casa}</td>
+              <td className="py-2 text-white/60 text-right tabular-nums">{l.grau}</td>
+            </tr>
           ))}
-        </div>
-      </details>
+        </tbody>
+      </table>
     </Modulo>
   )
 }
