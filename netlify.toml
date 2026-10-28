@@ -9,7 +9,12 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "22"
+  # Versão EXATA, a mesma do ambiente onde os goldens foram gerados. Com só
+  # "22", a Netlify passou a pegar um 22.x com tzdata 2026e, que adianta o
+  # horário de verão da Colômbia em 1992; o caso Bogotá do verify:astro mudou
+  # e todo build falhou de 24/10 em diante. Trocar de versão pede rodar o
+  # prebuild nela antes.
+  NODE_VERSION = "24.18.0"
   # Desliga a telemetria do Next no build
   NEXT_TELEMETRY_DISABLED = "1"
 
