@@ -6,53 +6,28 @@
  * dinâmica que funciona é a de responder a uma pergunta da vida antes de dar o
  * dado: o título é o tema ("Pensamento e fala"), e o planeta é a resposta.
  *
- * Cada ponto é lido em três camadas, sempre na mesma ordem:
- *  - o que ele é EM VOCÊ (o corpo);
- *  - com que tom ele se expressa (o signo);
- *  - em que área da vida você o vive (a casa).
+ * Cada ponto é lido em duas frases:
+ *  - como aquele planeta funciona em você, naquele signo (`PLANETA_NO_SIGNO`);
+ *  - em que situações da vida isso aparece, pela casa (`PLANETA_NA_CASA`).
  *
  * Tudo aqui é texto fixo, escrito uma vez e traduzido. Não há modelo: o mapa
  * não muda, e a leitura dele também não deve mudar de um dia para o outro.
  */
 import type { Locale } from "@/lib/i18n/config"
 import { EM_VOCE } from "./explicar-interconexao"
-import { SIGNOS } from "./nomes"
-import { LINHA_SIGNO, TERRENO_DA_CASA } from "./simbolos"
+import { CASA_COMO_LUGAR, PLANETA_NA_CASA, PLANETA_NO_SIGNO } from "./leitura-natal"
 
 /** A ordem dos temas: identidade primeiro, os lentos por último. */
 export const ORDEM_DOS_TEMAS = [
   "sun", "asc", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "mc", "uranus", "neptune", "pluto",
 ] as const
 
-const FRASES: Record<Locale, {
-  tom: (signo: string, linha: string) => string
-  onde: (area: string, emVoce: string) => string
-}> = {
-  pt: {
-    tom: (s, l) => `Com o tom de ${s}: ${l}.`,
-    onde: (a, v) => `É sobretudo em ${a} que você vive ${v}.`,
-  },
-  en: {
-    tom: (s, l) => `With the tone of ${s}: ${l}.`,
-    onde: (a, v) => `It is mostly in ${a} that you live out ${v}.`,
-  },
-  es: {
-    tom: (s, l) => `Con el tono de ${s}: ${l}.`,
-    onde: (a, v) => `Es sobre todo en ${a} donde vives ${v}.`,
-  },
-}
-
 const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 
-/** "Início · impulso · afirmação" vira "início, impulso, afirmação". */
-const linhaCorrida = (linha: string) => linha.split(" · ").join(", ").toLowerCase()
-
 export type LeituraDoPonto = {
-  /** o que aquele ponto é em você */
-  emVoce: string
-  /** o tom do signo; vazio quando o signo não é certo */
-  tom: string
-  /** a área da vida, pela casa; vazio sem hora de nascimento ou para os ângulos */
+  /** como o ponto funciona em você, no signo dele */
+  comoEm: string
+  /** onde isso aparece na vida, pela casa; vazio sem hora de nascimento ou para os ângulos */
   onde: string
 }
 
@@ -62,9 +37,10 @@ export type LeituraDoPonto = {
  * @param casa casa natal, ou null
  */
 export function lerPonto(id: string, signo: number | null, casa: number | null, locale: Locale): LeituraDoPonto {
-  const F = FRASES[locale]
-  const emVoce = EM_VOCE[locale][id] ?? ""
-  const tom = signo !== null ? F.tom(SIGNOS[locale][signo], linhaCorrida(LINHA_SIGNO[locale][signo])) : ""
-  const onde = casa !== null && emVoce ? F.onde(TERRENO_DA_CASA[locale][casa - 1], emVoce) : ""
-  return { emVoce: maiuscula(emVoce), tom, onde }
+  // sem signo certo (hora desconhecida e a Lua no limite), fica só o que o ponto é
+  const comoEm =
+    signo !== null ? PLANETA_NO_SIGNO[locale][id]?.[signo] ?? "" : `${maiuscula(EM_VOCE[locale][id] ?? "")}.`
+  const frase = PLANETA_NA_CASA[locale][id]
+  const onde = casa !== null && frase ? frase(CASA_COMO_LUGAR[locale][casa - 1]) : ""
+  return { comoEm, onde }
 }

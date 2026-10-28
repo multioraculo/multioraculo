@@ -641,9 +641,8 @@ function Tema({
         </div>
       </div>
 
-      <p className="text-white/85 text-[15.5px] leading-relaxed font-light mt-4">{leitura.emVoce}.</p>
-      {leitura.tom && <p className="text-white/55 text-[14.5px] leading-relaxed font-light mt-2">{leitura.tom}</p>}
-      {leitura.onde && <p className="text-white/70 text-[14.5px] leading-relaxed font-light mt-2">{leitura.onde}</p>}
+      <p className="text-white/85 text-[15.5px] leading-relaxed font-light mt-4">{leitura.comoEm}</p>
+      {leitura.onde && <p className="text-white/60 text-[14.5px] leading-relaxed font-light mt-2.5">{leitura.onde}</p>}
     </Modulo>
   )
 }

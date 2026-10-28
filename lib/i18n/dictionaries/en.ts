@@ -560,7 +560,7 @@ export const en: Dictionary = {
     housesGuideLead: "The chart is divided into twelve houses, and each one is an area of life. The house a planet sits in tells you where it acts; when today's sky touches that planet, that is where the meeting happens.",
     cardMeaning: "What this means for you",
     themesTitle: "Your chart, theme by theme",
-    themesLead: "Each part of your life has a point in the chart that speaks of it. For each one: what it is in you, the tone the sign gives it and the area of life where you live it. The points today's sky has met are marked.",
+    themesLead: "Each part of your life has a point in the chart that speaks of it. Each card says how it works in you, by its sign, and in which situations of life it shows up, by its house. The points today's sky has met are marked.",
     theme_sun: "Your identity",
     theme_asc: "How you present yourself",
     theme_moon: "Your emotional life",

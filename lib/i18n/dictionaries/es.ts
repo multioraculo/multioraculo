@@ -560,7 +560,7 @@ export const es: Dictionary = {
     housesGuideLead: "La carta se divide en doce casas, y cada una es un área de la vida. La casa en que está un planeta dice en qué terreno actúa; cuando el cielo de hoy toca ese planeta, es en ese terreno donde ocurre el encuentro.",
     cardMeaning: "Qué significa esto para ti",
     themesTitle: "Tu carta, tema por tema",
-    themesLead: "Cada parte de tu vida tiene un punto de la carta que habla de ella. Para cada una: lo que es en ti, el tono que le da el signo y el área de la vida en que la vives. Los puntos que el cielo de hoy encontró están marcados.",
+    themesLead: "Cada parte de tu vida tiene un punto de la carta que habla de ella. Cada tarjeta dice cómo funciona en ti, por el signo, y en qué situaciones de la vida aparece, por la casa. Los puntos que el cielo de hoy encontró están marcados.",
     theme_sun: "Tu identidad",
     theme_asc: "Cómo te presentas",
     theme_moon: "Tu vida emocional",

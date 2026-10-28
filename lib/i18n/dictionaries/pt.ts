@@ -572,7 +572,7 @@ export const pt = {
     housesGuideLead: "O mapa é dividido em doze casas, e cada uma é uma área da vida. A casa em que um planeta está diz em que terreno ele age; quando o céu de hoje toca esse planeta, é nesse terreno que o encontro acontece.",
     cardMeaning: "O que isso quer dizer para você",
     themesTitle: "Seu mapa, tema por tema",
-    themesLead: "Cada parte da sua vida tem um ponto do mapa que fala dela. Para cada uma: o que ela é em você, o tom que o signo dá e a área da vida em que você a vive. Os pontos que o céu de hoje encontrou estão marcados.",
+    themesLead: "Cada parte da sua vida tem um ponto do mapa que fala dela. Cada cartão diz como aquilo funciona em você, pelo signo, e em que situações da vida aparece, pela casa. Os pontos que o céu de hoje encontrou estão marcados.",
     theme_sun: "Sua identidade",
     theme_asc: "Como você se apresenta",
     theme_moon: "Seu emocional",

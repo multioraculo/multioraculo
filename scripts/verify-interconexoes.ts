@@ -19,6 +19,9 @@ import { verificarSintesePessoal } from "../lib/astro/verificador-interconexoes"
 import { promptInterconexoes } from "../lib/astro/prompt-interconexoes"
 import { sinteseDeterministica } from "../lib/astro/fallback-interconexoes"
 import { hashDoMapa } from "../lib/astro/interconexoes-server"
+import { CASA_COMO_LUGAR, PLANETA_NA_CASA, PLANETA_NO_SIGNO } from "../lib/astro/leitura-natal"
+import { lerPonto, ORDEM_DOS_TEMAS } from "../lib/astro/temas-do-mapa"
+import { PROIBIDAS } from "../lib/astro/editorial"
 
 const falhas: string[] = []
 let conferidos = 0
@@ -369,11 +372,39 @@ async function parteD() {
   confere("rota: o 402 acontece ANTES de construir o cliente", i402 < iCliente, "o cliente nasce antes da checagem")
 }
 
+/** G. A leitura do mapa por temas: completa, sem palavra proibida, sem frase repetida. */
+function parteG() {
+  for (const loc of ["pt", "en", "es"] as const) {
+    const frases: string[] = []
+    for (const id of ORDEM_DOS_TEMAS) {
+      const doSigno = PLANETA_NO_SIGNO[loc][id]
+      confere(`temas ${loc}: ${id} tem as doze frases de signo`, doSigno?.length === 12, `tem ${doSigno?.length ?? 0}`)
+      for (let s = 0; s < 12; s++) {
+        const casa = id === "asc" || id === "mc" ? null : (s % 12) + 1
+        const l = lerPonto(id, s, casa, loc)
+        frases.push(l.comoEm)
+        if (casa !== null) frases.push(l.onde)
+      }
+    }
+    confere(`temas ${loc}: doze lugares de casa`, CASA_COMO_LUGAR[loc].length === 12)
+    confere(`temas ${loc}: frase de casa para os dez corpos`, Object.keys(PLANETA_NA_CASA[loc]).length === 10)
+    const vazias = frases.filter((f) => !f.trim())
+    confere(`temas ${loc}: nenhuma leitura vazia`, vazias.length === 0, `${vazias.length} vazias`)
+    const texto = frases.join("\n")
+    const proibida = PROIBIDAS[loc].find((r) => r.test(texto))
+    confere(`temas ${loc}: nada da lista editorial`, !proibida, String(proibida))
+    confere(`temas ${loc}: sem travessão`, !/[–—]/.test(texto))
+    const signos = ORDEM_DOS_TEMAS.flatMap((id) => PLANETA_NO_SIGNO[loc][id])
+    confere(`temas ${loc}: nenhuma frase de signo repetida`, new Set(signos).size === signos.length)
+  }
+}
+
 async function main() {
   parteA()
   parteB()
   parteE()
   parteF()
+  parteG()
   await parteC()
   await parteD()
 
