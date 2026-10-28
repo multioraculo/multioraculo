@@ -31,6 +31,7 @@ import type { UsuarioDaSessao } from "@/lib/auth/usuario-header"
 import { useI18n } from "@/components/i18n-provider"
 import { fmt } from "@/lib/i18n"
 import AstroWheel, { GlifoPlaneta } from "@/components/astro-wheel"
+import { IlustracaoPlaneta } from "@/components/planetas-ilustracao"
 import SinteseInterconexoes from "@/components/sintese-interconexoes"
 import { ASPECTOS, CORPOS, SIGNOS } from "@/lib/astro/nomes"
 import { explicarInterconexao } from "@/lib/astro/explicar-interconexao"
@@ -542,6 +543,7 @@ function Deck({
               <Tema
                 key={id}
                 titulo={t[`theme_${id}`]}
+                ilustracao={id}
                 dado={`${id === "asc" ? t.asc : t.mc} · ${posicaoDe(lon, null, signos)}`}
                 leitura={lerPonto(id, indiceDoSigno(lon), null, loc)}
                 hoje={tocadosHoje.has(id)}
@@ -569,7 +571,7 @@ function Deck({
             <Tema
               key={id}
               titulo={t[`theme_${id}`]}
-              glifo={<GlifoPlaneta id={id} tamanho={14} />}
+              ilustracao={id}
               dado={dado}
               leitura={lerPonto(id, signo, corpo.casa, loc)}
               hoje={tocadosHoje.has(id)}
@@ -610,14 +612,14 @@ function posicaoDe(lon: number, signo: number | null, signos: readonly string[])
  */
 function Tema({
   titulo,
-  glifo,
+  ilustracao,
   dado,
   leitura,
   hoje,
   t,
 }: {
   titulo: string
-  glifo?: ReactNode
+  ilustracao: string
   dado: string
   leitura: LeituraDoPonto
   hoje: boolean
@@ -625,17 +627,18 @@ function Tema({
 }) {
   return (
     <Modulo className="p-5 sm:p-6 flex flex-col">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-white/95 instrument italic text-[19px] sm:text-[20px] leading-snug">{titulo}</h3>
-        {hoje && (
-          <span className="shrink-0 mt-1 rounded-full border border-white/20 px-2.5 py-0.5 text-white/70 text-[11.5px] tracking-wide font-light">
-            {t.touchedToday}
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-2 text-white/45 text-[13.5px] font-light mt-2 tabular-nums">
-        {glifo && <span className="text-white/40">{glifo}</span>}
-        <span>{dado}</span>
+      {/* a gravura do corpo: é ela que faz o tema ser reconhecido antes de lido */}
+      <div className="flex items-center gap-4">
+        <IlustracaoPlaneta id={ilustracao} tamanho={72} className="shrink-0 text-white/80" />
+        <div className="min-w-0">
+          <h3 className="text-white/95 instrument italic text-[19px] sm:text-[20px] leading-snug">{titulo}</h3>
+          <p className="text-white/45 text-[13.5px] font-light mt-1 tabular-nums">{dado}</p>
+          {hoje && (
+            <span className="inline-block w-fit mt-2 rounded-full border border-white/20 px-2.5 py-0.5 text-white/70 text-[11.5px] tracking-wide font-light">
+              {t.touchedToday}
+            </span>
+          )}
+        </div>
       </div>
 
       <p className="text-white/85 text-[15.5px] leading-relaxed font-light mt-4">{leitura.emVoce}.</p>
