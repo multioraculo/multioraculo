@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useRef, useEffect, useMemo } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
-import Link from "@/components/localized-link"
-import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n-provider"
-import { fmt } from "@/lib/i18n"
-import type { Dream, JourneyAnalysis, JourneyData } from "@/lib/types"
+import JornadaSonhos from "@/components/jornada-sonhos"
+import type { LinhaDeJornada } from "@/lib/dreams/jornada-estado"
+import type { Dream } from "@/lib/types"
 
 function Spinner({ className = "w-4 h-4" }: { className?: string }) {
   return (
@@ -26,25 +25,16 @@ function Spinner({ className = "w-4 h-4" }: { className?: string }) {
 
 export default function SavedDreamsList({
   initialDreams,
-  userId,
+  initialJourney = null,
 }: {
   initialDreams: Dream[]
-  userId: string
+  userId?: string
+  initialJourney?: LinhaDeJornada | null
 }) {
   const router = useRouter()
-  const { dict, locale, formatDate, path } = useI18n()
+  const { dict, formatDate, path } = useI18n()
   const t = dict.savedDreams
-  const supabase = useMemo(() => createClient(), [])
   const [dreams, setDreams] = useState<Dream[]>(initialDreams)
-
-  // ── Journey state ───────────────────────────────────────────
-  const [journeyData, setJourneyData] = useState<JourneyData | null>(null)
-  const [journeyLoading, setJourneyLoading] = useState(false)
-  const [savedJourney, setSavedJourney] = useState<JourneyAnalysis | null>(null)
-  const [journeyDirty, setJourneyDirty] = useState(false)
-  const [saveJourneyLoading, setSaveJourneyLoading] = useState(false)
-  // Jornada bloqueada pelo plano ou pela cota do período
-  const [journeyBlocked, setJourneyBlocked] = useState<string | null>(null)
 
   // ── Dream card state ────────────────────────────────────────
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -66,93 +56,6 @@ export default function SavedDreamsList({
     if (openMenuId) document.addEventListener("mousedown", handler)
     return () => document.removeEventListener("mousedown", handler)
   }, [openMenuId])
-
-  // Load latest saved journey analysis on mount
-  useEffect(() => {
-    if (dreams.length < 4) return
-    const load = async () => {
-      try {
-        const { data } = await supabase
-          .from("journey_analyses")
-          .select("id, user_id, analysis_text, dreams_analyzed, created_at")
-          .eq("user_id", userId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        if (data) {
-          setSavedJourney(data as JourneyAnalysis)
-          try {
-            setJourneyData(JSON.parse(data.analysis_text) as JourneyData)
-          } catch {
-            // old plain-text format — discard
-          }
-        }
-      } catch {
-        // silently ignore if table doesn't exist yet
-      }
-    }
-    load()
-  }, [dreams.length, userId, supabase])
-
-  // ── Journey handlers ────────────────────────────────────────
-
-  const handleGenerateJourney = async () => {
-    setJourneyLoading(true)
-    setJourneyData(null)
-    setJourneyDirty(false)
-    try {
-      const res = await fetch("/sonhos/journey", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locale }),
-      })
-      const json = await res.json()
-      if (!res.ok) {
-        // bloqueios de plano vêm com um código; o texto é do dicionário
-        if (json?.code === "plan_required") {
-          setJourneyBlocked(dict.billing.journeyPlanRequired)
-          return
-        }
-        if (json?.code === "limit_reached") {
-          setJourneyBlocked(fmt(dict.billing.journeyLimitReached, { date: json.periodEnd ? formatDate(json.periodEnd, "long") : "" }))
-          return
-        }
-        throw new Error(json.error ?? t.errorGenerate)
-      }
-      setJourneyBlocked(null)
-      setJourneyData(json.journeyData as JourneyData)
-      setJourneyDirty(true)
-    } catch (err: any) {
-      toast.error(err.message ?? t.errorGenerate)
-    } finally {
-      setJourneyLoading(false)
-    }
-  }
-
-  const handleSaveJourney = async () => {
-    if (!journeyData || saveJourneyLoading) return
-    setSaveJourneyLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from("journey_analyses")
-        .insert({
-          user_id: userId,
-          analysis_text: JSON.stringify(journeyData),
-          dreams_analyzed: dreams.length,
-        })
-        .select()
-        .single()
-
-      if (error) throw new Error(error.message)
-      setSavedJourney(data as JourneyAnalysis)
-      setJourneyDirty(false)
-      toast.success(t.analysisSaved)
-    } catch (err: any) {
-      toast.error(err.message ?? t.errorSaveAnalysis)
-    } finally {
-      setSaveJourneyLoading(false)
-    }
-  }
 
   // ── Dream card handlers ─────────────────────────────────────
 
@@ -194,147 +97,10 @@ export default function SavedDreamsList({
   return (
     <div>
 
-      {/* ══════════════════════════════════════════════════════
-          SEÇÃO 1: SUA JORNADA (apenas se 4+ sonhos)
-          ══════════════════════════════════════════════════════ */}
-      {dreams.length >= 4 && (
-        <section className="mb-16">
+      {/* Jornada dos Sonhos: a partir de dois sonhos */}
+      {dreams.length >= 2 && <JornadaSonhos dreams={dreams} initialJourney={initialJourney} />}
 
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl sm:text-5xl font-light italic instrument text-white mb-4">
-              {t.journeyTitle}
-            </h1>
-            <p className="text-base sm:text-lg text-white/60 leading-relaxed max-w-2xl">
-              {t.journeyIntro}
-            </p>
-          </div>
-
-          {/* Estado: nunca gerou */}
-          {!journeyData && !journeyLoading && (
-            <div className="flex items-center gap-4 flex-wrap">
-              <button
-                onClick={handleGenerateJourney}
-                className="px-8 py-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full text-sm text-white/80 hover:text-white transition-all duration-200"
-              >
-                {t.generate}
-              </button>
-              {savedJourney && (
-                <p className="text-white/30 text-sm">
-                  {fmt(t.lastAnalysis, { date: formatDate(savedJourney.created_at, "short") })}
-                </p>
-              )}
-              {journeyBlocked && (
-                <div className="basis-full bg-white/5 backdrop-blur-sm border border-white/15 rounded-xl p-4 flex flex-wrap items-center gap-3" role="status">
-                  <p className="text-white/80 text-sm leading-relaxed">{journeyBlocked}</p>
-                  <Link
-                    href="/assinatura"
-                    className="px-5 py-2 rounded-full bg-white/10 border border-white/20 text-white font-light text-sm hover:bg-white/15 hover:border-white/30 transition-all duration-200"
-                  >
-                    {dict.dreams.seePlans}
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Estado: gerando */}
-          {journeyLoading && (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Spinner className="w-8 h-8 text-white/40" />
-              <p className="text-white/40 text-sm">{t.analyzing}</p>
-            </div>
-          )}
-
-          {/* Estado: análise gerada — grid 2×2 */}
-          {journeyData && !journeyLoading && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
-                {/* Card 1: Linha de Evolução */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
-                    {t.timeline}
-                  </p>
-                  <div className="space-y-4 max-h-72 overflow-y-auto pr-2 custom-scrollbar">
-                    {journeyData.timeline.map((item) => (
-                      <div key={item.number} className="border-l border-white/15 pl-4">
-                        <p className="text-sm font-medium text-white/85 leading-snug">
-                          {item.number}. {item.title}
-                        </p>
-                        <p className="text-[13px] text-white/35 mt-0.5">{item.archetypes}</p>
-                        <p className="text-xs text-white/55 mt-1 leading-relaxed">{item.summary}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Card 2: Padrões Recorrentes */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
-                    {t.patterns}
-                  </p>
-                  <ul className="space-y-3">
-                    {journeyData.patterns.map((pattern, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-white/70 leading-relaxed">
-                        <span className="shrink-0 w-3 flex justify-center pt-[9px]"><span className="block h-1 w-1 rounded-full bg-white/25" /></span>
-                        <span>{pattern}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Card 3: Ponto de Virada */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
-                    {t.turningPoint}
-                  </p>
-                  <p className="text-sm text-white/70 leading-relaxed">{journeyData.turningPoint}</p>
-                </div>
-
-                {/* Card 4: Essência da Fase Atual */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                  <p className="text-white/25 text-[12px] uppercase tracking-widest mb-4">
-                    {t.essence}
-                  </p>
-                  <p className="text-sm text-white/70 leading-relaxed">{journeyData.essence}</p>
-                </div>
-
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-3 flex-wrap">
-                {journeyDirty ? (
-                  <button
-                    onClick={handleSaveJourney}
-                    disabled={saveJourneyLoading}
-                    className="px-6 py-2 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full text-sm text-white/80 hover:text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-wait flex items-center gap-2"
-                  >
-                    {saveJourneyLoading
-                      ? <><Spinner className="w-3 h-3" /> {dict.common.saving}</>
-                      : t.saveAnalysis}
-                  </button>
-                ) : savedJourney ? (
-                  <p className="text-white/30 text-sm">
-                    {fmt(t.analysisSavedOn, { date: formatDate(savedJourney.created_at, "short") })}
-                  </p>
-                ) : null}
-                <button
-                  onClick={handleGenerateJourney}
-                  className="px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-sm text-white/45 hover:text-white/70 transition-all duration-200"
-                >
-                  {t.refreshAnalysis}
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
-      {/* Divider */}
-      {dreams.length >= 4 && (
-        <div className="border-t border-white/10 mb-12" />
-      )}
+      {dreams.length >= 2 && <div className="border-t border-white/10 mb-12" />}
 
       {/* ══════════════════════════════════════════════════════
           SEÇÃO 2: SONHOS SALVOS
@@ -343,7 +109,7 @@ export default function SavedDreamsList({
         <div className="flex items-center justify-between mb-8">
           <h2 className={[
             "font-light italic instrument text-white",
-            dreams.length >= 4 ? "text-2xl sm:text-3xl" : "text-4xl sm:text-5xl",
+            dreams.length >= 2 ? "text-2xl sm:text-3xl" : "text-4xl sm:text-5xl",
           ].join(" ")}>
             {t.title}
           </h2>
@@ -354,6 +120,9 @@ export default function SavedDreamsList({
             {t.newDream}
           </button>
         </div>
+
+        {/* Um sonho: convite discreto para a primeira síntese */}
+        {dreams.length === 1 && <p className="text-white/55 text-sm -mt-4 mb-8">{t.oneDreamHint}</p>}
 
         {/* Empty state */}
         {dreams.length === 0 && (

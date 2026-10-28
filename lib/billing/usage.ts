@@ -21,7 +21,7 @@ import { getUserEntitlement, STARTED_WINDOW_MS, type Entitlement } from "./entit
 import { SYNTHESIS_LOCK_MS } from "./results"
 import { TRIAL_KINDS, type UsageKind } from "./plans"
 
-export type ConsumeCode = "limit_reached" | "plan_required" | "trial_used" | "billing_unavailable"
+export type ConsumeCode = "limit_reached" | "plan_required" | "trial_used" | "free_used" | "billing_unavailable"
 
 export type ConsumeResult =
   | { allowed: true; used: number; limit: number | null; remaining: number | null; entitlement: Entitlement; tracked: boolean }
@@ -46,6 +46,27 @@ export function httpStatusFor(code: ConsumeCode): number {
  */
 function billingUnavailableIsFatal(): boolean {
   return process.env.NODE_ENV === "production"
+}
+
+/** Janela "para sempre" da primeira Jornada gratuita: conta todos os usos da conta, de qualquer período. */
+export const PRIMEIRA_JORNADA_INICIO = "1970-01-01T00:00:00.000Z"
+export const PRIMEIRA_JORNADA_FIM = "2100-01-01T00:00:00.000Z"
+
+/**
+ * Como um consumo é medido. Regra de produto: a PRIMEIRA Jornada de cada conta
+ * é gratuita, uma única vez (não renova por mês); as seguintes seguem o plano.
+ * Só muda algo para quem tem limite 0 de Jornada (Free): o mesmo
+ * consume_reading, atômico por usuário, passa a contar a vida inteira da conta
+ * com limite 1. Quem já usou uma Jornada (paga ou não) não ganha outra.
+ * Planos com cota própria (Essencial, Ilimitado) seguem exatamente como antes.
+ * Uma geração que falhou não conta (a função só soma 'completed' e 'started' recente).
+ */
+export function regraDeConsumo(kind: UsageKind, limit: number | null, periodoInicio: string, periodoFim: string) {
+  if (limit === 0 && kind === "journey") {
+    return { planoNecessario: false, primeiraGratis: true, limit: 1 as number | null, inicio: PRIMEIRA_JORNADA_INICIO, fim: PRIMEIRA_JORNADA_FIM }
+  }
+  if (limit === 0) return { planoNecessario: true, primeiraGratis: false, limit, inicio: periodoInicio, fim: periodoFim }
+  return { planoNecessario: false, primeiraGratis: false, limit, inicio: periodoInicio, fim: periodoFim }
 }
 
 /**
@@ -127,17 +148,18 @@ export async function consumeReading(input: {
   // ------------------------------------------------------------------------
   await attributeVisitorReadings(input.userId, input.visitorId)
 
-  // tipo não incluído no plano (ex.: Jornada no Free)
-  if (limit === 0) {
+  const regra = regraDeConsumo(kind, limit, entitlement.periodStart, entitlement.periodEnd)
+  // tipo não incluído no plano
+  if (regra.planoNecessario) {
     return { allowed: false, code: "plan_required", used: 0, limit, entitlement }
   }
 
   const { data, error } = await admin.rpc("consume_reading", {
     p_user_id: input.userId,
     p_seed: input.seed,
-    p_limit: limit,
-    p_period_start: entitlement.periodStart,
-    p_period_end: entitlement.periodEnd,
+    p_limit: regra.limit,
+    p_period_start: regra.inicio,
+    p_period_end: regra.fim,
     p_locale: input.locale,
     p_kind: kind,
   })
@@ -149,6 +171,8 @@ export async function consumeReading(input: {
 
   const row = Array.isArray(data) ? data[0] : data
   if (!row?.allowed) {
+    // a primeira Jornada gratuita já foi usada: o resto é do plano
+    if (regra.primeiraGratis) return { allowed: false, code: "free_used", used: Number(row?.used ?? 1), limit: 1, entitlement }
     return { allowed: false, code: "limit_reached", used: Number(row?.used ?? 0), limit, entitlement }
   }
   return {
@@ -236,4 +260,55 @@ export async function releaseSynthesisSlot(seed: string): Promise<void> {
 /** Lê o cookie de visitante de um jar do Next (cookies()). */
 export function visitorIdFrom(value: string | undefined): string | null {
   return typeof value === "string" && /^[0-9a-f-]{20,64}$/i.test(value) ? value : null
+}
+
+/**
+ * Quanto tempo uma geração da Jornada pode ficar 'started' antes de a trava
+ * ser considerada abandonada. A rota tem maxDuration de 60 s, então 2 minutos
+ * cobrem qualquer geração viva; uma instância que morreu no meio libera a
+ * pessoa em no máximo isto (nenhuma trava permanente).
+ */
+export const JORNADA_TRAVA_MS = 2 * 60 * 1000
+
+/** o pedaço do cliente que a consulta usa (facilita o teste com banco falso) */
+type ClienteUso = { from: (tabela: string) => any }
+
+/**
+ * Há outra geração da Jornada deste usuário em curso (linha 'started' recente
+ * de kind 'journey' que não seja a de `seed`)?
+ *
+ * POR QUE ISTO BASTA ENTRE INSTÂNCIAS: a linha 'started' nasce dentro de
+ * consume_reading, que serializa por (usuário, tipo) com pg_advisory_xact_lock
+ * e só devolve depois do commit. Logo, de duas gerações concorrentes, a que
+ * insere depois SEMPRE enxerga a linha da que inseriu antes quando faz esta
+ * consulta (statement novo, READ COMMITTED), e recua. A que inseriu primeiro
+ * pode enxergar a outra e recuar também: nunca avançam as duas. A linha só
+ * sai de 'started' DEPOIS de a análise ser salva, então quem chega depois
+ * encontra a análise pronta e a reutiliza. Lança em caso de erro: o chamador
+ * decide, e na checagem pós-cobrança erro significa "não avance".
+ */
+export async function consultarJornadaEmAndamento(
+  client: ClienteUso,
+  userId: string,
+  seed: string | null,
+  agora: number = Date.now(),
+): Promise<boolean> {
+  const janela = Math.min(STARTED_WINDOW_MS, JORNADA_TRAVA_MS)
+  let q = client
+    .from("reading_usage")
+    .select("seed")
+    .eq("user_id", userId)
+    .eq("kind", "journey")
+    .eq("status", "started")
+    .gte("created_at", new Date(agora - janela).toISOString())
+  if (seed) q = q.neq("seed", seed)
+  const { data, error } = await q.limit(1)
+  if (error) throw new Error(error.message)
+  return Array.isArray(data) && data.length > 0
+}
+
+/** Versão de produção: service role. Sem ela (desenvolvimento) devolve false e a rota usa a trava em memória. */
+export async function jornadaEmAndamento(userId: string, seed: string | null): Promise<boolean> {
+  if (!hasAdminClient()) return false
+  return consultarJornadaEmAndamento(createAdminClient(), userId, seed)
 }
