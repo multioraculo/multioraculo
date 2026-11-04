@@ -27,6 +27,7 @@ import {
   verificarInterpretacaoSonho,
 } from "../lib/oracles/sonhos-prompt"
 import { LOCALES } from "../lib/i18n/config"
+import { B_TRANSCRICAO, C_4O_PORAO, C_4O_TRANSCRICAO, C_MINI_PORAO, C_MINI_TRANSCRICAO } from "./fixtures-ab-sonhos"
 import type { Locale } from "../lib/i18n/config"
 
 const falhas: string[] = []
@@ -89,13 +90,13 @@ Uma escada que desce, na casa onde a infância aconteceu, até um porão tomado 
 ## SÍMBOLOS PRINCIPAIS
 
 **1. A escada para baixo**
-Numa casa conhecida, o caminho não sobe para os quartos: desce. O relato não traz hesitação ao descer, e isso pode indicar que o movimento de ir ao fundo acontece quase por hábito, não por escolha.
+No imaginário coletivo, a escada que desce é um limiar entre níveis. Numa casa conhecida, o caminho não sobe para os quartos: desce. O relato não traz hesitação ao descer, e isso pode indicar que o movimento de ir ao fundo acontece quase por hábito, não por escolha.
 
 **2. O porão alagado**
-Já está cheio de água antes de a pessoa chegar, o que sugere algo que se acumulou sem que ela o tenha provocado agora. A água sobe aos joelhos, ou seja, alcança sem cobrir.
+Na imaginação coletiva, o porão guarda o que foi posto de lado, e a água é o que escapou do controle. Já está cheio de água antes de a pessoa chegar, o que sugere algo que se acumulou sem que ela o tenha provocado agora. A água sobe aos joelhos, ou seja, alcança sem cobrir.
 
 **3. A mulher de vestido azul**
-Não fala nada no relato: só entrega. Pode ser lida como uma figura que transmite acesso sem explicar, e a cor azul a aproxima do clima frio e calmo do lugar.
+Não fala nada no relato: só entrega. Pode ser lida como uma figura de guia que transmite acesso sem explicar, e a cor azul a aproxima do clima frio e calmo do lugar.
 
 **4. A chave enferrujada**
 Ela é dada, não encontrada, mas está gasta. O que foi oferecido pode ter perdido o uso antes de chegar às mãos de quem a recebe.
@@ -103,7 +104,7 @@ Ela é dada, não encontrada, mas está gasta. O que foi oferecido pode ter perd
 ## DINÂMICA PSÍQUICA
 
 **Receber o acesso e não conseguir usá-lo**
-A sequência importa: primeiro a descida, depois a chave, depois a porta que não cede. O sonho parece separar duas coisas que costumam andar juntas, ter permissão para entrar e conseguir entrar. A mulher dá a chave sem ensinar o gesto, e a ferrugem sugere que o instrumento envelhece junto com o assunto que ele deveria abrir.
+A sequência importa: primeiro a descida, depois a chave, depois a porta que não cede. O sonho parece separar duas coisas que costumam andar juntas, ter permissão para entrar e conseguir entrar. Há aqui um limiar que não se cruza. A mulher dá a chave sem ensinar o gesto, e a ferrugem sugere que o instrumento envelhece junto com o assunto que ele deveria abrir.
 
 Do outro lado, a voz chama o nome da pessoa. Isso muda a tensão: a porta não guarda algo estranho, guarda alguém que a conhece. Ao mesmo tempo a água sobe, e a reação não é pressa nem medo, é cansaço. Uma hipótese é que o desgaste, e não o perigo, seja o que organiza a cena: a pessoa não foge da água porque já se acostumou a ficar nela.
 
@@ -115,8 +116,8 @@ Do outro lado, a voz chama o nome da pessoa. Isso muda a tensão: a porta não g
 
 ## PERGUNTAS PARA REFLEXÃO
 
-- O que a chave gasta poderia abrir, se fosse trocada por algo que você mesmo escolhesse?
-- Quem, na sua história, poderia estar do outro lado dizendo o seu nome?`,
+- O que a chave gasta poderia abrir, se fosse trocada por outra?
+- Quem estaria do outro lado, dizendo o nome?`,
   en: `## INTRODUCTION
 
 A staircase leads down, in the house where childhood happened, to a flooded basement. Someone calls from behind a door that the key you were handed will not open.
@@ -124,13 +125,13 @@ A staircase leads down, in the house where childhood happened, to a flooded base
 ## MAIN SYMBOLS
 
 **1. The staircase going down**
-In a familiar house the way does not go up to the bedrooms but down. The account mentions no hesitation, which may suggest that going deep happens almost by habit rather than by choice.
+In the collective imagination a staircase going down is a threshold between levels. In a familiar house the way does not go up to the bedrooms but down. The account mentions no hesitation, which may suggest that going deep happens almost by habit rather than by choice.
 
 **2. The flooded basement**
-It is already full of water before you arrive, which hints at something that built up without being caused now. The water reaches the knees: it touches without covering.
+In the collective imagination the basement holds what has been put away, and the water is what slipped out of control. It is already full of water before you arrive, which hints at something that built up without being caused now. The water reaches the knees: it touches without covering.
 
 **3. The woman in the blue dress**
-She says nothing in the account, she only hands things over. She can be read as a figure who passes on access without explaining it, and the blue ties her to the cold, calm mood of the place.
+She says nothing in the account, she only hands things over. She can be read as a guide figure who passes on access without explaining it, and the blue ties her to the cold, calm mood of the place.
 
 **4. The rusty key**
 It is given, not found, yet it is worn. What was offered may have lost its use before reaching the hands that receive it.
@@ -138,7 +139,7 @@ It is given, not found, yet it is worn. What was offered may have lost its use b
 ## PSYCHIC DYNAMICS
 
 **Receiving access and being unable to use it**
-The sequence matters: first the descent, then the key, then the door that will not give. The dream seems to separate two things that usually travel together, being allowed in and being able to enter. The woman gives the key without teaching the gesture, and the rust suggests the tool aged along with the matter it was meant to open.
+The sequence matters: first the descent, then the key, then the door that will not give. The dream seems to separate two things that usually travel together, being allowed in and being able to enter. There is a threshold here that is never crossed. The woman gives the key without teaching the gesture, and the rust suggests the tool aged along with the matter it was meant to open.
 
 On the other side a voice calls the dreamer by name. That shifts the tension: the door does not hide a stranger, it hides someone who knows them. Meanwhile the water rises, and the reaction is neither haste nor fear but tiredness. One hypothesis is that weariness, not danger, organizes the scene: one does not flee the water because one has grown used to standing in it.
 
@@ -150,8 +151,8 @@ On the other side a voice calls the dreamer by name. That shifts the tension: th
 
 ## QUESTIONS FOR REFLECTION
 
-- What could the worn key open if it were swapped for something you chose yourself?
-- Who in your story might be on the other side saying your name?`,
+- What could the worn key open if it were swapped for another one?
+- Who might be on the other side, saying the name?`,
   es: `## INTRODUCCIÓN
 
 Una escalera baja, en la casa donde ocurrió la infancia, hasta un sótano inundado. Alguien llama desde una puerta que la llave recibida no abre.
@@ -159,13 +160,13 @@ Una escalera baja, en la casa donde ocurrió la infancia, hasta un sótano inund
 ## SÍMBOLOS PRINCIPALES
 
 **1. La escalera hacia abajo**
-En una casa conocida el camino no sube a los dormitorios: baja. El relato no menciona duda al bajar, y eso puede indicar que ir al fondo ocurre casi por costumbre y no por elección.
+En el imaginario colectivo, una escalera que baja es un umbral entre niveles. En una casa conocida el camino no sube a los dormitorios: baja. El relato no menciona duda al bajar, y eso puede indicar que ir al fondo ocurre casi por costumbre y no por elección.
 
 **2. El sótano inundado**
-Ya está lleno de agua antes de llegar, lo que sugiere algo acumulado sin que se haya provocado ahora. El agua sube hasta las rodillas: alcanza sin cubrir.
+En el imaginario colectivo, el sótano guarda lo puesto aparte, y el agua es lo que se escapó del control. Ya está lleno de agua antes de llegar, lo que sugiere algo acumulado sin que se haya provocado ahora. El agua sube hasta las rodillas: alcanza sin cubrir.
 
 **3. La mujer del vestido azul**
-No dice nada en el relato, solo entrega. Puede leerse como una figura que transmite acceso sin explicarlo, y el azul la acerca al clima frío y calmo del lugar.
+No dice nada en el relato, solo entrega. Puede leerse como una figura de guía que transmite acceso sin explicarlo, y el azul la acerca al clima frío y calmo del lugar.
 
 **4. La llave oxidada**
 Se la dan, no la encuentra, pero está gastada. Lo ofrecido pudo haber perdido su uso antes de llegar a las manos de quien la recibe.
@@ -173,7 +174,7 @@ Se la dan, no la encuentra, pero está gastada. Lo ofrecido pudo haber perdido s
 ## DINÁMICA PSÍQUICA
 
 **Recibir el acceso y no poder usarlo**
-La secuencia importa: primero el descenso, luego la llave, luego la puerta que no cede. El sueño parece separar dos cosas que suelen ir juntas, tener permiso para entrar y poder entrar. La mujer da la llave sin enseñar el gesto, y el óxido sugiere que la herramienta envejeció junto con el asunto que debía abrir.
+La secuencia importa: primero el descenso, luego la llave, luego la puerta que no cede. El sueño parece separar dos cosas que suelen ir juntas, tener permiso para entrar y poder entrar. Hay aquí un umbral que no se cruza. La mujer da la llave sin enseñar el gesto, y el óxido sugiere que la herramienta envejeció junto con el asunto que debía abrir.
 
 Del otro lado, una voz llama a la persona por su nombre. Eso cambia la tensión: la puerta no esconde a un extraño, esconde a alguien que la conoce. Mientras tanto el agua sube, y la reacción no es prisa ni miedo, es cansancio. Una hipótesis es que el desgaste, y no el peligro, organice la escena: no se huye del agua porque ya se aprendió a estar en ella.
 
@@ -185,8 +186,8 @@ Del otro lado, una voz llama a la persona por su nombre. Eso cambia la tensión:
 
 ## PREGUNTAS PARA LA REFLEXIÓN
 
-- ¿Qué podría abrir la llave gastada si la cambiaras por algo que tú elegiste?
-- ¿Quién, en tu historia, podría estar del otro lado diciendo tu nombre?`,
+- ¿Qué podría abrir la llave gastada si se cambiara por otra?
+- ¿Quién podría estar del otro lado, diciendo el nombre?`,
 }
 
 // ── A. o prompt: sem o caractere, nem como exemplo, em nenhum idioma ──────────
@@ -219,7 +220,7 @@ confere("antes: detecta travessão", vAntes.some((x) => /travessão/.test(x)))
 const base = DEPOIS.pt
 const mutacoes: [string, string, RegExp][] = [
   ["travessão no meio do texto", base.replace("sem ensinar o gesto, e", "sem ensinar o gesto — e"), /travessão/],
-  ["meia risca", base.replace("Quem, na sua", "Quem – na sua"), /travessão/],
+  ["meia risca", base.replace("Quem estaria", "Quem – estaria"), /travessão/],
   ["introdução de 3 frases", base.replace("Alguém chama de fora de uma porta que a chave recebida não abre.", "Alguém chama de fora. A porta não abre. A chave não serve."), /introdução/],
   ["síntese com 4 pontos", base.replace("- O cansaço ocupa", "- Um quarto ponto qualquer.\n- O cansaço ocupa"), /síntese/],
   ["síntese com parágrafo", base.replace("## SÍNTESE\n\n", "## SÍNTESE\n\nEm resumo, o sonho fala de acesso.\n\n"), /síntese/],
@@ -280,6 +281,35 @@ const repDepois = sobreposicao(sDepois.sintese ?? "", `${sDepois.introducao}\n${
 confere("repetição: síntese antiga repete mais que a nova", repAntes > repDepois, `${repAntes.toFixed(2)} vs ${repDepois.toFixed(2)}`)
 
 void RELATO
+
+// ── H. a comparação com o modelo real vira regressão ──────────────────────────
+{
+  const vB = verificarInterpretacaoSonho(B_TRANSCRICAO, "pt")
+  confere("real B (prompt raso): terceira pessoa ('a sonhadora') é pega", vB.some((x) => /protagonista, sonhador/.test(x)), vB.join("; "))
+  confere("real B (prompt raso): pergunta dirigida à pessoa é pega", vB.some((x) => /dirigida à pessoa/.test(x)))
+  const vM1 = verificarInterpretacaoSonho(C_MINI_TRANSCRICAO, "pt")
+  confere("real C/mini (relato falado): pergunta com 'você vive' é pega", vM1.some((x) => /dirigida à pessoa/.test(x)), vM1.join("; "))
+  const vM2 = verificarInterpretacaoSonho(C_MINI_PORAO, "pt")
+  confere("real C/mini (porão): 'para você' nas perguntas é pego", vM2.some((x) => /dirigida à pessoa/.test(x)), vM2.join("; "))
+  confere("real C/mini (porão): pergunta sobre experiências da pessoa é pega", vM2.some((x) => /vida ou a relação/.test(x)))
+  const vO1 = verificarInterpretacaoSonho(C_4O_TRANSCRICAO, "pt")
+  confere("real C/4o (relato falado): a boa leitura passa limpa", vO1.length === 0, vO1.join("; "))
+  const vO2 = verificarInterpretacaoSonho(C_4O_PORAO, "pt")
+  confere("real C/4o (porão): a seção final de perguntas foi omitida pelo modelo e o verificador pega", vO2.some((x) => /seções fora do formato/.test(x)), vO2.join("; "))
+  const comCrescimento = C_4O_TRANSCRICAO.replace("## SÍNTESE", "Essa descida é necessária para o crescimento psíquico.\n\n## SÍNTESE")
+  confere("crescimento: 'necessária para o crescimento' é pego num texto que já era bom", comCrescimento !== C_4O_TRANSCRICAO && verificarInterpretacaoSonho(comCrescimento, "pt").some((x) => /necessário para crescimento/.test(x)))
+  confere("real C/4o: o texto bom tem vocabulário arquetípico de sobra", (C_4O_TRANSCRICAO.match(/(sombra|mensageiro|imaginação coletiva|mitos|limiar)/gi) ?? []).length >= 4)
+  // o prompt de produção é o que venceu a comparação
+  const p = montarPromptSonho("pt")
+  confere("prompt: dois planos, universal e particular", /DOIS PLANOS/.test(p) && /plano UNIVERSAL/.test(p) && /plano PARTICULAR/.test(p))
+  confere("prompt: síntese nomeia motivo arquetípico, não moral", /NOMEIA um motivo ou movimento arquetípico/.test(p))
+  confere("prompt: perguntas sem 'você' e sem vida da pessoa", /nada de "você"/.test(p) && /Proibido perguntar sobre a vida da pessoa/.test(p))
+  confere("prompt: numeração pedida de verdade (o modelo não pode copiar o 'N.')", /escreva os números de verdade/.test(p) && !/\*\*N\./.test(p))
+  confere("prompt: proíbe sentimento não relatado e terceira pessoa", /Não atribua sentimentos/.test(p) && /Nunca "a protagonista"/.test(p))
+  confere("prompt: proíbe 'necessário para o crescimento'", /necessário, essencial ou importante para o crescimento/.test(p))
+  confere("prompt: 800 a 1100 palavras e relato falado", /entre 800 e 1100 palavras/.test(p) && /fala transcrita/.test(p))
+}
+
 
 if (falhas.length) {
   console.error(`verify:sonhos FALHOU (${falhas.length} de ${conferidos})`)

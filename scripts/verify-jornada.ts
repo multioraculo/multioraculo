@@ -948,6 +948,10 @@ async function main() {
     confere("prompt: 'openQuestions' é obrigatório e não pergunta sobre a vida desperta", /campo obrigatório, sempre de 2 a 3 itens, nunca vazio/.test(p3) && /não perguntam sobre a vida desperta/.test(p3))
     confere("prompt: com dois sonhos prefere poucas conexões frágeis a uma firme e fraca", /de 1 a 4/.test(p2) && /prefira poucas conexões, ditas como frágeis/.test(p2))
     confere("prompt: não contém imagens dos relatos usados na bateria", !/(?<![\p{L}])(ponte|barco|avó|supermercado|envelope|rio)(?![\p{L}])/iu.test(p2 + p3))
+    // bateria real 2: "os sonhos parecem explorar..." é linguagem de hipótese (o verificador não reconhecia o plural)
+    const jh = { ...BOA["pt-3"].j, integrated: "Os sonhos parecem explorar o movimento da travessia." }
+    confere("hipótese: o plural parecem conta como linguagem de hipótese", !verificarJornada(jh, BOA["pt-3"].sonhos, "pt").some((x) => /sem linguagem de hipótese/.test(x)))
+    confere("prompt: pede os dois planos, o movimento arquetípico e proíbe a abstração vaga", /DOIS PLANOS/.test(p3) && /NOMEIA/.test(p3) && /Prefira o motivo nomeado à abstração vaga/.test(p3) && /nunca \"a protagonista\"/.test(p3))
     // as chaves que o modelo precisa devolver continuam nomeadas no prompt
     confere("prompt: nomeia as cinco chaves do JSON", ["timeline", "connections", "evolution", "integrated", "openQuestions"].every((k) => p3.includes('"' + k + '"')))
   }

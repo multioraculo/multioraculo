@@ -20,7 +20,10 @@ import { lerAnalise, type JornadaV2, type SonhoDaJornada } from "../lib/dreams/j
 import { estimateCostUsd } from "../lib/ai/pricing"
 import type { Locale } from "../lib/i18n/config"
 
-const TETO_USD = 0.1
+const TETO_USD = Number(process.env.TETO_USD ?? 0.1)
+const SAIDA = process.env.BATERIA_SAIDA ?? "bateria-jornada-1.md"
+// estimativa de saída para a checagem do teto (as saídas reais ficam em ~700 tokens)
+const SAIDA_ESTIMADA = Number(process.env.SAIDA_ESTIMADA ?? 2800)
 const MAX_TOKENS = 2800
 const MODELO = "gpt-4o"
 const executar = process.argv.includes("--executar")
@@ -85,7 +88,7 @@ async function main() {
     })
     const user = montarMensagemJornada(t.sonhos, t.locale)
     const entrada = estimaEntrada(system + user)
-    const piorCaso = estimateCostUsd(MODELO, entrada, MAX_TOKENS)
+    const piorCaso = estimateCostUsd(MODELO, entrada, SAIDA_ESTIMADA)
 
     if (!executar) {
       resumo.push(`${t.nome}: entrada ≈ ${entrada} tokens, pior caso ≈ US$ ${piorCaso.toFixed(4)}`)
@@ -138,8 +141,8 @@ async function main() {
   console.log(resumo.join("\n"))
   console.log(executar ? `\nGasto estimado total: US$ ${gasto.toFixed(4)} (teto US$ ${TETO_USD})` : `\nExecução seca: nada foi chamado. Use --executar para chamar o modelo.`)
   if (executar) {
-    fs.writeFileSync(path.join(process.cwd(), "docs", "bateria-jornada-1.md"), relatorio.join("\n"), "utf8")
-    console.log("Relatório: docs/bateria-jornada-1.md")
+    fs.writeFileSync(path.join(process.cwd(), "docs", SAIDA), relatorio.join("\n"), "utf8")
+    console.log(`Relatório: docs/${SAIDA}`)
   }
 }
 main().catch((e) => { console.error("ERRO:", e?.message ?? e); process.exit(1) })

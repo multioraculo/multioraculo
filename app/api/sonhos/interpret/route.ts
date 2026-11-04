@@ -11,6 +11,13 @@ import { criarGuardaTracos, montarPromptSonho } from "@/lib/oracles/sonhos-promp
 export const runtime = "nodejs"
 export const maxDuration = 60
 
+/**
+ * Modelo da interpretação. Na comparação com o modelo real (docs/ab-sonhos-1.md),
+ * o gpt-4o seguiu o prompt arquetípico muito melhor que o gpt-4o-mini (cerca de
+ * US$ 0,012 contra US$ 0,0007 por interpretação). Trocar sem deploy: DREAM_MODEL.
+ */
+const MODELO_SONHO = process.env.DREAM_MODEL?.trim() || "gpt-4o"
+
 const json = (body: object, status: number) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
 
@@ -51,9 +58,9 @@ export async function POST(request: Request) {
   let completion: Awaited<ReturnType<typeof openai.chat.completions.create>>
   try {
     completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: MODELO_SONHO,
       temperature: 0.7,
-      max_tokens: 2000,
+      max_tokens: 2600, // 800 a 1100 palavras em PT chegam perto de 2000 tokens
       stream: true,
       stream_options: { include_usage: true },
       messages: [
@@ -74,7 +81,7 @@ export async function POST(request: Request) {
       async start(controller) {
         let ok = false
         let usage: TokenUsage = null
-        let model = "gpt-4o-mini"
+        let model: string = MODELO_SONHO
         // rede de segurança: o prompt reduz o travessão, a guarda garante
         const guarda = criarGuardaTracos()
         try {

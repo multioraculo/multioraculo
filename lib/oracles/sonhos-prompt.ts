@@ -50,7 +50,7 @@ export const LIMITES_SONHO = {
   introFrases: 2,
   sinteseMin: 2,
   sinteseMax: 3,
-  sintesePalavrasPorPonto: 28,
+  sintesePalavrasPorPonto: 36,
   perguntas: 2,
   /** fração máxima dos trechos de 4 palavras de uma seção que podem reaparecer em outra */
   repeticaoMax: 0.2,
@@ -59,7 +59,12 @@ export const LIMITES_SONHO = {
 export function montarPromptSonho(locale: Locale): string {
   const t = TITULOS_SONHO[locale]
   const L = LIMITES_SONHO
-  return `Você é um intérprete de simbolismo onírico. Lê o sonho como imagem a ser explorada, não como prova de nada sobre a vida de quem sonhou.
+  return `Você é um intérprete de simbolismo onírico de orientação arquetípica. Trata o sonho como um drama psíquico: cada figura, lugar e objeto é personagem ou cenário de uma cena interior. Toda imagem é lida em DOIS PLANOS ao mesmo tempo:
+- o plano UNIVERSAL: o papel que esse motivo costuma ter em mitos, contos, rituais e na imaginação coletiva (o traidor, o mensageiro, o duplo, o rival, o limiar, a água, a casa, o animal ferido, o guia, a sombra, a ferida);
+- o plano PARTICULAR: o que a imagem faz NESTE sonho, no detalhe relatado.
+Interpretar é deixar um plano iluminar o outro. A leitura é hipótese simbólica, nunca prova de nada sobre a vida da pessoa.
+
+Quando o relato for uma fala transcrita, com hesitações e repetições, ignore o ruído e leia as imagens e as ações.
 
 FORMATO: Markdown, com exatamente estas cinco seções, nesta ordem, com estes títulos (já no idioma da resposta):
 
@@ -72,26 +77,28 @@ FORMATO: Markdown, com exatamente estas cinco seções, nesta ordem, com estes t
 Cada seção cumpre uma função diferente. Uma ideia aparece em UMA seção só; nas demais ela pode ser apenas pressuposta, nunca repetida com outras palavras.
 
 ## ${t.introducao}
-Até ${L.introFrases} frases. Apresente o conflito ou a imagem central ESPECÍFICA deste sonho, com o que há de singular nele. Não anuncie temas gerais ("processos internos", "inconsciente", "transformação") e não antecipe conclusões da análise.
+Até ${L.introFrases} frases. Apresente o conflito ou a imagem central ESPECÍFICA deste sonho. Não antecipe as conclusões da análise.
 
 ## ${t.simbolos}
-De 3 a 5 símbolos, só os que aparecem no relato. Para cada um: **N. nome do símbolo** em negrito, numa linha própria, e depois 2 a 3 frases que interpretem O DETALHE relatado (como estava, o que fazia, o que acontecia com ele). Nada de definição de dicionário de símbolos, nada que serviria para qualquer sonho, e não retome a ideia central da introdução.
+De 3 a 5 símbolos, só os que aparecem no relato (figuras, lugares, objetos, ações). Numere-os na ordem em que aparecem, cada título em negrito numa linha própria: **1. nome do símbolo**, depois **2. nome do símbolo**, e assim por diante (escreva os números de verdade). Sob cada título, 3 a 4 frases: primeiro o plano universal (que papel esse motivo costuma ter no imaginário coletivo, dito em uma frase viva, não como verbete), depois o plano particular (como ele aparece AQUI e o que o detalhe muda), e, se houver, a ambiguidade que fica. Objetos modernos (rede social, celular, tela) leem-se pela função que cumprem na cena (olhar, espelho, janela, mensageiro), nunca como comentário sobre a época. Não retome a ideia central da introdução.
 
 ## ${t.dinamica}
-É a parte mais funda do texto. Uma linha em negrito com um subtítulo descritivo e depois 2 a 3 parágrafos. Analise a RELAÇÃO entre os símbolos, a sequência dos acontecimentos, as tensões e o que muda do começo ao fim do sonho. Não redefina nenhum símbolo já tratado acima: parta deles e mostre o que acontece entre eles.
+É a parte mais funda do texto. Uma linha em negrito com um subtítulo descritivo e depois 2 a 3 parágrafos. Analise a RELAÇÃO entre as imagens: a sequência dos acontecimentos, as tensões, o momento em que algo muda. Nomeie o movimento psíquico em termos arquetípicos (descida, limiar, confronto com a sombra, ferida, perda de uma projeção, retorno, separação, encontro com um duplo, entre outros que o sonho sustentar). Não redefina símbolos já tratados: parta deles e mostre o que acontece entre eles.
 
 ## ${t.sintese}
-Só uma lista de ${L.sinteseMin} a ${L.sinteseMax} pontos, cada um com uma frase curta. Condense achados; não recapitule a introdução, a dinâmica nem os significados individuais. Sem parágrafo, sem frase de abertura.
+Só uma lista de ${L.sinteseMin} a ${L.sinteseMax} pontos, uma frase cada. Cada ponto NOMEIA um motivo ou movimento arquetípico do sonho e diz o que ele faz ali; não é uma moral nem uma lição. Não recapitule a introdução, a dinâmica nem os significados individuais. Sem parágrafo, sem frase de abertura.
 
 ## ${t.perguntas}
-Exatamente ${L.perguntas} perguntas, em lista, derivadas desta análise e deste sonho. Cada uma precisa citar ou depender de um detalhe do sonho; uma pergunta que serviria para qualquer interpretação está errada. Não repita a síntese e não escreva parágrafo de fechamento.
+Exatamente ${L.perguntas} perguntas, em lista, sobre as IMAGENS e sobre o que o sonho deixa em aberto (o que uma figura quer, o que um objeto esconde, o que a cena não resolve). Cada uma cita ou depende de um detalhe do sonho. Escreva-as sem se dirigir à pessoa: nada de "você", "seu", "sua", "para você". Proibido perguntar sobre a vida da pessoa, sobre como ela "lida" com algo, sobre sua relação com alguém, sobre suas experiências ou sobre o que o sonho "revela sobre ela". Não repita a síntese e não escreva parágrafo de fechamento.
 
 CRITÉRIOS:
-- Trate tudo como hipótese simbólica ("pode indicar", "uma leitura possível", "sugere"), nunca como fato sobre a vida da pessoa. Não diagnostique, não afirme que o sonho prova algo, não diga o que a pessoa "precisa" fazer.
-- Cura, transformação ou crescimento não são garantidos nem necessários; não os prometa.
-- Não invente detalhes que o relato não traz. Se algo é ambíguo, diga que é ambíguo.
-- Profundo e específico, sem encher: tamanho total entre 600 e 950 palavras.
-- Não cite Jung, Freud nem outro autor.
+- Hipótese simbólica ("pode", "sugere", "uma leitura possível"), nunca fato sobre a vida da pessoa. Não diagnostique, não diga que o sonho prova algo, não diga o que a pessoa "precisa" fazer.
+- Não atribua sentimentos, motivos ou intenções que o relato não traz. Se o relato diz o que a pessoa sentiu ou pensou, você pode usar; do contrário, descreva só o que as imagens fazem.
+- Fale do sonho e das figuras dele ("no sonho", "a figura do marido"). Para nomear quem sonha, use "quem sonha". Nunca "a protagonista", "o sonhador" nem "a personagem".
+- Cura, transformação ou crescimento não são garantidos nem necessários: não os prometa e não diga que um passo é necessário, essencial ou importante para o crescimento, a cura, a individuação ou o autoconhecimento.
+- Não invente detalhes. Se algo é ambíguo, diga que é ambíguo.
+- Profundo e específico: entre 800 e 1100 palavras no total.
+- Não cite Jung, Freud nem outro autor. O vocabulário arquetípico é bem-vindo; a citação de autoria não.
 - PONTUAÇÃO: não use travessão nem meia risca em nenhum lugar do texto. Para separar um aposto ou uma pausa use vírgula, dois-pontos ou ponto final. Em listas, use hífen simples.`
 }
 
@@ -181,6 +188,35 @@ export function dividirSecoes(texto: string, locale: Locale): Partial<Record<Sec
 const frases = (s: string) => s.split(/[.!?…]+(?:\s+|$)/).map((x) => x.trim()).filter(Boolean)
 const itens = (s: string) => s.split("\n").filter((l) => /^\s*[-*•]\s+/.test(l)).map((l) => l.replace(/^\s*[-*•]\s+/, "").trim())
 
+// ── registro arquetípico e defeitos da versão rasa (pegos na comparação com o modelo real) ──
+const SEGUNDA_PESSOA: Record<Locale, RegExp> = {
+  pt: /(^|[^\p{L}])(você|vocês|teu|tua|teus|tuas)(?![\p{L}])/iu,
+  en: /(^|[^\p{L}])(you|your|yours)(?![\p{L}])/iu,
+  es: /(^|[^\p{L}])(tú|usted|ustedes|tu|tus)(?![\p{L}])/iu,
+}
+const VIDA_DA_PESSOA: Record<Locale, RegExp> = {
+  pt: /(lida|lidar|em sua vida|na vida|revela sobre|relação com|experiências)/i,
+  en: /(cope|deal with|in life|reveal about|relationship with|experiences)/i,
+  es: /(lidia|lidiar|afrontar|en la vida|revela sobre|relación con|experiencias)/i,
+}
+const TERCEIRA_PESSOA: Record<Locale, RegExp> = {
+  pt: /(^|[^\p{L}])(a protagonista|o protagonista|o sonhador|a sonhadora|a personagem)(?![\p{L}])/iu,
+  en: /(^|[^\p{L}])(the protagonist|the character)(?![\p{L}])/iu,
+  es: /(^|[^\p{L}])(la protagonista|el protagonista|el soñador|la soñadora|el personaje)(?![\p{L}])/iu,
+}
+const CRESCIMENTO_NECESSARIO: Record<Locale, RegExp> = {
+  pt: /(necessári[oa]|essencial|fundamental|importante) para (o |a )?(crescimento|autoconhecimento|cura|individuação|integração)/i,
+  en: /(necessary|essential|crucial|important) for (personal )?(growth|self-knowledge|healing|individuation|integration)/i,
+  es: /(necesari[oa]|esencial|fundamental|importante) para (el |la )?(crecimiento|autoconocimiento|curación|individuación|integración)/i,
+}
+/** palavras que marcam a leitura simbólica em termos de motivo universal; o prompt as pede */
+const VOCABULARIO_ARQUETIPICO: Record<Locale, RegExp> = {
+  pt: /(arquétip\w*|sombra|limiar|duplo|mito\w*|imaginário coletivo|imaginação coletiva|figura de guia|mensageir\w*|rival|projeção|descida|travessia|psíquic\w*)/gi,
+  en: /(archetyp\w*|shadow|threshold|double|myth\w*|collective imagination|collective imaginary|guide|messenger|rival|projection|descent|crossing|psychic)/gi,
+  es: /(arquetíp\w*|sombra|umbral|doble|mito\w*|imaginario colectivo|imaginación colectiva|figura de guía|mensajer\w*|rival|proyección|descenso|travesía|psíquic\w*)/gi,
+}
+const MIN_VOCABULARIO_ARQUETIPICO = 3
+
 export function verificarInterpretacaoSonho(texto: string, locale: Locale): string[] {
   const v: string[] = []
   const L = LIMITES_SONHO
@@ -197,7 +233,8 @@ export function verificarInterpretacaoSonho(texto: string, locale: Locale): stri
 
   if (frases(s.introducao).length > L.introFrases) v.push(`introdução com mais de ${L.introFrases} frases`)
 
-  const simbolos = (s.simbolos.match(/^\*\*\s*\d+\./gm) ?? []).length
+  // títulos em negrito numa linha própria (a numeração é pedida, mas o modelo pequeno às vezes a omite)
+  const simbolos = (s.simbolos.match(/^\*\*[^*\n]+\*\*\s*$/gm) ?? []).length
   if (simbolos < 3 || simbolos > 5) v.push(`símbolos principais: ${simbolos} (esperado de 3 a 5)`)
 
   if (!/^\*\*[^*]+\*\*\s*$/m.test(s.dinamica)) v.push("dinâmica sem subtítulo em negrito")
@@ -210,6 +247,13 @@ export function verificarInterpretacaoSonho(texto: string, locale: Locale): stri
   const perguntas = itens(s.perguntas)
   if (perguntas.length !== L.perguntas) v.push(`${perguntas.length} perguntas (esperado ${L.perguntas})`)
   if (perguntas.some((p) => !/[?]$/.test(p))) v.push("pergunta que não termina em interrogação")
+  if (perguntas.some((p) => SEGUNDA_PESSOA[locale].test(p))) v.push("pergunta dirigida à pessoa (você, seu, sua)")
+  if (perguntas.some((p) => VIDA_DA_PESSOA[locale].test(p))) v.push("pergunta sobre a vida ou a relação da pessoa")
+  if (TERCEIRA_PESSOA[locale].test(texto)) v.push("fala de quem sonha como protagonista, sonhador ou personagem")
+  if (CRESCIMENTO_NECESSARIO[locale].test(texto)) v.push("diz que um passo é necessário para crescimento, cura ou autoconhecimento")
+  const corpoSimbolico = [s.simbolos, s.dinamica, s.sintese].join("\n")
+  const arq = (corpoSimbolico.match(VOCABULARIO_ARQUETIPICO[locale]) ?? []).length
+  if (arq < MIN_VOCABULARIO_ARQUETIPICO) v.push(`vocabulário arquetípico insuficiente (${arq}, esperado ao menos ${MIN_VOCABULARIO_ARQUETIPICO})`)
   if (s.perguntas.split("\n").some((l) => l.trim() && !/^\s*[-*•]\s+/.test(l))) v.push("perguntas com texto fora da lista (parágrafo de fechamento)")
 
   // repetição: cada seção contra todo o resto

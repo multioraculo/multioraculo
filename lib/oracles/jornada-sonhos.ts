@@ -42,6 +42,8 @@ export function montarPromptJornada(
 
   return `Você lê um conjunto de sonhos como material simbólico e arquetípico. Interpreta imagens, não a vida de quem sonhou, e trata toda leitura como hipótese.
 
+ORIENTAÇÃO ARQUETÍPICA: leia cada imagem em DOIS PLANOS. No plano UNIVERSAL, diga o papel que o motivo tem em mitos, contos e na imaginação coletiva (limiar, travessia, guia ou ancestral, sombra, casa, água, descida, o terceiro, o objeto que perdeu a função). No plano PARTICULAR, diga o que o motivo faz nestes relatos, com os detalhes deles. A relação entre os sonhos é a de um mesmo movimento arquetípico que se repete, se inverte ou se transforma, e você o NOMEIA. Descrever o que aparece em cada sonho e juntar as descrições não é interpretar.
+
 O QUE INVESTIGAR (só o que o material sustenta):
 - símbolos, imagens e personagens que reaparecem, e como se transformam de um sonho para o outro;
 - temas e situações que voltam, e o que muda nas ações e na posição de quem sonha (observa, foge, entra, é conduzido, escolhe);
@@ -54,15 +56,16 @@ ${escala}${continuidade}
 
 FORMATO: apenas um objeto JSON com estes campos.
 - "timeline": um item por sonho, em ordem cronológica: {"number": número do sonho, "title": título curto e específico da imagem central, "archetypes": as imagens centrais deste sonho separadas por " · ", "summary": 1 a 2 frases sobre a imagem central deste sonho}. Aqui só o sonho isolado; as relações ficam em "connections".
-- "connections": lista de ${dois ? "1 a 4" : "3 a 5"} strings simples (não objetos), cada uma uma relação simbólica concreta entre sonhos (2 a 4 frases), citando as imagens e os detalhes dos relatos. Cada texto traz uma relação diferente.
+- "connections": lista de ${dois ? "1 a 4" : "3 a 5"} strings simples (não objetos), cada uma uma relação simbólica concreta entre sonhos (2 a 4 frases): nomeia o motivo ou movimento arquetípico em comum ou em contraste, cita as imagens e os detalhes dos relatos e diz o que a relação sugere. Cada texto traz uma relação diferente.
 - "evolution": ${dois ? "[]" : `de 2 a 5 itens {"type", "text"} em que type é um de persists, changed, gaining, fading, revised, e text (1 a 2 frases) cita a imagem concreta`}.
-- "integrated": a leitura do conjunto em 1 ou 2 parágrafos separados por linha em branco, até 170 palavras, em linguagem de hipótese. Diz o que o conjunto sugere junto, sem repetir as conexões nem os resumos.
-- "openQuestions": campo obrigatório, sempre de 2 a 3 itens, nunca vazio, cada item uma string simples. Dizem o que o material ainda não mostra ou o que sonhos futuros poderiam esclarecer. Não são conselhos nem tarefas, e não perguntam sobre a vida desperta da pessoa, nem sobre o que ela sente, nem sobre o que o sonho "significa para ela".
+- "integrated": a leitura do conjunto em 1 ou 2 parágrafos separados por linha em branco, até 170 palavras, em linguagem de hipótese. Nomeia o movimento arquetípico que atravessa o conjunto e a posição de quem sonha diante dele, sem repetir as conexões nem os resumos.
+- "openQuestions": campo obrigatório, sempre de 2 a 3 itens, nunca vazio, cada item uma string simples. Perguntam pelas imagens e pelos motivos: o que o material ainda não mostra, o que sonhos futuros poderiam esclarecer, que papel um motivo ainda sem lugar poderia ter. Não são conselhos nem tarefas, e não perguntam sobre a vida desperta da pessoa, nem sobre o que ela sente, nem sobre o que o sonho "significa para ela".
 
 CRITÉRIOS:
 - Hipótese simbólica não é fato: "pode sugerir", "uma leitura possível", "parece". Nada de diagnóstico, de previsão, de afirmação categórica sobre a vida da pessoa, nem de "o sonho prova".
 - Não reduza os sonhos a ansiedade, medo, bloqueio, trauma ou necessidade de transformação. Não fabrique trajetória de crescimento ou superação que o material não sustenta. Cura e transformação não são garantidas nem necessárias. Descreva mudanças de posição, de ação ou de cenário sem valorá-las: não as chame de progresso, progressão, evolução da pessoa, amadurecimento, avanço, superação nem liberdade crescente.
-- Não invente detalhes nem personagens que os relatos não trazem.
+- Não invente detalhes nem personagens que os relatos não trazem. Não atribua sentimentos que os relatos não registram.
+- Prefira o motivo nomeado à abstração vaga: no lugar de "busca por conexão ou sentido", "barreira emocional" ou "desconexão", diga qual imagem faz o quê, e qual movimento arquetípico isso compõe. Fale de quem sonha na terceira pessoa neutra ("quem sonha"), nunca "a protagonista" nem "o sonhador".
 - Cada ideia aparece em um campo só. Nada de repetir a mesma coisa com outras palavras.
 - Não cite Jung, Freud nem outro autor.
 - PONTUAÇÃO: não use travessão nem meia risca em nenhum campo. Use vírgula, dois-pontos ou ponto final.
@@ -153,9 +156,9 @@ const REDUCAO: Record<Locale, RegExp> = {
   es: /\b(ansiedad|miedo|bloqueo|trauma|transformación|crecimiento|superación|curación)\b/gi,
 }
 const HIPOTESE: Record<Locale, RegExp> = {
-  pt: /\b(pode|podem|poderia|talvez|sugere|sugerem|parece|hipótese|possível)\b/i,
+  pt: /\b(pode|podem|poderia|talvez|sugere|sugerem|parece|parecem|hipótese|possível)\b/i,
   en: /\b(may|might|could|perhaps|suggests?|seems?|hypothesis|possible)\b/i,
-  es: /\b(puede|pueden|podría|quizá|sugiere|sugieren|parece|hipótesis|posible)\b/i,
+  es: /\b(puede|pueden|podría|quizá|sugiere|sugieren|parece|parecen|hipótesis|posible)\b/i,
 }
 /** valorar a mudança como avanço: trajetória de crescimento que o material não sustenta */
 const PROGRESSO: Record<Locale, RegExp> = {
