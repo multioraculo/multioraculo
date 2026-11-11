@@ -6,17 +6,68 @@ import { newSeed } from "@/lib/oracles/draw"
 import { completeReading, consumeReading, failReading, httpStatusFor, visitorIdFrom } from "@/lib/billing/usage"
 import { VISITOR_COOKIE } from "@/lib/billing/visitor"
 import { recordAiUsage, type TokenUsage } from "@/lib/ai/usage"
-import { criarGuardaTracos, montarPromptSonho } from "@/lib/oracles/sonhos-prompt"
+import { criarGuardaTracos } from "@/lib/oracles/sonhos-prompt"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
 
 /**
- * Modelo da interpretação. Na comparação com o modelo real (docs/ab-sonhos-1.md),
- * o gpt-4o seguiu o prompt arquetípico muito melhor que o gpt-4o-mini (cerca de
- * US$ 0,012 contra US$ 0,0007 por interpretação). Trocar sem deploy: DREAM_MODEL.
+ * Prompt ORIGINAL da interpretação (o de antes da reforma editorial de out/2026),
+ * restaurado a pedido do dono do produto. A versão arquetípica revisada continua
+ * em lib/oracles/sonhos-prompt.ts (montarPromptSonho), sem uso na rota.
+ * A guarda de travessões na saída continua ligada: é a regra global de pontuação.
  */
-const MODELO_SONHO = process.env.DREAM_MODEL?.trim() || "gpt-4o"
+const SYSTEM_PROMPT = `Você é um intérprete ESPECIALIZADO em simbolismo onírico profundo.
+
+ESTRUTURA OBRIGATÓRIA DA RESPOSTA — use exatamente este formato Markdown (os títulos das seções devem ser escritos no idioma da resposta, com o mesmo sentido):
+
+## INTRODUÇÃO
+
+Comece SEMPRE com um parágrafo contextualizando a abordagem. Exemplo:
+"Este sonho revela [tema geral]. Vamos explorar seus símbolos como dramatizações de processos psíquicos internos — a relação entre consciente e inconsciente, padrões arquetípicos e movimentos de transformação."
+
+## SÍMBOLOS PRINCIPAIS
+
+Analise CADA símbolo relevante com numeração e título em negrito:
+
+**1. [Nome específico do símbolo]**
+[3-4 frases de análise profunda]
+
+**2. [Segundo símbolo]**
+[Análise detalhada]
+- Aspecto 1
+- Aspecto 2
+
+**3. [Continue numerando cada símbolo importante]**
+
+## DINÂMICA PSÍQUICA
+
+**[Subtítulo descritivo]**
+[2-3 parágrafos analisando o dilema central, tensões, movimento interno]
+
+## SÍNTESE
+
+**[Subtítulo]**
+[1-2 parágrafos]
+
+O inconsciente está comunicando:
+- [Ponto 1]
+- [Ponto 2]
+- [Ponto 3]
+
+## MENSAGEM DO INCONSCIENTE
+
+**[Subtítulo]**
+- [Pergunta 1]
+- [Pergunta 2]
+- [Pergunta 3]
+
+[Parágrafo de fechamento]
+
+REGRAS: Profundo, específico, 4-6 símbolos, 800-1200 palavras. Não citar Jung/Freud.`
+
+/** Modelo original: gpt-4o-mini. Trocar sem deploy: DREAM_MODEL. */
+const MODELO_SONHO = process.env.DREAM_MODEL?.trim() || "gpt-4o-mini"
 
 const json = (body: object, status: number) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } })
@@ -60,13 +111,13 @@ export async function POST(request: Request) {
     completion = await openai.chat.completions.create({
       model: MODELO_SONHO,
       temperature: 0.7,
-      max_tokens: 2600, // 800 a 1100 palavras em PT chegam perto de 2000 tokens
+      max_tokens: 2000,
       stream: true,
       stream_options: { include_usage: true },
       messages: [
         {
           role: "system",
-          content: `${montarPromptSonho(locale)}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
+          content: `${SYSTEM_PROMPT}\n\nIDIOMA DA RESPOSTA: escreva toda a resposta, inclusive os títulos das seções, em ${LOCALE_META[locale].promptName}, com naturalidade de falante nativo.`,
         },
         { role: "user", content: `Sonho:\n"${dream}"` },
       ],

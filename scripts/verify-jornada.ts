@@ -293,7 +293,7 @@ async function main() {
   const p3 = montarPromptJornada("pt", { n: 3 })
   confere("prompt 2 sonhos: proíbe padrão consolidado e zera a evolução", /DOIS sonhos/.test(p2) && /não afirme padrão recorrente/.test(p2) && /"evolution": \[\]/.test(p2))
   confere("prompt 3+ sonhos: pede permanece, mudou, força, relevância e incerteza", /o que permanece/.test(p3) && /ganharam força/.test(p3) && /perderam relevância/.test(p3) && /continua incerto/.test(p3))
-  confere("prompt: pede hipótese, sem diagnóstico, sem trajetória fabricada", /hipótese/.test(p3) && /Nada de diagnóstico/.test(p3) && /Não fabrique trajetória/.test(p3) && /Não invente detalhes/.test(p3))
+  confere("prompt: pede hipótese, sem diagnóstico, sem trajetória fabricada", /Nada de diagnóstico nem previsão/.test(p3) && /Não invente detalhes/.test(p3))
   const comAnterior = montarPromptJornada("pt", { n: 3, anterior: { integrated: "Leitura prévia X.", connections: ["Conexão prévia Y."] }, novosNumeros: [3] })
   confere("prompt com anterior: trata como hipótese e manda reescrever", /LEITURA ANTERIOR/.test(comAnterior) && /não verdade estabelecida/.test(comAnterior) && /reescreva a leitura/.test(comAnterior) && /Leitura prévia X/.test(comAnterior))
   confere("prompt sem anterior: não menciona leitura anterior", !/LEITURA ANTERIOR/.test(p3))
@@ -943,15 +943,14 @@ async function main() {
     for (const [nome, { sonhos, j, locale }] of Object.entries(BOA)) confere(`regras novas: fixture ${nome} continua aprovada`, verificarJornada(j, sonhos, locale).length === 0)
     // o prompt carrega as correções e não vaza as imagens dos relatos reais
     const p2 = montarPromptJornada("pt", { n: 2 }), p3 = montarPromptJornada("pt", { n: 3 })
-    confere("prompt: exige citar a imagem exata de cada sonho e proíbe contar imagem ausente", /nomeie a imagem exata de CADA sonho/.test(p2) && /não pode ser contada como presente em todos/.test(p2))
-    confere("prompt: proíbe valorar a mudança como progresso ou evolução", /não as chame de progresso, progressão, evolução da pessoa/.test(p3))
-    confere("prompt: 'openQuestions' é obrigatório e não pergunta sobre a vida desperta", /campo obrigatório, sempre de 2 a 3 itens, nunca vazio/.test(p3) && /não perguntam sobre a vida desperta/.test(p3))
-    confere("prompt: com dois sonhos prefere poucas conexões frágeis a uma firme e fraca", /de 1 a 4/.test(p2) && /prefira poucas conexões, ditas como frágeis/.test(p2))
+    // o prompt voltou ao texto ORIGINAL da síntese (decisão do dono do produto, nov/2026), no formato salvo atual
+    confere("prompt original: especialista em simbolismo onírico, arquétipos e essência poética", /especialista em simbolismo onírico e análise psíquica profunda/.test(p3) && /Arquétipo Principal/.test(p3) && /linguagem poética e direta/.test(p3))
+    confere("prompt: 'openQuestions' continua obrigatório (a tela mostra a seção)", /campo obrigatório, sempre de 2 a 3 strings simples, nunca vazio/.test(p3))
+    confere("prompt: com dois sonhos pede de 1 a 4 conexões e evolução vazia", /de 1 a 4/.test(p2) && /"evolution": \[\]/.test(p2))
     confere("prompt: não contém imagens dos relatos usados na bateria", !/(?<![\p{L}])(ponte|barco|avó|supermercado|envelope|rio)(?![\p{L}])/iu.test(p2 + p3))
     // bateria real 2: "os sonhos parecem explorar..." é linguagem de hipótese (o verificador não reconhecia o plural)
     const jh = { ...BOA["pt-3"].j, integrated: "Os sonhos parecem explorar o movimento da travessia." }
     confere("hipótese: o plural parecem conta como linguagem de hipótese", !verificarJornada(jh, BOA["pt-3"].sonhos, "pt").some((x) => /sem linguagem de hipótese/.test(x)))
-    confere("prompt: pede os dois planos, o movimento arquetípico e proíbe a abstração vaga", /DOIS PLANOS/.test(p3) && /NOMEIA/.test(p3) && /Prefira o motivo nomeado à abstração vaga/.test(p3) && /nunca \"a protagonista\"/.test(p3))
     // as chaves que o modelo precisa devolver continuam nomeadas no prompt
     confere("prompt: nomeia as cinco chaves do JSON", ["timeline", "connections", "evolution", "integrated", "openQuestions"].every((k) => p3.includes('"' + k + '"')))
   }

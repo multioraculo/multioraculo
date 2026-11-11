@@ -201,10 +201,10 @@ for (const locale of LOCALES) {
 
 // ── B. a rota usa o módulo (não volta a ter prompt próprio) ───────────────────
 const rota = fs.readFileSync(path.join(process.cwd(), "app/api/sonhos/interpret/route.ts"), "utf8")
-confere("rota: usa montarPromptSonho", /montarPromptSonho\(/.test(rota))
+// a rota voltou ao prompt ORIGINAL (decisão do dono do produto, nov/2026); o arquetípico revisado segue em montarPromptSonho, sem uso na rota
+confere("rota: usa o prompt original (SYSTEM_PROMPT) com a estrutura de cinco seções", /const SYSTEM_PROMPT\s*=/.test(rota) && /## INTRODUÇÃO/.test(rota) && /## MENSAGEM DO INCONSCIENTE/.test(rota) && !/montarPromptSonho\(/.test(rota))
 confere("rota: usa a guarda de travessão no stream", /criarGuardaTracos\(/.test(rota))
-confere("rota: sem SYSTEM_PROMPT literal próprio", !/const SYSTEM_PROMPT\s*=/.test(rota))
-confere("rota: sem travessão no código", !/[—–]/.test(rota.replace(/^\s*\/\/.*$/gm, "")))
+// o prompt original traz um travessão de exemplo: a guarda de saída é quem garante a regra global
 
 // ── C. o texto novo passa em PT, EN e ES; o antigo reprova ────────────────────
 for (const locale of LOCALES) {
