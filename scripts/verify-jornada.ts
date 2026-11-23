@@ -422,7 +422,8 @@ async function main() {
   confere("tela: usa o estado da regra única", /estadoDaJornada\(/.test(comp))
   confere("tela: avisa análise desatualizada e sonho excluído", /outdatedOne/.test(comp) && /deletedNotice/.test(comp))
   const lista = lê("components/saved-dreams-list.tsx")
-  confere("sonhos salvos: a Jornada aparece com 2 sonhos", /dreams\.length >= 2 && <JornadaSonhos/.test(lista) && !/dreams\.length >= 4/.test(lista))
+  confere("sonhos salvos: a Jornada aparece com 2 sonhos", /dreams\.length >= 2 \? <JornadaSonhos[^>]*\/> : <JornadaExemplo \/>/.test(lista) && !/dreams\.length >= 4/.test(lista))
+  confere("sonhos salvos: com menos de 2 sonhos mostra o exemplo, que não chama o modelo nem a cota", /JornadaExemplo/.test(lista) && !/fetch\(/.test((comp.match(/export function JornadaExemplo[\s\S]*?\n}\n/) ?? [""])[0]))
   confere("sonhos salvos: convite discreto com um sonho", /dreams\.length === 1/.test(lista) && /oneDreamHint/.test(lista))
 
   // ── I. idiomas: as mesmas chaves, com texto próprio, sem travessão ──────────

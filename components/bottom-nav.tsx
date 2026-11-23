@@ -35,9 +35,11 @@ export default function BottomNav() {
   const rotaAtual = rotaDoCaminho(real)
   const pathname = rotaAtual ? caminhoDaRota(rotaAtual.chave, "pt") : real
   const [explore, setExplore] = useState(false)
+  const [sonhos, setSonhos] = useState(false)
   const t = dict.nav
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" || pathname.startsWith("/leitura") : pathname.startsWith(href))
+  const sonhosActive = pathname.startsWith("/sonhos")
   const exploreActive = pathname.startsWith("/oraculos") || pathname.startsWith("/faq")
 
   // já na consulta: só limpa e sobe, sem navegar (o preventDefault também
@@ -93,12 +95,21 @@ export default function BottomNav() {
     <>
       <nav className="bnav sm:hidden" aria-label={t.mainNav}>
         {item("/home", t.home, SolIcon)}
-        {item("/sonhos", t.dreamsShort, MoonIcon)}
+        {sheetButton(t.dreamsShort, MoonIcon, sonhosActive, sonhos, () => setSonhos(true))}
         {item("/", t.consult, MultioraculoIcon, { center: true, onClick: goHome })}
         {item("/horoscopo", t.horoscope, StarIcon)}
         {sheetButton(t.explore, SearchIcon, exploreActive, explore, () => setExplore(true))}
       </nav>
       <ExploreSheet open={explore} onClose={() => setExplore(false)} />
+      <ExploreSheet
+        open={sonhos}
+        onClose={() => setSonhos(false)}
+        title={t.dreamsShort}
+        items={[
+          { href: "/sonhos", label: t.dreamsInterpret, hint: t.dreamsInterpretHint },
+          { href: "/sonhos-salvos", label: t.dreamJourney, hint: t.dreamJourneyHint },
+        ]}
+      />
     </>
   )
 }

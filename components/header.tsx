@@ -17,6 +17,7 @@ import LocaleSwitcher from "@/components/locale-switcher"
 import { SearchIcon } from "@/components/nav-icons"
 import { useI18n } from "@/components/i18n-provider"
 import BrandLogo from "@/components/brand-logo"
+import Seta from "@/components/seta"
 
 /**
  * O que o cabeçalho precisa de quem está logado. Páginas podem passar o User
@@ -45,7 +46,7 @@ export default function Header({ initialUser }: HeaderProps) {
   const [returnTo, setReturnTo] = useState<string | null>(null)
   // Menu leve do desktop: "Explorar" (Oráculos e
   // FAQ). No celular os mesmos destinos vivem na barra inferior.
-  const [openMenu, setOpenMenu] = useState<"explore" | null>(null)
+  const [openMenu, setOpenMenu] = useState<"explore" | "dreams" | null>(null)
   const menusRef = useRef<HTMLDivElement>(null)
   // destino do menu tocado: o painel fica aberto, com o item pendente, até a
   // navegação terminar (ver components/nav-pending.tsx)
@@ -150,8 +151,11 @@ export default function Header({ initialUser }: HeaderProps) {
   const navItems = [
     { href: "/home", label: dict.nav.home },
     { href: "/", label: dict.nav.consult, onClick: handleConsultaClick },
-    { href: "/sonhos", label: dict.nav.dreamsShort },
     { href: "/horoscopo", label: dict.nav.horoscope },
+  ]
+  const dreamLinks = [
+    { href: "/sonhos", label: dict.nav.dreamsInterpret, hint: dict.nav.dreamsInterpretHint },
+    { href: "/sonhos-salvos", label: dict.nav.dreamJourney, hint: dict.nav.dreamJourneyHint },
   ]
   const exploreLinks = [
     { href: "/oraculos", label: dict.nav.oracles, hint: dict.nav.exploreOracles },
@@ -180,8 +184,8 @@ export default function Header({ initialUser }: HeaderProps) {
         {/* Celular: sem links de texto no topo; a navegação principal fica no rodapé (BottomNav). */}
 
         {/* Desktop: os mesmos destinos da barra inferior, centralizados */}
-        <nav className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label={dict.nav.mainNav}>
-          {navItems.map((item) => (
+        <nav ref={menusRef} className="hidden sm:flex items-center gap-6 absolute left-1/2 -translate-x-1/2" aria-label={dict.nav.mainNav}>
+          {navItems.slice(0, 2).map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
@@ -191,7 +195,28 @@ export default function Header({ initialUser }: HeaderProps) {
               {item.label}
             </NavLink>
           ))}
-          <div className="contents" ref={menusRef}>
+          <div className="relative">
+            <button type="button" onClick={() => setOpenMenu((m) => (m === "dreams" ? null : "dreams"))} aria-haspopup="menu" aria-expanded={openMenu === "dreams"} className={menuButtonClass}>
+              {dict.nav.dreamsShort}
+              <Seta tipo="chevron" />
+            </button>
+            {openMenu === "dreams" && (
+              <div role="menu" className={menuPanelClass}>
+                {menuLinks(dreamLinks)}
+              </div>
+            )}
+          </div>
+          {navItems.slice(2).map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              onClick={item.onClick}
+              className="text-white/80 hover:text-white text-sm font-light transition-colors duration-200"
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          <div className="contents">
             <div className="relative">
               <button type="button" onClick={() => setOpenMenu((m) => (m === "explore" ? null : "explore"))} aria-haspopup="menu" aria-expanded={openMenu === "explore"} className={menuButtonClass}>
                 <SearchIcon className="w-4 h-4" />

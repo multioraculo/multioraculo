@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
 import { useI18n } from "@/components/i18n-provider"
-import JornadaSonhos from "@/components/jornada-sonhos"
+import JornadaSonhos, { JornadaExemplo } from "@/components/jornada-sonhos"
 import type { LinhaDeJornada } from "@/lib/dreams/jornada-estado"
 import type { Dream } from "@/lib/types"
 
@@ -98,9 +98,9 @@ export default function SavedDreamsList({
     <div>
 
       {/* Jornada dos Sonhos: a partir de dois sonhos */}
-      {dreams.length >= 2 && <JornadaSonhos dreams={dreams} initialJourney={initialJourney} />}
+      {dreams.length >= 2 ? <JornadaSonhos dreams={dreams} initialJourney={initialJourney} /> : <JornadaExemplo />}
 
-      {dreams.length >= 2 && <div className="border-t border-white/10 mb-12" />}
+      <div className="border-t border-white/10 mb-12" />
 
       {/* ══════════════════════════════════════════════════════
           SEÇÃO 2: SONHOS SALVOS
@@ -109,7 +109,7 @@ export default function SavedDreamsList({
         <div className="flex items-center justify-between mb-8">
           <h2 className={[
             "font-light italic instrument text-white",
-            dreams.length >= 2 ? "text-2xl sm:text-3xl" : "text-4xl sm:text-5xl",
+            "text-2xl sm:text-3xl",
           ].join(" ")}>
             {t.title}
           </h2>

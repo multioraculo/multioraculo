@@ -121,12 +121,12 @@ function MapaDaJornada({ data }: { data: JornadaV2 }) {
           const [nome, imagem] = partirNome(a.name)
           return (
             <div key={r} className="absolute left-0 right-0" style={{ top: HEAD + r * ROW_H, height: ROW_H }}>
-              <div className="flex items-baseline justify-between gap-3 text-[12px] leading-tight" style={{ height: LABEL_H }}>
-                <span className="text-white/75 font-medium shrink-0">
+              <div className="relative z-20 flex items-start justify-between gap-2 text-[12px] leading-tight" style={{ height: LABEL_H }}>
+                <span className="rounded-full bg-indigo-950/60 px-2 py-0.5 text-white/80 font-medium shrink-0">
                   <span className="text-white/30 tabular-nums mr-1.5">{r + 1}</span>
                   {nome}
                 </span>
-                {imagem && <span className="text-white/30 truncate text-right">{imagem}</span>}
+                {imagem && <span className="rounded-full bg-indigo-950/60 px-2 py-0.5 text-white/55 truncate min-w-0 text-right">{imagem}</span>}
               </div>
               <div className="absolute left-0 right-0 h-px bg-white/10" style={{ top: LABEL_H + (ROW_H - LABEL_H) / 2 }} />
             </div>
@@ -214,7 +214,7 @@ function LeituraAntiga({ data }: { data: JourneyData }) {
   )
 }
 
-function LeituraNova({ data }: { data: JornadaV2 }) {
+export function LeituraNova({ data }: { data: JornadaV2 }) {
   const { dict } = useI18n()
   const t = dict.savedDreams
   return (
@@ -279,6 +279,45 @@ function LeituraNova({ data }: { data: JornadaV2 }) {
         </Card>
       )}
     </div>
+  )
+}
+
+/** Página sem Jornada ainda: um exemplo com sonhos fictícios (do dicionário) e o convite para interpretar e salvar. */
+export function JornadaExemplo() {
+  const { dict } = useI18n()
+  const t = dict.savedDreams
+  const dados: JornadaV2 = {
+    versao: 2,
+    locale: "exemplo",
+    dreamIds: t.exampleDreams.map((_, i) => String(i)),
+    timeline: t.exampleDreams.map((d, i) => ({ number: i + 1, ...d })),
+    connections: t.exampleConnections,
+    evolution: t.exampleEvolution.map((e) => ({ type: e.type as JornadaV2["evolution"][number]["type"], text: e.text })),
+    integrated: t.exampleIntegrated,
+    archetypeList: t.exampleArchetypes.map((a) => ({ ...a })),
+    openQuestions: [],
+  }
+  return (
+    <section className="mb-16">
+      <div className="mb-8">
+        <h1 className="text-4xl sm:text-5xl font-light italic instrument text-white mb-4">{t.journeyTitle}</h1>
+        <p className="text-base sm:text-lg text-white/60 leading-relaxed max-w-2xl">{t.exampleLead}</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-8 rounded-2xl border border-white/15 bg-white/5 p-5">
+        <Link
+          href="/sonhos"
+          className="px-7 py-3 rounded-full bg-white/15 border border-white/25 text-white text-sm hover:bg-white/20 transition-colors"
+        >
+          {t.exampleCta}
+        </Link>
+        <p className="flex-1 min-w-[220px] text-white/60 text-sm leading-relaxed">{t.exampleSave}</p>
+      </div>
+      <p className="mb-3 inline-block rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[12px] uppercase tracking-widest text-white/50">{t.exampleBadge}</p>
+      <div aria-label={t.exampleTitle} className="select-none">
+        <p className="text-white/80 text-lg font-light mb-4">{t.exampleTitle}</p>
+        <LeituraNova data={dados} />
+      </div>
+    </section>
   )
 }
 

@@ -12,7 +12,7 @@ import Seta from "@/components/seta"
  * termina de abrir: enquanto a página não chega, o item tocado fica em estado
  * pendente, visível, em vez de o painel sumir e a tela ficar parada.
  */
-export default function ExploreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export default function ExploreSheet({ open, onClose, title, items: itensDados }: { open: boolean; onClose: () => void; title?: string; items?: { href: string; label: string; hint: string }[] }) {
   const { dict } = useI18n()
   const t = dict.nav
   const { pendingHref } = useNavPending()
@@ -39,20 +39,20 @@ export default function ExploreSheet({ open, onClose }: { open: boolean; onClose
 
   if (!open) return null
 
-  const items = [
+  const items = itensDados ?? [
     { href: "/oraculos", label: t.oracles, hint: t.exploreOracles },
     { href: "/assinatura", label: t.plans, hint: t.explorePlans },
     { href: "/faq", label: t.faq, hint: t.exploreFaq },
   ]
 
   return (
-    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={t.explore}>
+    <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label={title ?? t.explore}>
       <button className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" aria-label={dict.common.close} onClick={onClose} />
       <div
         className="absolute left-0 right-0 bottom-0 rounded-t-3xl border-t border-white/12 bg-[rgba(24,12,56,0.82)] backdrop-blur-xl px-5 pt-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-20 sm:w-80 sm:-translate-x-1/2 sm:rounded-2xl sm:border sm:pb-4 explore-sheet-enter"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/25 sm:hidden" aria-hidden="true" />
-        <p className="text-white/45 text-[12px] uppercase tracking-widest mb-2">{t.explore}</p>
+        <p className="text-white/45 text-[12px] uppercase tracking-widest mb-2">{title ?? t.explore}</p>
         <ul className="space-y-1">
           {items.map((it) => (
             <li key={it.href}>
