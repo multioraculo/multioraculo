@@ -91,8 +91,23 @@ function LeituraNova({ data }: { data: JornadaV2 }) {
           ))}
         </div>
       </Card>
-      {data.openQuestions.length > 0 && (
-        <Card title={t.openTitle}><Lista itens={data.openQuestions} /></Card>
+      {data.archetypeList?.length > 0 && (
+        <Card title={t.archetypesTitle} wide>
+          <ol className="space-y-5">
+            {data.archetypeList.map((a, i) => (
+              <li key={i} className="flex gap-4">
+                <span className="text-white/30 text-sm tabular-nums shrink-0 w-5 pt-0.5">{i + 1}</span>
+                <div>
+                  <p className="text-sm font-medium text-white/85 leading-snug">{a.name}</p>
+                  {a.dreams?.length > 0 && (
+                    <p className="text-[12px] text-white/35 mt-0.5">{fmt(t.archetypesIn, { dreams: a.dreams.join(", ") })}</p>
+                  )}
+                  <p className="text-sm text-white/70 leading-relaxed mt-1.5">{a.meaning}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </Card>
       )}
       {data.evolution.length > 0 && (
         <Card title={t.evolutionTitle} wide>

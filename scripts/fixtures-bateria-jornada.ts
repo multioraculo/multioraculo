@@ -20,7 +20,7 @@ const tl = (...i: Array<[string, string, string]>) => i.map(([title, archetypes,
 
 /** teste 1 (2 sonhos relacionados): "Em aberto" veio vazio */
 export const REAL_1: JornadaV2 = {
-  versao: 2, locale: "pt", dreamIds: ["r1", "r2"], evolution: [], openQuestions: [],
+  versao: 2, archetypeList: [], locale: "pt", dreamIds: ["r1", "r2"], evolution: [], openQuestions: [],
   timeline: tl(["Ponte sobre o rio escuro", "rio largo e escuro · ponte de madeira · avó acenando", "Atravessar um rio largo e escuro por uma ponte incompleta para alcançar a avó falecida, mas é empurrada pela correnteza."], ["Corredor na escola vazia", "corredor de escola vazia · porta de ferro · barco de madeira no campo", "Caminhar por um corredor vazio até uma porta de ferro que se abre para um campo aberto com um barco de madeira virado."]),
   connections: [
     "Nos dois sonhos, há a presença de madeira em elementos de travessia: a ponte incompleta no primeiro e o barco virado no segundo. Ambos simbolizam meios de transporte ou passagem que não estão em uso pleno, sugerindo transições interrompidas ou incompletas.",
@@ -32,7 +32,7 @@ export const REAL_1: JornadaV2 = {
 
 /** teste 3 (3 sonhos, com leitura anterior): trajetória de crescimento e "barco nos três sonhos" inventados */
 export const REAL_3: JornadaV2 = {
-  versao: 2, locale: "pt", dreamIds: ["r1", "r2", "r3"], openQuestions: [],
+  versao: 2, archetypeList: [], locale: "pt", dreamIds: ["r1", "r2", "r3"], openQuestions: [],
   timeline: tl(["Ponte Incompleta sobre Rio Escuro", "ponte de madeira · avó falecida · rio largo e escuro", "Uma ponte de madeira incompleta sobre um rio largo e escuro impede a travessia até a avó já falecida que acena do outro lado."], ["Barco Virado no Campo", "escola vazia · barco de madeira virado · campo aberto", "Após atravessar um corredor de escola vazia, um campo aberto aparece com um barco de madeira virado, sugerindo incerteza sobre a chegada ou partida."], ["Barco no Rio ao Entardecer", "barco pequeno · rio calmo · casa com luz acesa", "Navegando sozinha em um barco pequeno num rio calmo ao entardecer, uma casa com luz acesa na margem é observada sem aproximação."]),
   connections: [
     "Nos três sonhos, há a presença constante de elementos aquáticos: o rio largo e escuro do primeiro, o barco virado distante de água no segundo e o rio calmo no terceiro. A água sugere um elemento de transição ou fluxo emocional que se modifica ao longo dos sonhos.",
@@ -52,7 +52,7 @@ export const REAL_3: JornadaV2 = {
 
 /** teste 4 (EN, 2 sonhos): "recurring" com dois sonhos; perguntas que puxam para a vida desperta */
 export const REAL_4: JornadaV2 = {
-  versao: 2, locale: "en", dreamIds: ["e1", "e2"], evolution: [],
+  versao: 2, archetypeList: [], locale: "en", dreamIds: ["e1", "e2"], evolution: [],
   timeline: tl(["Pier at Night with Lantern", "pier · lantern · gray-coated man · sealed envelope · ferry", "The dreamer stands on a pier at night with a lantern that keeps going out and is asked by a man in a gray coat to carry a sealed envelope across the water on a pilotless ferry."], ["Childhood Kitchen with Open Envelope", "childhood kitchen · table set for six · dark water view · open and empty envelope", "The dreamer is in a childhood kitchen, alone at a table set for six, with a window showing dark water and an open, empty envelope under a plate."]),
   connections: [
     "Both dreams involve a body of dark water, suggesting a symbolic continuity of unknown or subconscious depths that connect different settings: the pier and the kitchen.",

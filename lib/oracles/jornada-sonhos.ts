@@ -14,8 +14,9 @@
 
 import { TRACOS } from "@/lib/astro/editorial"
 import { LOCALE_META, type Locale } from "@/lib/i18n/config"
-import { MAX_CHARS_SONHO, TIPOS_EVOLUCAO, type JornadaV2, type SonhoDaJornada, type TipoEvolucao } from "@/lib/dreams/jornada-estado"
+import { MAX_CHARS_SONHO, TIPOS_EVOLUCAO, type ArquetipoDaJornada, type JornadaV2, type SonhoDaJornada, type TipoEvolucao } from "@/lib/dreams/jornada-estado"
 import { removerTracos, sobreposicao } from "@/lib/oracles/sonhos-prompt"
+import { SIMBOLOS } from "@/lib/oracles/simbolos-inconsciente"
 
 export type AnteriorParaPrompt = { integrated: string; connections: string[] }
 
@@ -24,6 +25,11 @@ const PALAVRAS_CONSOLIDADO: Record<Locale, string> = {
   pt: `"recorrente", "recorrência", "sempre", "toda vez", "repetidamente", "consolidado", "tendência"`,
   en: `"recurring", "recurrent", "recurrence", "always", "every time", "repeatedly", "consolidated", "tendency"`,
   es: `"recurrente", "recurrencia", "siempre", "cada vez", "repetidamente", "consolidado", "tendencia"`,
+}
+
+/** as leituras curadas do repertório simbólico (uma por imagem), no idioma da saída: apoio para o significado de cada arquétipo, sem autor nem obra */
+export function repertorioDeApoio(locale: Locale): string {
+  return SIMBOLOS.map((x) => `- ${removerTracos(x.texto[locale].nome)}: ${removerTracos(x.texto[locale].leitura)}`).join("\n")
 }
 
 export function montarPromptJornada(
@@ -46,12 +52,19 @@ Analise os sonhos fornecidos cronologicamente e retorne APENAS um objeto JSON v�
 
 ${escala}${continuidade}
 
+REPERTÓRIO DE APOIO (leituras curadas de imagens simbólicas). Quando um motivo dos sonhos corresponder a uma delas, parta dela e adapte ao caso; para os demais motivos, use a tradição da psicologia analítica. Não cite autor nem obra:
+${repertorioDeApoio(locale)}
+
 CAMPOS DO JSON:
 - "timeline": uma entrada por sonho, do mais antigo (número 1) ao mais recente: {"number": número do sonho, "title": título evocativo e simbólico para este sonho, "archetypes": "Arquétipo Principal · Símbolo 1 · Símbolo 2", "summary": resumo psicológico de 1 a 2 frases sobre o que este sonho revela}.
 - "connections": ${dois ? "de 1 a 4" : "de 3 a 5"} strings simples (não objetos), cada uma uma frase fluida descrevendo um padrão entre os sonhos e seu significado psicológico, em linguagem natural, dizendo o que ele revela sobre o momento interior. Cada texto traz um padrão diferente.
 - "evolution": ${dois ? "[]" : `de 2 a 5 itens {"type", "text"} em que type é um de persists, changed, gaining, fading, revised, e text (1 a 2 frases) descreve em linguagem natural o que permanece, mudou, ganhou ou perdeu força, ou foi revisto`}.
-- "integrated": o tema central da fase atual em linguagem poética e direta, 2 a 3 frases reveladoras, podendo incluir o sonho que marca uma mudança de perspectiva ou virada. Até 170 palavras.
-- "openQuestions": campo obrigatório, sempre de 2 a 3 strings simples, nunca vazio: o que os sonhos ainda não mostram ou o que sonhos futuros poderiam esclarecer.
+- "archetypeList": de 4 a 7 itens, ORDENADOS do arquétipo mais relevante ao menos relevante para o conjunto (primeiro o que mais pesa e atravessa mais sonhos). Cada item é {"name", "meaning", "dreams"}.
+  "name": o ARQUÉTIPO, nomeado como figura ou movimento da psicologia analítica (A Sombra, A Persona, A Anima ou o Animus, O Self, A Grande Mãe, O Velho Sábio, O Herói, A Criança Divina, O Limiar, entre outros), seguido entre parênteses da imagem dos sonhos que o carrega. O nome é o arquétipo, nunca só o objeto: "O Self (a casa)" e não "A casa".
+  "meaning": 3 a 4 frases em prosa. As duas primeiras explicam o arquétipo em si, o que ele significa e que papel cumpre na psique segundo a tradição analítica, de forma concreta e sem frase genérica como "símbolo de mudança e transição". As seguintes mostram como ele aparece, se transforma ou muda de posição nestes sonhos, com os detalhes dos relatos.
+  "dreams": a lista dos números dos sonhos em que aparece.
+  Cada imagem importante deve estar sob o arquétipo a que pertence, e dois itens não podem dizer a mesma coisa. Não repita as conexões.
+- "integrated": o tema central da fase atual em linguagem poética e direta, 2 a 3 frases reveladoras em linguagem de hipótese, que amarram os arquétipos listados na linha de evolução arquetípica do conjunto, podendo incluir o sonho que marca uma mudança de perspectiva ou virada. Até 170 palavras.
 
 REGRAS ABSOLUTAS:
 - Responda APENAS com JSON válido, sem texto, markdown ou explicações adicionais.
@@ -59,6 +72,8 @@ REGRAS ABSOLUTAS:
 - PROIBIDO usar travessão ou meia risca em qualquer campo. Use vírgula, dois-pontos ou ponto final.
 - NÃO cite Jung, Freud ou qualquer autor pelo nome.
 - Nada de diagnóstico nem previsão. Não invente detalhes nem personagens que os relatos não trazem.
+- Quem sonha é sempre "quem sonha" ou "a pessoa", nunca "a sonhadora" nem "o sonhador". Não atribua sentimentos que os relatos não registram.
+- Descreva as mudanças de posição, de ação ou de cenário sem valorá-las: não as chame de progresso, evolução da pessoa, amadurecimento, avanço nem superação. A leitura é hipótese ("pode sugerir", "parece"), nunca afirmação sobre a vida da pessoa.
 
 Idioma de todos os textos do JSON: ${LOCALE_META[locale].promptName}`
 }
@@ -80,6 +95,19 @@ const texto = (v: unknown): string => (typeof v === "string" ? removerTracos(v).
 // o modelo às vezes embrulha cada item da lista em {"text": "..."}: aproveita o texto em vez de descartar a resposta
 const item = (v: unknown): string => (v && typeof v === "object" ? texto((v as Record<string, unknown>).text) : texto(v))
 const lista = (v: unknown, max: number): string[] => (Array.isArray(v) ? v.map(item).filter(Boolean).slice(0, max) : [])
+
+/** a lista de arquétipos do modelo: nome e significado em texto, números de sonho só dentro do intervalo existente */
+const arquetipos = (v: unknown, n: number): ArquetipoDaJornada[] =>
+  Array.isArray(v)
+    ? v
+        .map((a: any) => ({
+          name: texto(a?.name),
+          meaning: texto(a?.meaning),
+          dreams: (Array.isArray(a?.dreams) ? a.dreams : []).map(Number).filter((d: number) => Number.isInteger(d) && d >= 1 && d <= n),
+        }))
+        .filter((a) => a.name && a.meaning)
+        .slice(0, 7)
+    : []
 
 /**
  * Resposta crua do modelo para o formato salvo. Travessão e meia risca são
@@ -118,7 +146,8 @@ export function normalizarJornada(raw: unknown, ctx: { sonhos: SonhoDaJornada[];
     connections,
     evolution,
     integrated,
-    openQuestions: lista(r.openQuestions, 3),
+    archetypeList: arquetipos(r.archetypeList, n),
+    openQuestions: [],
   }
 }
 
@@ -174,6 +203,7 @@ export function textosDaJornada(j: JornadaV2): string[] {
     ...j.connections,
     ...j.evolution.map((e) => e.text),
     j.integrated,
+    ...(j.archetypeList ?? []).flatMap((a) => [a.name, a.meaning]),
     ...j.openQuestions,
   ]
 }
@@ -191,7 +221,12 @@ export function verificarJornada(j: JornadaV2, sonhos: SonhoDaJornada[], locale:
   if (j.connections.length < cMin || j.connections.length > cMax) v.push(`${j.connections.length} conexões (esperado de ${cMin} a ${cMax})`)
   if (n === 2 && j.evolution.length > 0) v.push("evolução preenchida com apenas dois sonhos")
   if (n >= 3 && (j.evolution.length < 2 || j.evolution.length > 5)) v.push(`${j.evolution.length} itens de evolução (esperado de 2 a 5)`)
-  if (j.openQuestions.length < 2 || j.openQuestions.length > 3) v.push(`${j.openQuestions.length} itens em aberto (esperado de 2 a 3)`)
+  const arq = j.archetypeList ?? []
+  if (arq.length < 3 || arq.length > 7) v.push(`${arq.length} arquétipos listados (esperado de 4 a 7)`)
+  arq.forEach((a, i) => {
+    if (palavras(a.meaning) < 15) v.push(`arquétipo ${i + 1} sem significado desenvolvido`)
+    if (a.dreams.length === 0) v.push(`arquétipo ${i + 1} sem os sonhos em que aparece`)
+  })
   if (palavras(j.integrated) > 190) v.push("leitura integrada longa demais")
   if (!HIPOTESE[locale].test(j.integrated)) v.push("leitura integrada sem linguagem de hipótese")
 
@@ -212,6 +247,7 @@ export function verificarJornada(j: JornadaV2, sonhos: SonhoDaJornada[], locale:
   par("leitura integrada contra conexões", j.integrated, conexoes, 0.2)
   par("em aberto contra leitura integrada", j.openQuestions.join("\n"), `${j.integrated}\n${conexoes}`, 0.2)
   j.connections.forEach((c, i) => j.connections.forEach((d, k) => i < k && par(`conexão ${i + 1} contra ${k + 1}`, c, d, 0.3)))
+  par("arquétipos contra conexões", arq.map((a) => a.meaning).join("\n"), conexoes, 0.3)
   par("conexões contra resumos", conexoes, j.timeline.map((t) => t.summary).join("\n"), 0.25)
 
   // ancoragem: cada conexão toca em palavras que estão nos relatos

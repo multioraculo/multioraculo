@@ -39,8 +39,19 @@ export type JornadaV2 = {
   evolution: Array<{ type: TipoEvolucao; text: string }>
   /** leitura integrada, em hipótese */
   integrated: string
-  /** o que permanece incerto */
+  /** os arquétipos mais relevantes do conjunto, do mais relevante ao menos; análises salvas antes deste campo não o trazem */
+  archetypeList: ArquetipoDaJornada[]
+  /** legado: análises salvas antes de nov/2026 traziam perguntas em aberto; a tela já não as mostra e o prompt já não as pede */
   openQuestions: string[]
+}
+
+export type ArquetipoDaJornada = {
+  /** o motivo como aparece nos sonhos */
+  name: string
+  /** o que ele significa na tradição analítica e como aparece e muda nestes sonhos */
+  meaning: string
+  /** números (1 em diante) dos sonhos em que aparece */
+  dreams: number[]
 }
 
 export type AnaliseLida = { versao: 1; data: JourneyData } | { versao: 2; data: JornadaV2 }
@@ -74,6 +85,7 @@ export function lerAnalise(analysisText: string | null | undefined): AnaliseLida
         connections: Array.isArray(o.connections) ? o.connections : [],
         evolution: Array.isArray(o.evolution) ? o.evolution : [],
         integrated: String(o.integrated ?? ""),
+        archetypeList: Array.isArray(o.archetypeList) ? o.archetypeList.filter((a: any) => a && typeof a.name === "string" && typeof a.meaning === "string") : [],
         openQuestions: Array.isArray(o.openQuestions) ? o.openQuestions : [],
       },
     }

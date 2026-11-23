@@ -74,6 +74,7 @@ async function main() {
 
   for (let i = 0; i < TESTES.length; i++) {
     const t = TESTES[i]
+    if (process.env.TESTES && !process.env.TESTES.split(",").map(Number).includes(i + 1) && !(executar && TESTES.some((x, k) => x.anteriorDe === i && process.env.TESTES!.split(",").map(Number).includes(k + 1)))) { saidas.push(null); continue }
     const anterior = t.anteriorDe !== undefined ? saidas[t.anteriorDe] : null
     if (t.anteriorDe !== undefined && !anterior && executar) {
       resumo.push(`${t.nome}: PULADO (depende do teste ${t.anteriorDe + 1}, que não gerou saída)`)
@@ -129,7 +130,7 @@ async function main() {
     if (j) {
       relatorio.push(`**Linha do tempo**`, ...j.timeline.map((x) => `- ${x.number}. ${x.title} (${x.archetypes}): ${x.summary}`), ``, `**Conexões**`, ...j.connections.map((x) => `- ${x}`), ``)
       if (j.evolution.length) relatorio.push(`**Evolução**`, ...j.evolution.map((e) => `- [${e.type}] ${e.text}`), ``)
-      relatorio.push(`**Leitura do conjunto**`, ``, j.integrated, ``, `**Em aberto**`, ...j.openQuestions.map((x) => `- ${x}`), ``)
+      relatorio.push(`**Leitura do conjunto**`, ``, j.integrated, ``, `**Arquétipos do conjunto**`, ...j.archetypeList.map((x, k) => `${k + 1}. ${x.name} (sonhos ${x.dreams.join(", ")}): ${x.meaning}`), ``)
       // o mesmo JSON passa pelo leitor de análises salvas, como na rota
       if (lerAnalise(JSON.stringify(j))?.versao !== 2) relatorio.push(`(AVISO: a análise não é lida de volta como v2)`, ``)
     } else {

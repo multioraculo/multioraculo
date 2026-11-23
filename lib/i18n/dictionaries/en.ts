@@ -994,6 +994,8 @@ export const en: Dictionary = {
     evolutionTitle: "How the Reading Changed",
     integratedTitle: "Reading of the Whole",
     openTitle: "Still Open",
+    archetypesTitle: "Archetypes of the Whole",
+    archetypesIn: "In dreams {dreams}",
     basedOn: "Based on {count} dreams",
     basedOnWindow: "Based on your {count} most recent dreams",
     generatedOn: "Generated on {date}",

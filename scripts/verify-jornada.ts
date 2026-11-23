@@ -34,7 +34,7 @@ import { consultarJornadaEmAndamento, httpStatusFor, JORNADA_TRAVA_MS, PRIMEIRA_
 import { STARTED_WINDOW_MS } from "../lib/billing/entitlement"
 import { E1, E2, R1, R2, R3, REAL_1, REAL_3, REAL_4 } from "./fixtures-bateria-jornada"
 import { executarJornada, type DepsJornada } from "../lib/dreams/jornada-servico"
-import { montarMensagemJornada, montarPromptJornada, normalizarJornada, verificarJornada } from "../lib/oracles/jornada-sonhos"
+import { montarMensagemJornada, montarPromptJornada, normalizarJornada, repertorioDeApoio, verificarJornada } from "../lib/oracles/jornada-sonhos"
 import { LOCALES } from "../lib/i18n/config"
 import type { Locale } from "../lib/i18n/config"
 import { pt } from "../lib/i18n/dictionaries/pt"
@@ -63,9 +63,35 @@ const ES_S1 = S("d1", 1, "Estaba frente a un río ancho y un puente roto impedí
 const ES_S2 = S("d2", 5, "Crucé un pasillo largo de una escuela vacía y abrí una puerta que daba a un campo desconocido. Había un bote quieto y nadie cerca. No sabía si había llegado o solo estaba de paso.")
 
 function jornada(over: Partial<JornadaV2> & Pick<JornadaV2, "dreamIds" | "timeline" | "connections" | "integrated" | "openQuestions">, locale = "pt"): JornadaV2 {
-  return { versao: 2, locale, evolution: [], ...over }
+  return { versao: 2, locale, evolution: [], archetypeList: [], ...over }
 }
 const tl = (...itens: Array<[string, string, string]>) => itens.map(([title, archetypes, summary], i) => ({ number: i + 1, title, archetypes, summary }))
+
+const arq = (name: string, meaning: string, dreams: number[]) => ({ name, meaning, dreams })
+const ARQ_PT2 = [
+  arq("O limiar e a travessia", "O limiar é o ponto de passagem entre dois estados, e a travessia é o gesto de cruzá-lo: na psicologia analítica marcam a fronteira entre o que já é conhecido e o que ainda não tem forma. No primeiro sonho a ponte quebrada e a correnteza impedem o cruzamento; no segundo a porta de ferro cede sem esforço e dá num campo sem referências.", [1, 2]),
+  arq("A figura ancestral", "A avó falecida remete ao ancestral que guia, a imagem do que vem de antes e sustenta quem sonha. Ela acena do outro lado do rio no primeiro sonho e deixa de aparecer no segundo, onde ninguém está por perto.", [1]),
+  arq("O espaço vazio da escola", "A escola despovoada lembra o lugar de aprendizagem sem testemunhas, cenário em que quem sonha se vê a sós diante do que atravessa. No segundo sonho o corredor comprido leva ao campo e fica a dúvida de ter chegado ou não.", [2]),
+  arq("O veículo sem correnteza", "O barco fora da água é um meio de transporte que perdeu a função, imagem de um modo de conduzir o próprio caminho que já não encontra movimento. Aparece só no segundo sonho, onde quem sonha senta nele e olha o céu sem seguir.", [2]),
+]
+const ARQ_PT3 = [
+  arq("O limiar e a travessia", "O limiar é o ponto de passagem entre dois estados, e a travessia é o gesto de cruzá-lo: na psicologia analítica marcam a fronteira entre o conhecido e o que ainda não tem forma. A travessia vai da ponte quebrada ao corredor que abre num campo e, por fim, ao rio percorrido de barco.", [1, 2, 3]),
+  arq("A água e o fluxo", "A água é a imagem do fluxo da vida psíquica, ora força que devolve, ora meio que sustenta. No primeiro sonho a correnteza empurra de volta quem nada; no terceiro o rio calmo conduz o barco sem esforço.", [1, 3]),
+  arq("A figura ancestral", "A avó falecida remete ao ancestral que guia, a imagem do que vem de antes. Acena do outro lado no primeiro sonho e não reaparece nos seguintes, onde a luz na margem ocupa um lugar próximo.", [1]),
+  arq("A casa iluminada", "A casa com a luz acesa é imagem de abrigo e de um centro possível, algo a que se pode voltar. Surge só no terceiro sonho, na margem, e quem sonha a observa sem remar até lá.", [3]),
+]
+const ARQ_EN2 = [
+  arq("The threshold and the crossing", "The threshold is the point of passage between two states, and the crossing is the act of going through it: in analytical psychology they mark the border between the known and what has no form yet. In the first dream the broken bridge and the current block the way; in the second the door opens easily onto an unknown field.", [1, 2]),
+  arq("The ancestral figure", "The grandmother who has died points to the ancestor who guides, the image of what comes before and supports the dreamer. She waves from the far bank in the first dream and is absent in the second, where nobody is around.", [1]),
+  arq("The empty school", "The empty school recalls a place of learning without witnesses, a setting where the dreamer stands alone before what is being crossed. In the second dream the long corridor leads to the field, and it stays unclear whether the dreamer has arrived.", [2]),
+  arq("The idle vessel", "The boat that sits away from the water is a means of travel that has lost its function, an image of steering one's own course without a current to carry it. It appears only in the second dream, where the dreamer sits in it and watches the sky.", [2]),
+]
+const ARQ_ES2 = [
+  arq("El umbral y la travesía", "El umbral es el punto de paso entre dos estados, y la travesía es el gesto de cruzarlo: en la psicología analítica marcan la frontera entre lo conocido y lo que aún no tiene forma. En el primer sueño el puente roto y la corriente impiden el cruce; en el segundo la puerta cede sin esfuerzo y da a un campo desconocido.", [1, 2]),
+  arq("La figura ancestral", "La abuela fallecida remite al ancestro que guía, la imagen de lo que viene de antes y sostiene a quien sueña. Saluda desde la otra orilla en el primer sueño y no aparece en el segundo, donde no hay nadie cerca.", [1]),
+  arq("La escuela vacía", "La escuela despoblada recuerda un lugar de aprendizaje sin testigos, escenario en el que quien sueña se ve a solas ante lo que atraviesa. En el segundo sueño el pasillo largo lleva al campo y queda la duda de si se ha llegado.", [2]),
+  arq("El vehículo quieto", "El bote fuera del agua es un medio de transporte que perdió su función, imagen de conducir el propio camino sin una corriente que lo lleve. Aparece solo en el segundo sueño, donde quien sueña se sienta en él y mira el cielo.", [2]),
+]
 
 const BOA: Record<string, { sonhos: SonhoDaJornada[]; j: JornadaV2; locale: Locale }> = {
   "pt-2": {
@@ -84,6 +110,7 @@ const BOA: Record<string, { sonhos: SonhoDaJornada[]; j: JornadaV2; locale: Loca
       ],
       integrated:
         "Lidos juntos, os dois sonhos parecem tratar de um limite que primeiro impede e depois deixa passar, sem entregar um destino. Quem sonha oscila entre tentar vencer a água pela força e chegar a um lugar sem sinais de chegada. É uma leitura possível entre outras, e com dois sonhos ela permanece uma hipótese inicial.",
+      archetypeList: ARQ_PT2,
       openQuestions: [
         "Não está claro se o campo desconhecido é um destino ou apenas outra etapa da passagem.",
         "Fica em aberto se a ausência de companhia no segundo sonho marca uma mudança ou é um acaso do cenário.",
@@ -113,6 +140,7 @@ const BOA: Record<string, { sonhos: SonhoDaJornada[]; j: JornadaV2; locale: Loca
       ],
       integrated:
         "Com três sonhos, o rio deixa de ser só barreira e passa a ser o lugar em que se está. A mudança mais visível é de posição: de quem tenta vencer para quem acompanha. É uma leitura possível, sujeita a revisão com novos sonhos.",
+      archetypeList: ARQ_PT3,
       openQuestions: [
         "Continua incerto se a luz na margem substitui a figura da avó ou apenas ocupa o mesmo espaço da cena.",
         "Não se sabe se o barco sem rumo no terceiro sonho é descanso ou ausência de direção.",
@@ -136,6 +164,7 @@ const BOA: Record<string, { sonhos: SonhoDaJornada[]; j: JornadaV2; locale: Loca
       ],
       integrated:
         "Read together, the two dreams seem to concern a threshold that first stops and then allows passage, without delivering a destination. The dreamer moves between trying to beat the water by force and reaching a place with no sign of arrival. This is one possible reading among others, and with two dreams it remains an initial hypothesis.",
+      archetypeList: ARQ_EN2,
       openQuestions: [
         "It is unclear whether the unknown field is a destination or only another stage of the passage.",
         "It stays open whether the absence of company in the second dream marks a change or a quirk of the scenery.",
@@ -159,6 +188,7 @@ const BOA: Record<string, { sonhos: SonhoDaJornada[]; j: JornadaV2; locale: Loca
       ],
       integrated:
         "Leídos juntos, los dos sueños parecen tratar de un límite que primero impide y luego deja pasar, sin entregar un destino. Quien sueña oscila entre intentar vencer el agua por la fuerza y llegar a un lugar sin señales de llegada. Es una lectura posible entre otras, y con dos sueños sigue siendo una hipótesis inicial.",
+      archetypeList: ARQ_ES2,
       openQuestions: [
         "No está claro si el campo desconocido es un destino o solo otra etapa del paso.",
         "Queda abierto si la ausencia de compañía en el segundo sueño marca un cambio o es un azar del escenario.",
@@ -319,8 +349,9 @@ async function main() {
   const nz3 = normalizarJornada({ ...cru, evolution: [{ type: "persists", text: "a" }, { type: "inventado", text: "b" }, { type: "changed", text: "" }] }, { sonhos: [PT_S1, PT_S2, PT_S3], locale: "pt" })!
   confere("normalizar: tipo desconhecido e texto vazio saem da evolução", nz3.evolution.length === 1 && nz3.evolution[0].type === "persists")
   confere("normalizar: resposta sem conteúdo vira null (falha técnica, sem cobrança)", normalizarJornada({}, { sonhos: [PT_S1, PT_S2], locale: "pt" }) === null && normalizarJornada(null, { sonhos: [PT_S1, PT_S2], locale: "pt" }) === null)
-  const embrulhada = normalizarJornada({ ...cru, connections: [{ text: "Conexão A." }, { text: "Conexão B." }], openQuestions: [{ text: "Pergunta 1?" }, "Pergunta 2?"] }, { sonhos: [PT_S1, PT_S2], locale: "pt" })
-  confere("normalizar: itens embrulhados em {text} são aproveitados, não derrubam a resposta", embrulhada !== null && embrulhada.connections.join("|") === "Conexão A.|Conexão B." && embrulhada.openQuestions.join("|") === "Pergunta 1?|Pergunta 2?")
+  const embrulhada = normalizarJornada({ ...cru, connections: [{ text: "Conexão A." }, { text: "Conexão B." }], archetypeList: [{ name: { text: "x" } }, { name: "A figura", meaning: "Significado.", dreams: [1, "2", 9, 0] }, { name: "Sem significado" }] }, { sonhos: [PT_S1, PT_S2], locale: "pt" })
+  confere("normalizar: itens embrulhados em {text} são aproveitados, não derrubam a resposta", embrulhada !== null && embrulhada.connections.join("|") === "Conexão A.|Conexão B." && embrulhada.archetypeList.length === 1 && embrulhada.archetypeList[0].dreams.join() === "1,2" && embrulhada.openQuestions.length === 0)
+  confere("normalizar: arquétipo sem nome ou sem significado sai; números de sonho fora do intervalo saem", embrulhada !== null && embrulhada.archetypeList.map((a) => a.name).join("|") === "A figura" && !embrulhada.archetypeList[0].dreams.includes(9) && !embrulhada.archetypeList[0].dreams.includes(0))
   confere("normalizar: timeline sempre com um item por sonho", normalizarJornada({ ...cru, timeline: [] }, { sonhos: [PT_S1, PT_S2], locale: "pt" })!.timeline.length === 2)
 
   // ── G. verificador editorial: PT, EN e ES ───────────────────────────────────
@@ -353,7 +384,11 @@ async function main() {
   pega("nenhuma conexão com dois sonhos", clone((j) => { j.connections = [] }), /conexões/)
   confere("uma só conexão com dois sonhos é permitida (sonhos diferentes)", clone((j) => { j.connections = [j.connections[0]] }).every((x) => !/conexões/.test(x)))
   pega("cinco conexões com dois sonhos", clone((j) => { j.connections = [...j.connections, ...j.connections] }), /conexões/)
-  pega("uma só pergunta em aberto", clone((j) => { j.openQuestions = [j.openQuestions[0]] }), /em aberto/)
+  pega("nenhum arquétipo listado", clone((j) => { j.archetypeList = [] }), /arquétipos listados/)
+  pega("oito arquétipos listados", clone((j) => { j.archetypeList = [...j.archetypeList, ...j.archetypeList] }), /arquétipos listados/)
+  pega("arquétipo sem significado desenvolvido", clone((j) => { j.archetypeList[0] = { ...j.archetypeList[0], meaning: "Curto." } }), /sem significado desenvolvido/)
+  pega("arquétipo sem os sonhos em que aparece", clone((j) => { j.archetypeList[0] = { ...j.archetypeList[0], dreams: [] } }), /sem os sonhos/)
+  pega("significado de arquétipo que copia uma conexão", clone((j) => { j.archetypeList[0] = { ...j.archetypeList[0], meaning: j.connections.join(" ") } }), /arquétipos contra conexões/)
   pega("ids que não batem com o material", clone((j) => { j.dreamIds = ["d1", "zz"] }), /ids/)
   pega("linha do tempo incompleta", clone((j) => { j.timeline = j.timeline.slice(0, 1) }), /linha do tempo/)
   const tres = BOA["pt-3"]
@@ -932,10 +967,10 @@ async function main() {
   // ── N. a primeira bateria com o modelo real vira regressão ──────────────────
   {
     const v1 = verificarJornada(REAL_1, [R1, R2], "pt")
-    confere("bateria real 1: 'Em aberto' vazio é pego", v1.some((x) => /em aberto/.test(x)), v1.join("; "))
+    confere("bateria real 1: sem lista de arquétipos é pego", v1.some((x) => /arquétipos listados/.test(x)), v1.join("; "))
     const v3 = verificarJornada(REAL_3, [R1, R2, R3], "pt")
     confere("bateria real 3: trajetória de crescimento ('progresso', 'progressão', 'evolução na') é pega", v3.some((x) => /progresso ou evolução/.test(x)), v3.join("; "))
-    confere("bateria real 3: 'Em aberto' vazio é pego", v3.some((x) => /em aberto/.test(x)))
+    confere("bateria real 3: sem lista de arquétipos é pego", v3.some((x) => /arquétipos listados/.test(x)))
     const v4 = verificarJornada(REAL_4, [E1, E2], "en")
     confere("bateria real 4: 'recurring' com dois sonhos é pego", v4.some((x) => /recorrência/.test(x)), v4.join("; "))
     confere("bateria real 4: pergunta sobre a vida desperta é pega", v4.some((x) => /vida desperta/.test(x)))
@@ -945,14 +980,17 @@ async function main() {
     const p2 = montarPromptJornada("pt", { n: 2 }), p3 = montarPromptJornada("pt", { n: 3 })
     // o prompt voltou ao texto ORIGINAL da síntese (decisão do dono do produto, nov/2026), no formato salvo atual
     confere("prompt original: especialista em simbolismo onírico, arquétipos e essência poética", /especialista em simbolismo onírico e análise psíquica profunda/.test(p3) && /Arquétipo Principal/.test(p3) && /linguagem poética e direta/.test(p3))
-    confere("prompt: 'openQuestions' continua obrigatório (a tela mostra a seção)", /campo obrigatório, sempre de 2 a 3 strings simples, nunca vazio/.test(p3))
+    confere("prompt: pede a lista de arquétipos em ordem, com o significado de cada um", /"archetypeList": de 4 a 7 itens, ORDENADOS do arquétipo mais relevante ao menos relevante/.test(p3) && /o ARQUÉTIPO, nomeado como figura ou movimento da psicologia analítica/.test(p3) && /nunca só o objeto/.test(p3) && /nunca "a sonhadora"/.test(p3) && /Cada imagem importante deve estar sob o arquétipo a que pertence/.test(p3))
+    confere("prompt: não pede mais 'Em aberto'", !/openQuestions/.test(p3) && !/campo obrigatório/.test(p3))
+    confere("prompt: traz o repertório de apoio, sem autor nem obra", /REPERTÓRIO DE APOIO/.test(p3) && /A Sombra:/.test(p3) && /Não cite autor nem obra/.test(p3) && !/(jung|henderson|franz|jaff|jacobi|O Homem e seus Símbolos)/i.test(repertorioDeApoio("pt")))
+    confere("prompt: o repertório de apoio vem no idioma da saída", /The Shadow:/.test(montarPromptJornada("en", { n: 2 })) && /La Sombra|Sombra/.test(montarPromptJornada("es", { n: 2 })))
     confere("prompt: com dois sonhos pede de 1 a 4 conexões e evolução vazia", /de 1 a 4/.test(p2) && /"evolution": \[\]/.test(p2))
-    confere("prompt: não contém imagens dos relatos usados na bateria", !/(?<![\p{L}])(ponte|barco|avó|supermercado|envelope|rio)(?![\p{L}])/iu.test(p2 + p3))
+    confere("prompt: não contém imagens dos relatos usados na bateria", !/(?<![\p{L}])(ponte|barco|avó|supermercado|envelope|rio)(?![\p{L}])/iu.test((p2 + p3).replace(/REPERTÓRIO DE APOIO[\s\S]*?CAMPOS DO JSON/g, "")))
     // bateria real 2: "os sonhos parecem explorar..." é linguagem de hipótese (o verificador não reconhecia o plural)
     const jh = { ...BOA["pt-3"].j, integrated: "Os sonhos parecem explorar o movimento da travessia." }
     confere("hipótese: o plural parecem conta como linguagem de hipótese", !verificarJornada(jh, BOA["pt-3"].sonhos, "pt").some((x) => /sem linguagem de hipótese/.test(x)))
     // as chaves que o modelo precisa devolver continuam nomeadas no prompt
-    confere("prompt: nomeia as cinco chaves do JSON", ["timeline", "connections", "evolution", "integrated", "openQuestions"].every((k) => p3.includes('"' + k + '"')))
+    confere("prompt: nomeia as cinco chaves do JSON", ["timeline", "connections", "evolution", "integrated", "archetypeList"].every((k) => p3.includes('"' + k + '"')))
   }
 
   if (falhas.length) {

@@ -1006,6 +1006,8 @@ export const pt = {
     evolutionTitle: "Como a Leitura Mudou",
     integratedTitle: "Leitura do Conjunto",
     openTitle: "Em Aberto",
+    archetypesTitle: "Arquétipos do Conjunto",
+    archetypesIn: "Nos sonhos {dreams}",
     basedOn: "Baseada em {count} sonhos",
     basedOnWindow: "Baseada nos {count} sonhos mais recentes",
     generatedOn: "Gerada em {date}",
