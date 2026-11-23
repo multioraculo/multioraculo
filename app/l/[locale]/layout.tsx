@@ -1,8 +1,7 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Figtree } from "next/font/google"
+import localFont from "next/font/local"
 import { GeistMono } from "geist/font/mono"
-import { Instrument_Serif } from "next/font/google"
 import { notFound } from "next/navigation"
 import { Toaster } from "sonner"
 import { I18nProvider } from "@/components/i18n-provider"
@@ -35,17 +34,22 @@ import "@/app/globals.css"
  * suave, sem recarga e sem remontar a barra.
  */
 
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+// As fontes moram no repositório (app/fonts, subconjunto latin, o mesmo que o
+// Google entregava). Com next/font/google o build baixava os arquivos do
+// Google e, em 23/11/2026, a resposta que chegou à Netlify trouxe um endereço
+// sem extensão: o carregador do Next quebrou e nenhum deploy passava. Figtree é
+// variável, então um arquivo cobre do 300 ao 700.
+const figtree = localFont({
+  src: [{ path: "../../fonts/figtree-latin.woff2", weight: "300 700", style: "normal" }],
   variable: "--font-figtree",
   display: "swap",
 })
 
-const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
+const instrumentSerif = localFont({
+  src: [
+    { path: "../../fonts/instrument-serif-latin.woff2", weight: "400", style: "normal" },
+    { path: "../../fonts/instrument-serif-italic-latin.woff2", weight: "400", style: "italic" },
+  ],
   variable: "--font-instrument-serif",
   display: "swap",
 })
