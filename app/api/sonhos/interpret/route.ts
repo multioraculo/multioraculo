@@ -123,6 +123,7 @@ export async function POST(request: Request) {
       ],
     })
   } catch (err: any) {
+    console.error("[sonhos/interpret] OpenAI recusou:", MODELO_SONHO, err?.status, err?.code, err?.message)
     await failReading(seed).catch(() => {})
     return json({ error: "Falha ao interpretar o sonho." }, 502)
   }

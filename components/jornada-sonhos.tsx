@@ -63,6 +63,143 @@ function Timeline({ itens }: { itens: Array<{ number: number; title: string; arc
   )
 }
 
+const ROW_H = 68
+const HEAD = 44
+const LABEL_H = 26
+
+/** "A Sombra (a crítica)" -> ["A Sombra", "a crítica"] */
+function partirNome(nome: string): [string, string] {
+  const m = nome.match(/^(.*?)\s*\((.*)\)\s*$/)
+  return m ? [m[1], m[2]] : [nome, ""]
+}
+
+/**
+ * Mapa da Jornada: colunas são os sonhos, linhas são os arquétipos em ordem de
+ * relevância. A linha luminosa segue, em cada sonho, o arquétipo mais forte.
+ * Tudo sai de dados já salvos (timeline e archetypeList): nenhuma chamada ao modelo.
+ */
+function MapaDaJornada({ data }: { data: JornadaV2 }) {
+  const { dict } = useI18n()
+  const t = dict.savedDreams
+  const n = data.timeline.length
+  const arqs = data.archetypeList.slice(0, 7)
+  const [sel, setSel] = useState<number>(n)
+  if (n < 2 || arqs.length === 0) return null
+
+  const H = HEAD + arqs.length * ROW_H
+  const xPct = (num: number) => ((num - 0.5) / n) * 100
+  const yRow = (r: number) => HEAD + r * ROW_H + LABEL_H + (ROW_H - LABEL_H) / 2
+
+  // o arquétipo que conduz cada sonho: o "Arquétipo Principal" da linha do tempo, quando
+  // casa com uma linha da lista; senão, a primeira linha da lista que contém o sonho
+  const norm = (x: string) => x.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim()
+  const nomes = arqs.map((a) => norm(partirNome(a.name)[0]))
+  const forte = new Map<number, number>()
+  for (let num = 1; num <= n; num++) {
+    const principal = norm((data.timeline.find((x) => x.number === num)?.archetypes ?? "").split("·")[0])
+    let r = principal ? nomes.findIndex((nm) => nm === principal || nm.includes(principal) || principal.includes(nm)) : -1
+    if (r < 0 || !arqs[r].dreams.includes(num)) r = arqs.findIndex((a) => a.dreams.includes(num))
+    if (r >= 0) forte.set(num, r)
+  }
+  const pts = [...forte.entries()].sort((a, b) => a[0] - b[0]).map(([num, r]) => ({ num, x: xPct(num), y: yRow(r) }))
+  let d = ""
+  pts.forEach((p, i) => {
+    if (i === 0) return void (d = `M ${p.x} ${p.y}`)
+    const q = pts[i - 1]
+    const mx = (q.x + p.x) / 2
+    d += ` C ${mx} ${q.y}, ${mx} ${p.y}, ${p.x} ${p.y}`
+  })
+
+  const atual = data.timeline.find((x) => x.number === sel)
+
+  return (
+    <Card title={t.mapTitle} wide>
+      <p className="text-[13px] text-white/40 leading-relaxed -mt-2 mb-5 max-w-2xl">{t.mapHint}</p>
+      <div className="relative" style={{ height: H }}>
+        {/* rótulos e trilhos, de ponta a ponta */}
+        {arqs.map((a, r) => {
+          const [nome, imagem] = partirNome(a.name)
+          return (
+            <div key={r} className="absolute left-0 right-0" style={{ top: HEAD + r * ROW_H, height: ROW_H }}>
+              <div className="flex items-baseline justify-between gap-3 text-[12px] leading-tight" style={{ height: LABEL_H }}>
+                <span className="text-white/75 font-medium shrink-0">
+                  <span className="text-white/30 tabular-nums mr-1.5">{r + 1}</span>
+                  {nome}
+                </span>
+                {imagem && <span className="text-white/30 truncate text-right">{imagem}</span>}
+              </div>
+              <div className="absolute left-0 right-0 h-px bg-white/10" style={{ top: LABEL_H + (ROW_H - LABEL_H) / 2 }} />
+            </div>
+          )
+        })}
+
+        {/* área dos sonhos: mesma largura para a linha, os pontos e os números */}
+        <div className="absolute top-0 bottom-0" style={{ left: "3%", right: "3%" }}>
+          <div
+            className="absolute top-0 bottom-0 rounded-xl bg-white/[0.06] transition-all duration-300"
+            style={{ left: `${((sel - 1) / n) * 100}%`, width: `${100 / n}%` }}
+          />
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox={`0 0 100 ${H}`} preserveAspectRatio="none" aria-hidden="true">
+            {d && (
+              <>
+                <path d={d} fill="none" stroke="rgb(125 211 252)" strokeOpacity="0.10" strokeWidth="16" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                <path d={d} fill="none" stroke="rgb(125 211 252)" strokeOpacity="0.22" strokeWidth="8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                <path d={d} fill="none" stroke="rgb(186 230 253)" strokeOpacity="0.85" strokeWidth="1.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+              </>
+            )}
+          </svg>
+
+          {data.timeline.map((x) => (
+            <button
+              key={x.number}
+              type="button"
+              onClick={() => setSel(x.number)}
+              aria-pressed={sel === x.number}
+              aria-label={`${fmt(t.mapDream, { n: x.number })}: ${x.title}`}
+              title={x.title}
+              className={[
+                "absolute top-2 -translate-x-1/2 h-7 p-0 flex items-center justify-center rounded-full text-[11px] sm:text-[12px] tabular-nums border transition-colors",
+                sel === x.number ? "bg-white/20 border-white/40 text-white" : "bg-white/5 border-white/10 text-white/50 hover:text-white/80",
+              ].join(" ")}
+              style={{ left: `${xPct(x.number)}%`, width: `min(28px, calc(${100 / n}% - 2px))` }}
+            >
+              {x.number}
+            </button>
+          ))}
+
+          {arqs.flatMap((a, r) =>
+            a.dreams.filter((num) => num >= 1 && num <= n).map((num) => {
+              const naLinha = forte.get(num) === r
+              return (
+                <button
+                  key={`${r}-${num}`}
+                  type="button"
+                  onClick={() => setSel(num)}
+                  aria-label={`${a.name}, ${fmt(t.mapDream, { n: num })}`}
+                  title={`${a.name} · ${fmt(t.mapDream, { n: num })}`}
+                  className={[
+                    "absolute -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform hover:scale-125",
+                    naLinha ? "h-[18px] w-[18px] bg-white shadow-[0_0_14px_4px_rgba(125,211,252,0.55)]" : "h-[11px] w-[11px] bg-white/45",
+                  ].join(" ")}
+                  style={{ left: `${xPct(num)}%`, top: yRow(r) }}
+                />
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {atual && (
+        <div className="mt-4 rounded-xl bg-white/5 border border-white/10 p-4" aria-live="polite">
+          <p className="text-sm font-medium text-white/85 leading-snug">{atual.number}. {atual.title}</p>
+          <p className="text-[13px] text-white/40 mt-0.5">{atual.archetypes}</p>
+          <p className="text-sm text-white/65 mt-2 leading-relaxed">{atual.summary}</p>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 /** Leituras salvas antes da versão 2: o mesmo grid de quatro cartões de sempre. */
 function LeituraAntiga({ data }: { data: JourneyData }) {
   const { dict } = useI18n()
@@ -82,35 +219,55 @@ function LeituraNova({ data }: { data: JornadaV2 }) {
   const t = dict.savedDreams
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-      <Card title={t.timeline}><Timeline itens={data.timeline} /></Card>
-      <Card title={t.connectionsTitle}><Lista itens={data.connections} /></Card>
-      <Card title={t.integratedTitle}>
-        <div className="space-y-3">
+      <Card title={t.integratedTitle} wide>
+        <div className="space-y-3 max-w-3xl">
           {data.integrated.split(/\n\s*\n/).map((p, i) => (
-            <p key={i} className="text-sm text-white/70 leading-relaxed">{p}</p>
+            <p key={i} className="text-base sm:text-lg font-light text-white/85 leading-relaxed">{p}</p>
           ))}
         </div>
       </Card>
+      <MapaDaJornada data={data} />
       {data.archetypeList?.length > 0 && (
         <Card title={t.archetypesTitle} wide>
-          <ol className="space-y-5">
-            {data.archetypeList.map((a, i) => (
-              <li key={i} className="flex gap-4">
-                <span className="text-white/30 text-sm tabular-nums shrink-0 w-5 pt-0.5">{i + 1}</span>
-                <div>
-                  <p className="text-sm font-medium text-white/85 leading-snug">{a.name}</p>
-                  {a.dreams?.length > 0 && (
-                    <p className="text-[12px] text-white/35 mt-0.5">{fmt(t.archetypesIn, { dreams: a.dreams.join(", ") })}</p>
-                  )}
-                  <p className="text-sm text-white/70 leading-relaxed mt-1.5">{a.meaning}</p>
-                </div>
-              </li>
-            ))}
+          <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+            {data.archetypeList.map((a, i) => {
+              const [nome, imagem] = partirNome(a.name)
+              return (
+                <li key={i} className="flex gap-3">
+                  <span className="shrink-0 mt-0.5 h-6 w-6 rounded-full border border-white/15 bg-white/5 text-white/50 text-[12px] tabular-nums flex items-center justify-center">{i + 1}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white/90 leading-snug">
+                      {nome}
+                      {imagem && <span className="font-normal text-white/40"> · {imagem}</span>}
+                    </p>
+                    {a.dreams?.length > 0 && (
+                      <p className="text-[12px] text-white/35 mt-0.5">{fmt(t.archetypesIn, { dreams: a.dreams.join(", ") })}</p>
+                    )}
+                    <p className="text-sm text-white/65 leading-relaxed mt-1.5">{a.meaning}</p>
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         </Card>
       )}
+      <Card title={t.timeline} wide>
+        <ol className="relative grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
+          {data.timeline.map((item) => (
+            <li key={item.number} className="flex gap-3">
+              <span className="shrink-0 mt-0.5 h-6 w-6 rounded-full bg-sky-200/15 border border-sky-200/30 text-sky-100/80 text-[12px] tabular-nums flex items-center justify-center">{item.number}</span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-white/85 leading-snug">{item.title}</p>
+                <p className="text-[12px] text-white/35 mt-0.5">{item.archetypes}</p>
+                <p className="text-[13px] text-white/60 mt-1 leading-relaxed">{item.summary}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </Card>
+      <Card title={t.connectionsTitle}><Lista itens={data.connections} /></Card>
       {data.evolution.length > 0 && (
-        <Card title={t.evolutionTitle} wide>
+        <Card title={t.evolutionTitle}>
           <div className="space-y-4">
             {data.evolution.map((e, i) => (
               <div key={i} className="border-l border-white/15 pl-4">
