@@ -340,11 +340,18 @@
    cruza é girada por transform, mas a caixa dela continua em pé, por cima da
    central, e engolia as faixas visíveis dela. Só a lâmina (girada) recebe o
    ponteiro; o evento sobe até o botão como em qualquer carta. */
-.tc-hit { pointer-events: none; container-type: inline-size; }
+.tc-hit {
+  pointer-events: none; container-type: inline-size;
+  /* largura da lâmina fluida, para a tipografia dela. Sem unidades de container
+     (Safari até o 15) vale a estimativa pela tela: a mesa ocupa a tela menos 99 px
+     de margens e painéis, e a carta é 92/436 da mesa. */
+  --tk-fluida: min(92px, calc((100vw - 99px) * 0.211));
+}
+@supports (width: 1cqw) { .tc-hit { --tk-fluida: 100cqw; } }
 .tc-hit .tc-slot { pointer-events: auto; }
 /* a mesa encolhe inteira no celular: a lâmina mede a tipografia pela largura
-   real da carta (--tk-cw: 100cqw, container = .tc-hit), e o número da posição
-   ganha um pouco de corpo onde a carta é pequena */
+   real da carta (--tk-cw: var(--tk-fluida), container = .tc-hit), e o número da
+   posição ganha um pouco de corpo onde a carta é pequena */
 @media (max-width: 639px) {
   .tc-num { font-size: 11px; }
 }
@@ -369,15 +376,29 @@
    baralho: lâmina violeta translúcida, aresta luminosa fina, craquelê
    discreto, gravura marfim (public/lenormand/<id>.png) na mesma janela da
    carta original, número no alto e nome em serifa itálica embaixo.
-   Tamanhos por variáveis: celular tem cartas de 100px; desktop, 92px. */
+   Tamanhos por variáveis: celular tem cartas de ATÉ 100px; desktop, 92px.
+
+   NO CELULAR A CARTA É FLUIDA. Três cartas de 100 px e dois vãos pedem 316 px, e
+   o painel do oráculo só tem isso a partir de 416 px de tela: num iPhone de
+   390 sobram 291, e a mesa passava 12 px de cada lado do painel (47 px num
+   aparelho de 320). A carta vale um terço do que o container tem (.ln-mesa),
+   até 100 px, e número e nome acompanham porque saem de --ln-cw. Sem unidades
+   de container (Safari até o 15) vale a estimativa pela tela: 99 px de margens
+   e painéis, mais os dois vãos. */
+.ln-mesa { container-type: inline-size; }
 .ln-table {
-  --ln-cw: 100px; --ln-gap: 8px;
+  --ln-gap: 8px;
+  --ln-cw: min(100px, calc((100vw - 99px - 2 * var(--ln-gap)) / 3));
   display: grid; grid-template-columns: repeat(3, var(--ln-cw)); gap: var(--ln-gap);
   justify-content: center; perspective: 900px;
 }
+@supports (width: 1cqw) {
+  .ln-table { --ln-cw: min(100px, calc((100cqw - 2 * var(--ln-gap)) / 3)); }
+}
 @media (min-width: 640px) { .ln-table { --ln-cw: 92px; --ln-gap: 10px; } }
 .ln-pos {
-  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.32);
+  /* acompanha a carta quando ela encolhe: a 68 px, "PRESENTE" em 12 px já passava */
+  font-size: min(12px, calc(var(--ln-cw) * 0.13)); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.32);
   text-align: center; margin-bottom: 6px; line-height: 1.2; min-height: 2.4em;
   display: flex; align-items: flex-end; justify-content: center;
 }
@@ -658,6 +679,30 @@
 }
 
 /* placa da runa (a mesma da mesa, também usada na carta em foco) */
+/* Mapa de nove runas: três placas por linha em qualquer tela. No celular a
+   placa tem de 68 a 92 px, e o rótulo da posição em 12 px com espaçamento largo
+   ("FUNDAMENTO OCULTO") era mais largo que ela. O rótulo passa a medir pela
+   largura do mapa (.rn-mesa): cabe a palavra mais longa dos três idiomas na
+   placa, entre 9 e 12 px, e volta ao desenho cheio a partir de 640 px. Sem
+   unidades de container (Safari até o 15), a estimativa pela tela. A pedra
+   encolhe com a placa em vez de encostar na borda.
+   SEM overflow-wrap: anywhere. Numa tela de 320 px a palavra a 9 px ainda passa
+   3 px do respiro da placa, e é melhor ela inteira ali do que partida no meio
+   ("FUNDAMENT / O"); abaixo de 350 px o espaçamento entre letras sai para ela
+   ficar dentro da placa. */
+.rn-mesa { container-type: inline-size; }
+.rn-pos { font-size: clamp(9px, calc((100vw - 99px) * 0.0455 - 2.1px), 12px); letter-spacing: 0.04em; }
+@media (max-width: 350px) { .rn-pos { letter-spacing: 0; } }
+@supports (width: 1cqw) { .rn-pos { font-size: clamp(9px, calc(4.55cqw - 2.1px), 12px); } }
+@media (min-width: 640px) { .rn-pos { font-size: 12px; letter-spacing: 0.1em; } }
+.rn-mesa svg { max-width: 100%; height: auto; }
+/* A placa é o próprio botão de foco, mas NÃO leva .fc-btn. Aquela regra serve a
+   um <button> que só embrulha a carta: zera display, padding, borda e
+   alinhamento. Como está fora das camadas do Tailwind, vencia as utilitárias da
+   placa, que ficava sem respiro, sem borda, com o rótulo à esquerda e com nome e
+   orientação na mesma linha, passando da largura. Aqui fica só o que é do botão. */
+.rn-btn { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rn-btn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px; }
 .rn-plate { background: radial-gradient(circle at 50% 25%, rgba(181,126,255,0.14), rgba(255,255,255,0.035) 60%, rgba(255,255,255,0.02)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 0 40px rgba(255,255,255,0.02); }
 
 /* Barra de luz da leitura: acompanha a consulta do envio até o texto final.

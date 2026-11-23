@@ -122,8 +122,14 @@ export function TarotCapsule({
   card: TarotCardRef
   name: string
   label: string
-  /** largura em px; ausente = fluida (100% do container, tipografia em unidades de container) */
-  width?: number
+  /**
+   * Largura da lâmina: número = px; texto = expressão CSS (ex.: a da carta em
+   * foco, que depende da tela); ausente = fluida (100% do container). A
+   * tipografia da lâmina é proporcional a ESTA medida, então ela tem de ser a
+   * largura que a carta ocupa de fato: uma lâmina de 300 px fixos dentro de uma
+   * moldura menor sai maior que a moldura e com o texto fora de escala.
+   */
+  width?: number | string
   /** `sizes` do <img> quando a largura é fluida */
   sizes?: string
   /** carta da primeira dobra: baixa já, sem esperar o layout (loading=eager) */
@@ -141,7 +147,7 @@ export function TarotCapsule({
   }, [])
   const webp = tarotArtSrcSet(card.id)
   return (
-    <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: width ? `${width}px` : "100cqw" }}>
+    <div className="tk-card" style={{ ...(width ? { width } : undefined), ["--tk-cw" as string]: typeof width === "number" ? `${width}px` : (width ?? "var(--tk-fluida, 92px)") }}>
       {numeral ? <span className="tk-num" aria-hidden="true">{numeral}</span> : null}
       <span className="tk-rule tk-rule-top" aria-hidden="true" />
       <div className={"tk-art" + (carregando ? " is-loading" : "")}>
@@ -150,7 +156,7 @@ export function TarotCapsule({
             300 px CSS sempre recebe a de 600). No <img> fica o PNG de nome fixo,
             que só navegador sem WebP pede; quem decodifica WebP nunca o baixa. */}
         <picture>
-          {webp ? <source type="image/webp" srcSet={webp} sizes={width ? width + "px" : (sizes ?? "150px")} /> : null}
+          {webp ? <source type="image/webp" srcSet={webp} sizes={typeof width === "number" ? width + "px" : (sizes ?? "150px")} /> : null}
           <img
             ref={imgRef}
             src={tarotArtPng(card.id)}
@@ -171,6 +177,14 @@ export function TarotCapsule({
     </div>
   )
 }
+
+/**
+ * Largura da carta em foco (a ampliada, que vira para mostrar o significado).
+ * Uma medida só para a moldura do FocusCard e para a lâmina dentro dela: cabe
+ * na largura (78vw), na altura (31vh de largura dão 60vh de carta) e não passa
+ * de 300 px.
+ */
+export const TAROT_FOCO_LARGURA = "min(78vw, 300px, 31vh)"
 
 export default function TarotSpread({ items, cards, animate = false, pending = false }: Props) {
   const { dict } = useI18n()
@@ -246,12 +260,12 @@ export default function TarotSpread({ items, cards, animate = false, pending = f
         items={entries.map((e) => ({ position: e.position, name: e.name, orientation: e.orientation, meaning: e.meaning }))}
         renderFront={(i) => (
           <div style={{ transform: entries[i].card.reversed ? "rotate(180deg)" : undefined }}>
-            <TarotCapsule card={entries[i].card} name={entries[i].name} label={entries[i].label} width={300} />
+            <TarotCapsule card={entries[i].card} name={entries[i].name} label={entries[i].label} width={TAROT_FOCO_LARGURA} sizes="300px" />
           </div>
         )}
         onAdvance={focus.advance}
         onClose={focus.close}
-        width="min(78vw, 300px, 31vh)"
+        width={TAROT_FOCO_LARGURA}
         aspect="92 / 178"
         live={pending}
       />

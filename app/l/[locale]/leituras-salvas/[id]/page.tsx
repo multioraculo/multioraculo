@@ -127,7 +127,7 @@ export default async function LeituraDetailPage({
 
             {/* Oráculos — mesma estrutura do card de detalhe no live */}
             {activeOracles.length > 0 && (
-              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 border border-white/10 space-y-6">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-6">
                 <h3 className="text-white text-lg text-center font-light">{t.readByOracle}</h3>
 
                 <div className="space-y-4">
@@ -140,7 +140,7 @@ export default async function LeituraDetailPage({
                     return (
                       <div
                         key={key}
-                        className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 space-y-5"
+                        className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20 space-y-5"
                       >
                         {/* Header */}
                         <div>
@@ -189,7 +189,7 @@ export default async function LeituraDetailPage({
                               {items.map((item, i) => (
                                 <div key={i} className="flex gap-3">
                                   {item.position && (
-                                    <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
+                                    <span className="text-white/30 text-[13px] shrink-0 w-[5.5rem] sm:w-28 pt-0.5 leading-tight">
                                       {item.position}
                                     </span>
                                   )}

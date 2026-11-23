@@ -126,6 +126,8 @@ export default function LenormandTable({ items, cards, animate = false }: Props)
 
   return (
     <>
+      {/* ln-mesa: o container de que a mesa tira a largura das cartas (globals.css) */}
+      <div className="ln-mesa">
       <div className="ln-table" role="list" aria-label={t.tableLabel}>
         {entries.map((e, i) => (
           <div key={i} role="listitem" aria-label={`${e.position ? e.position + ": " : ""}${e.index! + 1}, ${e.name}`} className={focus.focusedIndex === i ? "fc-away" : ""}>
@@ -141,6 +143,7 @@ export default function LenormandTable({ items, cards, animate = false }: Props)
             </button>
           </div>
         ))}
+      </div>
       </div>
       <FocusCard
         state={focus.state}

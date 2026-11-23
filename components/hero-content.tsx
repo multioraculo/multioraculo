@@ -761,7 +761,7 @@ export default function HeroContent({ initialUser }: HeroContentProps) {
                           {items.map((item, i) => (
                             <div key={i} className="flex gap-3">
                               {item.position && (
-                                <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">
+                                <span className="text-white/30 text-[13px] shrink-0 w-[5.5rem] sm:w-28 pt-0.5 leading-tight">
                                   {item.position}
                                 </span>
                               )}

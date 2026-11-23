@@ -26,7 +26,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useI18n } from "@/components/i18n-provider"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
-import { TarotCapsule } from "@/components/tarot-spread"
+import { TarotCapsule, TAROT_FOCO_LARGURA } from "@/components/tarot-spread"
 import { tarotCardRef } from "@/lib/oracles/tarot-assets"
 import { renderSym } from "@/lib/oracles/localize"
 import { ARCANO_POR_INDICE } from "@/lib/oracles/arcanos-maiores"
@@ -237,12 +237,12 @@ export default function EscolhaUmaCarta() {
         items={[{ position: dict.oracles.tarot, name: nome, meaning: leitura }]}
         renderFront={() =>
           arcano !== null ? (
-            <TarotCapsule card={tarotCardRef(arcano, false)} name={nome} label={nome} width={300} />
+            <TarotCapsule card={tarotCardRef(arcano, false)} name={nome} label={nome} width={TAROT_FOCO_LARGURA} sizes="300px" />
           ) : null
         }
         onAdvance={foco.advance}
         onClose={foco.close}
-        width="min(78vw, 300px, 31vh)"
+        width={TAROT_FOCO_LARGURA}
         aspect="92 / 178"
       />
     </div>

@@ -172,23 +172,25 @@ export default function RunesSpread({ items, runes, animate = false }: Props) {
   return (
     <>
       <RuneDefs />
+      {/* rn-mesa: o container de que o rótulo da posição tira o tamanho (globals.css) */}
+      <div className="rn-mesa">
       <div className="grid grid-cols-3 gap-2 sm:gap-3" role="list" aria-label={t.spreadLabel}>
         {cards.map((c, i) => (
           <div
             key={i}
             role="listitem"
             aria-label={`${c.position ? c.position + ": " : ""}${c.name}${c.reversed ? `, ${t.reversed}` : ""}`}
-            className={`fc-btn rn-plate relative flex flex-col items-center rounded-xl border border-white/[0.12] px-2 pt-3 pb-3 text-center ${animate ? "rune-enter" : ""} ${focus.focusedIndex === i ? "fc-away" : ""}`}
+            className={`rn-plate rn-btn relative flex flex-col items-center rounded-xl border border-white/[0.12] px-1 sm:px-2 pt-3 pb-3 text-center ${animate ? "rune-enter" : ""} ${focus.focusedIndex === i ? "fc-away" : ""}`}
             style={{ animationDelay: animate ? `${i * 90}ms` : undefined }}
             onClick={() => focus.open(i)}
             onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); focus.open(i) } }}
             tabIndex={0}
             title={dict.focus.open}
           >
-            <span className="text-white/40 text-[12px] sm:text-[12px] uppercase tracking-widest leading-tight min-h-[2.2em] flex items-center">
+            <span className="rn-pos text-white/40 uppercase leading-tight min-h-[2.2em] flex items-center">
               {c.position}
             </span>
-            <div className="my-1.5 sm:my-2 flex items-center justify-center">
+            <div className="my-1.5 sm:my-2 w-full flex items-center justify-center">
               <RuneObject name={c.name} glyph={c.glyph} reversed={c.reversed} index={i} />
             </div>
             <span className="text-white/90 text-xs sm:text-sm font-medium leading-tight">{c.name}</span>
@@ -197,6 +199,7 @@ export default function RunesSpread({ items, runes, animate = false }: Props) {
             </span>
           </div>
         ))}
+      </div>
       </div>
       <FocusCard
         state={focus.state}

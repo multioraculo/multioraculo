@@ -100,14 +100,14 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
 
           {/* Oráculos: só depois do desbloqueio */}
           {unlocked && (
-            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-8 border border-white/10 space-y-6">
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-8 border border-white/10 space-y-6">
               <h3 className="text-white text-lg text-center font-light">{dict.results.readByOracle}</h3>
               <div className="space-y-4">
                 {ORACLE_ORDER.filter((k) => rec.oracles[k]).map((key) => {
                   const oracle = rec.oracles[key]
                   const items = oracle.draw?.items ?? []
                   return (
-                    <div key={key} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 space-y-5">
+                    <div key={key} className="bg-white/10 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-white/20 space-y-5">
                       <div>
                         <h4 className="text-white text-base font-light">{dict.oracles[key]}</h4>
                         {oracle.draw?.notes && <p className="text-white/45 text-xs mt-1">{oracle.draw.notes}</p>}
@@ -147,7 +147,7 @@ export default async function LeituraPage({ params }: { params: Promise<{ seed: 
                             {items.map((item, i) => (
                               <div key={i} className="flex gap-3">
                                 {item.position && (
-                                  <span className="text-white/30 text-[13px] shrink-0 w-20 sm:w-28 pt-0.5 leading-tight">{item.position}</span>
+                                  <span className="text-white/30 text-[13px] shrink-0 w-[5.5rem] sm:w-28 pt-0.5 leading-tight">{item.position}</span>
                                 )}
                                 <div className="min-w-0">
                                   <span className="text-white/85 text-xs font-medium">{item.name}</span>

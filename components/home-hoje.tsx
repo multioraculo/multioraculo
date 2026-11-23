@@ -65,7 +65,7 @@ import MarcosHome from "@/components/marcos-home"
 import FraseDePoder from "@/components/frase-de-poder"
 import { guardarPerguntaEscolhida, usePerguntaSugerida } from "@/components/perguntas-sugeridas"
 import FocusCard, { useFocusCard } from "@/components/focus-card"
-import { TarotCapsule } from "@/components/tarot-spread"
+import { TarotCapsule, TAROT_FOCO_LARGURA } from "@/components/tarot-spread"
 import { LenormandCard } from "@/components/lenormand-table"
 import LequeOraculos from "@/components/leque-oraculos"
 import ImagemDoInconsciente from "@/components/imagem-do-inconsciente"
@@ -95,6 +95,15 @@ const CHAVE_SIGNO = "multioraculo:signo"
 /** As duas cartas têm proporções diferentes; estas larguras as deixam da mesma altura. */
 const LARGURA_TAROT = 118
 const LARGURA_LENORMAND = 140
+/**
+ * As duas cartas do dia lado a lado pedem 278 px (118 + 20 de vão + 140), e a
+ * placa só tem isso a partir de 366 px de tela. Abaixo (Android de 360, iPhone
+ * de 320 ou com zoom de tela) elas encolhem juntas, na mesma proporção, em vez
+ * de alargar a placa para fora da tela: sobra da tela = 100vw menos 40 de
+ * margem da página, 48 de respiro da placa e 20 do vão entre as cartas.
+ */
+const LARGURA_TAROT_CSS = `min(${LARGURA_TAROT}px, calc((100vw - 108px) * 0.4574))`
+const LARGURA_LENORMAND_CSS = `min(${LARGURA_LENORMAND}px, calc((100vw - 108px) * 0.5426))`
 
 const semNumero = (nome: string) => nome.replace(/^\d{1,2}\s*[—–-]\s*/, "")
 
@@ -390,7 +399,9 @@ export default function HomeHoje({
             que a chamada para consultar mora só aqui. */}
         <section aria-label={t.today}>
         <Capitulo titulo={t.today} complemento={data} />
-        <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
+        {/* grid-cols-1: sem ela a trilha única vale a largura mínima do conteúdo
+            e, em tela estreita, a placa passa da borda em vez de encolher */}
+        <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12">
           <Modulo forte className="p-6 sm:p-7 lg:p-8 lg:col-span-7">
             <Rotulo>{t.drawCollective}</Rotulo>
             <h2 className="text-white/95 instrument italic text-[23px] sm:text-[25px] leading-snug mt-2.5">
@@ -402,8 +413,8 @@ export default function HomeHoje({
                 <CartasDoDia tiragem={tiragem} />
               ) : (
                 <>
-                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_TAROT, height: 228 }} />
-                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_LENORMAND, height: 226 }} />
+                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_TAROT_CSS, aspectRatio: "92 / 178" }} />
+                  <div className="rounded-[6px] bg-white/[0.05] animate-pulse" style={{ width: LARGURA_LENORMAND_CSS, aspectRatio: "0.62" }} />
                 </>
               )}
             </div>
@@ -574,7 +585,7 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
           aria-label={`${tarot.nome}. ${dict.focus.open}`}
         >
           {/* primeira dobra: baixa a gravura já, sem esperar o layout */}
-          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT} prioridade />
+          <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={LARGURA_TAROT_CSS} sizes={`${LARGURA_TAROT}px`} prioridade />
         </button>
       </div>
 
@@ -590,7 +601,7 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
             name={nomeLenormand}
             sizes={`${LARGURA_LENORMAND}px`}
             prioridade
-            style={{ ["--ln-cw" as string]: `${LARGURA_LENORMAND}px` }}
+            style={{ ["--ln-cw" as string]: LARGURA_LENORMAND_CSS }}
           />
         </button>
       </div>
@@ -601,12 +612,12 @@ function CartasDoDia({ tiragem }: { tiragem: RespostaTiragem }) {
         hideEmptyMeaning
         renderFront={() => (
           <div style={{ transform: tarot.carta.reversed ? "rotate(180deg)" : undefined }}>
-            <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={300} />
+            <TarotCapsule card={tarot.carta} name={tarot.nome} label={tarot.nome} width={TAROT_FOCO_LARGURA} sizes="300px" />
           </div>
         )}
         onAdvance={focoTarot.advance}
         onClose={focoTarot.close}
-        width="min(78vw, 300px, 31vh)"
+        width={TAROT_FOCO_LARGURA}
         aspect="92 / 178"
       />
 
